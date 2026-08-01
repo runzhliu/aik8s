@@ -1,0 +1,34 @@
+[project]
+site_name = "AI & K8s 知识库"
+site_description = "AI、Kubernetes、Linux 与基础设施笔记"
+site_url = "https://aik8s.run/"
+docs_dir = "docs"
+site_dir = "site"
+
+[project.theme]
+variant = "modern"
+language = "zh"
+features = [
+  "navigation.indexes",
+  "navigation.sections",
+  "navigation.path",
+  "navigation.top",
+  "toc.follow",
+  "content.code.copy",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "indigo"
+accent = "indigo"
+toggle.icon = "lucide/sun"
+toggle.name = "切换到深色模式"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "indigo"
+accent = "indigo"
+toggle.icon = "lucide/moon"
+toggle.name = "切换到浅色模式"

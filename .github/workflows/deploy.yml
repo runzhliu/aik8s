@@ -1,0 +1,95 @@
+name: Deploy documentation
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
+
+    env:
+      PROD_HOST: ${{ vars.PROD_HOST }}
+      PROD_PORT: ${{ vars.PROD_PORT }}
+      PROD_USER: ${{ vars.PROD_USER }}
+      DEPLOY_ROOT: /srv/aik8s
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --requirement requirements.txt
+
+      - name: Build documentation
+        run: zensical build --clean --strict
+
+      - name: Add production-only AdSense
+        env:
+          ADSENSE_CLIENT: ca-pub-5607799704547851
+        run: python scripts/inject_adsense.py --site-dir site --client "$ADSENSE_CLIENT"
+
+      - name: Validate deployment configuration
+        shell: bash
+        env:
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_KNOWN_HOSTS: ${{ secrets.PROD_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$PROD_HOST"
+          test -n "$PROD_PORT"
+          test -n "$PROD_USER"
+          test -n "$PROD_SSH_KEY"
+          test -n "$PROD_KNOWN_HOSTS"
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_KNOWN_HOSTS: ${{ secrets.PROD_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$PROD_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$PROD_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload release
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_dir="$DEPLOY_ROOT/releases/$GITHUB_SHA"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -p "$PROD_PORT" "$PROD_USER@$PROD_HOST" \
+            "mkdir -p '$release_dir'"
+          rsync --archive --compress --delete \
+            -e "ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -p $PROD_PORT" \
+            site/ "$PROD_USER@$PROD_HOST:$release_dir/"
+
+      - name: Activate release
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_dir="$DEPLOY_ROOT/releases/$GITHUB_SHA"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -p "$PROD_PORT" "$PROD_USER@$PROD_HOST" \
+            "ln -sfn '$release_dir' '$DEPLOY_ROOT/.current-next' && mv -Tf '$DEPLOY_ROOT/.current-next' '$DEPLOY_ROOT/current'"

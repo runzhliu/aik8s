@@ -1,0 +1,9 @@
+aik8s.run {
+    root * /srv/aik8s/current
+    encode zstd gzip
+    file_server
+}
+
+www.aik8s.run {
+    redir https://aik8s.run{uri} permanent
+}
