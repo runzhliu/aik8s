@@ -5,42 +5,42 @@ hide:
   - toc
 ---
 
-# 把 AI 工作负载真正跑在 Kubernetes 上
+# AI on Kubernetes 工程知识库
 
-> 面向 AI 基础设施、平台工程和模型服务团队，系统讲清 GPU 集群、分布式训练、LLM 推理、RDMA、Agent 沙箱，以及上线后的成本、安全与运维。
+面向 AI 基础设施、平台工程和模型服务团队，整理 GPU 集群、分布式训练、LLM 推理、RDMA、Agent 沙箱，以及成本、安全和运维方面的工程实践。
 
-这里不是新闻聚合，也不是工具名称大全。每篇专题都围绕一个生产问题展开：**为什么需要、组件如何分工、怎样选型、用什么指标验收、出问题从哪里查。**
+这里不做新闻聚合，也不只是罗列工具。每篇专题围绕一个生产问题展开：为什么需要、组件如何分工、怎样选型、用什么指标验收，以及出现问题时从哪里排查。
 
 [开始阅读 AI on K8s](ai-k8s/index.md){ .md-button .md-button--primary }
 [查看 30/60/90 天落地路线](ai-k8s/adoption-roadmap.md){ .md-button }
 
-## 你可以在这里解决什么
+## 这里涵盖的工程问题
 
 <div class="grid cards" markdown>
 
--   **🧩 规划 GPU 平台**
+-   **GPU 平台规划**
 
     从 Device Plugin、DRA、队列、拓扑和共享方式开始，建立清晰的计算资源模型。
 
-    [GPU 与异构资源调度 →](ai-k8s/gpu-scheduling.md)
+    [GPU 与异构资源调度](ai-k8s/gpu-scheduling.md)
 
--   **🚄 提高训练效率**
+-   **分布式训练效率**
 
     把数据供给、分布式通信、RDMA、Checkpoint 和故障恢复放到同一条性能链路中。
 
-    [分布式训练平台 →](ai-k8s/distributed-training.md)
+    [分布式训练平台](ai-k8s/distributed-training.md)
 
--   **⚡ 建设 LLM 推理服务**
+-   **LLM 推理服务**
 
     理解 vLLM、KServe、LWS、智能路由、KV Cache、Prefill/Decode 和弹性伸缩。
 
-    [LLM 推理平台 →](ai-k8s/llm-inference.md)
+    [LLM 推理平台](ai-k8s/llm-inference.md)
 
--   **🛠️ 做好 Day-2 运营**
+-   **平台运行与维护**
 
     用可观测性、FinOps、安全策略、性能基准和版本矩阵把平台长期稳定运行起来。
 
-    [平台运维、升级与多集群 →](ai-k8s/platform-operations.md)
+    [平台运维、升级与多集群](ai-k8s/platform-operations.md)
 
 </div>
 
@@ -55,7 +55,7 @@ hide:
 | 运行 AI Agent 或代码沙箱 | [Agent 与工具执行](ai-k8s/agentic-workloads.md) → [安全治理](ai-k8s/security-governance.md) → [可观测性](ai-k8s/observability.md) |
 | 负责升级、稳定性和事故响应 | [平台运维](ai-k8s/platform-operations.md) → [故障恢复](ai-k8s/reliability.md) → [性能回归](ai-k8s/benchmarking.md) |
 
-## 17 篇专题构成一张完整地图
+## 专题目录
 
 ### 算力、队列与数据
 
@@ -98,4 +98,4 @@ hide:
 
 ---
 
-如果你只准备读一篇，先从 [AI on Kubernetes 十年发展与工具全景](ai-k8s/index.md) 开始；如果已经在建设平台，直接进入 [落地路线图](ai-k8s/adoption-roadmap.md)。
+第一次阅读可以先看 [AI on Kubernetes 十年发展与工具全景](ai-k8s/index.md)；已经在建设平台的读者，可以直接进入 [落地路线图](ai-k8s/adoption-roadmap.md)。
