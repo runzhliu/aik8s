@@ -36,6 +36,8 @@ make build-production
 
 普通的 `make dev` 和 `make build` 不包含广告代码。生产部署工作流会自动执行注入，不需要手动运行该命令。
 
+AdSense 授权销售方记录保存在 `docs/ads.txt`，构建后发布到站点根路径 `/ads.txt`。发布商 ID 变更时需要同时更新该文件和生产注入配置。
+
 ## 添加内容
 
 在 `docs/` 中创建文件夹和 Markdown 文件即可。目录名和文件名会形成公开 URL，建议只使用小写英文字母、数字和连字符；中文展示名称放在一级标题或 `zensical.toml` 的 `nav` 配置中。

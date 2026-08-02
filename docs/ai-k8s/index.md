@@ -10,12 +10,40 @@ AI on Kubernetes 并不是一个单独的产品，而是一套逐步形成的云
 
 ## 专题阅读
 
-- [GPU 与异构资源调度](gpu-scheduling.md)：GPU 软件栈、共享方式、队列、拓扑感知和 DRA。
-- [分布式训练平台](distributed-training.md)：Kubeflow Trainer、KubeRay、JobSet、数据与容错设计。
-- [LLM 推理平台](llm-inference.md)：KServe、vLLM、LWS、Inference Gateway 和核心性能指标。
-- [MLOps 与平台工程](mlops.md)：流水线、实验、GitOps、多租户、安全和可观测性。
-- [落地路线图](adoption-roadmap.md)：按团队规模选择技术栈，并给出 30/60/90 天实施清单。
+### 算力、队列与数据
+
+- [GPU 与异构资源调度](gpu-scheduling.md)：GPU 软件栈、共享方式、拓扑感知和 DRA。
+- [队列、公平共享与多租户](queue-multitenancy.md)：Kueue、Flavor、Cohort、公平性、优先级和抢占契约。
+- [AI 数据、存储与缓存](data-storage.md)：对象存储、共享文件、本地 NVMe、模型分发和数据局部性。
 - [RDMA 与 AI 高速网络](rdma-networking.md)：InfiniBand、RoCE、GPUDirect、Multus、SR-IOV、调优与排障。
+
+### 训练、推理与 Agent
+
+- [分布式训练平台](distributed-training.md)：Kubeflow Trainer、KubeRay、JobSet、数据与容错设计。
+- [可靠性、Checkpoint 与故障恢复](reliability.md)：RPO/RTO、分布式 Checkpoint、Spot、PDB 和故障演练。
+- [LLM 推理平台](llm-inference.md)：KServe、vLLM、LWS、Inference Gateway 和核心性能指标。
+- [AI Agent、沙箱与工具执行](agentic-workloads.md)：Agent Sandbox、RuntimeClass、Tool Gateway、预算和审计。
+- [边缘 AI、K3s 与云边协同](edge-ai.md)：弱网自治、设备管理、模型 OTA、K3s 与 KubeEdge 选型。
+
+### 平台工程与治理
+
+- [MLOps 与平台工程](mlops.md)：流水线、实验、GitOps、多租户、安全和可观测性。
+- [GPU、训练与推理可观测性](observability.md)：DCGM、训练分解、TTFT/TPOT、Trace、SLO 和告警。
+- [AI 平台安全与治理](security-governance.md)：身份、Pod Security、镜像/模型供应链、Secret 和网络边界。
+- [GPU 成本、容量规划与 FinOps](cost-capacity.md)：单位经济性、OpenCost、弹性、Spot 和预算保护。
+- [性能基准、压测与回归](benchmarking.md)：硬件、NCCL、存储、Time-to-Quality、LLM 压测和发布门禁。
+- [平台运维、升级与多集群](platform-operations.md)：版本矩阵、Canary GPU 节点、CRD、灾备和升级验收。
+- [落地路线图](adoption-roadmap.md)：按团队规模选择技术栈，并给出 30/60/90 天实施清单。
+
+### 推荐阅读路线
+
+| 角色/目标 | 建议顺序 |
+| --- | --- |
+| 从零建设平台 | GPU 调度 → 数据存储 → 队列多租户 → MLOps → 落地路线图 |
+| 优化分布式训练 | 分布式训练 → RDMA → 数据存储 → 可靠性 → 性能基准 |
+| 建设 LLM 推理 | LLM 推理 → 可观测性 → 成本容量 → 安全治理 → 可靠性 |
+| 运行 Agent 平台 | Agent 沙箱 → 安全治理 → 可观测性 → 成本容量 → 平台运维 |
+| 负责 Day-2 运维 | 可观测性 → 可靠性 → 性能基准 → 平台运维 → 落地路线图 |
 
 ## 一、十年发展脉络
 
@@ -103,6 +131,8 @@ Kubeflow Trainer V2 也开始更多复用 JobSet、Kueue 等 Kubernetes 批处�
 推理运行时       vLLM / SGLang / Triton / TensorFlow Serving
                          │
 流量与弹性       Inference Gateway / Envoy AI Gateway / llm-d / KEDA
+                         │
+Agent 执行         Agent Sandbox / Kata / gVisor / Tool Gateway
                          │
 硬件与数据       GPU Operator / DRA / CSI / Object Storage / RDMA
                          │
@@ -207,6 +237,17 @@ Inference Gateway 的关键变化是：负载均衡不再只做轮询，而是�
 | GPU 指标 | NVIDIA DCGM Exporter | 利用率、显存、功耗、温度、XID 错误 |
 | 日志与追踪 | Loki/Elastic、OpenTelemetry、Jaeger/Tempo | 训练任务诊断、请求链路与跨服务归因 |
 | LLM 质量与追踪 | MLflow、Phoenix、Langfuse、OpenLLMetry | Prompt、Token、延迟、成本、评估和反馈，不应只看基础设施指标 |
+
+### 9. Agent 执行、安全与成本治理
+
+| 工具/机制 | 主要职责 | 适用建议 |
+| --- | --- | --- |
+| Agent Sandbox | 管理隔离、持久、单例的 Agent 执行环境和 Warm Pool | 需要大规模创建/回收 Agent Workspace 时评估 |
+| Kata Containers / gVisor | 为不可信代码增加运行时隔离边界 | 代码执行、Notebook 和 Agent 场景；仍需最小权限与网络策略 |
+| Pod Security Admission / Kyverno | Pod 安全基线、准入策略、镜像验证 | 把普通 workload 与特权 GPU Operator 分开治理 |
+| OpenCost | Kubernetes 成本分配、Showback/Chargeback | 按团队、Job、模型统计 GPU 与闲置成本 |
+
+Agent 工作负载把平台治理从“运行受信镜像”扩展到“执行模型动态生成的动作”，因此工具权限、网络出站、工作区生命周期和审计都必须成为一等能力。参考：[Agent Sandbox](https://agent-sandbox.sigs.k8s.io/)、[OpenCost](https://opencost.io/docs/)
 
 ## 三、怎么选：四套实用组合
 
