@@ -201,4 +201,4 @@ MLflow 适合承载实验与模型元数据，Prometheus/DCGM 负责基础设施
 - [ ] MLflow Run、Kubernetes Job UID 和模型制品可以相互关联。
 - [ ] 已定义任务时限、配额、优先级和清理策略。
 
-网络部分的原理、部署组件和逐层排障方法见：[RDMA 与 AI 高速网络](06-RDMA与AI高速网络.md)。
+网络部分的原理、部署组件和逐层排障方法见：[RDMA 与 AI 高速网络](rdma-networking.md)。

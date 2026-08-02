@@ -4,6 +4,22 @@ site_description = "AI、Kubernetes、Linux 与基础设施笔记"
 site_url = "https://aik8s.run/"
 docs_dir = "docs"
 site_dir = "site"
+nav = [
+  {"首页" = "index.md"},
+  {"AI on K8s" = [
+    "ai-k8s/index.md",
+    {"GPU 与异构资源调度" = "ai-k8s/gpu-scheduling.md"},
+    {"分布式训练平台" = "ai-k8s/distributed-training.md"},
+    {"LLM 推理平台" = "ai-k8s/llm-inference.md"},
+    {"MLOps 与平台工程" = "ai-k8s/mlops.md"},
+    {"落地路线图" = "ai-k8s/adoption-roadmap.md"},
+    {"RDMA 与 AI 高速网络" = "ai-k8s/rdma-networking.md"},
+  ]},
+  {"K3s 升级" = [
+    "k3s-upgrade/index.md",
+    {"升级与 DRA 预检报告" = "k3s-upgrade/report.md"},
+  ]},
+]
 
 [project.theme]
 variant = "modern"

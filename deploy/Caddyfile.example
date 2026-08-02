@@ -1,9 +1,19 @@
 aik8s.run {
-    root * /srv/aik8s/current
-    encode zstd gzip
-    file_server
+	redir "/AI on K8s/" /ai-k8s/ permanent
+	redir "/AI on K8s/01-GPU与异构资源调度/" /ai-k8s/gpu-scheduling/ permanent
+	redir "/AI on K8s/02-分布式训练平台/" /ai-k8s/distributed-training/ permanent
+	redir "/AI on K8s/03-LLM推理平台/" /ai-k8s/llm-inference/ permanent
+	redir "/AI on K8s/04-MLOps与平台工程/" /ai-k8s/mlops/ permanent
+	redir "/AI on K8s/05-落地路线图/" /ai-k8s/adoption-roadmap/ permanent
+	redir "/AI on K8s/06-RDMA与AI高速网络/" /ai-k8s/rdma-networking/ permanent
+	redir "/k3s升级/" /k3s-upgrade/ permanent
+	redir "/k3s升级/k3s-upgrade-report-192.168.1.200/" /k3s-upgrade/report/ permanent
+
+	root * /srv/aik8s/current
+	encode zstd gzip
+	file_server
 }
 
 www.aik8s.run {
-    redir https://aik8s.run{uri} permanent
+	redir https://aik8s.run{uri} permanent
 }

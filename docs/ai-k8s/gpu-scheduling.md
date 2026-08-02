@@ -175,4 +175,4 @@ DCGM Exporter 可以把 GPU、MIG 和部分 DRA 归属信息暴露给 Prometheus
 - [ ] 对共享 GPU 明确隔离承诺，不把 Time-Slicing 宣称为强隔离。
 - [ ] 计费同时使用申请量、占用时间和有效利用率，避免只按 Pod 数计费。
 
-下一篇：[RDMA 与 AI 高速网络](06-RDMA与AI高速网络.md) 会进一步解释 GPU、NIC、RoCE/InfiniBand 和 Kubernetes 网络组件如何连接起来。
+下一篇：[RDMA 与 AI 高速网络](rdma-networking.md) 会进一步解释 GPU、NIC、RoCE/InfiniBand 和 Kubernetes 网络组件如何连接起来。

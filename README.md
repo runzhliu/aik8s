@@ -38,7 +38,7 @@ make build-production
 
 ## 添加内容
 
-在 `docs/` 中创建文件夹和 Markdown 文件即可。自动导航按文件名排序，需要固定顺序时可以使用 `01-`、`02-` 这样的前缀。
+在 `docs/` 中创建文件夹和 Markdown 文件即可。目录名和文件名会形成公开 URL，建议只使用小写英文字母、数字和连字符；中文展示名称放在一级标题或 `zensical.toml` 的 `nav` 配置中。
 
 每个栏目建议添加一个 `index.md`：
 
@@ -46,8 +46,8 @@ make build-production
 docs/
 └── kubernetes/
     ├── index.md
-    ├── 01-基础概念.md
-    └── 02-集群部署.md
+    ├── basic-concepts.md
+    └── cluster-deployment.md
 ```
 
 ## 生产部署

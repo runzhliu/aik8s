@@ -10,12 +10,12 @@ AI on Kubernetes 并不是一个单独的产品，而是一套逐步形成的云
 
 ## 专题阅读
 
-- [GPU 与异构资源调度](01-GPU与异构资源调度.md)：GPU 软件栈、共享方式、队列、拓扑感知和 DRA。
-- [分布式训练平台](02-分布式训练平台.md)：Kubeflow Trainer、KubeRay、JobSet、数据与容错设计。
-- [LLM 推理平台](03-LLM推理平台.md)：KServe、vLLM、LWS、Inference Gateway 和核心性能指标。
-- [MLOps 与平台工程](04-MLOps与平台工程.md)：流水线、实验、GitOps、多租户、安全和可观测性。
-- [落地路线图](05-落地路线图.md)：按团队规模选择技术栈，并给出 30/60/90 天实施清单。
-- [RDMA 与 AI 高速网络](06-RDMA与AI高速网络.md)：InfiniBand、RoCE、GPUDirect、Multus、SR-IOV、调优与排障。
+- [GPU 与异构资源调度](gpu-scheduling.md)：GPU 软件栈、共享方式、队列、拓扑感知和 DRA。
+- [分布式训练平台](distributed-training.md)：Kubeflow Trainer、KubeRay、JobSet、数据与容错设计。
+- [LLM 推理平台](llm-inference.md)：KServe、vLLM、LWS、Inference Gateway 和核心性能指标。
+- [MLOps 与平台工程](mlops.md)：流水线、实验、GitOps、多租户、安全和可观测性。
+- [落地路线图](adoption-roadmap.md)：按团队规模选择技术栈，并给出 30/60/90 天实施清单。
+- [RDMA 与 AI 高速网络](rdma-networking.md)：InfiniBand、RoCE、GPUDirect、Multus、SR-IOV、调优与排障。
 
 ## 一、十年发展脉络
 
