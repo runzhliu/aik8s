@@ -8,6 +8,8 @@ site_dir = "site"
 [project.theme]
 variant = "modern"
 language = "zh"
+logo = "assets/brand/aik8s-logo.png"
+favicon = "assets/brand/favicon.png"
 features = [
   "navigation.indexes",
   "navigation.sections",

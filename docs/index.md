@@ -4,6 +4,7 @@
 
 ## 内容目录
 
+- [AI on K8s](AI%20on%20K8s/index.md)：AI 工作负载在 Kubernetes 上十年的演进、核心技术栈与工具选型。
 - [K3s 升级](k3s升级/index.md)：K3s 升级过程、兼容性检查和验证报告。
 
 ## 如何添加内容
