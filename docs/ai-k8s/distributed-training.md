@@ -2,7 +2,7 @@
 title: 分布式训练平台
 description: 训练控制器、Gang Scheduling、集合通信、容错和作业生命周期
 status: evolving
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
 # 分布式训练平台
@@ -209,3 +209,5 @@ MLflow 适合承载实验与模型元数据，Prometheus/DCGM 负责基础设施
 - [ ] 已定义任务时限、配额、优先级和清理策略。
 
 网络部分的原理、部署组件和逐层排障方法见：[RDMA 与 AI 高速网络](rdma-networking.md)。
+
+当 GPU 容量分散在多个集群时，优先让完整 TrainJob 通过 MultiKueue 等机制选择一个目标集群，再在集群内完成 Gang 和拓扑调度；跨地域同步 Collective 通常不是默认方案。详见：[Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)。

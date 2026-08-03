@@ -2,7 +2,7 @@
 title: AI Kubernetes 集群架构设计
 description: 从故障域、节点池、控制面、网络和存储规划训练与推理集群
 status: stable
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
 # AI Kubernetes 集群架构设计
@@ -59,6 +59,8 @@ AI 集群设计不是先安装一串 Operator，而是先明确工作负载、�
 - 边缘站点必须弱网自治。
 
 多集群不会自动解决治理问题。每增加一个集群，都要复制身份、策略、Registry、Secret、观测、版本管理和灾备能力。
+
+多集群的历史、控制平面分层，以及 GPU 训练和推理的具体组合方式见：[Kubernetes 跨集群与大规模 GPU](multi-cluster-ai.md)。
 
 ## 四、节点池如何划分
 

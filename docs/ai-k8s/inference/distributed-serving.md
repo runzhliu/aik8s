@@ -2,7 +2,7 @@
 title: 多机与分离式 LLM 推理
 description: 设计多机模型副本、LeaderWorkerSet、Prefill/Decode 分离、KV 传输、llm-d 和 NVIDIA Dynamo
 status: evolving
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
 # 多机与分离式 LLM 推理
@@ -315,3 +315,5 @@ Gateway
 - [NVIDIA Dynamo Disaggregated Serving](https://docs.nvidia.com/dynamo/latest/user-guides/disaggregated-serving)
 - [TensorRT-LLM Disaggregated Serving](https://nvidia.github.io/TensorRT-LLM/features/disagg-serving.html)
 - [KServe LLMInferenceService](https://kserve.github.io/website/docs/concepts/architecture/control-plane-llmisvc)
+
+多地域场景应优先在每个集群部署完整推理栈，由全局 Gateway 选择集群，再由集群内 Router/EPP 选择模型副本；TP/PP、P/D 和 KV 传输原则上留在低延迟网络域。详见：[Kubernetes 跨集群与大规模 GPU](../cluster/multi-cluster-ai.md)。

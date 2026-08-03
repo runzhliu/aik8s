@@ -2,7 +2,7 @@
 title: AI on Kubernetes 十年发展史
 description: 从 GPU Device Plugin、训练 Operator、MLOps 到 DRA、Inference Gateway 和分离式推理
 status: stable
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
 # AI on Kubernetes 十年发展史
@@ -140,6 +140,12 @@ Kubernetes + containerd + CNI/CSI
 ```
 
 这不是必须全部安装的标准答案。小团队应从最少组件开始，只有当队列、拓扑、缓存、路由或治理问题真实出现时再增加对应控制器。
+
+### 跨集群主线
+
+跨集群也经历了从“统一 Federation API 复制各种资源”，到按职责拆分的过程：Cluster API 管集群生命周期，Karmada/OCM/GitOps 管应用和策略分发，MCS/ClusterMesh 等管服务发现与连接，MultiKueue 管批作业在多个集群间择一派发。
+
+对 AI 平台，当前更成熟的边界通常是“全局选择集群、本地选择节点或 Endpoint”：训练把完整 Job 放进一个满足 GPU 拓扑和 RDMA 的集群，推理在各地域部署完整模型服务并调度请求。详细演进与架构见：[Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)。
 
 ## 九、长期不变的工程原则
 

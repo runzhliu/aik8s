@@ -2,7 +2,7 @@
 title: AI/LLM on Kubernetes 基础设施
 description: 从加速器和集群，到训练、推理、RAG、Agent 与生产运维的完整技术地图
 status: stable
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
 # AI/LLM on Kubernetes 基础设施
@@ -43,6 +43,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 建设或接管 GPU 集群 | [GPU 节点软件栈](cluster/gpu-node-stack.md) → [设备管理](accelerators/device-management.md) → [GPU 调度](gpu-scheduling.md) → [平台运维](platform-operations.md) |
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
 | 建设在线 LLM 推理服务 | [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [性能优化](inference/optimization.md) → [网关与路由](inference/gateway-routing.md) |
+| 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
 | 建设 RAG 或 Agent 平台 | [RAG 基础设施](rag-agent/rag-infrastructure.md) → [Agent 与沙箱](agentic-workloads.md) → [安全治理](security-governance.md) |
 | 负责 SRE、成本或容量 | [可观测性](observability.md) → [性能基准](benchmarking.md) → [成本与容量](cost-capacity.md) → [落地路线图](adoption-roadmap.md) |
 
@@ -52,6 +53,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [Kubernetes 如何承载 AI](foundations/kubernetes-for-ai.md)：从 API、控制器、调度器到 CRI、CNI、CSI 和设备接口。
 - [AI 集群架构设计](cluster/architecture.md)：工作负载画像、节点池、故障域、单集群与多集群边界。
+- [Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)：Federation 历史、当前多集群能力，以及训练整 Job 放置和区域级推理架构。
 - [AI on Kubernetes 十年发展史](history.md)：从 GPU Pod、Operator 和批调度，到 DRA、推理网关与分离式推理。
 - [术语表](reference/glossary.md)：统一 Kubernetes、GPU、训练、推理、网络、RAG 和可靠性术语。
 

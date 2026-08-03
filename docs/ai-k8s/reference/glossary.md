@@ -2,7 +2,7 @@
 title: AI/LLM Kubernetes 术语表
 description: GPU、调度、训练、推理、网络、缓存、模型制品和可靠性常用术语速查
 status: stable
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
 # AI/LLM Kubernetes 术语表
@@ -28,6 +28,9 @@ last_reviewed: 2026-08-02
 | ResourceClaim | 工作负载对具体设备能力的一次声明。 |
 | NFD | Node Feature Discovery，发现 CPU、PCI、内核等节点特征并生成标签。 |
 | RuntimeClass | Pod 选择 runc、gVisor、Kata 等容器运行实现的 Kubernetes 对象。 |
+| Cluster API | 用 Kubernetes 风格声明式 API 管理集群和 Machine 生命周期的上游项目。 |
+| ClusterSet | 一组具有明确成员关系的 Kubernetes 集群；MCS 等多集群 API 使用的逻辑边界。 |
+| MCS API | Multicluster Services API，用 ServiceExport/ServiceImport 表达跨集群服务发现。 |
 | Taint/Toleration | 限制 Pod 是否可以进入某类节点的调度机制。 |
 | Node Affinity | 根据节点标签表达 Pod 必须或倾向运行的位置。 |
 | Topology Spread | 将副本分散到节点、可用区等拓扑域。 |
@@ -62,6 +65,7 @@ last_reviewed: 2026-08-02
 | PodGroup | 将多个 Pod 表达为同一调度组的 API/概念。 |
 | Workload | Kueue/上游调度中代表一组共同准入 Pod 的对象。 |
 | Kueue | Kubernetes 原生 Job 队列和配额准入系统，不替代 kube-scheduler。 |
+| MultiKueue | Kueue 的多集群 Job 派发能力，通常把完整工作负载择一发送到某个 Worker Cluster。 |
 | ClusterQueue | Kueue 中跨 Namespace 的配额和策略对象。 |
 | LocalQueue | Namespace 内用户提交 Workload 的队列入口。 |
 | ResourceFlavor | Kueue 中表示某类节点/资源属性和 Taint 的对象。 |
