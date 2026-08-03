@@ -1,3 +1,10 @@
+---
+title: AI 平台安全与治理
+description: 身份、租户隔离、Pod 安全、镜像与模型供应链及合规审计
+status: stable
+last_reviewed: 2026-08-02
+---
+
 # AI 平台安全与治理
 
 AI on Kubernetes 同时继承了容器平台、数据平台和模型供应链的风险。GPU Operator 需要较高主机权限，Notebook 允许交互执行代码，模型文件可能来自外部社区，而 Agent 还会主动访问网络和工具。

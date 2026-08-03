@@ -1,3 +1,10 @@
+---
+title: 分布式训练平台
+description: 训练控制器、Gang Scheduling、集合通信、容错和作业生命周期
+status: evolving
+last_reviewed: 2026-08-02
+---
+
 # 分布式训练平台
 
 分布式训练不是“把 `replicas` 调大”。平台必须同时处理多角色启动、资源成组分配、网络拓扑、数据供给、检查点、失败恢复和实验追踪。本页给出 Kubernetes 上训练控制面的设计方法。

@@ -1,101 +1,113 @@
 ---
-title: AI & Kubernetes 工程知识库
-description: 面向 AI 基础设施、平台工程和模型服务团队的 Kubernetes 实战知识库
+title: AI/LLM on Kubernetes 基础设施
+description: 面向平台工程师、SRE 和模型服务团队的 AI/LLM 基础设施工程文档
 hide:
   - toc
 ---
 
-# AI on Kubernetes 工程知识库
+# AI/LLM on Kubernetes 基础设施知识库
 
-面向 AI 基础设施、平台工程和模型服务团队，整理 GPU 集群、分布式训练、LLM 推理、RDMA、Agent 沙箱，以及成本、安全和运维方面的工程实践。
+这是一套面向平台工程师、SRE、训练和模型服务团队的工程文档，系统整理 AI/LLM 工作负载运行在 Kubernetes 上需要的基础设施知识。
 
-这里不做新闻聚合，也不只是罗列工具。每篇专题围绕一个生产问题展开：为什么需要、组件如何分工、怎样选型、用什么指标验收，以及出现问题时从哪里排查。
+内容从 GPU 节点、异构设备、调度队列、RDMA 和数据供给开始，延伸到分布式训练、LLM 推理、RAG、Agent 沙箱、可观测性、安全、成本和生产运维。每个专题尽量说明组件边界、选型条件、关键指标、故障路径和上线检查，而不只是罗列项目名称。
 
-[开始阅读 AI on K8s](ai-k8s/index.md){ .md-button .md-button--primary }
-[查看 30/60/90 天落地路线](ai-k8s/adoption-roadmap.md){ .md-button }
+[进入完整技术地图](ai-k8s/index.md){ .md-button .md-button--primary }
+[查看生产参考架构](ai-k8s/guides/reference-architectures.md){ .md-button }
 
-## 这里涵盖的工程问题
+## 文档覆盖范围
 
 <div class="grid cards" markdown>
 
--   **GPU 平台规划**
+-   **集群与加速器**
 
-    从 Device Plugin、DRA、队列、拓扑和共享方式开始，建立清晰的计算资源模型。
+    理解 AI 工作负载从 Kubernetes API 到节点驱动、容器运行时和 GPU 的完整路径，建立可重复的节点验收和异构设备管理方式。
 
-    [GPU 与异构资源调度](ai-k8s/gpu-scheduling.md)
+    [从基础架构开始](ai-k8s/foundations/kubernetes-for-ai.md)
 
--   **分布式训练效率**
+-   **调度与分布式训练**
 
-    把数据供给、分布式通信、RDMA、Checkpoint 和故障恢复放到同一条性能链路中。
+    处理资源声明、队列准入、公平共享、Gang Scheduling、RDMA、数据加载、Checkpoint 和故障恢复。
 
-    [分布式训练平台](ai-k8s/distributed-training.md)
+    [查看训练基础设施](ai-k8s/distributed-training.md)
 
--   **LLM 推理服务**
+-   **LLM 推理与 RAG**
 
-    理解 vLLM、KServe、LWS、智能路由、KV Cache、Prefill/Decode 和弹性伸缩。
+    覆盖推理引擎、批处理、KV Cache、量化、智能路由、Prefill/Decode 分离，以及向量检索和权限过滤。
 
-    [LLM 推理平台](ai-k8s/llm-inference.md)
+    [查看推理技术地图](ai-k8s/llm-inference.md)
 
--   **平台运行与维护**
+-   **平台工程与生产运维**
 
-    用可观测性、FinOps、安全策略、性能基准和版本矩阵把平台长期稳定运行起来。
+    用版本矩阵、基准测试、SLO、可观测性、安全策略、容量模型和发布门禁保持平台长期可运行。
 
-    [平台运维、升级与多集群](ai-k8s/platform-operations.md)
+    [查看平台运维体系](ai-k8s/platform-operations.md)
 
 </div>
 
-## 从你的角色开始
+## 按你的任务开始
 
-| 你正在做什么 | 建议阅读路径 |
+| 当前任务 | 建议阅读路径 |
 | --- | --- |
-| 第一次了解 AI on K8s | [十年发展与工具全景](ai-k8s/index.md) → [落地路线图](ai-k8s/adoption-roadmap.md) |
-| 负责 GPU 集群和资源治理 | [GPU 调度](ai-k8s/gpu-scheduling.md) → [队列与多租户](ai-k8s/queue-multitenancy.md) → [成本与容量](ai-k8s/cost-capacity.md) |
-| 优化多机多卡训练 | [分布式训练](ai-k8s/distributed-training.md) → [RDMA 网络](ai-k8s/rdma-networking.md) → [数据与存储](ai-k8s/data-storage.md) → [可靠性](ai-k8s/reliability.md) |
-| 建设 LLM 推理平台 | [LLM 推理](ai-k8s/llm-inference.md) → [可观测性](ai-k8s/observability.md) → [性能基准](ai-k8s/benchmarking.md) → [成本与容量](ai-k8s/cost-capacity.md) |
-| 运行 AI Agent 或代码沙箱 | [Agent 与工具执行](ai-k8s/agentic-workloads.md) → [安全治理](ai-k8s/security-governance.md) → [可观测性](ai-k8s/observability.md) |
-| 负责升级、稳定性和事故响应 | [平台运维](ai-k8s/platform-operations.md) → [故障恢复](ai-k8s/reliability.md) → [性能回归](ai-k8s/benchmarking.md) |
+| 第一次系统了解 AI on Kubernetes | [Kubernetes 如何承载 AI](ai-k8s/foundations/kubernetes-for-ai.md) → [集群架构设计](ai-k8s/cluster/architecture.md) → [完整技术地图](ai-k8s/index.md) |
+| 建设 GPU 或异构算力集群 | [GPU 节点软件栈](ai-k8s/cluster/gpu-node-stack.md) → [设备管理](ai-k8s/accelerators/device-management.md) → [GPU 调度](ai-k8s/gpu-scheduling.md) |
+| 建设多租户训练平台 | [队列与多租户](ai-k8s/queue-multitenancy.md) → [分布式训练](ai-k8s/distributed-training.md) → [RDMA 网络](ai-k8s/rdma-networking.md) → [可靠性](ai-k8s/reliability.md) |
+| 建设 LLM 在线推理平台 | [推理平台总览](ai-k8s/llm-inference.md) → [引擎选型](ai-k8s/inference/engines.md) → [性能优化](ai-k8s/inference/optimization.md) → [智能路由](ai-k8s/inference/gateway-routing.md) |
+| 建设 RAG 或 Agent 服务 | [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md) → [Agent 与沙箱](ai-k8s/agentic-workloads.md) → [安全治理](ai-k8s/security-governance.md) |
+| 负责稳定性、成本和容量 | [可观测性](ai-k8s/observability.md) → [性能基准](ai-k8s/benchmarking.md) → [成本与容量](ai-k8s/cost-capacity.md) → [落地路线图](ai-k8s/adoption-roadmap.md) |
 
-## 专题目录
+## 核心专题
 
-### 算力、队列与数据
+### 计算与集群
 
-- [GPU 与异构资源调度](ai-k8s/gpu-scheduling.md)：整卡、MIG、共享、DRA 与拓扑。
-- [队列、公平共享与多租户](ai-k8s/queue-multitenancy.md)：Kueue、Flavor、Cohort、优先级与抢占。
-- [AI 数据、存储与缓存](ai-k8s/data-storage.md)：对象存储、共享文件、本地 NVMe 与模型分发。
-- [RDMA 与 AI 高速网络](ai-k8s/rdma-networking.md)：InfiniBand、RoCE、GPUDirect、NCCL 与逐层排障。
+- [Kubernetes 如何承载 AI](ai-k8s/foundations/kubernetes-for-ai.md)
+- [AI 集群架构设计](ai-k8s/cluster/architecture.md)
+- [GPU 节点软件栈](ai-k8s/cluster/gpu-node-stack.md)
+- [多厂商异构加速器](ai-k8s/accelerators/heterogeneous-accelerators.md)
+- [Device Plugin、CDI 与 DRA](ai-k8s/accelerators/device-management.md)
 
-### 训练、推理与 Agent
+### 调度、网络与数据
 
-- [分布式训练平台](ai-k8s/distributed-training.md)：Kubeflow Trainer、KubeRay、JobSet 与训练生命周期。
-- [可靠性、Checkpoint 与故障恢复](ai-k8s/reliability.md)：RPO/RTO、Spot、PDB 与故障演练。
-- [LLM 推理平台](ai-k8s/llm-inference.md)：运行时、模型服务、请求路由与 KV Cache。
-- [AI Agent、沙箱与工具执行](ai-k8s/agentic-workloads.md)：Agent Sandbox、RuntimeClass、工具权限与审计。
-- [边缘 AI、K3s 与云边协同](ai-k8s/edge-ai.md)：弱网自治、设备管理和模型 OTA。
+- [GPU 与异构资源调度](ai-k8s/gpu-scheduling.md)
+- [队列、公平共享与多租户](ai-k8s/queue-multitenancy.md)
+- [AI 工作负载弹性伸缩](ai-k8s/scheduling/autoscaling.md)
+- [RDMA 与 AI 高速网络](ai-k8s/rdma-networking.md)
+- [模型制品、分发与缓存](ai-k8s/data/model-artifacts.md)
 
-### 平台工程与治理
+### 训练与推理
 
-- [MLOps 与平台工程](ai-k8s/mlops.md)：流水线、实验、模型注册、GitOps 与平台 API。
-- [GPU、训练与推理可观测性](ai-k8s/observability.md)：DCGM、TTFT/TPOT、Trace、SLO 与告警。
-- [AI 平台安全与治理](ai-k8s/security-governance.md)：身份、Pod Security、镜像和模型供应链。
-- [GPU 成本、容量规划与 FinOps](ai-k8s/cost-capacity.md)：单位经济性、OpenCost、弹性与预算。
-- [性能基准、压测与回归](ai-k8s/benchmarking.md)：硬件、NCCL、存储、训练和推理门禁。
-- [平台运维、升级与多集群](ai-k8s/platform-operations.md)：版本矩阵、Canary、CRD、备份与灾备。
-- [AI on K8s 落地路线图](ai-k8s/adoption-roadmap.md)：从问题清单到 30/60/90 天实施计划。
+- [分布式训练平台](ai-k8s/distributed-training.md)
+- [LLM 推理平台总览](ai-k8s/llm-inference.md)
+- [推理引擎选型](ai-k8s/inference/engines.md)
+- [LLM 推理性能优化](ai-k8s/inference/optimization.md)
+- [AI Gateway 与智能路由](ai-k8s/inference/gateway-routing.md)
+- [分布式与 Prefill/Decode 分离推理](ai-k8s/inference/distributed-serving.md)
 
-## 实战记录
+### 应用基础设施与治理
 
-理论专题之外，站内也保存真实环境的操作与验证记录：
+- [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md)
+- [AI Agent、沙箱与工具执行](ai-k8s/agentic-workloads.md)
+- [GPU、训练与推理可观测性](ai-k8s/observability.md)
+- [AI 平台安全与治理](ai-k8s/security-governance.md)
+- [平台运维、升级与多集群](ai-k8s/platform-operations.md)
 
-- [K3s 升级与 DRA 预检](k3s-upgrade/index.md)：从版本跨度、备份和兼容性检查，到升级后的节点与工作负载验证。
+## 可直接使用的参考材料
 
-## 内容原则
+- [五种生产参考架构](ai-k8s/guides/reference-architectures.md)：小型 GPU 平台、多租户训练、高可用推理、分离式推理和 Agent 沙箱。
+- [GPU 平台最小闭环实验](ai-k8s/guides/gpu-platform-lab.md)：从 GPU 发现和冒烟测试，到 vLLM 服务、网络策略和冷启动测量。
+- [AI on Kubernetes 十年发展史](ai-k8s/history.md)：理解关键接口和工具为什么出现，以及当前技术主线。
+- [术语表](ai-k8s/reference/glossary.md)：快速查询设备、调度、训练、推理、网络和 RAG 术语。
+- [30/60/90 天落地路线图](ai-k8s/adoption-roadmap.md)：把架构目标拆成可执行的实施阶段。
 
-- **职责边界优先**：先分清 Kubernetes、Operator、调度器、运行时和业务代码分别负责什么。
-- **指标优先**：选型最终落到吞吐、延迟、可靠性、成本和质量，而不是组件数量。
-- **生产问题优先**：每章包含故障模式、上线清单或验收方法。
-- **一手资料优先**：关键结论尽量链接 Kubernetes SIG、项目官方文档和公开规范。
-- **渐进落地**：从最小可用栈开始，规模和治理需求出现后再增加组件。
+## 实战案例
 
----
+[K3s 升级与 DRA 预检](k3s-upgrade/index.md) 保存了一次真实环境的版本跨度评估、备份、兼容性检查、升级和验证过程。案例与通用专题分开，便于区分可复用方法和特定环境记录。
 
-第一次阅读可以先看 [AI on Kubernetes 十年发展与工具全景](ai-k8s/index.md)；已经在建设平台的读者，可以直接进入 [落地路线图](ai-k8s/adoption-roadmap.md)。
+## 内容标准
+
+- 优先使用 Kubernetes SIG、项目官方文档和公开规范等一手资料。
+- 区分稳定原理、快速演进的上游能力和仅用于学习的实验配置。
+- 选型结论必须落到吞吐、延迟、可靠性、成本、安全或运维复杂度。
+- 示例必须能说明验证方法；生产落地还要补齐版本固定、权限、密钥、容量、备份和回滚。
+- 保留已有页面地址，新增内容按主题目录组织，避免链接随导航调整而失效。
+
+建议先进入 [完整技术地图](ai-k8s/index.md)，再按当前角色选择一条阅读路径。

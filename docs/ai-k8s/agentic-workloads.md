@@ -1,3 +1,10 @@
+---
+title: AI Agent、沙箱与工具执行
+description: Agent 工作负载的运行时隔离、网络、身份、工具权限和审计设计
+status: evolving
+last_reviewed: 2026-08-02
+---
+
 # AI Agent、沙箱与工具执行
 
 Agent 工作负载与普通 Deployment 不同：它可能长时间保持状态，主动访问外部工具，生成并执行代码，处理不可信网页或仓库内容，并在没有人逐步确认的情况下采取动作。

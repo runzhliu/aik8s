@@ -1,3 +1,10 @@
+---
+title: AI on Kubernetes 落地路线图
+description: 从现状评估到 30、60、90 天建设计划和长期能力演进
+status: stable
+last_reviewed: 2026-08-02
+---
+
 # AI on K8s 落地路线图
 
 技术栈的最佳起点不是“安装完整 Kubeflow”，而是先回答工作负载、规模、租户和运维能力。下面给出一套可以逐步扩展的实施路线。

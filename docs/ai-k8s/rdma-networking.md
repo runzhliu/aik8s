@@ -1,3 +1,10 @@
+---
+title: RDMA 与 AI 高速网络
+description: InfiniBand、RoCE、GPUDirect、NCCL、Kubernetes 接入和分层排障
+status: stable
+last_reviewed: 2026-08-02
+---
+
 # RDMA 与 AI 高速网络
 
 在单机训练中，GPU 之间主要通过 PCIe、NVLink 或 NVSwitch 通信；一旦扩展到多机，网络就可能决定整个任务的上限。RDMA 的价值是让数据以更少的 CPU 参与、更少的内存复制和更低的软件栈开销在节点间传输。

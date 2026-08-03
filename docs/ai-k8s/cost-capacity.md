@@ -1,3 +1,10 @@
+---
+title: GPU 成本、容量规划与 FinOps
+description: AI 平台的成本归属、单位经济性、容量预测和弹性策略
+status: stable
+last_reviewed: 2026-08-02
+---
+
 # GPU 成本、容量规划与 FinOps
 
 GPU 平台的成本优化不是把利用率推到 100%。过度压缩容量会增加排队和尾延迟，错误的共享会损害模型性能，而便宜的 Spot 节点也可能因为反复重算变得更贵。

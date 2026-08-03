@@ -1,3 +1,10 @@
+---
+title: 平台运维、升级与多集群
+description: 版本矩阵、渐进升级、CRD、备份、灾备和事故响应
+status: stable
+last_reviewed: 2026-08-02
+---
+
 # 平台运维、升级与多集群
 
 AI 平台的版本矩阵比普通 Kubernetes 更复杂：内核、驱动、CUDA、Container Toolkit、Device Plugin、GPU Operator、RDMA、训练框架和推理引擎彼此约束。升级成功的标准不是 Pod 全绿，而是代表性训练和推理仍然满足性能与可靠性基线。

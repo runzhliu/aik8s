@@ -1,3 +1,10 @@
+---
+title: GPU 与异构资源调度
+description: 整卡、MIG、共享、拓扑、亲和性和资源碎片治理
+status: evolving
+last_reviewed: 2026-08-02
+---
+
 # GPU 与异构资源调度
 
 GPU 集群最难的部分通常不是“安装 CUDA”，而是长期保持驱动、运行时、设备插件、调度策略和监控数据彼此兼容。本页从平台工程视角说明 Kubernetes 如何管理 GPU，以及什么时候应使用共享、Kueue、Volcano 和 DRA。

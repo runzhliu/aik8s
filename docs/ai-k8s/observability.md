@@ -1,3 +1,10 @@
+---
+title: GPU、训练与推理可观测性
+description: 从用户请求和训练作业到 Pod、GPU、网络与存储的指标和追踪体系
+status: evolving
+last_reviewed: 2026-08-02
+---
+
 # GPU、训练与推理可观测性
 
 AI 平台最常见的可观测性误区，是只安装 Prometheus 和一个 GPU Dashboard。真正可用的系统必须把基础设施、调度、训练进度、推理请求和模型质量连接到同一条证据链。

@@ -1,39 +1,69 @@
 [project]
-site_name = "AI & K8s 知识库"
-site_description = "AI、Kubernetes、Linux 与基础设施笔记"
+site_name = "AI/LLM on Kubernetes 基础设施"
+site_description = "面向平台工程师和 SRE 的 AI/LLM on Kubernetes 基础设施文档：GPU、调度、训练、推理、RDMA、RAG、Agent 与生产运维"
 site_url = "https://aik8s.run/"
 docs_dir = "docs"
 site_dir = "site"
 nav = [
   {"首页" = "index.md"},
-  {"AI on K8s" = [
+  {"AI/LLM on Kubernetes" = [
     "ai-k8s/index.md",
-    {"算力、队列与数据" = [
-      {"GPU 与异构资源调度" = "ai-k8s/gpu-scheduling.md"},
-      {"队列、公平共享与多租户" = "ai-k8s/queue-multitenancy.md"},
-      {"AI 数据、存储与缓存" = "ai-k8s/data-storage.md"},
-      {"RDMA 与 AI 高速网络" = "ai-k8s/rdma-networking.md"},
+    {"基础与架构" = [
+      {"Kubernetes 如何承载 AI" = "ai-k8s/foundations/kubernetes-for-ai.md"},
+      {"集群架构设计" = "ai-k8s/cluster/architecture.md"},
+      {"十年发展史" = "ai-k8s/history.md"},
+      {"术语表" = "ai-k8s/reference/glossary.md"},
     ]},
-    {"训练、推理与 Agent" = [
+    {"集群、节点与加速器" = [
+      {"GPU 节点软件栈" = "ai-k8s/cluster/gpu-node-stack.md"},
+      {"多厂商异构加速器" = "ai-k8s/accelerators/heterogeneous-accelerators.md"},
+      {"Device Plugin、CDI 与 DRA" = "ai-k8s/accelerators/device-management.md"},
+      {"GPU 与异构资源调度" = "ai-k8s/gpu-scheduling.md"},
+    ]},
+    {"队列、弹性与容量" = [
+      {"队列、公平共享与多租户" = "ai-k8s/queue-multitenancy.md"},
+      {"AI 工作负载弹性伸缩" = "ai-k8s/scheduling/autoscaling.md"},
+      {"GPU 成本与容量规划" = "ai-k8s/cost-capacity.md"},
+    ]},
+    {"网络、数据与模型制品" = [
+      {"RDMA 与 AI 高速网络" = "ai-k8s/rdma-networking.md"},
+      {"AI 数据、存储与缓存" = "ai-k8s/data-storage.md"},
+      {"模型制品、分发与缓存" = "ai-k8s/data/model-artifacts.md"},
+    ]},
+    {"分布式训练" = [
       {"分布式训练平台" = "ai-k8s/distributed-training.md"},
       {"可靠性与故障恢复" = "ai-k8s/reliability.md"},
-      {"LLM 推理平台" = "ai-k8s/llm-inference.md"},
+    ]},
+    {"LLM 推理" = [
+      {"推理平台总览" = "ai-k8s/llm-inference.md"},
+      {"推理引擎选型" = "ai-k8s/inference/engines.md"},
+      {"推理性能优化" = "ai-k8s/inference/optimization.md"},
+      {"AI Gateway 与智能路由" = "ai-k8s/inference/gateway-routing.md"},
+      {"分布式与 P/D 分离推理" = "ai-k8s/inference/distributed-serving.md"},
+    ]},
+    {"RAG、Agent 与边缘" = [
+      {"RAG 基础设施" = "ai-k8s/rag-agent/rag-infrastructure.md"},
       {"AI Agent 与沙箱" = "ai-k8s/agentic-workloads.md"},
       {"边缘 AI 与云边协同" = "ai-k8s/edge-ai.md"},
     ]},
-    {"平台工程与治理" = [
+    {"平台工程与生产运维" = [
       {"MLOps 与平台工程" = "ai-k8s/mlops.md"},
       {"GPU、训练与推理可观测性" = "ai-k8s/observability.md"},
       {"AI 平台安全与治理" = "ai-k8s/security-governance.md"},
-      {"GPU 成本与容量规划" = "ai-k8s/cost-capacity.md"},
       {"性能基准与回归" = "ai-k8s/benchmarking.md"},
       {"平台运维与升级" = "ai-k8s/platform-operations.md"},
       {"落地路线图" = "ai-k8s/adoption-roadmap.md"},
     ]},
+    {"参考架构与实验" = [
+      {"生产参考架构" = "ai-k8s/guides/reference-architectures.md"},
+      {"GPU 平台最小闭环实验" = "ai-k8s/guides/gpu-platform-lab.md"},
+    ]},
   ]},
-  {"K3s 升级" = [
-    "k3s-upgrade/index.md",
-    {"升级与 DRA 预检报告" = "k3s-upgrade/report.md"},
+  {"案例" = [
+    {"K3s 升级" = [
+      "k3s-upgrade/index.md",
+      {"升级与 DRA 预检报告" = "k3s-upgrade/report.md"},
+    ]},
   ]},
 ]
 

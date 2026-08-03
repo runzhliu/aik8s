@@ -1,3 +1,10 @@
+---
+title: 队列、公平共享与多租户
+description: Kueue 队列、ResourceFlavor、Cohort、优先级、抢占和租户治理
+status: evolving
+last_reviewed: 2026-08-02
+---
+
 # 队列、公平共享与多租户
 
 GPU 平台的多租户问题，不是简单地给每个团队建一个 namespace。真正需要治理的是：谁可以提交任务、能占用多少稀缺资源、空闲配额能否借用、紧急任务如何抢占，以及不同硬件和拓扑如何计价。

@@ -1,3 +1,10 @@
+---
+title: MLOps 与平台工程
+description: 流水线、实验、模型注册、GitOps 与内部平台 API
+status: evolving
+last_reviewed: 2026-08-02
+---
+
 # MLOps 与平台工程
 
 Kubernetes 能保证声明的工作负载持续运行，但不会自动回答“这个模型由哪份数据和代码产生”“谁批准上线”“质量是否退化”。MLOps 的任务是把研究过程、制品、部署和反馈闭合成可追溯的工程系统。
