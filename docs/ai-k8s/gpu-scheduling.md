@@ -9,6 +9,8 @@ last_reviewed: 2026-08-02
 
 GPU 集群最难的部分通常不是“安装 CUDA”，而是长期保持驱动、运行时、设备插件、调度策略和监控数据彼此兼容。本页从平台工程视角说明 Kubernetes 如何管理 GPU，以及什么时候应使用共享、Kueue、Volcano 和 DRA。
 
+面向交互式研发环境的整卡、MIG、Time-Slicing、显存估算、用户规格和空闲回收，见[大模型时代的 GPU Notebook 平台与存储选型](development/gpu-notebook-platform.md)。
+
 ## 一、GPU 软件栈的职责边界
 
 ```text

@@ -50,6 +50,7 @@ nav = [
       {"边缘 AI 与云边协同" = "ai-k8s/edge-ai.md"},
     ]},
     {"平台工程与生产运维" = [
+      {"GPU Notebook 平台与存储" = "ai-k8s/development/gpu-notebook-platform.md"},
       {"MLOps 与平台工程" = "ai-k8s/mlops.md"},
       {"GPU、训练与推理可观测性" = "ai-k8s/observability.md"},
       {"AI 平台安全与治理" = "ai-k8s/security-governance.md"},

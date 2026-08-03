@@ -190,6 +190,10 @@ last_reviewed: 2026-08-03
 
 | 术语 | 解释 |
 | --- | --- |
+| GPU Notebook | 运行在 GPU 计算资源上的交互式开发工作区，通常包含 JupyterLab、IDE、终端、持久 Home 和数据访问，而不只是一个 `.ipynb` 文件。 |
+| Workspace | 用户可停止、恢复并重新选择计算规格的开发环境；其 Pod 生命周期应与持久 Home、数据和正式任务分离。 |
+| Idle Culler | 检测长期无交互或无有效计算的工作区并停止计算资源的控制器或服务。 |
+| Golden Image | 平台验证并发布的标准开发镜像，固定框架、CUDA、工具和安全补丁版本。 |
 | SLI | Service Level Indicator，被测量的服务指标。 |
 | SLO | Service Level Objective，指标应达到的目标。 |
 | Error Budget | SLO 允许的失败或不可用预算。 |

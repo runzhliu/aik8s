@@ -24,6 +24,8 @@ Kubernetes 能保证声明的工作负载持续运行，但不会自动回答“
 
 平台应提供稳定接口，把工具封装成少量“黄金路径”，而不是让每个项目自行组合十几个组件。
 
+Notebook 本身只负责交互式开发，不应成为长训练任务的执行器。JupyterHub、Kubeflow、GPU 规格、用户 Home、模型缓存和任务移交的完整设计见[大模型时代的 GPU Notebook 平台与存储选型](development/gpu-notebook-platform.md)。
+
 ## 二、可复现需要六个版本
 
 一次训练或推理至少应关联：

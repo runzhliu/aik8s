@@ -41,6 +41,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | --- | --- |
 | 从零理解 AI 如何运行在 Kubernetes 上 | [Kubernetes 如何承载 AI](foundations/kubernetes-for-ai.md) → [集群架构设计](cluster/architecture.md) → [术语表](reference/glossary.md) |
 | 建设或接管 GPU 集群 | [GPU 节点软件栈](cluster/gpu-node-stack.md) → [设备管理](accelerators/device-management.md) → [GPU 调度](gpu-scheduling.md) → [平台运维](platform-operations.md) |
+| 建设 GPU Notebook 开发平台 | [GPU Notebook 平台与存储](development/gpu-notebook-platform.md) → [GPU 调度](gpu-scheduling.md) → [数据与缓存](data-storage.md) → [MLOps](mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
 | 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [性能优化](inference/optimization.md) → [网关与路由](inference/gateway-routing.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
@@ -99,6 +100,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 ### 平台工程与生产运维
 
+- [大模型时代的 GPU Notebook 平台与存储选型](development/gpu-notebook-platform.md)：JupyterHub、Kubeflow、托管 Workbench、GPU 共享、用户 Home、对象存储和本地缓存。
 - [MLOps 与平台工程](mlops.md)：流水线、实验、模型注册、GitOps 和平台 API。
 - [GPU、训练与推理可观测性](observability.md)：DCGM、作业指标、TTFT/TPOT、Trace、SLO 和告警。
 - [AI 平台安全与治理](security-governance.md)：身份、Pod Security、镜像与模型供应链、租户隔离。

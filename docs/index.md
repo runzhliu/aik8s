@@ -50,6 +50,7 @@ hide:
 | --- | --- |
 | 第一次系统了解 AI on Kubernetes | [Kubernetes 如何承载 AI](ai-k8s/foundations/kubernetes-for-ai.md) → [集群架构设计](ai-k8s/cluster/architecture.md) → [完整技术地图](ai-k8s/index.md) |
 | 建设 GPU 或异构算力集群 | [GPU 节点软件栈](ai-k8s/cluster/gpu-node-stack.md) → [设备管理](ai-k8s/accelerators/device-management.md) → [GPU 调度](ai-k8s/gpu-scheduling.md) |
+| 建设 GPU Notebook 开发平台 | [Notebook 平台与存储](ai-k8s/development/gpu-notebook-platform.md) → [数据与缓存](ai-k8s/data-storage.md) → [MLOps](ai-k8s/mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](ai-k8s/queue-multitenancy.md) → [分布式训练](ai-k8s/distributed-training.md) → [RDMA 网络](ai-k8s/rdma-networking.md) → [可靠性](ai-k8s/reliability.md) |
 | 建设 LLM 在线推理平台 | [推理平台总览](ai-k8s/llm-inference.md) → [引擎选型](ai-k8s/inference/engines.md) → [性能优化](ai-k8s/inference/optimization.md) → [智能路由](ai-k8s/inference/gateway-routing.md) |
 | 建设 RAG 或 Agent 服务 | [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md) → [Agent Sandbox 选型](ai-k8s/rag-agent/agent-sandbox-selection.md) → [工具与执行治理](ai-k8s/agentic-workloads.md) → [安全治理](ai-k8s/security-governance.md) |
@@ -84,6 +85,7 @@ hide:
 
 ### 应用基础设施与治理
 
+- [大模型时代的 GPU Notebook 平台与存储选型](ai-k8s/development/gpu-notebook-platform.md)
 - [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md)
 - [Agent Sandbox 选型与架构分析](ai-k8s/rag-agent/agent-sandbox-selection.md)
 - [AI Agent、沙箱与工具执行](ai-k8s/agentic-workloads.md)
