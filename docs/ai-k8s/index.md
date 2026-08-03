@@ -53,7 +53,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [Kubernetes 如何承载 AI](foundations/kubernetes-for-ai.md)：从 API、控制器、调度器到 CRI、CNI、CSI 和设备接口。
 - [AI 集群架构设计](cluster/architecture.md)：工作负载画像、节点池、故障域、单集群与多集群边界。
-- [Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)：Federation 历史、当前多集群能力，以及训练整 Job 放置和区域级推理架构。
+- [Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)：Federation 历史、Karmada/MultiKueue 等当前能力，以及训练整 Job 放置和区域级推理架构。
 - [AI on Kubernetes 十年发展史](history.md)：从 GPU Pod、Operator 和批调度，到 DRA、推理网关与分离式推理。
 - [术语表](reference/glossary.md)：统一 Kubernetes、GPU、训练、推理、网络、RAG 和可靠性术语。
 

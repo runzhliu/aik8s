@@ -31,6 +31,7 @@ last_reviewed: 2026-08-03
 | Cluster API | 用 Kubernetes 风格声明式 API 管理集群和 Machine 生命周期的上游项目。 |
 | ClusterSet | 一组具有明确成员关系的 Kubernetes 集群；MCS 等多集群 API 使用的逻辑边界。 |
 | MCS API | Multicluster Services API，用 ServiceExport/ServiceImport 表达跨集群服务发现。 |
+| Karmada | Kubernetes 多集群编排系统，用传播、Override、集群放置和 Failover 策略管理成员集群中的资源。 |
 | Taint/Toleration | 限制 Pod 是否可以进入某类节点的调度机制。 |
 | Node Affinity | 根据节点标签表达 Pod 必须或倾向运行的位置。 |
 | Topology Spread | 将副本分散到节点、可用区等拓扑域。 |

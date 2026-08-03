@@ -149,7 +149,125 @@ GPU 场景必须额外验证扩展资源、设备属性、Gang、拓扑、网络
 
 参考：[Cluster API](https://cluster-api.sigs.k8s.io/)、[OCM Architecture](https://open-cluster-management.io/docs/concepts/architecture/)、[Karmada Concepts](https://karmada.io/docs/core-concepts/concepts/)、[Liqo](https://docs.liqo.io/)、[MCS API](https://multicluster.sigs.k8s.io/concepts/multicluster-services-api/)
 
-## 六、跨集群 GPU 训练：优先整作业放置
+## 六、Karmada 怎样与 AI/GPU 结合
+
+Karmada 的核心定位是：使用 Kubernetes 风格的 API，把资源模板按策略放置和传播到多个自治集群，并汇总状态、处理差异和故障迁移。它不是集群创建工具、跨集群 CNI，也不是把所有成员集群变成一个 Node/GPU 调度域。
+
+### 控制链路
+
+```text
+Resource Template
+  Deployment / Job / KServe / TrainJob / LWS ...
+        +
+PropagationPolicy / ClusterPropagationPolicy
+        +
+OverridePolicy / ClusterOverridePolicy
+        ▼
+ResourceBinding
+        ▼  karmada-scheduler 选择成员集群
+每个目标集群一个 Work
+        ▼
+Push：控制面写成员集群 API
+Pull：成员集群 karmada-agent 拉取并执行
+        ▼
+成员集群本地 Controller / Scheduler / Kueue
+        ▼
+健康、状态和副本信息聚合回 Karmada 控制面
+```
+
+Karmada Scheduler 做的是集群级决策；资源进入成员集群后，Pod 仍由该集群的 kube-scheduler、Kueue、Volcano 和设备插件完成节点与 GPU 分配。
+
+参考：[Karmada Architecture](https://karmada.io/docs/core-concepts/architecture/)
+
+### 核心对象与 AI 平台用途
+
+| 对象/能力 | 作用 | AI/GPU 场景 |
+| --- | --- | --- |
+| `PropagationPolicy` | 选择资源和目标集群，定义副本分布、Spread 与 Failover | 把推理服务放到指定地域/GPU 集群，或将完整离线任务放到候选集群 |
+| `ClusterPropagationPolicy` | 集群范围的传播策略 | 平台管理员分发公共 Runtime、监控和设备相关资源 |
+| `OverridePolicy` | 按目标集群修改字段 | 覆盖镜像 Registry、StorageClass、模型 URI、ServiceAccount 或 GPU Flavor |
+| `ResourceBinding` | 保存资源模板与集群调度结果 | 审计某个模型/任务最终进入了哪些集群 |
+| `Work` | 面向一个成员集群的待执行 Manifest | 连接 Karmada 控制面与成员集群实际对象 |
+| Resource Interpreter | 解释自定义资源的副本、组件、依赖、健康和状态 | 让 TrainJob、RayCluster、KServe/LWS 等 CRD 可被准确估算和汇总 |
+| Cluster Resource Modeling | 汇总或建模成员集群可用资源 | 在集群级初筛 CPU、内存、Pod 和扩展资源容量 |
+
+`OverridePolicy` 很适合处理“逻辑应用相同、成员集群细节不同”的情况。例如同一个模型服务在私有集群使用内部 Registry 和本地对象存储，在云集群使用云 Workload Identity 和另一种 StorageClass。差异应由策略表达，不要复制多份逐渐漂移的完整 YAML。
+
+参考：[Propagation Policy](https://karmada.io/docs/userguide/scheduling/propagation-policy/)、[Override Policy](https://karmada.io/docs/userguide/scheduling/override-policy/)
+
+### GPU 集群放置仍需二次准入
+
+Karmada 可以根据成员集群标签、Taint、地域和资源模型筛选目标，也可以按集群可用资源分配副本。但平台不能只让它读取聚合的 `nvidia.com/gpu` 余量就直接承诺大型任务。
+
+GPU 场景还要处理：
+
+- 16 张空闲卡是否集中在同一 NVSwitch、Rack 或 RDMA Block；
+- 本地 Kueue 队列是否已有更高优先级 Workload；
+- GPU 型号、显存、MIG Profile、驱动和 CUDA/ROCm 是否匹配；
+- 数据、模型缓存和 Checkpoint 是否在该集群可达；
+- 成员集群状态上报到 Karmada 期间是否已经产生容量竞争。
+
+因此推荐把 Karmada 的集群选择看成候选放置，再由成员集群的队列和调度器最终准入。默认 Cluster Resource Summary 也可能隐藏节点碎片；当前 Customized Cluster Resource Modeling 只支持 CPU、内存、存储和临时存储等基础资源分级，并不能直接描述 GPU/NVLink/RDMA 拓扑。AI 能力仍需要稳定的集群标签、Resource Interpreter、传播策略和本地拓扑调度共同表达。
+
+参考：[Karmada Cluster Resource Modeling](https://karmada.io/docs/userguide/scheduling/cluster-resources/)
+
+### AI CRD 为什么需要 Resource Interpreter
+
+对原生 Deployment、Job 等对象，Karmada 内置了资源结构知识；对 TrainJob、RayCluster、RayJob、KServe 或自定义推理 CRD，Karmada 默认只看到一个普通自定义对象，不一定知道其中有多少 Worker、每个组件需要多少 GPU、依赖哪些 Secret，以及什么状态代表 Healthy。
+
+Resource Interpreter 可以为 CRD 补充：
+
+- `InterpretReplica`：提取单 Pod Template 的副本与资源需求；
+- `InterpretComponent`：分别提取 Leader/Worker、Head/Worker 等多组件需求；
+- `InterpretDependency`：找出 ServiceAccount、Secret、ConfigMap、PVC 等依赖；
+- `InterpretHealth`：定义何时健康，可供状态和 Failover 使用；
+- `AggregateStatus`：把成员集群状态汇总到控制面；
+- `Retain`：保留由成员集群 HPA/Controller 管理的字段，避免双方反复覆盖。
+
+截至本页复核日期，Karmada v1.16+ 的 `InterpretComponent` 和 `MultiplePodTemplatesScheduling` 仍为 Alpha、默认关闭。它虽然面向 TrainJob、RayCluster 等多组件 AI/大数据工作负载，但生产使用前必须固定版本、编写或确认 Interpreter、用 `karmadactl interpret` 验证，并测试容量估算、依赖传播和状态聚合。
+
+参考：[Karmada Resource Interpreter](https://karmada.io/docs/userguide/globalview/customizing-resource-interpreter/)
+
+### Karmada 适合推理，也能传播训练任务
+
+**多地域推理**是更自然的 Karmada 场景：
+
+1. 用 PropagationPolicy 选择地域、云厂商和 GPU 能力；
+2. 用 Duplicate/Spread 让完整模型服务进入多个故障域；
+3. 用 OverridePolicy 设置每个集群的模型 URI、身份和存储；
+4. 由成员集群内 KServe/LWS/Deployment 创建并预热模型副本；
+5. 全局 Gateway 只把流量发到模型 Ready 且有容量的集群；
+6. 集群内 EPP/Router 再完成模型、KV Cache 和队列感知路由。
+
+Karmada 也可以传播 Job 或 TrainJob，但要先明确语义：
+
+- 如果目标是“同一个离线任务在多个集群各执行一份”，应用传播模型很合适；
+- 如果目标是“多个候选集群中只选一个运行，并遵守租户队列与公平共享”，MultiKueue 的 Job Dispatch 语义通常更直接；
+- 如果目标是“一个分布式训练的 Rank 横跨多个集群”，Karmada 不会自动提供 Gang、Rendezvous、NCCL/RDMA 和统一故障恢复。
+
+### Karmada 与 MultiKueue 不是二选一
+
+| 维度 | Karmada | MultiKueue |
+| --- | --- | --- |
+| 主要对象 | 通用 Kubernetes 资源与 CRD | Kueue Workload 和受支持 Job 类型 |
+| 主要目标 | 应用传播、跨集群放置、Override、状态与 Failover | 批任务在多个 Worker Cluster 中排队并择一派发 |
+| 多集群副本 | 可 Duplicate、Divide、Spread | 通常由一个目标集群执行完整 Job |
+| 配额与公平共享 | 不是其主要队列模型 | 复用 Kueue ClusterQueue、Flavor 和准入 |
+| AI CRD | 可能需要 Resource Interpreter | 需要对应 Job 类型的 MultiKueue 集成 |
+| 适合推理 | 多地域发布和故障域放置 | 不是请求流量路由系统 |
+| 适合训练 | 复制/放置完整资源，适合明确的传播语义 | 更适合队列驱动的整 Job 择一派发 |
+
+两者可以在同一平台承担不同职责，例如 Karmada/GitOps 分发成员集群的 Trainer Runtime、推理服务和策略，MultiKueue 单独负责训练 Job 派发。但必须明确字段所有权，避免两个控制器同时创建或迁移同一 Job。
+
+### Failover 不等于 GPU 进程热迁移
+
+Karmada 能根据 Cluster 或 Application 健康触发迁移，也提供 Purge 和 Graceful Eviction 等策略。对于训练和有状态 AI 工作负载，真正可恢复仍依赖外部 Checkpoint、模型/数据可达和应用恢复入口。
+
+Karmada 的 Application State Preservation 可以在故障迁移时提取并重新注入部分状态字段，但相关 Stateful Failover Injection 仍是 Alpha。它不能复制 GPU HBM、NCCL Communicator 或进程内训练状态。因此应把训练容灾表述为“由 Karmada 触发重新放置，再由应用从 Checkpoint 恢复”，而不是 Live Migration。
+
+参考：[Karmada Application-level Failover](https://karmada.io/docs/userguide/failover/application-failover)
+
+## 七、跨集群 GPU 训练：优先整作业放置
 
 ### 推荐数据流
 
@@ -231,7 +349,7 @@ DDP/FSDP、Tensor Parallel、Expert Parallel 会频繁执行 All-Reduce、All-Ga
 
 长训练从 Cluster A 切到 Cluster B，通常是：停止或失败 → 保存/选择 Checkpoint → 在 B 重新排队 → 恢复。平台应显式定义 RPO、RTO、Checkpoint 兼容性和数据可达性，不应把它描述成无损 Pod 迁移。
 
-## 七、跨集群 GPU 推理：复制服务，调度请求
+## 八、跨集群 GPU 推理：复制服务，调度请求
 
 ### 推荐架构
 
@@ -294,7 +412,7 @@ Model Registry / Object Storage
 
 MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和访问，但它们通常不了解模型、KV Cache、Token 队列和 TTFT。生产 LLM 平台仍需把全局流量选择与集群内 Inference-aware Routing 分层。
 
-## 八、训练与推理的结论并不相同
+## 九、训练与推理的结论并不相同
 
 | 问题 | 大规模训练 | 在线推理 |
 | --- | --- | --- |
@@ -305,7 +423,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 | 跨集群数据 | 数据集、Checkpoint、模型制品 | 模型、配置、Adapter，必要时会话状态 |
 | 最不适合跨 WAN 的部分 | 每 Step Collective | TP/PP、KV 传输、P/D 内部链路 |
 
-## 九、一个可落地的分层参考架构
+## 十、一个可落地的分层参考架构
 
 ```text
 全局管理层（不在同步数据路径）
@@ -334,7 +452,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 5. **故障域显式。** 集群、区域、网络 Block 和存储故障要有不同恢复策略。
 6. **版本是一组制品。** Kubernetes、驱动、Runtime、Operator、CRD、模型和 Connector 一起发布。
 
-## 十、跨集群故障语义
+## 十一、跨集群故障语义
 
 | 故障 | 训练平台应如何处理 | 推理平台应如何处理 |
 | --- | --- | --- |
@@ -348,7 +466,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 
 跨集群控制器必须有唯一任务身份、幂等创建、Lease/Ownership 和最终对账机制。网络分区后最危险的情况不是“暂时看不到”，而是同一个训练或发布在两个集群被重复执行。
 
-## 十一、常见反模式
+## 十二、常见反模式
 
 - 把 4 个集群各 8 张空闲 GPU 当成一个可运行 32 卡同步任务的资源池；
 - 全局调度器直接依赖几秒甚至几分钟之前的 GPU 空闲数承诺容量；
@@ -361,7 +479,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 - 把 MCS/Service Mesh 当作全局 GPU 调度或 LLM 智能路由；
 - 只做正常路径 Demo，没有演练 Hub 失联、双写、取消和状态对账。
 
-## 十二、怎样选择起点
+## 十三、怎样选择起点
 
 | 需求 | 建议起点 |
 | --- | --- |
@@ -384,7 +502,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 6. 只有出现明确应用依赖时再增加 MCS、ClusterMesh 或 Offloading。
 7. 最后才评估跨集群同步训练、P/D 或 KV 传输等高耦合方案。
 
-## 十三、上线检查清单
+## 十四、上线检查清单
 
 - [ ] 每个集群有稳定唯一 ID、所有者、地域、故障域和版本信息。
 - [ ] Inventory 能表达 GPU 型号、显存、互联、RDMA、数据和价格，不只表达卡数。
@@ -409,7 +527,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 - [Multicluster Services API](https://multicluster.sigs.k8s.io/concepts/multicluster-services-api/)
 - [Cluster API](https://cluster-api.sigs.k8s.io/)
 - [MultiKueue](https://kueue.sigs.k8s.io/docs/concepts/multikueue/)
-- [Karmada Resource Propagation](https://karmada.io/docs/userguide/scheduling/resource-propagating/)
+- [Karmada Propagation Policy](https://karmada.io/docs/userguide/scheduling/propagation-policy/)
 - [Open Cluster Management Architecture](https://open-cluster-management.io/docs/concepts/architecture/)
 - [Liqo Architecture and Offloading](https://docs.liqo.io/)
 
