@@ -1,6 +1,6 @@
 ---
 title: AI/LLM Kubernetes 术语表
-description: GPU、调度、训练、推理、网络、缓存、模型制品和可靠性常用术语速查
+description: GPU、调度、训练、推理、网络、Agent 沙箱、模型制品和可靠性常用术语速查
 status: stable
 last_reviewed: 2026-08-03
 ---
@@ -166,6 +166,25 @@ last_reviewed: 2026-08-03
 | Hybrid Search | 组合向量、关键词和 Metadata Filter 的检索。 |
 | Reranker | 对初步检索候选进行更精确排序的模型。 |
 | Groundedness | 生成内容是否被提供的来源或上下文支持。 |
+
+## Agent 与沙箱
+
+| 术语 | 解释 |
+| --- | --- |
+| Agent Control Plane | 管理 Agent 会话、模型调用、预算、策略、Sandbox 和工具审批的控制面。 |
+| Agent Sandbox | 为 Agent 提供隔离执行环境的泛称；也可特指 Kubernetes SIG Apps 的 Agent Sandbox CRD/Controller 项目。 |
+| Sandbox | 一个具有独立生命周期、文件系统、资源和网络策略的 Agent 执行实例。 |
+| SandboxTemplate | Kubernetes Agent Sandbox 中由平台维护的可复用 Sandbox 配置模板。 |
+| SandboxClaim | 用户或应用从 Warm Pool 申请一个 Sandbox 的 Kubernetes API 对象。 |
+| SandboxWarmPool | 预先启动一组 Sandbox，供 Claim 快速领取的资源池。 |
+| Warm Hit | Sandbox 申请直接领取已准备实例，没有经过完整冷启动。 |
+| Tool Gateway | 代理 Agent 外部工具调用并执行身份、参数、授权、审批、限速和审计的服务。 |
+| gVisor | 通过 user-space kernel 截获和实现应用系统调用、减少宿主内核暴露面的沙箱运行时。 |
+| Kata Containers | 使用轻量 VM 和独立 Guest Kernel 提供更强 Pod 隔离、通过 OCI/CRI 接入 Kubernetes 的运行时。 |
+| Firecracker | 基于 KVM、面向高密度 microVM 的精简 VMM；它是底层构件而非完整 Sandbox 控制面。 |
+| MicroVM | 精简设备模型和 Guest OS 的轻量虚机，常用于 Serverless 与不可信代码隔离。 |
+| Prompt Injection | 不可信内容诱导模型忽略预期指令或滥用工具的攻击方式，不能只靠 Sandbox Runtime 解决。 |
+| Egress Proxy | 统一检查、限制和审计 Sandbox 出站连接的代理。 |
 
 ## 平台、安全与可靠性
 

@@ -45,6 +45,7 @@ nav = [
     ]},
     {"RAG、Agent 与边缘" = [
       {"RAG 基础设施" = "ai-k8s/rag-agent/rag-infrastructure.md"},
+      {"Agent Sandbox 选型与分析" = "ai-k8s/rag-agent/agent-sandbox-selection.md"},
       {"AI Agent 与沙箱" = "ai-k8s/agentic-workloads.md"},
       {"边缘 AI 与云边协同" = "ai-k8s/edge-ai.md"},
     ]},

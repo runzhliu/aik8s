@@ -2,7 +2,7 @@
 title: AI/LLM on Kubernetes 参考架构
 description: 从小型 GPU 平台、多租户训练、在线推理、分离式推理到 Agent 沙箱的五套参考架构
 status: evolving
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
 # AI/LLM on Kubernetes 参考架构
@@ -266,7 +266,7 @@ User/API
        ▼
 Agent Sandbox Controller
   → 每会话 Pod/VM
-       ├── Kata/gVisor/Agent Sandbox RuntimeClass
+       ├── gVisor/Kata RuntimeClass
        ├── Ephemeral Workspace
        ├── 独立 ServiceAccount
        └── Default-deny NetworkPolicy
@@ -352,4 +352,5 @@ External Tools / Data / Browser
 - [分布式训练平台](../distributed-training.md)
 - [LLM 推理平台](../llm-inference.md)
 - [多机与分离式 LLM 推理](../inference/distributed-serving.md)
+- [Agent Sandbox 选型与架构分析](../rag-agent/agent-sandbox-selection.md)
 - [AI Agent、沙箱与工具执行](../agentic-workloads.md)

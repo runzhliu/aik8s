@@ -44,7 +44,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
 | 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [性能优化](inference/optimization.md) → [网关与路由](inference/gateway-routing.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
-| 建设 RAG 或 Agent 平台 | [RAG 基础设施](rag-agent/rag-infrastructure.md) → [Agent 与沙箱](agentic-workloads.md) → [安全治理](security-governance.md) |
+| 建设 RAG 或 Agent 平台 | [RAG 基础设施](rag-agent/rag-infrastructure.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [工具与执行治理](agentic-workloads.md) → [安全治理](security-governance.md) |
 | 负责 SRE、成本或容量 | [可观测性](observability.md) → [性能基准](benchmarking.md) → [成本与容量](cost-capacity.md) → [落地路线图](adoption-roadmap.md) |
 
 ## 完整主题地图 { #topic-map }
@@ -93,6 +93,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 ### RAG、Agent 与边缘
 
 - [RAG 基础设施](rag-agent/rag-infrastructure.md)：采集、切分、Embedding、向量数据库、检索、重排和权限过滤。
+- [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)：威胁模型、Kubernetes Agent Sandbox、gVisor、Kata、微虚机和托管平台决策。
 - [AI Agent、沙箱与工具执行](agentic-workloads.md)：RuntimeClass、网络边界、凭据、工具权限和审计。
 - [边缘 AI 与云边协同](edge-ai.md)：K3s、弱网自治、设备管理、模型 OTA 和边缘可观测性。
 
@@ -122,6 +123,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 模型服务 | KServe、Seldon、自建控制器 | 需要标准模型 API、多模型还是 LLM 专用能力？ |
 | 推理运行时 | vLLM、SGLang、TensorRT-LLM、Triton | 目标模型、硬件、延迟和吞吐是什么？ |
 | 请求入口 | Gateway API、Inference Extension、服务网格 | 路由需要理解模型、KV Cache 和队列状态吗？ |
+| Agent 执行 | Agent Sandbox、gVisor、Kata、托管 Sandbox API | 生命周期、隔离运行时和工具授权是否已经分层？ |
 | 可观测性 | Prometheus、OpenTelemetry、DCGM Exporter | 能否从用户请求追到 Pod、GPU、网络和模型版本？ |
 
 ## 内容状态和更新规则

@@ -2,7 +2,7 @@
 title: AI Agent、沙箱与工具执行
 description: Agent 工作负载的运行时隔离、网络、身份、工具权限和审计设计
 status: evolving
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
 # AI Agent、沙箱与工具执行
@@ -10,6 +10,8 @@ last_reviewed: 2026-08-02
 Agent 工作负载与普通 Deployment 不同：它可能长时间保持状态，主动访问外部工具，生成并执行代码，处理不可信网页或仓库内容，并在没有人逐步确认的情况下采取动作。
 
 Kubernetes 可以提供身份、配额、网络、存储和生命周期底座，但不能自动证明 Agent 的行为安全。
+
+如果正在比较 Kubernetes Agent Sandbox、gVisor、Kata、Firecracker 或托管执行平台，先阅读 [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)。本章继续讨论选型之后的工具授权、Prompt Injection、网络、预算、审计和发布边界。
 
 ## 一、Agent 为什么不是普通微服务
 
@@ -53,7 +55,7 @@ Agent 不应直接持有所有外部系统的长期管理员密钥。
 
 ## 三、Agent Sandbox 的定位
 
-Kubernetes SIG Apps 的 Agent Sandbox 提供 `Sandbox` CRD，用于管理具有稳定身份和持久状态的单例工作负载；扩展 API 包括 `SandboxTemplate`、`SandboxClaim` 和 `SandboxWarmPool`。参考：[Agent Sandbox Documentation](https://agent-sandbox.sigs.k8s.io/docs/)
+Kubernetes SIG Apps 的 Agent Sandbox 提供 `Sandbox` CRD，用于管理具有稳定身份和持久状态的单例工作负载；扩展 API 包括 `SandboxTemplate`、`SandboxClaim` 和 `SandboxWarmPool`。截至 2026-08-03，项目发布线为 `v0.5.4`、API 为 `v1beta1`，但仍属于需要固定版本并演练升级的 pre-1.0 项目。参考：[Agent Sandbox Documentation](https://agent-sandbox.sigs.k8s.io/docs/) 与 [Releases](https://github.com/kubernetes-sigs/agent-sandbox/releases)。
 
 它解决的是声明式生命周期：
 
@@ -63,7 +65,7 @@ Kubernetes SIG Apps 的 Agent Sandbox 提供 `Sandbox` CRD，用于管理具有�
 - 预热池降低启动延迟；
 - Claim 与具体 Sandbox 解耦。
 
-它不是 Prompt 安全产品，也不替代 NetworkPolicy、RuntimeClass、Secret 管理和工具授权。
+它不是一种 RuntimeClass，也不是 Prompt 安全产品；它不会替代 gVisor/Kata、NetworkPolicy、Secret 管理和工具授权。
 
 ## 四、隔离等级怎么选
 
