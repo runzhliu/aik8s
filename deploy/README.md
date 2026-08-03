@@ -2,7 +2,9 @@
 
 生产环境使用 GitHub Actions 构建 Zensical 站点，通过 SSH 和 rsync 上传静态文件，再由 Caddy 对外提供 HTTPS 服务。
 
-生产工作流会在构建后向所有 HTML 页面注入 AdSense 客户端 `ca-pub-5607799704547851`。本地预览和普通本地构建不会加载广告脚本。
+生产工作流会在构建后向所有 HTML 页面注入 AdSense 客户端和 Cloudflare Web Analytics Beacon。本地预览和普通本地构建不会加载广告或统计脚本。
+
+Cloudflare Web Analytics Token 会随 Beacon 出现在公开 HTML 中，它只标识统计站点，不具备 Cloudflare Dashboard、GraphQL API 或账号权限。不要把它与 Cloudflare API Token、Global API Key 或部署密钥混用。
 
 ## 1. 准备域名
 

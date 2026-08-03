@@ -28,13 +28,13 @@ make build
 
 构建结果保存在 `site/`，该目录不会提交到 Git。
 
-生产构建还会向每个 HTML 页面的 `<head>` 注入 Google AdSense：
+生产构建还会注入 Google AdSense 和 Cloudflare Web Analytics；普通本地构建不加载这些第三方脚本：
 
 ```bash
 make build-production
 ```
 
-普通的 `make dev` 和 `make build` 不包含广告代码。生产部署工作流会自动执行注入，不需要手动运行该命令。
+生产部署工作流会自动执行注入，不需要手动运行该命令。Cloudflare Web Analytics Token 是公开出现在浏览器 HTML 中的站点标识，不是 Cloudflare API Token 或账号凭据。
 
 AdSense 授权销售方记录保存在 `docs/ads.txt`，构建后发布到站点根路径 `/ads.txt`。发布商 ID 变更时需要同时更新该文件和生产注入配置。
 
