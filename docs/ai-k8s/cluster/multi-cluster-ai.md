@@ -532,3 +532,5 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 - [Liqo Architecture and Offloading](https://docs.liqo.io/)
 
 与本页配套的集群内细节见：[AI 集群架构设计](architecture.md)、[分布式训练平台](../distributed-training.md)、[多机与分离式 LLM 推理](../inference/distributed-serving.md) 和 [边缘 AI 与云边协同](../edge-ai.md)。
+
+跨地域模型权重不应由每个 Pod 直接跨 WAN 回源；区域副本、P2P、节点 NVMe 预热和发布门禁见：[模型格式、制品供应链与分发](../data/model-artifacts.md)。

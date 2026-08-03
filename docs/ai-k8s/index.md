@@ -74,7 +74,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [RDMA 与 AI 高速网络](rdma-networking.md)：InfiniBand、RoCE、GPUDirect、NCCL 和逐层排障。
 - [AI 数据、存储与缓存](data-storage.md)：对象存储、共享文件、本地 NVMe、数据加载与缓存层级。
-- [模型制品、分发与缓存](data/model-artifacts.md)：格式、版本、OCI Modelcar、节点缓存、签名和冷启动。
+- [模型制品、分发与缓存](data/model-artifacts.md)：格式、版本、OCI Modelcar、跨地域复制、P2P、节点缓存、流式加载和冷启动。
 
 ### 分布式训练
 
