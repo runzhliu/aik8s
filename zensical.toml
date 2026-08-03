@@ -37,6 +37,7 @@ nav = [
     ]},
     {"LLM 推理" = [
       {"推理平台总览" = "ai-k8s/llm-inference.md"},
+      {"本地运行与测试" = "ai-k8s/inference/local-testing.md"},
       {"推理引擎选型" = "ai-k8s/inference/engines.md"},
       {"推理性能优化" = "ai-k8s/inference/optimization.md"},
       {"AI Gateway 与智能路由" = "ai-k8s/inference/gateway-routing.md"},

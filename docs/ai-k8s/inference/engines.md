@@ -9,6 +9,8 @@ last_reviewed: 2026-08-02
 
 推理引擎负责加载模型、管理 GPU 内存、组织 Batch、执行 Kernel 并输出 Token；KServe、Kubernetes 和 Gateway 负责的是服务生命周期、资源与流量。选择引擎前必须先分清这些边界。
 
+如果还处在模型、Prompt、RAG 或 API 联调阶段，可先从[本地运行与测试大模型](local-testing.md)开始，再用本页选择生产候选引擎。
+
 ## 一、推理平台分层
 
 ```text

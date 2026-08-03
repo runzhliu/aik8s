@@ -42,7 +42,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 从零理解 AI 如何运行在 Kubernetes 上 | [Kubernetes 如何承载 AI](foundations/kubernetes-for-ai.md) → [集群架构设计](cluster/architecture.md) → [术语表](reference/glossary.md) |
 | 建设或接管 GPU 集群 | [GPU 节点软件栈](cluster/gpu-node-stack.md) → [设备管理](accelerators/device-management.md) → [GPU 调度](gpu-scheduling.md) → [平台运维](platform-operations.md) |
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
-| 建设在线 LLM 推理服务 | [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [性能优化](inference/optimization.md) → [网关与路由](inference/gateway-routing.md) |
+| 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [性能优化](inference/optimization.md) → [网关与路由](inference/gateway-routing.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
 | 建设 RAG 或 Agent 平台 | [RAG 基础设施](rag-agent/rag-infrastructure.md) → [Agent 与沙箱](agentic-workloads.md) → [安全治理](security-governance.md) |
 | 负责 SRE、成本或容量 | [可观测性](observability.md) → [性能基准](benchmarking.md) → [成本与容量](cost-capacity.md) → [落地路线图](adoption-roadmap.md) |
@@ -83,6 +83,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 ### LLM 推理
 
+- [本地运行与测试大模型](inference/local-testing.md)：用 Ollama、llama.cpp、LM Studio、LocalAI、MLX-LM 和 vLLM/SGLang 验证模型与应用契约。
 - [LLM 推理平台总览](llm-inference.md)：服务抽象、运行时、请求链路和容量模型。
 - [推理引擎选型](inference/engines.md)：vLLM、SGLang、TensorRT-LLM、Triton、llama.cpp 等运行时的边界。
 - [LLM 推理性能优化](inference/optimization.md)：TTFT、TPOT、批处理、KV Cache、量化、并行和推测解码。
