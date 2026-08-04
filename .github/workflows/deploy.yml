@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -41,6 +43,13 @@ jobs:
 
       - name: Build documentation
         run: zensical build --clean --strict
+
+      - name: Generate feeds and social metadata
+        run: >-
+          python scripts/build_distribution.py
+          --docs-dir docs
+          --site-dir site
+          --site-url "https://aik8s.run/"
 
       - name: Add production-only AdSense
         env:
