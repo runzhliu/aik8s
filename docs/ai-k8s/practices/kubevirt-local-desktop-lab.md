@@ -144,6 +144,68 @@ VM 和普通 Pod 可以同时运行在同一个节点。KubeVirt 的 VM 最终�
 
 ## 5. 安装 KubeVirt 与 CDI
 
+### 5.1 KubeVirt 1.7 与 1.9：为什么控制面 Pod 变多了
+
+KubeVirt 1.7 和 1.9 的核心架构没有改变。常驻的核心组件仍然是：
+
+| 组件 | 部署方式 | 职责 |
+| --- | --- | --- |
+| `virt-operator` | Deployment，通常两个副本 | 安装、升级并持续协调 KubeVirt 控制面 |
+| `virt-api` | Deployment，通常两个副本 | 提供 VM/VMI 子资源、准入和 Console/VNC 等 API |
+| `virt-controller` | Deployment，通常两个副本 | 协调 VM、VMI、迁移、快照和相关 Pod |
+| `virt-handler` | DaemonSet，每个可虚拟化节点一个 | 在节点侧管理 libvirt/QEMU 和 VMI 生命周期 |
+| `virt-exportproxy` | Deployment，通常两个副本 | 为 VM、快照和 PVC 导出提供稳定入口 |
+
+`virt-launcher` 不属于常驻控制面。每个运行中的 VMI 都会创建自己的 `virt-launcher` Pod；停止或删除 VMI 后，该 Pod 也会消失。类似地，真正读取卷数据的 `virt-exportserver` 只会在执行导出任务时按需创建。排查资源占用时，应把“常驻控制面”和“随 VM/任务创建的工作负载”分开统计。
+
+1.9 默认安装后最显眼的变化，是多出以下两个常驻 Pod：
+
+- `virt-template-apiserver`：提供原生 `VirtualMachineTemplate` 相关 API；
+- `virt-template-controller`：协调模板、模板请求及其关联资源。
+
+原生 `VirtualMachineTemplate` 在 1.8 作为 Alpha 功能引入，需要显式开启；到了 1.9，它升级为 Beta 并默认开启，因此 Operator 会自动部署这两个 `virt-template` 组件。它可以把网络、卷、DataVolume 等集群资源和参数一起纳入可复用 VM 蓝图，与主要复用 CPU、内存和设备偏好的 Instancetype/Preference 是互补关系。参见 [VirtualMachine Templates](https://kubevirt.io/user-guide/user_workloads/vm_templates/)。
+
+不要用 KubeVirt 主版本号判断这两个镜像是否“混装”。例如 KubeVirt `v1.9.0` 固定的是 `virt-template-apiserver:v0.2.2` 和 `virt-template-controller:v0.2.2`；`v0.2.2` 是独立 `virt-template` 组件自己的版本。应让 `virt-operator` 管理这组依赖，不要为了让版本字符串看起来一致而手动替换镜像。
+
+下面是 1.7 与 1.9 的主要运维差异：
+
+| 维度 | KubeVirt 1.7 | KubeVirt 1.9 | 实际影响 |
+| --- | --- | --- | --- |
+| Kubernetes 基线 | 面向 Kubernetes 1.34，并支持此前两个小版本 | 面向 Kubernetes 1.36，并支持此前两个小版本 | Kubernetes 1.36/K3s 1.36 应选择 1.9，不应为了减少 Pod 回退到 1.7 |
+| 核心控制面 | Operator、API、Controller、Handler | 与 1.7 相同 | VM 的基本调度和运行路径没有被替换 |
+| 原生 VM Template | 不属于默认控制面 | Beta，默认启用 | 通常会额外看到一个 apiserver 和一个 controller Pod |
+| VM Export | 已有 `virt-exportproxy`，它并非 1.9 新组件 | VMExport 升为 GA，并能配合功能门导出 OCI、导出 VM Template | 不要把 exportproxy 误判成版本膨胀带来的新进程 |
+| Beta 功能门 | 默认关闭，需要加入 `featureGates` 显式启用 | 全部 Beta 功能默认开启，使用 `disabledFeatureGates` 逐项退出 | 从 1.7 升级前必须审计默认值变化，Alpha 功能仍保持默认关闭 |
+| 面向 AI/异构节点的能力 | 已支持通过 DRA 描述 GPU 和 HostDevice | 增加 GPU UUID 与 VMI 关联指标、单设备 vGPU 热迁移等能力；Grace/IOMMUFD 等仍受架构、内核和功能门约束 | “API 已支持”不等于节点硬件、IOMMU、驱动和迁移存储已经满足条件 |
+
+版本日期、Kubernetes 支持范围和完整变更以 [KubeVirt release notes](https://kubevirt.io/user-guide/release_notes/) 与 [Kubernetes support matrix](https://github.com/kubevirt/sig-release/blob/main/releases/k8s-support-matrix.md) 为准。1.9 默认启用 Beta 功能的背景和从 1.7 跨版本升级的注意事项，参见官方说明 [Beta Features Enabled by Default in KubeVirt v1.9](https://kubevirt.io/2026/Beta-Features-On-By-Default-In-v1-9.html)。
+
+可以直接观察当前版本部署了哪些常驻组件：
+
+```bash
+kubectl --context <context> -n kubevirt get deployment,daemonset
+kubectl --context <context> -n kubevirt get pods -o wide
+kubectl --context <context> get crd | grep -E 'template.kubevirt.io|kubevirt.io'
+```
+
+如果平台完全不使用原生 VM Template，可以显式关闭模板组件以减少两个常驻 Pod。生产环境应先确认没有模板对象和调用方，再修改 KubeVirt CR：
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: KubeVirt
+metadata:
+  name: kubevirt
+  namespace: kubevirt
+spec:
+  configuration:
+    virtTemplateDeployment:
+      enabled: false
+```
+
+不建议仅仅为了减少组件数量而选择不支持当前 Kubernetes 版本的旧 KubeVirt。对于 1.9，更重要的是在上线前审计 [feature gate report](https://github.com/kubevirt/kubevirt/releases/tag/v1.9.0)，明确哪些 Beta 功能应保留默认开启、哪些应通过 `disabledFeatureGates` 退出。
+
+### 5.2 固定版本并安装
+
 固定经过兼容性验证的版本，不要在生产清单中使用浮动地址：
 
 ```bash
