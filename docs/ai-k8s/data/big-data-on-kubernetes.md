@@ -11,6 +11,8 @@ last_reviewed: 2026-08-04
 
 Kubernetes 能统一容器、资源、身份、发布和观测，但不会自动提供分布式 SQL、流状态、消息持久化或 Lakehouse 事务。建设“大数据 on Kubernetes”时，必须把 Kubernetes 控制面、计算引擎、数据系统和 AI 工作负载分开建模。
 
+Ray Data 与 Spark/Flink 的边界，以及它如何衔接大模型训练、后训练和推理，见[Ray 在大模型训练与推理中的角色](../ray-llm-platform.md)。
+
 ## 1. 从 Hadoop 集群到云原生数据平台
 
 大数据平台大致经历了三条主线：

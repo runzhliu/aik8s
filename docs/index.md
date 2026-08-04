@@ -54,7 +54,8 @@ hide:
 | 建设 GPU Notebook 开发平台 | [Notebook 平台与存储](ai-k8s/development/gpu-notebook-platform.md) → [数据与缓存](ai-k8s/data-storage.md) → [MLOps](ai-k8s/mlops.md) |
 | 建设大数据与 AI 数据平台 | [大数据 on Kubernetes](ai-k8s/data/big-data-on-kubernetes.md) → [数据与缓存](ai-k8s/data-storage.md) → [模型制品](ai-k8s/data/model-artifacts.md) → [MLOps](ai-k8s/mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](ai-k8s/queue-multitenancy.md) → [分布式训练](ai-k8s/distributed-training.md) → [RDMA 网络](ai-k8s/rdma-networking.md) → [可靠性](ai-k8s/reliability.md) |
-| 建设 LLM 在线推理平台 | [推理平台总览](ai-k8s/llm-inference.md) → [引擎选型](ai-k8s/inference/engines.md) → [性能优化](ai-k8s/inference/optimization.md) → [智能路由](ai-k8s/inference/gateway-routing.md) |
+| 建设 Ray 大模型平台 | [Ray 训练与推理](ai-k8s/ray-llm-platform.md) → [分布式训练](ai-k8s/distributed-training.md) → [可靠性](ai-k8s/reliability.md) |
+| 建设 LLM 在线推理平台 | [推理平台总览](ai-k8s/llm-inference.md) → [引擎选型](ai-k8s/inference/engines.md) → [Serving 框架](ai-k8s/inference/serving-frameworks.md) → [智能路由](ai-k8s/inference/gateway-routing.md) |
 | 建设 RAG 或 Agent 服务 | [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md) → [Agent Sandbox 选型](ai-k8s/rag-agent/agent-sandbox-selection.md) → [工具与执行治理](ai-k8s/agentic-workloads.md) → [安全治理](ai-k8s/security-governance.md) |
 | 负责稳定性、成本和容量 | [可观测性](ai-k8s/observability.md) → [性能基准](ai-k8s/benchmarking.md) → [成本与容量](ai-k8s/cost-capacity.md) → [落地路线图](ai-k8s/adoption-roadmap.md) |
 
@@ -80,8 +81,10 @@ hide:
 ### 训练与推理
 
 - [分布式训练平台](ai-k8s/distributed-training.md)
+- [Ray 在大模型训练与推理中的角色](ai-k8s/ray-llm-platform.md)
 - [LLM 推理平台总览](ai-k8s/llm-inference.md)
 - [推理引擎选型](ai-k8s/inference/engines.md)
+- [LLM Serving 与 AI 微服务框架](ai-k8s/inference/serving-frameworks.md)
 - [LLM 推理性能优化](ai-k8s/inference/optimization.md)
 - [AI Gateway 与智能路由](ai-k8s/inference/gateway-routing.md)
 - [分布式与 Prefill/Decode 分离推理](ai-k8s/inference/distributed-serving.md)
@@ -98,6 +101,7 @@ hide:
 
 ## 可直接使用的参考材料
 
+- [AI/LLM 集群组件清单](cases/ai-cluster-component-checklist.md)：按场景说明需要哪些组件、为什么需要、何时可以不装以及怎样验收。
 - [五种生产参考架构](ai-k8s/guides/reference-architectures.md)：小型 GPU 平台、多租户训练、高可用推理、分离式推理和 Agent 沙箱。
 - [GPU 平台最小闭环实验](ai-k8s/guides/gpu-platform-lab.md)：从 GPU 发现和冒烟测试，到 vLLM 服务、网络策略和冷启动测量。
 - [AI on Kubernetes 十年发展史](ai-k8s/history.md)：理解关键接口和工具为什么出现，以及当前技术主线。
@@ -106,7 +110,7 @@ hide:
 
 ## 实战案例
 
-[工程案例](cases/index.md) 单独记录真实环境的背景、操作、异常和验证证据。目前收录的 [K3s 集群升级与 DRA 预检](k3s-upgrade/index.md)，保存了一次真实环境的版本跨度评估、备份、兼容性检查、升级和验证过程。案例与通用专题分开，便于区分可复用方法和特定环境记录。
+[工程案例](cases/index.md) 单独收录可执行清单和真实环境记录。其中 [AI/LLM 集群组件清单](cases/ai-cluster-component-checklist.md) 用于确定建设范围，[K3s 集群升级与 DRA 预检](k3s-upgrade/index.md) 保存了一次真实环境的版本跨度评估、备份、兼容性检查、升级和验证过程。
 
 ## 内容标准
 

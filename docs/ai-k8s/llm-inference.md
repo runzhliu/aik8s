@@ -2,12 +2,14 @@
 title: LLM 推理平台
 description: 在线大模型服务的控制面、运行时、路由、伸缩和容量设计
 status: evolving
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-04
 ---
 
 # LLM 推理平台
 
 传统模型服务多半是“一个请求对应一次短计算”，而 LLM 推理具有长连接、流式输出、动态批处理、巨量显存和 KV Cache 等特征。平台设计因此从普通 Service 负载均衡，演进到模型感知、缓存感知和请求感知的调度。
+
+需要比较 vLLM、KServe、AIBrix、Ray Serve、BentoML 和 NVIDIA NIM 的层次与组合方式，见[LLM Serving 与 AI 微服务框架](inference/serving-frameworks.md)；计划统一使用 Ray Data、Train、Tune 与 Serve 时，见[Ray 在大模型训练与推理中的角色](ray-llm-platform.md)。
 
 ## 1. 先分清四层
 

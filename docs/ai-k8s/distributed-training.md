@@ -2,12 +2,14 @@
 title: 分布式训练平台
 description: 训练控制器、Gang Scheduling、集合通信、容错和作业生命周期
 status: evolving
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
 ---
 
 # 分布式训练平台
 
 分布式训练不是“把 `replicas` 调大”。平台必须同时处理多角色启动、资源成组分配、网络拓扑、数据供给、检查点、失败恢复和实验追踪。本页给出 Kubernetes 上训练控制面的设计方法。
+
+如果数据处理、训练、Tune、后训练 Rollout 和在线服务计划统一使用 Ray，见[Ray 在大模型训练与推理中的角色](ray-llm-platform.md)。
 
 ## 1. 一次训练任务经过什么
 
@@ -57,7 +59,7 @@ KubeRay 提供三类主要资源：
 
 若数据预处理、训练、超参搜索和服务都基于 Python，Ray 能减少跨系统搬运；若团队主要使用 MPI、Slurm 迁移代码或框架原生启动器，Kubeflow Trainer/JobSet 往往更自然。
 
-参考：[KubeRay](https://ray-project.github.io/kuberay/)
+更完整的训练、后训练和推理边界见[Ray 在大模型训练与推理中的角色](ray-llm-platform.md)。参考：[KubeRay](https://ray-project.github.io/kuberay/)
 
 ### JobSet
 

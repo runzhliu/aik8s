@@ -44,7 +44,8 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 建设 GPU Notebook 开发平台 | [GPU Notebook 平台与存储](development/gpu-notebook-platform.md) → [GPU 调度](gpu-scheduling.md) → [数据与缓存](data-storage.md) → [MLOps](mlops.md) |
 | 建设大数据与 AI 数据平台 | [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [数据与缓存](data-storage.md) → [模型制品](data/model-artifacts.md) → [MLOps](mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
-| 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [性能优化](inference/optimization.md) → [网关与路由](inference/gateway-routing.md) |
+| 建设 Ray 大模型平台 | [Ray 训练与推理](ray-llm-platform.md) → [分布式训练](distributed-training.md) → [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [可靠性](reliability.md) |
+| 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [Serving 框架](inference/serving-frameworks.md) → [网关与路由](inference/gateway-routing.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
 | 建设 RAG 或 Agent 平台 | [RAG 基础设施](rag-agent/rag-infrastructure.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [工具与执行治理](agentic-workloads.md) → [安全治理](security-governance.md) |
 | 负责 SRE、成本或容量 | [可观测性](observability.md) → [性能基准](benchmarking.md) → [成本与容量](cost-capacity.md) → [落地路线图](adoption-roadmap.md) |
@@ -82,6 +83,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 ### 分布式训练
 
 - [分布式训练平台](distributed-training.md)：Kubeflow Trainer、KubeRay、JobSet 与训练生命周期。
+- [Ray 在大模型训练与推理中的角色](ray-llm-platform.md)：Ray Core、Data、Train、Tune、Serve、Serve LLM 与 KubeRay 的端到端边界。
 - [可靠性、Checkpoint 与故障恢复](reliability.md)：RPO/RTO、Spot、优雅退出和故障演练。
 
 ### LLM 推理
@@ -89,6 +91,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [本地运行与测试大模型](inference/local-testing.md)：用 Ollama、llama.cpp、LM Studio、LocalAI、MLX-LM 和 vLLM/SGLang 验证模型与应用契约。
 - [LLM 推理平台总览](llm-inference.md)：服务抽象、运行时、请求链路和容量模型。
 - [推理引擎选型](inference/engines.md)：vLLM、SGLang、TensorRT-LLM、Triton、llama.cpp 等运行时的边界。
+- [LLM Serving 与 AI 微服务框架](inference/serving-frameworks.md)：vLLM、KServe、AIBrix、Ray Serve、BentoML、NVIDIA NIM 与应用层框架。
 - [LLM 推理性能优化](inference/optimization.md)：TTFT、TPOT、批处理、KV Cache、量化、并行和推测解码。
 - [AI Gateway 与智能路由](inference/gateway-routing.md)：Gateway API Inference Extension、前缀感知、负载感知和流控。
 - [分布式与 Prefill/Decode 分离推理](inference/distributed-serving.md)：模型并行、LeaderWorkerSet、llm-d、Dynamo 和 KV 传输。
@@ -114,6 +117,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [生产参考架构](guides/reference-architectures.md)：小型 GPU 平台、多租户训练、高可用推理、分离式推理和 Agent 沙箱。
 - [GPU 平台最小闭环实验](guides/gpu-platform-lab.md)：资源发现、GPU 冒烟、vLLM 服务、网络策略、冷启动和优雅下线。
+- [AI/LLM 集群组件清单](../cases/ai-cluster-component-checklist.md)：按目标场景列出组件、必要性、引入理由和验收条件。
 
 ## 工具不等于架构
 

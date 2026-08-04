@@ -9,12 +9,19 @@ last_reviewed: 2026-08-04
 
 这里收录真实环境中的实施与排障记录。专题文档回答“通常应该怎样设计”，案例则保留特定版本、硬件、约束、操作过程和验证结果，用来展示这些方法在具体环境中怎样落地。
 
-[查看 K3s 集群升级案例](../k3s-upgrade/index.md){ .md-button .md-button--primary }
+[查看集群组件清单](ai-cluster-component-checklist.md){ .md-button .md-button--primary }
+[查看 K3s 集群升级案例](../k3s-upgrade/index.md){ .md-button }
 [返回完整技术地图](../ai-k8s/index.md){ .md-button }
 
 ## 案例索引
 
 <div class="grid cards" markdown>
+
+-   **AI/LLM 集群组件清单**
+
+    按最小 GPU 闭环、多租户训练、Ray、大数据、高可用推理和分离式推理拆分组件包，逐项说明需要什么、为什么需要、什么时候可以不安装，以及如何验收。
+
+    [查看组件清单](ai-cluster-component-checklist.md)
 
 -   **K3s 集群跨版本升级与 DRA 预检**
 

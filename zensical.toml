@@ -34,12 +34,14 @@ nav = [
     ]},
     {"分布式训练" = [
       {"分布式训练平台" = "ai-k8s/distributed-training.md"},
+      {"Ray 大模型训练与推理" = "ai-k8s/ray-llm-platform.md"},
       {"可靠性与故障恢复" = "ai-k8s/reliability.md"},
     ]},
     {"LLM 推理" = [
       {"推理平台总览" = "ai-k8s/llm-inference.md"},
       {"本地运行与测试" = "ai-k8s/inference/local-testing.md"},
       {"推理引擎选型" = "ai-k8s/inference/engines.md"},
+      {"Serving 与微服务框架" = "ai-k8s/inference/serving-frameworks.md"},
       {"推理性能优化" = "ai-k8s/inference/optimization.md"},
       {"AI Gateway 与智能路由" = "ai-k8s/inference/gateway-routing.md"},
       {"分布式与 P/D 分离推理" = "ai-k8s/inference/distributed-serving.md"},
@@ -66,6 +68,7 @@ nav = [
   ]},
   {"案例" = [
     "cases/index.md",
+    {"AI/LLM 集群组件清单" = "cases/ai-cluster-component-checklist.md"},
     {"K3s 集群升级" = [
       "k3s-upgrade/index.md",
       {"升级与 DRA 预检报告" = "k3s-upgrade/report.md"},

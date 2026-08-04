@@ -99,6 +99,24 @@ last_reviewed: 2026-08-04
 | Shuffle | 分布式计算 Stage 之间按 Key/Partition 重分布数据的过程，常消耗大量网络、磁盘和内存。 |
 | Backpressure | 下游处理速度不足时向上游传播的压力信号，Flink 等流系统据此暴露处理瓶颈。 |
 
+## Ray
+
+| 术语 | 解释 |
+| --- | --- |
+| Ray Core | 提供分布式 Task、Actor、对象传输、资源与调度的基础运行时。 |
+| Ray Task | 可远程并行执行的函数调用，通常用于无状态或短生命周期工作。 |
+| Ray Actor | 具有状态和稳定进程生命周期的远程对象，常用于模型 Worker、服务和后训练角色。 |
+| Object Store | Ray 节点间共享和传输对象的数据层；不是持久对象存储或数据湖。 |
+| Placement Group | 预留一组资源 Bundle，并按 Pack/Spread 等策略共同放置 Actor 或 Task。 |
+| Ray Data | 面向 AI 数据处理、流式执行、批量推理和训练数据供给的分布式库。 |
+| Ray Train | 协调训练 Worker、框架分布式环境、Checkpoint 和结果的训练控制层。 |
+| Ray Tune | 分布式实验和超参数搜索库，管理 Trial、搜索算法、早停和资源。 |
+| Ray Serve | 以 Deployment、Replica 和 Handle 组织可独立扩缩的 Python 推理服务和调用图。 |
+| Ray Serve LLM | 在 Ray Serve 上扩展多模型、多机、vLLM/SGLang、P/D 分离和高级 LLM 路由的框架。 |
+| KubeRay | 在 Kubernetes 上管理 `RayCluster`、`RayJob` 和 `RayService` 的 Operator。 |
+| RayJob | KubeRay 的批任务资源，可创建 RayCluster、提交 Job，并在结束后回收集群。 |
+| RayService | KubeRay 中 RayCluster 与 Ray Serve Application 的组合资源，用于在线服务和升级。 |
+
 ## 分布式训练
 
 | 术语 | 解释 |
@@ -164,6 +182,8 @@ last_reviewed: 2026-08-04
 | EPP | Endpoint Picker/Endpoint Picker Provider，根据请求与后端状态选择 Endpoint。 |
 | LWS | LeaderWorkerSet，把一个 Leader 和多个 Worker 作为复制单元。 |
 | Modelcar | KServe 中把模型作为 OCI Image 附加到 Serving Pod 的模式。 |
+| AIBrix | 面向 Kubernetes LLM 推理的控制面，覆盖 Gateway、路由、弹性、LoRA、KV Cache 和分布式推理等能力。 |
+| NVIDIA NIM | 将模型、验证过的推理运行时、配置和管理接口包装为 NVIDIA 推理微服务的产品栈。 |
 
 ## 模型、RAG 与 MLOps
 
