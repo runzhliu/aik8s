@@ -64,7 +64,8 @@ nav = [
     ]},
   ]},
   {"案例" = [
-    {"K3s 升级" = [
+    "cases/index.md",
+    {"K3s 集群升级" = [
       "k3s-upgrade/index.md",
       {"升级与 DRA 预检报告" = "k3s-upgrade/report.md"},
     ]},

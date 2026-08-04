@@ -13,6 +13,7 @@ hide:
 
 [进入完整技术地图](ai-k8s/index.md){ .md-button .md-button--primary }
 [查看生产参考架构](ai-k8s/guides/reference-architectures.md){ .md-button }
+[浏览工程案例](cases/index.md){ .md-button }
 
 ## 文档覆盖范围
 
@@ -103,7 +104,7 @@ hide:
 
 ## 实战案例
 
-[K3s 升级与 DRA 预检](k3s-upgrade/index.md) 保存了一次真实环境的版本跨度评估、备份、兼容性检查、升级和验证过程。案例与通用专题分开，便于区分可复用方法和特定环境记录。
+[工程案例](cases/index.md) 单独记录真实环境的背景、操作、异常和验证证据。目前收录的 [K3s 集群升级与 DRA 预检](k3s-upgrade/index.md)，保存了一次真实环境的版本跨度评估、备份、兼容性检查、升级和验证过程。案例与通用专题分开，便于区分可复用方法和特定环境记录。
 
 ## 内容标准
 
