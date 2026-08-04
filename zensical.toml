@@ -13,6 +13,7 @@ nav = [
     {"基础与架构" = [
       {"Kubernetes 如何承载 AI" = "ai-k8s/foundations/kubernetes-for-ai.md"},
       {"集群架构设计" = "ai-k8s/cluster/architecture.md"},
+      {"开源集群管理工具" = "ai-k8s/cluster/open-source-management.md"},
       {"跨集群与大规模 GPU" = "ai-k8s/cluster/multi-cluster-ai.md"},
       {"十年发展史" = "ai-k8s/history.md"},
       {"术语表" = "ai-k8s/reference/glossary.md"},
