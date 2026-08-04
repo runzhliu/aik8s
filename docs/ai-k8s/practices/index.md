@@ -27,6 +27,7 @@ last_reviewed: 2026-08-04
 
 - [Kueue 与 Volcano 对比实验](kueue-vs-volcano.md)
 - [Kubernetes 还是 Slurm](kubernetes-vs-slurm.md)
+- [KubeVirt 单节点桌面实战：本地盘、CDI 与浏览器 noVNC](kubevirt-local-desktop-lab.md)
 - [用 KubeVirt 与 Ceph RBD 构建持久 GPU Notebook](kubevirt-rbd-notebook.md)
 - [Spot GPU 与 Checkpoint 恢复实验](spot-checkpoint.md)
 - [国产 GPU/NPU 的 Kubernetes 实践](domestic-accelerators.md)

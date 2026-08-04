@@ -78,6 +78,7 @@ nav = [
       {"P/D 分离性能拐点" = "ai-k8s/practices/pd-break-even.md"},
       {"Kueue 与 Volcano 实验" = "ai-k8s/practices/kueue-vs-volcano.md"},
       {"Kubernetes 还是 Slurm" = "ai-k8s/practices/kubernetes-vs-slurm.md"},
+      {"KubeVirt 单节点桌面实战" = "ai-k8s/practices/kubevirt-local-desktop-lab.md"},
       {"KubeVirt + RBD Notebook" = "ai-k8s/practices/kubevirt-rbd-notebook.md"},
       {"Spot GPU 恢复实验" = "ai-k8s/practices/spot-checkpoint.md"},
       {"GPU 节点故障图鉴" = "ai-k8s/practices/gpu-failure-atlas.md"},
