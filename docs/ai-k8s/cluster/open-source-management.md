@@ -272,6 +272,7 @@ Gateway / DNS：在线推理流量切换
 
 ## 延伸阅读
 
+- [国内外主流云厂商 Kubernetes](cloud-managed-kubernetes.md)
 - [Kubernetes 跨集群与大规模 GPU](multi-cluster-ai.md)
 - [平台运维、升级与多集群](../platform-operations.md)
 - [AI 集群架构设计](architecture.md)

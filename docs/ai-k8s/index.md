@@ -42,6 +42,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 从零理解 AI 如何运行在 Kubernetes 上 | [Kubernetes 如何承载 AI](foundations/kubernetes-for-ai.md) → [集群架构设计](cluster/architecture.md) → [术语表](reference/glossary.md) |
 | 建设或接管 GPU 集群 | [GPU 节点软件栈](cluster/gpu-node-stack.md) → [设备管理](accelerators/device-management.md) → [GPU 调度](gpu-scheduling.md) → [平台运维](platform-operations.md) |
 | 选择开源集群管理平台 | [开源集群管理工具与方式](cluster/open-source-management.md) → [平台运维](platform-operations.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) |
+| 选择国内外云厂商 Kubernetes | [云厂商托管 Kubernetes](cluster/cloud-managed-kubernetes.md) → [集群架构设计](cluster/architecture.md) → [异构加速器](accelerators/heterogeneous-accelerators.md) |
 | 建设 GPU Notebook 开发平台 | [GPU Notebook 平台与存储](development/gpu-notebook-platform.md) → [GPU 调度](gpu-scheduling.md) → [数据与缓存](data-storage.md) → [MLOps](mlops.md) |
 | 建设大数据与 AI 数据平台 | [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [数据与缓存](data-storage.md) → [模型制品](data/model-artifacts.md) → [MLOps](mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
@@ -58,6 +59,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [Kubernetes 如何承载 AI](foundations/kubernetes-for-ai.md)：从 API、控制器、调度器到 CRI、CNI、CSI 和设备接口。
 - [AI 集群架构设计](cluster/architecture.md)：工作负载画像、节点池、故障域、单集群与多集群边界。
 - [开源 Kubernetes 集群管理工具与方式](cluster/open-source-management.md)：从 kubectl、Headlamp 和 GitOps，到 Rancher、Cluster API、Gardener、Karmada 与 OCM 的分层选型。
+- [国内外主流云厂商 Kubernetes](cluster/cloud-managed-kubernetes.md)：对比 ACK、TKE、CCE、EKS、GKE 和 AKS 的托管边界、网络存储生态与 AI/GPU 能力。
 - [Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)：Federation 历史、Karmada/MultiKueue 等当前能力，以及训练整 Job 放置和区域级推理架构。
 - [AI on Kubernetes 十年发展史](history.md)：从 GPU Pod、Operator 和批调度，到 DRA、推理网关与分离式推理。
 - [术语表](reference/glossary.md)：统一 Kubernetes、GPU、训练、推理、网络、RAG 和可靠性术语。
