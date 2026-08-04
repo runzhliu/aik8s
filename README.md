@@ -39,7 +39,8 @@ make build
 
 构建结果保存在 `site/`，该目录不会提交到 Git。
 
-生产构建还会生成 RSS/Atom、页面分享与社交元数据，并注入站点统计脚本：
+生产构建还会生成 RSS/Atom、带更新时间的 Sitemap、页面分享、社交元数据和
+TechArticle/BreadcrumbList 结构化数据，并注入站点统计脚本：
 
 ```bash
 make build-production

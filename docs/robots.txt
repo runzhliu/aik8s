@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aik8s.run/sitemap.xml
