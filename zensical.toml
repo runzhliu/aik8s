@@ -1,6 +1,6 @@
 [project]
 site_name = "AI/LLM on Kubernetes 基础设施"
-site_description = "面向平台工程师和 SRE 的 AI/LLM on Kubernetes 基础设施文档：GPU、调度、训练、推理、RDMA、RAG、Agent 与生产运维"
+site_description = "面向平台工程师和 SRE 的 AI/LLM on Kubernetes 基础设施文档：GPU、大数据、调度、训练、推理、RAG、Agent 与生产运维"
 site_url = "https://aik8s.run/"
 docs_dir = "docs"
 site_dir = "site"
@@ -29,6 +29,7 @@ nav = [
     {"网络、数据与模型制品" = [
       {"RDMA 与 AI 高速网络" = "ai-k8s/rdma-networking.md"},
       {"AI 数据、存储与缓存" = "ai-k8s/data-storage.md"},
+      {"大数据 on Kubernetes" = "ai-k8s/data/big-data-on-kubernetes.md"},
       {"模型制品、分发与缓存" = "ai-k8s/data/model-artifacts.md"},
     ]},
     {"分布式训练" = [

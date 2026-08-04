@@ -2,7 +2,7 @@
 title: AI 数据、存储与缓存
 description: 对象存储、共享文件、本地 NVMe、数据加载和多级缓存设计
 status: stable
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-04
 ---
 
 # AI 数据、存储与缓存
@@ -10,6 +10,8 @@ last_reviewed: 2026-08-02
 AI 平台的数据路径通常比计算路径更容易被低估。GPU 已经分配成功，并不代表训练正在有效计算；当数据加载、模型下载或 Checkpoint 写入跟不上时，昂贵的加速器只是在等待 I/O。
 
 本章从平台角度拆解数据分层、存储选型、缓存、数据局部性和故障诊断。
+
+如果需要进一步设计 Spark、Flink、Kafka、Trino、Lakehouse 与 AI 数据流水线，见[大数据 on Kubernetes](data/big-data-on-kubernetes.md)。
 
 如果正在设计交互式开发环境，还需要把用户 Home、共享目录、模型缓存、Scratch 和 Idle 回收放在同一条生命周期中评估，见[大模型时代的 GPU Notebook 平台与存储选型](development/gpu-notebook-platform.md)。
 

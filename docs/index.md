@@ -1,15 +1,15 @@
 ---
 title: AI/LLM on Kubernetes 基础设施
-description: 面向平台工程师、SRE 和模型服务团队的 AI/LLM 基础设施工程文档
+description: 面向平台工程师、SRE、数据平台和模型服务团队的 AI/LLM 基础设施工程文档
 hide:
   - toc
 ---
 
 # AI/LLM on Kubernetes 基础设施知识库
 
-这是一套面向平台工程师、SRE、训练和模型服务团队的工程文档，系统整理 AI/LLM 工作负载运行在 Kubernetes 上需要的基础设施知识。
+这是一套面向平台工程师、SRE、数据平台、训练和模型服务团队的工程文档，系统整理 AI/LLM 工作负载运行在 Kubernetes 上需要的基础设施知识。
 
-内容从 GPU 节点、异构设备、调度队列、RDMA 和数据供给开始，延伸到分布式训练、LLM 推理、RAG、Agent 沙箱、可观测性、安全、成本和生产运维。每个专题尽量说明组件边界、选型条件、关键指标、故障路径和上线检查，而不只是罗列项目名称。
+内容从 GPU 节点、异构设备、大数据、调度队列、RDMA 和数据供给开始，延伸到分布式训练、LLM 推理、RAG、Agent 沙箱、可观测性、安全、成本和生产运维。每个专题尽量说明组件边界、选型条件、关键指标、故障路径和上线检查，而不只是罗列项目名称。
 
 [进入完整技术地图](ai-k8s/index.md){ .md-button .md-button--primary }
 [查看生产参考架构](ai-k8s/guides/reference-architectures.md){ .md-button }
@@ -25,11 +25,11 @@ hide:
 
     [从基础架构开始](ai-k8s/foundations/kubernetes-for-ai.md)
 
--   **调度与分布式训练**
+-   **大数据、调度与分布式训练**
 
-    处理资源声明、队列准入、公平共享、Gang Scheduling、RDMA、数据加载、Checkpoint 和故障恢复。
+    处理 Spark/Flink/Kafka/Lakehouse、资源声明、队列准入、Gang Scheduling、RDMA、数据加载、Checkpoint 和故障恢复。
 
-    [查看训练基础设施](ai-k8s/distributed-training.md)
+    [查看大数据基础设施](ai-k8s/data/big-data-on-kubernetes.md)
 
 -   **LLM 推理与 RAG**
 
@@ -52,6 +52,7 @@ hide:
 | 第一次系统了解 AI on Kubernetes | [Kubernetes 如何承载 AI](ai-k8s/foundations/kubernetes-for-ai.md) → [集群架构设计](ai-k8s/cluster/architecture.md) → [完整技术地图](ai-k8s/index.md) |
 | 建设 GPU 或异构算力集群 | [GPU 节点软件栈](ai-k8s/cluster/gpu-node-stack.md) → [设备管理](ai-k8s/accelerators/device-management.md) → [GPU 调度](ai-k8s/gpu-scheduling.md) |
 | 建设 GPU Notebook 开发平台 | [Notebook 平台与存储](ai-k8s/development/gpu-notebook-platform.md) → [数据与缓存](ai-k8s/data-storage.md) → [MLOps](ai-k8s/mlops.md) |
+| 建设大数据与 AI 数据平台 | [大数据 on Kubernetes](ai-k8s/data/big-data-on-kubernetes.md) → [数据与缓存](ai-k8s/data-storage.md) → [模型制品](ai-k8s/data/model-artifacts.md) → [MLOps](ai-k8s/mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](ai-k8s/queue-multitenancy.md) → [分布式训练](ai-k8s/distributed-training.md) → [RDMA 网络](ai-k8s/rdma-networking.md) → [可靠性](ai-k8s/reliability.md) |
 | 建设 LLM 在线推理平台 | [推理平台总览](ai-k8s/llm-inference.md) → [引擎选型](ai-k8s/inference/engines.md) → [性能优化](ai-k8s/inference/optimization.md) → [智能路由](ai-k8s/inference/gateway-routing.md) |
 | 建设 RAG 或 Agent 服务 | [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md) → [Agent Sandbox 选型](ai-k8s/rag-agent/agent-sandbox-selection.md) → [工具与执行治理](ai-k8s/agentic-workloads.md) → [安全治理](ai-k8s/security-governance.md) |
@@ -73,6 +74,7 @@ hide:
 - [队列、公平共享与多租户](ai-k8s/queue-multitenancy.md)
 - [AI 工作负载弹性伸缩](ai-k8s/scheduling/autoscaling.md)
 - [RDMA 与 AI 高速网络](ai-k8s/rdma-networking.md)
+- [大数据 on Kubernetes](ai-k8s/data/big-data-on-kubernetes.md)
 - [模型制品、分发与缓存](ai-k8s/data/model-artifacts.md)
 
 ### 训练与推理

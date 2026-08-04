@@ -1,8 +1,8 @@
 ---
 title: AI/LLM Kubernetes 术语表
-description: GPU、调度、训练、推理、网络、Agent 沙箱、模型制品和可靠性常用术语速查
+description: GPU、大数据、调度、训练、推理、网络、Agent 沙箱、模型制品和可靠性常用术语速查
 status: stable
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
 ---
 
 # AI/LLM Kubernetes 术语表
@@ -80,6 +80,24 @@ last_reviewed: 2026-08-03
 | HPA | Horizontal Pod Autoscaler，按指标改变副本数。 |
 | VPA | Vertical Pod Autoscaler，推荐或调整 Pod CPU/内存请求。 |
 | KEDA | 基于事件和外部指标驱动扩缩容，并支持 0 到 1 激活。 |
+
+## 大数据与 Lakehouse
+
+| 术语 | 解释 |
+| --- | --- |
+| Apache Spark | 面向批处理、SQL、流处理和数据准备的分布式计算引擎；在 Kubernetes 上通常由 Driver 创建 Executor Pod。 |
+| Apache Flink | 面向有状态流处理和流批作业的分布式引擎，以 Checkpoint、Savepoint 和事件时间能力见长。 |
+| Apache Kafka | 持久分布式事件日志，用于消息、CDC、日志与流量缓冲，不等同于长期数据湖。 |
+| KRaft | Kafka 内置的 Raft 元数据控制面，取代 ZooKeeper。 |
+| Strimzi | 使用 Kubernetes Operator 管理 Kafka、Node Pool、Topic、User、Connect 和 MirrorMaker 等资源的项目。 |
+| Trino | 面向 Lakehouse、数据源联邦和交互分析的分布式 SQL 查询引擎。 |
+| Lakehouse | 以对象存储/文件系统保存数据，并通过开放表格式和 Catalog 提供表、Snapshot、事务与多引擎访问的数据架构。 |
+| Open Table Format | Iceberg、Delta、Hudi 等管理数据文件、Schema、Partition、Snapshot 和事务的表级格式。 |
+| Apache Iceberg | 面向大型分析表的开放表格式，支持 Snapshot、Schema/Partition Evolution 和多引擎读写。 |
+| Catalog | 管理表名、Namespace、当前元数据指针及相关访问入口的元数据服务。 |
+| CDC | Change Data Capture，把数据库新增、修改和删除转为可消费的变更事件。 |
+| Shuffle | 分布式计算 Stage 之间按 Key/Partition 重分布数据的过程，常消耗大量网络、磁盘和内存。 |
+| Backpressure | 下游处理速度不足时向上游传播的压力信号，Flink 等流系统据此暴露处理瓶颈。 |
 
 ## 分布式训练
 

@@ -1,8 +1,8 @@
 ---
 title: AI/LLM on Kubernetes 基础设施
-description: 从加速器和集群，到训练、推理、RAG、Agent 与生产运维的完整技术地图
+description: 从加速器、大数据和集群，到训练、推理、RAG、Agent 与生产运维的完整技术地图
 status: stable
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
 ---
 
 # AI/LLM on Kubernetes 基础设施
@@ -20,7 +20,7 @@ last_reviewed: 2026-08-03
 ```text
 用户、SDK、应用与工作流
         │
-        ├─ RAG / Agent / 在线推理 / 训练任务
+        ├─ 大数据 / RAG / Agent / 在线推理 / 训练任务
         │
 Gateway、Serving、Trainer、Pipeline、Queue
         │
@@ -42,6 +42,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 从零理解 AI 如何运行在 Kubernetes 上 | [Kubernetes 如何承载 AI](foundations/kubernetes-for-ai.md) → [集群架构设计](cluster/architecture.md) → [术语表](reference/glossary.md) |
 | 建设或接管 GPU 集群 | [GPU 节点软件栈](cluster/gpu-node-stack.md) → [设备管理](accelerators/device-management.md) → [GPU 调度](gpu-scheduling.md) → [平台运维](platform-operations.md) |
 | 建设 GPU Notebook 开发平台 | [GPU Notebook 平台与存储](development/gpu-notebook-platform.md) → [GPU 调度](gpu-scheduling.md) → [数据与缓存](data-storage.md) → [MLOps](mlops.md) |
+| 建设大数据与 AI 数据平台 | [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [数据与缓存](data-storage.md) → [模型制品](data/model-artifacts.md) → [MLOps](mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
 | 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [性能优化](inference/optimization.md) → [网关与路由](inference/gateway-routing.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
@@ -75,6 +76,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [RDMA 与 AI 高速网络](rdma-networking.md)：InfiniBand、RoCE、GPUDirect、NCCL 和逐层排障。
 - [AI 数据、存储与缓存](data-storage.md)：对象存储、共享文件、本地 NVMe、数据加载与缓存层级。
+- [大数据 on Kubernetes](data/big-data-on-kubernetes.md)：Spark、Flink、Kafka、Trino、Lakehouse、Operator、队列调度，以及训练与 RAG 数据链路。
 - [模型制品、分发与缓存](data/model-artifacts.md)：格式、版本、OCI Modelcar、跨地域复制、P2P、节点缓存、流式加载和冷启动。
 
 ### 分布式训练
@@ -121,6 +123,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | --- | --- | --- |
 | 设备接入 | Device Plugin、CDI、DRA、厂商 Operator | 需要整卡、分片、拓扑还是动态声明？ |
 | 批调度 | kube-scheduler、Kueue、Volcano | 需要准入队列、公平共享还是 Gang Scheduling？ |
+| 大数据计算 | Spark、Flink、Trino、Ray Data | 是批处理、流状态、交互 SQL 还是 AI 数据准备？ |
 | 训练控制 | Kubeflow Trainer、JobSet、KubeRay | 训练框架、容错和弹性边界是什么？ |
 | 模型服务 | KServe、Seldon、自建控制器 | 需要标准模型 API、多模型还是 LLM 专用能力？ |
 | 推理运行时 | vLLM、SGLang、TensorRT-LLM、Triton | 目标模型、硬件、延迟和吞吐是什么？ |
