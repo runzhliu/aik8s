@@ -27,6 +27,7 @@ last_reviewed: 2026-08-04
 
 - [Kueue 与 Volcano 对比实验](kueue-vs-volcano.md)
 - [Kubernetes 还是 Slurm](kubernetes-vs-slurm.md)
+- [用 KubeVirt 与 Ceph RBD 构建持久 GPU Notebook](kubevirt-rbd-notebook.md)
 - [Spot GPU 与 Checkpoint 恢复实验](spot-checkpoint.md)
 - [国产 GPU/NPU 的 Kubernetes 实践](domestic-accelerators.md)
 
@@ -49,4 +50,3 @@ last_reviewed: 2026-08-04
 6. 成功标准、失败标准和结果的不适用范围。
 
 复现实验时先修改 Namespace、镜像、StorageClass、资源名和安全策略，不要直接把示例中的权限、镜像标签或云厂商参数复制到生产。
-

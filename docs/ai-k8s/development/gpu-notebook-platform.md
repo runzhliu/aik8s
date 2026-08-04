@@ -38,6 +38,7 @@ JupyterHub + KubeSpawner
 | 团队很小、完全单云、没有平台运维人力 | 云托管 Workbench | 云 IAM、镜像、实例和存储集成开箱即用 |
 | 已在 OpenShift 且要求商业支持和统一治理 | Red Hat OpenShift AI 等发行版 | 沿用企业身份、Operator、审计和支持体系 |
 | 只有少数可信用户、短期验证 | 受控 VM 或单用户 Workbench | Kubernetes 多租户控制面的投入可能暂时不划算 |
+| 用户会修改任意系统目录，必须停止后原样恢复 | KubeVirt + 独立 RBD 根盘 | 完整 guest 文件系统持久化，不依赖用户遵守 PVC 目录约定 |
 
 不建议直接给每位用户创建一个普通 `Deployment + Service + Ingress`。这种自建方式很快会重复实现认证、停止/恢复、PVC 生命周期、URL 路由、规格选择、镜像治理和审计。
 
@@ -388,6 +389,8 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 不推荐每次启动都在线安装数 GiB 依赖、长期修改容器根文件系统、使用可变 `latest` 镜像，或让用户自行搭配未经验证的 CUDA、驱动和框架版本。
 
 推荐发布少量黄金镜像，用 Digest 固定版本，并保留镜像 SBOM、漏洞扫描和 CUDA/Driver 兼容记录。用户确实需要新依赖时，先在项目 Lockfile 中验证，再进入下一版镜像。
+
+如果平台无法控制用户默认行为：用户会在 `/opt`、`/usr/local`、`/var`、Home 和各种缓存目录安装软件，并且明确需要“像个人 Linux 工作站一样停止后原样恢复”，只挂载 Home PVC 不再是完整答案。可以为这类用户提供 KubeVirt 持久工作站，用独立 Ceph RBD 保存整个 VM 根盘，同时保留容器 Notebook 作为默认轻量模式。完整步骤见：[用 KubeVirt 与 Ceph RBD 构建持久 GPU Notebook](../practices/kubevirt-rbd-notebook.md)。
 
 ## 14. 启动速度和 GPU 节点弹性
 
