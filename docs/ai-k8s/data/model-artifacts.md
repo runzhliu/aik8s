@@ -2,7 +2,7 @@
 title: 模型格式、制品供应链与分发
 description: 管理模型格式、OCI 制品、跨地域复制、P2P 分发、节点缓存、流式加载、签名和冷启动
 status: evolving
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
 ---
 
 # 模型格式、制品供应链与分发
@@ -135,7 +135,68 @@ spec:
 
 模型作为 OCI Artifact 或 Modelcar 可以复用 Registry 的 Digest、权限、镜像分发和节点缓存。需要评估大 Layer、垃圾回收、签名、Registry 带宽和 Snapshotter。
 
-## 7. KServe Modelcar
+## 7. OCI Registry 选型：Harbor 之外
+
+Harbor 是功能完整、成熟的开源选择，但不是唯一方案。选型先区分轻量 Registry、企业级 Registry、开发平台内置 Registry、通用制品库和云托管服务。
+
+### 自建与托管方案对比
+
+| 方案 | 类型 | 适合 | 主要特点与边界 |
+| --- | --- | --- | --- |
+| Harbor | 开源、自建 | 通用企业 Registry、多项目、复制和安全治理 | UI、RBAC、Proxy Cache、复制、扫描和签名生态完整；组件和数据库运维相对较重 |
+| Zot | 开源、自建 | 轻量私有 Registry、边缘、小型或专用模型仓库 | OCI 原生、单二进制，可启用认证、授权、扫描、GC、去重、镜像同步和 HA；平台治理生态小于 Harbor |
+| Project Quay / Red Hat Quay | 开源/商业支持 | 企业、多租户、OpenShift 和多地域 | Clair 扫描、Robot Account 和 Geo-replication；数据库、对象存储和故障切换仍需整体设计 |
+| CNCF Distribution | 开源、自建 | 最小 Registry、测试环境或二次开发基础 | 上游 Registry 实现，TLS、认证和存储驱动清晰；缺少完整 UI、扫描、租户、复制和策略管理 |
+| GitLab Container Registry | GitLab SaaS/自建集成 | GitLab CI/CD 已是研发主入口 | 项目权限、CI Token、清理策略和元数据集成方便；目标版本的 OCI 1.1 Referrers 支持需单独验证 |
+| GitHub Container Registry | 云托管 | GitHub 项目、开源和 Actions 流水线 | 与 Repository/Actions 权限集成简单；不适合作为离线或本地生产集群的唯一回源 |
+| JFrog Artifactory | 商业、自建/SaaS | 同时管理 OCI、Maven、PyPI、npm、模型等制品 | Remote/Virtual Repository 和供应链治理能力强；授权、成本和平台复杂度更高 |
+| ECR / Artifact Registry / ACR | 公有云托管 | 集群主要运行在单一公有云 | IAM、VPC、Kubernetes、扫描、复制和托管存储集成，运维成本低；跨云和迁移受云接口约束 |
+| 阿里云 ACR 企业版 | 国内云托管 | ACK、国内外多地域和大镜像分发 | OCI 制品、多地域同步、P2P 和按需加载能力适合国内网络；生产需使用有 SLA 的企业规格 |
+
+### 快速决策
+
+| 条件 | 优先候选 |
+| --- | --- |
+| 需要开源 UI、RBAC、扫描、复制和 Proxy Cache 的完整平台 | Harbor |
+| 希望轻量、OCI 原生、独立部署一个模型/镜像仓库 | Zot |
+| OpenShift/Red Hat 体系或需要 Quay 的企业支持 | Quay |
+| 已经使用 GitLab 管理代码、CI 和项目权限 | GitLab Container Registry |
+| 需要统一管理多种语言包、二进制、容器和模型 | JFrog Artifactory |
+| 全部工作负载位于单一公有云 | 优先该云的托管 Registry |
+| 只需要最小 `/v2/` API 或准备二次开发 | CNCF Distribution |
+
+不要仅比较“是否能 `docker push`”。生产能力至少包括：
+
+- Namespace/Repository 权限和 Robot/Workload Identity；
+- Tag Immutability、Digest 拉取和保留策略；
+- 在线/离线 Garbage Collection 及其可用性影响；
+- 漏洞扫描、签名、SBOM/Model BOM 和审计；
+- Proxy/Pull-through Cache 与外部源治理；
+- 对象存储 Backend、数据库备份和灾难恢复；
+- 跨可用区/地域复制的一致性、延迟和失败语义；
+- 监控、限流、并发上传和下载 SLO。
+
+### 大模型权重的专项检查
+
+OCI Registry 可以保存容器之外的 Artifact。ORAS 提供推送、拉取和开发 OCI Artifact 客户端的工具，它不是 Registry Server。不同 Registry 对 OCI 1.1 `subject`、Referrers API、自定义 Media Type 和 Artifact UI 的支持程度可能不同，必须用目标版本实际验证。
+
+大型模型还要验证：
+
+- 大 Blob 上传中断后能否续传，Gateway/Ingress 是否存在 Body、Buffer 和超时限制；
+- 模型分片如何映射为 Layer，更新少量权重是否导致全部 Layer 重新上传；
+- Registry、对象存储和出口在大量 Pod 同时冷启动时的吞吐与限流；
+- Layer 下载后是否还会解压/复制，容器运行时需要多少临时磁盘；
+- 跨地域复制完成是否进入模型发布门禁；
+- GC 是否理解仍被 Manifest、签名、SBOM 或 Referrer 引用的 Blob；
+- Tag 是否不可变，训练、部署和回滚是否始终记录 Manifest Digest；
+- 是否需要区域 Registry、Pull-through Cache、Dragonfly/P2P 或节点模型缓存；
+- Registry 故障时，已预热节点能否继续服务，新节点如何安全降级。
+
+Registry 负责权威制品和分发入口；Dragonfly/P2P、节点缓存和 Snapshotter 属于加速数据面，不能替代 Registry 的审批、签名、权限与生命周期。
+
+参考：[Zot Registry](https://zotregistry.dev/latest/)、[Project Quay](https://docs.projectquay.io/)、[CNCF Distribution](https://distribution.github.io/distribution/about/)、[GitLab Container Registry](https://docs.gitlab.com/user/packages/container_registry/)、[ORAS](https://oras.land/docs/)、[Amazon ECR Pull-through Cache](https://docs.aws.amazon.com/AmazonECR/latest/userguide/pull-through-cache.html)、[Azure Container Registry](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-concepts)、[阿里云 ACR](https://help.aliyun.com/zh/acr/product-overview/what-is-container-registry/)
+
+## 8. KServe Modelcar
 
 KServe 支持用 `oci://` 指向包含模型数据的 OCI Image：
 
@@ -162,7 +223,7 @@ spec:
 
 参考：[KServe OCI Modelcars](https://kserve.github.io/website/docs/model-serving/storage/providers/oci)
 
-## 8. 本地模型缓存
+## 9. 本地模型缓存
 
 模型冷启动路径：
 
@@ -188,7 +249,7 @@ spec:
 
 不能用 Prefix Cache 命中率衡量模型权重缓存，也不能把 Pod Running 当成 GPU 权重已经加载。
 
-## 9. KServe LocalModelCache
+## 10. KServe LocalModelCache
 
 KServe LocalModelCache 可以在目标节点预下载模型，并维护节点缓存状态。典型对象包括 `LocalModelNodeGroup`、`LocalModelCache` 和 `LocalModelNode`。
 
@@ -206,7 +267,7 @@ KServe LocalModelCache 可以在目标节点预下载模型，并维护节点缓
 
 参考：[KServe Local Model Cache](https://kserve.github.io/website/docs/model-serving/generative-inference/modelcache/localmodel)、[LocalModel Installation](https://kserve.github.io/website/docs/install/localmodel-install)
 
-## 10. 分发策略
+## 11. 分发策略
 
 ### 每个 Pod 下载
 
@@ -232,7 +293,7 @@ KServe LocalModelCache 可以在目标节点预下载模型，并维护节点缓
 
 引擎可以从 HTTP/S3 等远端源并发读取 Tensor，或通过特定格式边下载边反序列化，减少完整落盘和 CPU 内存峰值。它优化的是“远端字节进入引擎/GPU”的路径，不能替代不可变版本、区域复制、权限、缓存和回滚。
 
-## 11. 主流生产分层
+## 12. 主流生产分层
 
 当前主流做法不是在对象存储、OCI、PVC、P2P 中四选一，而是让它们承担不同层次：
 
@@ -274,7 +335,7 @@ Traffic Ready
 
 这套分层避免让一个系统同时承担制品治理、跨地域复制、节点缓存和请求发布。最常见的生产组合是：**对象存储或 OCI Registry 作为权威源，区域内保留副本，发布前预热到 GPU 节点本地 NVMe；节点规模很大时再加入 P2P。**
 
-## 12. 跨地域模型分发
+## 13. 跨地域模型分发
 
 多地域平台不应让每个 Pod 从中央 Bucket 或公网 Model Hub 跨 WAN 拉取。更稳健的路径是：
 
@@ -308,7 +369,7 @@ Global Artifact Digest
 
 OCI Registry 的 Layer 去重只对内容完全相同的 Layer 有效。一个权重分片中的少量数值变化也会产生新的 Digest，因此不要把增量同步收益建立在“模型版本相近”的直觉上；应根据真实分片和 Registry 行为测量。
 
-## 13. 百节点与 TB 级 P2P 分发
+## 14. 百节点与 TB 级 P2P 分发
 
 直接回源的理论流量近似为：
 
@@ -346,7 +407,7 @@ P2P 上线前要明确：
 
 P2P 是分发数据面，不是权威 Registry。Peer Cache 可以随时丢失和重建，模型审批、签名、生命周期与回滚仍由上层制品系统负责。
 
-## 14. 分发完成不等于模型可服务
+## 15. 分发完成不等于模型可服务
 
 一个模型从权威存储到真正提供请求，至少有四个不同状态：
 
@@ -369,7 +430,7 @@ P2P 是分发数据面，不是权威 Registry。Peer Cache 可以随时丢失�
 
 对于严格在线 SLO，更稳妥的默认值仍是先把完整、校验过的模型放到本地 NVMe，再由引擎并行加载；Streaming 用于经过基准证明的启动优化或长尾模型。
 
-## 15. 训练与推理的分发路径不同
+## 16. 训练与推理的分发路径不同
 
 | 维度 | 训练/Checkpoint | 在线推理权重 |
 | --- | --- | --- |
@@ -384,7 +445,7 @@ P2P 是分发数据面，不是权威 Registry。Peer Cache 可以随时丢失�
 
 基础模型与 Adapter 也可以分层：大型基础模型长期驻留节点，较小的 LoRA/Adapter 独立版本化并按需分发。仍需验证 Adapter 与基础模型 Digest、Tokenizer、引擎版本和租户权限，不能只按文件名拼装。
 
-## 16. 模型发布状态机
+## 17. 模型发布状态机
 
 一个可控的模型发布流程可以表示为：
 
@@ -416,7 +477,7 @@ Build
 
 不要让 Autoscaler 在流量峰值到来后才第一次下载几百 GB 权重。在线推理的节点供给、模型预热和副本扩容需要联合规划；必要时保留空 GPU 节点或 Warm Pool。
 
-## 17. 容量与带宽规划
+## 18. 容量与带宽规划
 
 单节点下载时间可以粗略估算为：
 
@@ -448,7 +509,7 @@ Build
 
 模型 Shard 也有权衡：过大的 Shard 降低元数据数量，但单片失败重试成本高、并发度低；过小的 Shard 会增加请求、文件系统元数据和打开文件压力。应让分片大小、引擎并行加载能力、对象存储 Multipart 和 P2P Piece 策略共同基准，而不是机械地统一文件大小。
 
-## 18. 冷启动预算
+## 19. 冷启动预算
 
 ```text
 冷启动 = 节点供给
@@ -464,7 +525,7 @@ Build
 
 对每一项测量 P50/P95，并记录缓存冷/热两种情况。一个 100 GiB 模型即使远端带宽为 10 Gbit/s，理论传输下限也超过一分钟，实际还包括协议、并发、解压和存储瓶颈。
 
-## 19. 完整性和签名
+## 20. 完整性和签名
 
 推荐链路：
 
@@ -481,7 +542,7 @@ Build
 
 不仅签名权重，还要关联 Tokenizer、配置、量化 Scale 和自定义代码。Digest 一致只能证明内容未变，不能证明模型质量或来源可信。
 
-## 20. 权限模型
+## 21. 权限模型
 
 - 模型发现、读取、发布、晋级和删除使用不同权限；
 - 生产 Pod 只读特定已审批 Digest；
@@ -491,7 +552,7 @@ Build
 - 模型许可证和数据使用限制进入元数据；
 - 审计谁让哪个模型版本进入哪个环境。
 
-## 21. 垃圾回收
+## 22. 垃圾回收
 
 清理对象包括：
 
@@ -504,7 +565,7 @@ Build
 
 删除前检查线上部署、Canary、回滚策略、训练血缘和合规保留。缓存可以按 LRU 清理，权威制品不能用同一策略。
 
-## 22. 可观测性
+## 23. 可观测性
 
 至少记录：
 
@@ -524,7 +585,7 @@ Build
 
 所有指标至少带上 `model_digest`、`region`、`cluster_id`、`node`、`source` 和 `release_id` 中适用的维度。模型名称或 Tag 不足以区分实际字节版本。
 
-## 23. 常见故障
+## 24. 常见故障
 
 | 现象 | 可能原因 |
 | --- | --- |
@@ -542,7 +603,7 @@ Build
 | Streaming 首次请求抖动 | 远端读取、惰性 Page Fault 或未完成 Engine Warmup |
 | 回滚失败 | 旧模型或对应 Runtime 已被清理 |
 
-## 24. 生产检查清单
+## 25. 生产检查清单
 
 - [ ] 模型版本关联权重、Tokenizer、配置、量化和评估。
 - [ ] 所有生产部署使用不可变 Revision 或 Digest。
@@ -569,6 +630,11 @@ Build
 - [KServe OCI Modelcars](https://kserve.github.io/website/docs/model-serving/storage/providers/oci)
 - [KServe Local Model Cache](https://kserve.github.io/website/docs/model-serving/generative-inference/modelcache/localmodel)
 - [KServe LocalModel Installation](https://kserve.github.io/website/docs/install/localmodel-install)
+- [Zot Registry](https://zotregistry.dev/latest/)
+- [Project Quay](https://docs.projectquay.io/)
+- [CNCF Distribution](https://distribution.github.io/distribution/about/)
+- [GitLab Container Registry](https://docs.gitlab.com/user/packages/container_registry/)
+- [ORAS](https://oras.land/docs/)
 - [Hugging Face Hub 下载与缓存](https://huggingface.co/docs/huggingface_hub/en/guides/download)
 - [Dragonfly](https://d7y.io/docs/)
 - [vLLM Tensorizer](https://docs.vllm.ai/en/latest/models/extensions/tensorizer/)

@@ -2,6 +2,8 @@
 site_name = "AI/LLM on Kubernetes 基础设施"
 site_description = "面向平台工程师和 SRE 的 AI/LLM on Kubernetes 基础设施文档：GPU、大数据、调度、训练、推理、RAG、Agent 与生产运维"
 site_url = "https://aik8s.run/"
+repo_url = "https://github.com/runzhliu/aik8s"
+repo_name = "runzhliu/aik8s"
 docs_dir = "docs"
 site_dir = "site"
 nav = [
@@ -89,6 +91,9 @@ features = [
   "toc.follow",
   "content.code.copy",
 ]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
 
 [[project.theme.palette]]
 media = "(prefers-color-scheme: light)"

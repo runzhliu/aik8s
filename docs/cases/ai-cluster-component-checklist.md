@@ -89,6 +89,7 @@ Kueue、Volcano 和 YuniKorn 不一定全部安装。应根据“准入队列”
 | 共享文件 | 云文件、CephFS、NFS、并行文件系统 | 条件必需 | 兼容 POSIX、Notebook Home、多 Rank Checkpoint |
 | 本地高速盘 | NVMe、Local PV、`emptyDir` with size limit | 条件必需 | Shuffle、Spill、模型缓存和数据热层 |
 | 模型 Registry | MLflow、Kubeflow Model Registry/Hub、自研 Catalog | 条件必需 | 管理模型元数据、阶段、评估和血缘 |
+| OCI Registry | Harbor、Zot、Quay、GitLab Registry、Artifactory 或云厂商 Registry | 必需 | 保存不可变镜像、OCI 模型制品、签名和 SBOM；选型见[模型制品与分发](../ai-k8s/data/model-artifacts.md#7-oci-registry-harbor) |
 | 模型分发 | OCI Modelcar、KServe LocalModel、P2P/节点缓存、自研 DaemonSet | 大模型条件必需 | 权重很大时降低冷启动和对象存储热点 |
 | Dataset Catalog | Iceberg/Delta/Hudi Catalog、数据 Catalog | 数据平台条件必需 | 训练绑定 Snapshot、Schema 和权限 |
 | 数据/模型签名 | Digest、Cosign、SBOM/Model BOM | 生产必需 | 确认进入训练和推理的制品不可变、可审计 |
