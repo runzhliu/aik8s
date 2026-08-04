@@ -2,7 +2,7 @@
 title: 大模型时代的 GPU Notebook 平台与存储选型
 description: 从 JupyterHub、Kubeflow 和托管 Workbench，到整卡、MIG、共享 GPU、用户 Home、对象存储与本地缓存的生产选型
 status: evolving
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
 ---
 
 # 大模型时代的 GPU Notebook 平台与存储选型
@@ -217,7 +217,100 @@ Kubeflow 官方提醒：Pod 启动后临时安装的包会随 Pod 消失，除�
 
 `ResourceQuota` 用来限制团队资源总量，`LimitRange` 和准入策略用来阻止无边界的 CPU、内存和临时存储；GPU 总量还应进入团队配额、审批或队列体系。
 
-## 6. 先估算显存，再选择 GPU
+## 6. 容器、KubeVirt 与共享大机的资源隔离
+
+很多早期 Notebook 平台采用“一台大机器、几十个特权容器、所有用户都能看到全部 CPU、内存和 GPU”的方式。它的优点是资源空闲时任何人都能直接使用，缺点是安全边界、故障域、性能归因和容量保护几乎都交给用户自觉。
+
+迁移到 KubeVirt 前，必须先区分三种完全不同的资源语义：
+
+| 层次 | 典型配置 | 实际作用 |
+| --- | --- | --- |
+| Guest 虚拟硬件 | `domain.cpu`、Guest Memory | 决定 VM 内能看到多少 vCPU 和内存，是 Guest 的直接上限 |
+| `virt-launcher` request | `resources.requests` | 决定 Kubernetes 调度预留量和 CPU 竞争权重，不是 CPU 硬上限 |
+| `virt-launcher` limit | `resources.limits` | CPU 通过 cgroup 节流，内存越界可能导致 VM 崩溃或被终止 |
+| 专用 CPU | `dedicatedCpuPlacement: true` | 将 vCPU 固定到独占 pCPU，换取稳定性能并放弃弹性共享 |
+| GPU 设备 | PCI Passthrough、vGPU/MDEV、MIG、Time-Slicing | 决定 GPU 是独占、硬件切分还是 Best Effort 共享 |
+
+### 特权容器不是“能用完整台机器”的原因
+
+`privileged: true` 主要改变 Linux capabilities、设备访问和宿主机攻击面，并不会自动绕过 CPU 或内存 cgroup。旧平台里的 Notebook 能使用大量资源，通常是因为没有设置 CPU/内存 limit，并把所有 GPU 设备暴露给了容器；普通非特权容器在没有 CPU limit 时，同样可以使用节点的空闲 CPU。
+
+因此，不应为了保留资源弹性继续使用特权容器。更安全的做法是取消特权和 HostPath，只保留较小 request，并选择“不设 CPU limit”或设置较高 CPU limit。内存仍应有明确上限，避免单个 Notebook 把节点推入 OOM。参考：[Kubernetes 资源 request 与 limit](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+
+### 2 vCPU VM 不会自动借到 10 核
+
+如果 VM 配置了 2 个 vCPU，Guest 最多只能并行执行两个 vCPU 线程；即使宿主机还有 98 个空闲核，它也不会自动变成 10 核或 100 核。没有 CPU limit 只表示这两个 vCPU 不受额外的 cgroup 配额节流，QEMU emulator 和 I/O 线程还会消耗少量宿主机 CPU。
+
+KubeVirt 默认 `cpuAllocationRatio` 为 10，因此一个 2 vCPU VM 默认只为 `virt-launcher` 请求约 `200m` CPU，而且默认没有 CPU limit。实测常见结果如下：
+
+```text
+Guest：2 vCPU / 4 GiB
+virt-launcher CPU request：200m
+virt-launcher CPU limit：未设置
+virt-launcher Memory request：约 4 GiB + 虚拟化开销
+```
+
+在 100 核机器上运行 50 台这样的 VM 时，Guest 一共能看到 100 vCPU，但调度器默认只统计约 10 核 CPU request。所有 VM 同时繁忙时仍可能把 100 核用满；单台 VM 则不会突破自己的 2 vCPU 拓扑。参考：[KubeVirt Resources Requests and Limits](https://kubevirt.io/user-guide/compute/resources_requests_and_limits/)、[KubeVirt Node Overcommit](https://kubevirt.io/user-guide/compute/node_overcommit/)
+
+### 想要“保底 2 核、空闲时用到 8 核”
+
+需要让 Guest 看见更多 vCPU，同时只向调度器申请较小的保底份额，并且不设置 CPU limit：
+
+```yaml
+spec:
+  domain:
+    cpu:
+      sockets: 8
+    resources:
+      requests:
+        cpu: "2"
+        memory: 16Gi
+      # 不设置 limits.cpu
+```
+
+这台 VM 在节点空闲时最多可以并行使用约 8 个 vCPU；发生竞争时，`2` 核 request 主要决定调度准入和 CPU shares。不同策略的区别是：
+
+| 配置 | 调度预留 | 单 VM 最大并行 CPU | 适用场景 |
+| --- | ---: | ---: | --- |
+| 2 vCPU、默认 request、无 limit | 约 0.2 核 | 约 2 核 | 高密度轻量 Notebook |
+| 8 vCPU、request 2、无 limit | 2 核 | 约 8 核 | 希望空闲时突发的交互开发 |
+| 2 vCPU、limit 2 | 取决于 request | 约 2 核且受配额节流 | 需要明确硬上限 |
+| 2 vCPU、Dedicated CPU | 2 个独占 pCPU，另计开销 | 2 个固定 pCPU | 性能测试、低延迟和稳定吞吐 |
+
+专用 CPU 要求 Guaranteed QoS、整数 CPU，并依赖 kubelet CPU Manager；还要为 QEMU emulator 和平台 DaemonSet 预留容量。参考：[KubeVirt Dedicated CPU](https://kubevirt.io/user-guide/compute/dedicated_cpu_resources/)
+
+### 内存不能照搬 CPU 的超卖方式
+
+CPU 时间可以在多个 vCPU 之间调度，Guest 内存则更接近启动时就要兑现的容量。KubeVirt 当前不适合依赖传统虚拟化平台中的大规模动态 Ballooning 和自动归还：给 50 台 VM 各分 16 GiB，容量规划就应接近 800 GiB，再加 `virt-launcher`、页表、固件和设备模拟开销。
+
+生产上可以积极超卖 CPU，但应谨慎超卖内存。即使 `virt-launcher` 没有 memory limit，Guest 也不会因此自动看到宿主机全部内存；反过来，设置过紧的 memory limit 可能直接导致 VM 崩溃。Notebook 的模型、数据和缓存应放入对象存储、共享数据层和本地缓存，而不是靠给所有 VM 分配接近整机容量解决。
+
+### 8 张 GPU 如何提供给 50 个用户
+
+| 模式 | 用户看到的资源 | 隔离 | 50 人共享 8 卡的含义 |
+| --- | --- | --- | --- |
+| 完整 PCI Passthrough | 一张或多张真实 GPU | 强，设备通常独占 | 8 张卡最多同时承载 8 台单卡 VM |
+| NVIDIA vGPU / MDEV | 一张卡上的虚拟 GPU Profile | 取决于硬件、驱动和 Profile | 可把一张卡拆给多台 VM，但需要支持的 GPU 和授权体系 |
+| MIG | 硬件切分实例 | 有显存和故障隔离 | 适合稳定的小规格多租户，但 Profile 数量和形状固定 |
+| Time-Slicing | 共享访问资源 | 没有显存和故障隔离 | 能提高并发，但一个用户仍可能占满显存或影响同卡任务 |
+| 单台大型 GPU VM | VM 内看到全部 8 张 GPU | VM 与宿主机隔离，VM 内用户仍共享 | 最接近旧平台“一台大机供 50 人使用”的行为 |
+
+物理 GPU Passthrough 需要 IOMMU、VFIO 和设备插件，分配后不能同时继续交给宿主机容器使用。KubeVirt 也支持 mediated device/vGPU，但应把驱动、License、Profile 重配和节点排空纳入生命周期。参考：[KubeVirt Host Devices](https://kubevirt.io/user-guide/compute/host-devices/)、[KubeVirt Mediated Devices](https://kubevirt.io/user-guide/compute/mediated_devices_configuration/)、[NVIDIA GPU Operator with KubeVirt](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/25.3/gpu-operator-kubevirt.html)
+
+NVIDIA Time-Slicing 可以扩大并发，但官方明确说明它不提供 MIG 的显存和故障隔离；申请多个共享资源也不保证获得成比例的算力。它适合同一信任域的开发测试，不应包装成强隔离规格。参考：[NVIDIA GPU Time-Slicing](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/25.3.4/gpu-sharing.html)
+
+### 100 核、8 卡、50 人的推荐组合
+
+不要强迫所有用户只使用一种隔离模型，更实用的是混合平台：
+
+1. **默认交互 Notebook 使用非特权容器**：CPU request 设为 1–2 核，不设置或设置较高 CPU limit；内存设置合理 request 和硬 limit；GPU 使用 MIG 或经过风险说明的 Time-Slicing。
+2. **需要 root、systemd、任意系统包或更强安全边界时使用 KubeVirt**：例如给 Guest 8 vCPU、CPU request 2 核且不设 CPU limit，内存按真实容量分配；GPU 选择整卡 Passthrough 或 vGPU。
+3. **必须保留“所有人都看见 8 张卡”的旧体验时使用单台大型 GPU VM**：把大部分 CPU、内存和 8 张 GPU 分给一台 VM，再在 VM 内运行 JupyterHub 和用户容器。它缩小了对 Kubernetes 宿主机的攻击面，但没有解决 VM 内 50 个用户之间的资源干扰。
+4. **正式训练从 Notebook 移交到 Job/TrainJob/RayJob**：通过队列、配额和优先级获得整卡或多卡，避免一个交互环境长期持有昂贵资源。
+
+不建议尝试制造“特权 KubeVirt VM”。Guest root 默认只控制 Guest；需要的 GPU、网卡、NVMe 和网络能力应逐项声明。把 HostPath、Host PID、任意 PCI 设备和宿主机管理权限一起暴露给用户，只会重新制造旧平台的宿主机级风险。
+
+## 7. 先估算显存，再选择 GPU
 
 只看模型参数量通常会低估显存。最基本的权重估算是：
 
@@ -242,7 +335,7 @@ INT4：约 0.5 Byte，加量化元数据
 
 正式采购前必须用目标模型、框架、精度、上下文和 Batch 实测峰值显存，不要只按参数量乘字节做容量承诺。
 
-## 7. 整卡、MIG、Time-Slicing 和 MPS 怎么选
+## 8. 整卡、MIG、Time-Slicing 和 MPS 怎么选
 
 | 模式 | 显存隔离 | 故障隔离 | 性能稳定性 | 适合 Notebook | 主要代价 |
 | --- | --- | --- | --- | --- | --- |
@@ -273,7 +366,7 @@ NVIDIA 明确说明 Time-Slicing Replica 之间没有 MIG 所提供的显存和�
 
 共享 GPU 还需要额外监控物理卡级 XID、显存 OOM 和利用率。仅按 Pod 的扩展资源数量计费会误导用户，因为它不能代表实际获得的 GPU 时间。
 
-## 8. 把 Notebook 数据分成八类
+## 9. 把 Notebook 数据分成八类
 
 | 数据 | 是否需要持久 | 是否需要共享 | 推荐位置 |
 | --- | --- | --- | --- |
@@ -288,7 +381,7 @@ NVIDIA 明确说明 Time-Slicing Replica 之间没有 MIG 所提供的显存和�
 
 最重要的规则是：**Home PVC 不是数据湖，RWX 共享盘不是所有数据的默认归宿，本地 NVMe 不是唯一副本。**
 
-## 9. 存储类型选型矩阵
+## 10. 存储类型选型矩阵
 
 | 存储类型 | 访问模式 | 性能特点 | 适合 | 不适合 |
 | --- | --- | --- | --- | --- |
@@ -305,7 +398,7 @@ Kubernetes 的 PersistentVolume 生命周期独立于单个 Pod；`emptyDir` 等
 
 `ReadWriteOnce` 表示卷可以在一个节点上读写，并不一定严格限制为一个 Pod；需要确保同一时刻只被一个 Pod 使用时，应评估 CSI 驱动是否支持 `ReadWriteOncePod`。多数 Notebook 平台依靠“一个用户服务器 + 一个 PVC”的控制面约束已经足够，但迁移和故障场景仍要验证重复挂载行为。
 
-## 10. 推荐的目录与挂载约定
+## 11. 推荐的目录与挂载约定
 
 ```text
 /home/jovyan        每用户 SSD PVC；Notebook、脚本、配置、小型虚拟环境
@@ -325,7 +418,7 @@ Kubernetes 的 PersistentVolume 生命周期独立于单个 Pod；`emptyDir` 等
 - 正式 Checkpoint 必须同步到哪个对象存储前缀；
 - 禁止把 Token、云密钥或 kubeconfig 写入 Notebook 输出和 Git。
 
-## 11. 推荐的存储分层
+## 12. 推荐的存储分层
 
 ```text
 权威层：对象存储
@@ -358,7 +451,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 第一版可以采用“对象存储权威副本 + 节点 NVMe LRU 缓存”。当缓存未命中、校验失败或节点丢失时，系统必须能从权威层重建。
 
-## 12. 不要把所有用户都放进一个巨大 RWX Home
+## 13. 不要把所有用户都放进一个巨大 RWX Home
 
 “所有 Home 共用一个 RWX 文件系统”看起来迁移简单，但常见问题包括：
 
@@ -370,7 +463,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 默认采用每用户 RWO/RWOP SSD PVC，团队确实需要共享的内容再挂载到独立 RWX 路径。共享目录应有项目级 ACL、配额、快照和生命周期策略。
 
-## 13. 环境应该放在镜像还是 Home
+## 14. 环境应该放在镜像还是 Home
 
 ### 放进不可变镜像
 
@@ -392,7 +485,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 如果平台无法控制用户默认行为：用户会在 `/opt`、`/usr/local`、`/var`、Home 和各种缓存目录安装软件，并且明确需要“像个人 Linux 工作站一样停止后原样恢复”，只挂载 Home PVC 不再是完整答案。可以为这类用户提供 KubeVirt 持久工作站，用独立 Ceph RBD 保存整个 VM 根盘，同时保留容器 Notebook 作为默认轻量模式。完整步骤见：[用 KubeVirt 与 Ceph RBD 构建持久 GPU Notebook](../practices/kubevirt-rbd-notebook.md)。
 
-## 14. 启动速度和 GPU 节点弹性
+## 15. 启动速度和 GPU 节点弹性
 
 ```text
 总启动时间
@@ -417,7 +510,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 交互式 Notebook 不适合无限期在 Kueue 中排队。更合理的方式是给交互池保留小额配额和明确最大会话时间，正式训练则由 Notebook 提交到 Kueue 管理的 Job 队列。
 
-## 15. Idle Culler 不是简单看浏览器是否打开
+## 16. Idle Culler 不是简单看浏览器是否打开
 
 空闲回收至少要区分：
 
@@ -440,7 +533,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 成本报表至少区分 Allocation、GPU 实际利用、Active User Time 和 Idle Allocated Time。只统计“分配了几张卡”无法判断平台是否有效。
 
-## 16. 安全隔离
+## 17. 安全隔离
 
 Notebook 是带浏览器入口、终端和任意代码执行能力的长生命周期 Shell，应按高风险工作负载治理。
 
@@ -467,7 +560,7 @@ Notebook 是带浏览器入口、终端和任意代码执行能力的长生命�
 - Secret 使用外部 Secret 系统或短期令牌，避免显示在环境变量、Notebook 输出和日志中；
 - 对外分享 Notebook 必须经过脱敏和输出清理。
 
-## 17. 可观测性与审计
+## 18. 可观测性与审计
 
 每个 Workspace Pod 建议统一用户、团队、Workspace、Profile、镜像 Digest、成本中心和 GPU 模式等标签。
 
@@ -482,7 +575,7 @@ Notebook 是带浏览器入口、终端和任意代码执行能力的长生命�
 
 审计至少保留：谁创建、启动、停止、删除或改变了 Workspace；选择了哪个镜像、Profile 和数据挂载；谁申请了整卡或多卡；Notebook 以什么身份提交了哪个 Job；谁访问了受限数据；管理员何时升级控制面、镜像、CSI 和 GPU 组件。
 
-## 18. 三套参考架构
+## 19. 三套参考架构
 
 ### A. 10–50 人研发团队
 
@@ -525,7 +618,7 @@ Cloud IAM → Managed Workbench
 
 特点：优先减少平台运维，重点控制 Idle Shutdown、私网、实例配额、持久卷费用和跨区数据。随着租户隔离、自定义调度或多云需求增长，再评估迁移到 Kubernetes 工作区平台。
 
-## 19. 一个平台规格契约示例
+## 20. 一个平台规格契约示例
 
 不要直接让用户填写完整 Pod。内部平台可以维护类似下面的目录对象，再渲染为 JupyterHub Profile、Kubeflow Workspace 或托管服务模板：
 
@@ -571,7 +664,7 @@ spec:
 
 这不是建议立即发明一个新的 CRD。第一版可以用 Git 中的 JupyterHub Helm Values、Kubeflow 模板或内部 Portal 配置表达同样的契约。关键是用户看到的是稳定产品规格，平台内部才处理 StorageClass、Resource Name、Taint 和网络策略。
 
-## 20. PoC 必须测什么
+## 21. PoC 必须测什么
 
 ### 功能测试
 
@@ -606,7 +699,7 @@ spec:
 - 尝试使用特权容器、HostPath、Host Network 和未批准镜像；
 - 检查 Notebook 输出、终端历史、Git 历史和日志是否泄露 Token。
 
-## 21. 备份与生命周期
+## 22. 备份与生命周期
 
 ### Home PVC
 
@@ -631,7 +724,7 @@ spec:
 
 参考：[Kubernetes Volume Snapshots](https://kubernetes.io/docs/concepts/storage/volume-snapshots/)
 
-## 22. 常见反模式
+## 23. 常见反模式
 
 | 反模式 | 后果 | 修正 |
 | --- | --- | --- |
@@ -646,7 +739,7 @@ spec:
 | Snapshot 当成唯一备份 | 同故障域或误删仍可能无法恢复 | Git + 独立备份 + 恢复演练 |
 | Idle 只看浏览器连接 | 误杀计算或永不回收后台进程 | Kernel、Terminal、GPU 和最长时限联合判断 |
 
-## 23. 选型评分表
+## 24. 选型评分表
 
 建议先给以下维度设置权重，再用实际 PoC 数据打分：
 
@@ -662,7 +755,7 @@ spec:
 
 总分接近不代表产品等价。安全、数据恢复或 GPU 隔离中的任何一项没有达到硬门槛，都不应被更好的 UI 分数抵消。
 
-## 24. 分阶段落地
+## 25. 分阶段落地
 
 ### 第一阶段：建立可用入口
 
@@ -692,7 +785,7 @@ spec:
 - 缓存预热、热点预测和容量预约；
 - Kubeflow Notebooks v1 到 Workspaces v2 或其他平台的迁移。
 
-## 25. 上线清单
+## 26. 上线清单
 
 - [ ] Notebook 只承担交互开发，正式长任务有独立执行系统。
 - [ ] 用户只能选择批准的镜像、资源和挂载 Profile。

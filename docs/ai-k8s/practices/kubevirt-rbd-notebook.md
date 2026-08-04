@@ -163,6 +163,8 @@ kubectl taint node <node> workload.example.com/kubevirt=true:NoSchedule
 
 KubeVirt 的专用 vCPU 依赖 Kubernetes CPU Manager；NUMA passthrough 还要求 Dedicated CPU 和可分配 HugePages。参考：[Dedicated CPU](https://kubevirt.io/user-guide/compute/dedicated_cpu_resources/)、[NUMA](https://kubevirt.io/user-guide/compute/numa/)
 
+`domain.cpu` 中的 vCPU 数量、`virt-launcher` Pod 的 CPU request/limit 和宿主机 pCPU 是三个不同层次。需要在“每位用户固定 2 核”和“保底 2 核、空闲时可突发到 8 核”之间做选择时，见 [Notebook 容器、KubeVirt 与共享大机的资源隔离](../development/gpu-notebook-platform.md#6-kubevirt)。
+
 ### 4.4 GPU 直通宿主机准备
 
 PCI Passthrough 的宿主机还需要：
