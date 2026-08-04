@@ -9,7 +9,7 @@ last_reviewed: 2026-08-03
 
 AI on Kubernetes 不是一个单独产品，而是一套逐步形成的云原生 AI 基础设施。过去十年的核心变化，是 Kubernetes 从“能运行使用 GPU 的容器”，发展为能够表达分布式训练、稀缺加速器、模型服务和生成式推理特征的平台底座。
 
-## 一、发展阶段
+## 1. 发展阶段
 
 | 阶段 | 核心问题 | 主要变化 | 代表工具/能力 |
 | --- | --- | --- | --- |
@@ -19,7 +19,7 @@ AI on Kubernetes 不是一个单独产品，而是一套逐步形成的云原生
 | 2023—2024 | LLM 如何高吞吐运行 | Paged KV、连续 Batch、GPU 共享、拓扑与成本 | vLLM、SGLang、LWS、KServe、DCGM |
 | 2025—2026 | 设备、Workload 和请求如何协同 | DRA、Workload/PodGroup、Inference Extension、P/D 分离 | DRA、JobSet、LWS、llm-d、Dynamo |
 
-## 二、2016—2017：让 Kubernetes 看见 GPU
+## 2. 2016—2017：让 Kubernetes 看见 GPU
 
 早期 Kubernetes 主要面向 CPU 和内存。GPU、FPGA、RDMA 等设备需要一种不把厂商逻辑写入核心的扩展机制。
 
@@ -35,7 +35,7 @@ resources:
 
 同一时期 CPU Manager、HugePages、Topology Manager 等能力逐步为高性能工作负载建立底座。
 
-## 三、2018—2020：训练语义进入 Operator
+## 3. 2018—2020：训练语义进入 Operator
 
 分布式训练不只是多个相同 Pod。它包含不同角色、Rank、Rendezvous、整体启动、失败恢复和完成状态。
 
@@ -52,7 +52,7 @@ Kubeflow Training Operator、MPI Operator 等控制器将这些语义写入 CRD�
 
 但许多团队也经历了“安装完整 Kubeflow 等于拥有 MLOps”的误区。组件存在不代表数据、模型和审批已经形成闭环。
 
-## 四、2020—2022：MLOps 与平台工程
+## 4. 2020—2022：MLOps 与平台工程
 
 规模增长后，问题从“能运行”变成“能否复现、共享和治理”：
 
@@ -65,7 +65,7 @@ Kubeflow Training Operator、MPI Operator 等控制器将这些语义写入 CRD�
 
 MLflow、Kubeflow Pipelines、Argo Workflows、Flyte 等承担实验和工作流；KServe 形成统一推理 API；Kueue 将队列、配额和借用带入 Kubernetes 原生工作负载准入；KubeRay 让 Ray 集群和任务进入控制器模型。
 
-## 五、2023—2024：LLM 改变推理系统
+## 5. 2023—2024：LLM 改变推理系统
 
 LLM 的请求和资源模型与普通预测服务不同：
 
@@ -81,7 +81,7 @@ vLLM 的 PagedAttention 和高吞吐服务生态、SGLang 的 Prefix/Radix 能�
 
 LeaderWorkerSet 开始表达“一个模型副本由 Leader 和多个 Worker 构成”，Gateway 和服务控制面也需要理解模型级状态，而不是仅把 Pod 视作无状态 HTTP 后端。
 
-## 六、2025—2026：从 Pod 到设备、Workload 和请求
+## 6. 2025—2026：从 Pod 到设备、Workload 和请求
 
 这一阶段有三条并行演进路线。
 
@@ -106,7 +106,7 @@ llm-d、NVIDIA Dynamo 等系统进一步组合：
 - 多机、多池和多种引擎；
 - Flow Control 和联合扩缩容。
 
-## 七、控制对象的演进
+## 7. 控制对象的演进
 
 ```text
 第一阶段：Pod
@@ -124,7 +124,7 @@ llm-d、NVIDIA Dynamo 等系统进一步组合：
 
 每次上移都不会让下一层消失。请求级 Router 仍依赖正确的 Pod 调度，DRA 仍依赖驱动和容器运行时。
 
-## 八、基础设施主线
+## 8. 基础设施主线
 
 截至 2026 年，一套常见开源主线可以概括为：
 
@@ -147,7 +147,7 @@ Kubernetes + containerd + CNI/CSI
 
 对 AI 平台，当前更成熟的边界通常是“全局选择集群、本地选择节点或 Endpoint”：训练把完整 Job 放进一个满足 GPU 拓扑和 RDMA 的集群，推理在各地域部署完整模型服务并调度请求。详细演进与架构见：[Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)。
 
-## 九、长期不变的工程原则
+## 9. 长期不变的工程原则
 
 1. **Kubernetes 不等于 MLOps。** 它不自动管理数据血缘、模型质量和审批。
 2. **GPU 可分配不等于 GPU 被有效使用。** 数据、网络和 Batch 都可能是瓶颈。
@@ -158,7 +158,7 @@ Kubernetes + containerd + CNI/CSI
 7. **质量与性能必须绑定。** 更快但质量下降的模型不是同一产品。
 8. **先建立基线，再引入优化。** 否则无法知道收益和回归来源。
 
-## 十、延伸阅读
+## 10. 延伸阅读
 
 - [Kubernetes 十年回顾](https://kubernetes.io/blog/2024/06/06/10-years-of-kubernetes/)
 - [CNCF Cloud Native AI Whitepaper](https://www.cncf.io/reports/cloud-native-artificial-intelligence-whitepaper/)

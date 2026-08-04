@@ -11,7 +11,7 @@ last_reviewed: 2026-08-02
 
 如果还处在模型、Prompt、RAG 或 API 联调阶段，可先从[本地运行与测试大模型](local-testing.md)开始，再用本页选择生产候选引擎。
 
-## 一、推理平台分层
+## 1. 推理平台分层
 
 ```text
 API Client
@@ -32,7 +32,7 @@ Gateway 与请求调度
 
 KServe 和 vLLM 通常是组合关系；llm-d/Dynamo 也可能在多个引擎之上提供分布式运行、路由和 KV 传输。
 
-## 二、先定义需求
+## 2. 先定义需求
 
 至少明确：
 
@@ -49,7 +49,7 @@ KServe 和 vLLM 通常是组合关系；llm-d/Dynamo 也可能在多个引擎之
 
 没有负载画像时，“哪个引擎最快”没有可操作答案。
 
-## 三、主要引擎对比
+## 3. 主要引擎对比
 
 | 引擎 | 核心定位 | 优势 | 主要代价 |
 | --- | --- | --- | --- |
@@ -63,7 +63,7 @@ KServe 和 vLLM 通常是组合关系；llm-d/Dynamo 也可能在多个引擎之
 
 表格只表达定位。模型覆盖和硬件矩阵变化很快，最终以目标版本官方文档和基准为准。
 
-## 四、vLLM
+## 4. vLLM
 
 适合：
 
@@ -97,7 +97,7 @@ vllm serve /models/example \
 
 参考：[vLLM Documentation](https://docs.vllm.ai/)
 
-## 五、SGLang
+## 5. SGLang
 
 SGLang 的核心特点包括 RadixAttention/Prefix Cache、结构化生成、并行和面向复杂 LLM/多模态工作负载的运行时。
 
@@ -120,7 +120,7 @@ SGLang 的核心特点包括 RadixAttention/Prefix Cache、结构化生成、并
 
 参考：[SGLang Documentation](https://docs.sglang.io/)
 
-## 六、TensorRT-LLM
+## 6. TensorRT-LLM
 
 适合追求 NVIDIA 平台极限性能并能承担构建与验证复杂度的团队。能力通常包括：
 
@@ -142,7 +142,7 @@ SGLang 的核心特点包括 RadixAttention/Prefix Cache、结构化生成、并
 
 参考：[TensorRT-LLM Documentation](https://nvidia.github.io/TensorRT-LLM/latest/)
 
-## 七、Triton Inference Server
+## 7. Triton Inference Server
 
 Triton 适合统一传统 ML/DL、多模型和多 Backend：
 
@@ -158,7 +158,7 @@ Triton 可以承载 LLM Backend，但如果目标是最新的 Prefix Cache、P/D
 
 参考：[Triton Architecture](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/architecture.html)
 
-## 八、llama.cpp 与边缘运行时
+## 8. llama.cpp 与边缘运行时
 
 适合：
 
@@ -178,7 +178,7 @@ Triton 可以承载 LLM Backend，但如果目标是最新的 Prefix Cache、P/D
 
 不要因为 Runtime 轻量，就跳过模型版本和质量回归。
 
-## 九、多引擎 Runtime Catalog
+## 9. 多引擎 Runtime Catalog
 
 平台可以维护一组经过验证的 Runtime：
 
@@ -192,7 +192,7 @@ Triton 可以承载 LLM Backend，但如果目标是最新的 Prefix Cache、P/D
 
 每个 Runtime 记录：镜像 Digest、驱动/CUDA/ROCm、引擎版本、支持模型、量化、最大上下文、已知限制、基准和下线日期。
 
-## 十、Kubernetes Deployment 基线
+## 10. Kubernetes Deployment 基线
 
 ```yaml
 apiVersion: apps/v1
@@ -238,7 +238,7 @@ spec:
 
 生产还需要模型卷、`/dev/shm`、安全上下文、ServiceAccount、NetworkPolicy、PDB、Service、Gateway、指标和优雅终止。
 
-## 十一、Readiness 与启动探针
+## 11. Readiness 与启动探针
 
 模型下载和加载可能很久，建议区分：
 
@@ -248,7 +248,7 @@ spec:
 
 Readiness 应覆盖目标模型存在、Engine Worker 健康和必要分布式 Peer 就绪。端口监听不能证明模型已加载。
 
-## 十二、优雅终止
+## 12. 优雅终止
 
 滚动升级时：
 
@@ -261,7 +261,7 @@ Readiness 应覆盖目标模型存在、Engine Worker 健康和必要分布式 P
 
 需要验证客户端取消、SIGTERM、preStop 和 Gateway Endpoint 更新顺序。
 
-## 十三、引擎选择实验
+## 13. 引擎选择实验
 
 用同一模型和硬件对候选引擎执行：
 
@@ -276,7 +276,7 @@ Readiness 应覆盖目标模型存在、Engine Worker 健康和必要分布式 P
 9. 单位 Token 成本和功耗；
 10. 版本升级兼容。
 
-## 十四、常见错误
+## 14. 常见错误
 
 - 只看厂商公布的峰值 Token/s；
 - 不固定模型 Revision、量化和请求分布；
@@ -287,7 +287,7 @@ Readiness 应覆盖目标模型存在、Engine Worker 健康和必要分布式 P
 - 让一个 Runtime 支持所有模型而没有兼容矩阵；
 - 忽略取消、滚动升级和长连接。
 
-## 十五、生产检查清单
+## 15. 生产检查清单
 
 - [ ] 引擎选择基于目标模型、硬件和真实请求分布。
 - [ ] Runtime Catalog 固定镜像 Digest 和兼容矩阵。

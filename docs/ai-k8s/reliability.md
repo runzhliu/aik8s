@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 AI 工作负载经常把“Pod 重启成功”误认为“业务恢复成功”。对于运行数天的训练、占用多机多卡的推理副本和数百 GB 的模型，真正需要衡量的是进度损失、恢复耗时、数据一致性和服务容量。
 
-## 一、先定义故障域
+## 1. 先定义故障域
 
 | 故障域 | 示例 | 平台应对 |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ AI 工作负载经常把“Pod 重启成功”误认为“业务恢复成功”�
 
 恢复策略必须匹配故障域。只设置 `restartPolicy` 无法解决节点或集群级问题。
 
-## 二、用 RPO 和 RTO 描述训练恢复
+## 2. 用 RPO 和 RTO 描述训练恢复
 
 - **RPO**：最多允许丢失多少训练进度；
 - **RTO**：从故障发生到恢复有效训练需要多久。
@@ -42,7 +42,7 @@ AI 工作负载经常把“Pod 重启成功”误认为“业务恢复成功”�
 
 如果只统计 Pod 重新 Running 的时间，RTO 会被严重低估。
 
-## 三、Checkpoint 需要保存什么
+## 3. Checkpoint 需要保存什么
 
 完整恢复通常需要：
 
@@ -58,7 +58,7 @@ AI 工作负载经常把“Pod 重启成功”误认为“业务恢复成功”�
 
 只保存模型权重适合推理发布，不一定能无损继续训练。
 
-## 四、Checkpoint 保存频率怎么算
+## 4. Checkpoint 保存频率怎么算
 
 保存越频繁，恢复进度损失越小，但写入开销越大。可以用以下信息确定周期：
 
@@ -76,7 +76,7 @@ AI 工作负载经常把“Pod 重启成功”误认为“业务恢复成功”�
 
 本地副本缩短恢复，远端副本覆盖节点和集群故障。
 
-## 五、分布式 Checkpoint 与重分片
+## 5. 分布式 Checkpoint 与重分片
 
 大模型不适合由 Rank 0 汇总后单文件保存，否则内存和网络会形成瓶颈。PyTorch Distributed Checkpoint 支持多个 Rank 并行读写，并能在加载时重分片，使保存拓扑与恢复拓扑不必完全相同。参考：[PyTorch Distributed Checkpoint](https://docs.pytorch.org/docs/main/distributed.checkpoint.html)
 
@@ -89,7 +89,7 @@ AI 工作负载经常把“Pod 重启成功”误认为“业务恢复成功”�
 - 不完整上传如何清理；
 - 恢复前如何校验摘要。
 
-## 六、弹性训练的边界
+## 6. 弹性训练的边界
 
 Torch Distributed Elastic、Ray Train 等可以在 Worker 失败时重启或改变规模，但“弹性”不代表任意时刻无损缩放。
 
@@ -104,7 +104,7 @@ Torch Distributed Elastic、Ray Train 等可以在 Worker 失败时重启或改�
 
 参考：[Torch Distributed Elastic](https://docs.pytorch.org/docs/2.13/distributed.elastic.html)、[Ray Train Fault Tolerance](https://docs.ray.io/en/latest/train/user-guides/fault-tolerance.html)
 
-## 七、Spot 与抢占式节点
+## 7. Spot 与抢占式节点
 
 Spot GPU 可能显著降低成本，但必须把中断当作正常事件：
 
@@ -117,7 +117,7 @@ Spot GPU 可能显著降低成本，但必须把中断当作正常事件：
 
 短任务、可重试批推理和频繁 Checkpoint 的训练更适合 Spot；严格低延迟在线服务通常需要稳定底线容量。
 
-## 八、推理服务的高可用
+## 8. 推理服务的高可用
 
 单个模型服务需要考虑：
 
@@ -131,7 +131,7 @@ Spot GPU 可能显著降低成本，但必须把中断当作正常事件：
 
 对于跨多节点的 LeaderWorkerSet，一个副本是整组 Pod，而不是单个 Pod。容量规划和 PDB 都要以副本组为单位理解。
 
-## 九、PDB 能做什么，不能做什么
+## 9. PDB 能做什么，不能做什么
 
 PodDisruptionBudget 约束通过 Eviction API 发起的自愿中断，例如节点 drain；它不能阻止硬件故障，也不会直接限制 Deployment 的滚动更新。参考：[Kubernetes Disruptions](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)
 
@@ -143,7 +143,7 @@ PodDisruptionBudget 约束通过 Eviction API 发起的自愿中断，例如节�
 - 不健康 Pod 阻塞维护；
 - 只设置 PDB，却没有跨节点的真实副本。
 
-## 十、GPU 节点故障隔离
+## 10. GPU 节点故障隔离
 
 检测到持续 XID、ECC、NVLink 或 PCIe 错误时，建议流程：
 
@@ -157,7 +157,7 @@ PodDisruptionBudget 约束通过 Eviction API 发起的自愿中断，例如节�
 
 不要让自动重启在同一故障 GPU 上无限循环。
 
-## 十一、数据与控制面的备份
+## 11. 数据与控制面的备份
 
 需要备份的不只是 etcd：
 
@@ -172,7 +172,7 @@ PodDisruptionBudget 约束通过 Eviction API 发起的自愿中断，例如节�
 
 如果恢复依赖已经故障的同一个集群内 Registry 或 Secret，就不是真正的灾备。
 
-## 十二、故障演练矩阵
+## 12. 故障演练矩阵
 
 | 演练 | 预期结果 |
 | --- | --- |
@@ -186,7 +186,7 @@ PodDisruptionBudget 约束通过 Eviction API 发起的自愿中断，例如节�
 
 演练要在可控环境开始，并记录实际 RPO/RTO，而不是只记录“最终恢复”。
 
-## 十三、Runbook 应包含什么
+## 13. Runbook 应包含什么
 
 - 告警含义和影响范围；
 - 第一个确认命令和 Dashboard；
@@ -196,7 +196,7 @@ PodDisruptionBudget 约束通过 Eviction API 发起的自愿中断，例如节�
 - 升级到人工处理的条件；
 - 事件结束后的数据保留和复盘项目。
 
-## 十四、上线清单
+## 14. 上线清单
 
 - [ ] 训练和推理分别定义 RPO/RTO；
 - [ ] Checkpoint 包含继续训练所需的完整状态；

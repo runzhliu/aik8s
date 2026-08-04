@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 GPU 节点能够加入 Kubernetes，不代表它已经适合生产 AI。真正的验收要覆盖固件、PCIe/NUMA、内核驱动、容器运行时、设备接入、监控、网络和实际框架。
 
-## 一、软件栈边界
+## 1. 软件栈边界
 
 ```text
 训练框架 / 推理引擎
@@ -33,7 +33,7 @@ GPU Operator、NFD、监控与健康控制器
 
 容器中的 CUDA Toolkit 可以比宿主机驱动更新到一定程度，但具体兼容范围以厂商矩阵为准。不要因为 `nvidia-smi` 能运行，就推断任意 CUDA、PyTorch 和 NCCL 组合都受支持。
 
-## 二、节点镜像应固定什么
+## 2. 节点镜像应固定什么
 
 建议把以下内容纳入不可变节点镜像或声明式节点配置：
 
@@ -49,7 +49,7 @@ GPU Operator、NFD、监控与健康控制器
 
 驱动可以由 GPU Operator 容器化安装，也可以预装在节点镜像中。两种方式都可行，关键是只能有一个权威来源，并明确升级、重启和回滚顺序。
 
-## 三、固件与 BIOS
+## 3. 固件与 BIOS
 
 在安装 Kubernetes 前确认：
 
@@ -63,7 +63,7 @@ GPU Operator、NFD、监控与健康控制器
 
 这些设置受具体服务器和加速器限制，不能复制一份通用 BIOS 模板后跳过厂商验证。
 
-## 四、内核与驱动
+## 4. 内核与驱动
 
 驱动升级前至少核对：
 
@@ -78,7 +78,7 @@ GPU Operator、NFD、监控与健康控制器
 
 内核小版本更新也可能触发驱动模块重建。Canary 节点必须执行完整计算、P2P、RDMA 和框架测试，而不是只观察 DaemonSet 为 Ready。
 
-## 五、容器运行时与 CDI
+## 5. 容器运行时与 CDI
 
 Container Device Interface 使用标准化 JSON 规范描述容器应获得的设备节点、挂载和环境变量。它能减少针对不同容器运行时的专用 Hook，但不会替代 Device Plugin/DRA 的调度和分配。
 
@@ -98,7 +98,7 @@ find /etc/cdi /var/run/cdi -maxdepth 2 -type f -print 2>/dev/null
 
 生产中应记录生成 CDI 文件的组件、刷新时机和回滚行为。设备重配置后陈旧的 CDI Spec 可能让容器获得错误设备路径。
 
-## 六、GPU Operator 安装模式
+## 6. GPU Operator 安装模式
 
 NVIDIA GPU Operator 常见组件包括：
 
@@ -122,7 +122,7 @@ NVIDIA GPU Operator 常见组件包括：
 
 AMD GPU Operator 同样可以管理驱动、Device Plugin、节点标签、指标和健康测试。不要把 NVIDIA 组件名称硬编码为平台通用 API。
 
-## 七、kubelet 资源预留
+## 7. kubelet 资源预留
 
 GPU 节点仍需要足够 CPU 和内存运行 kubelet、CNI、CSI、Device Plugin、监控和日志代理。建议明确：
 
@@ -140,7 +140,7 @@ evictionHard:
 
 示例仅表达思路，实际数值应基于节点规模、DaemonSet 和最大 Pod 数测量。低估预留会出现 GPU 空闲但节点因内存或磁盘压力驱逐工作负载。
 
-## 八、CPU、NUMA 与拓扑
+## 8. CPU、NUMA 与拓扑
 
 数据加载、Tokenization、通信和推理网关都消耗 CPU。GPU 工作负载应尽量让：
 
@@ -161,7 +161,7 @@ nvidia-smi topo -m
 
 不同厂商使用各自诊断工具，但排查目标相同：确认设备之间的实际互联路径，而不是只看 Kubernetes 标签。
 
-## 九、本地磁盘和共享内存
+## 9. 本地磁盘和共享内存
 
 大型模型冷启动可能同时消耗容器镜像层、模型权重和临时转换空间。节点需要规划：
 
@@ -185,7 +185,7 @@ containers:
         mountPath: /dev/shm
 ```
 
-## 十、节点标签和 Taint
+## 10. 节点标签和 Taint
 
 硬件事实建议由 NFD、GPU Feature Discovery 或厂商 Node Labeller生成；平台抽象标签由平台团队维护。
 
@@ -202,7 +202,7 @@ containers:
 
 升级发现组件时，平台标签契约可以保持稳定。
 
-## 十一、分层验收
+## 11. 分层验收
 
 ### 第 1 层：硬件与驱动
 
@@ -257,7 +257,7 @@ spec:
 - 模型加载和推理；
 - Checkpoint 保存和恢复。
 
-## 十二、健康与自动隔离
+## 12. 健康与自动隔离
 
 需要区分：
 
@@ -281,7 +281,7 @@ spec:
 
 不要让控制器无限重启一个存在硬件故障的长训练。
 
-## 十三、升级流程
+## 13. 升级流程
 
 1. 冻结目标版本矩阵；
 2. 在相同硬件的实验节点验证；
@@ -295,7 +295,7 @@ spec:
 
 驱动变更可能改变性能，即使 API 完全兼容，也必须与历史基准比较。
 
-## 十四、节点验收记录模板
+## 14. 节点验收记录模板
 
 ```text
 Node:
@@ -315,7 +315,7 @@ Representative inference:
 Result / evidence URI:
 ```
 
-## 十五、生产检查清单
+## 15. 生产检查清单
 
 - [ ] 节点镜像、固件和 BIOS 有受控版本。
 - [ ] 驱动和 Container Toolkit 只有一个权威安装来源。

@@ -13,7 +13,7 @@ Kubernetes 可以提供身份、配额、网络、存储和生命周期底座，
 
 如果正在比较 Kubernetes Agent Sandbox、gVisor、Kata、Firecracker 或托管执行平台，先阅读 [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)。本章继续讨论选型之后的工具授权、Prompt Injection、网络、预算、审计和发布边界。
 
-## 一、Agent 为什么不是普通微服务
+## 1. Agent 为什么不是普通微服务
 
 | 特征 | 普通服务 | Agent Runtime |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ Kubernetes 可以提供身份、配额、网络、存储和生命周期底座，
 
 因此需要把 Agent 控制面、执行沙箱和工具代理分开。
 
-## 二、参考架构
+## 2. 参考架构
 
 ```text
 用户/API
@@ -53,7 +53,7 @@ Tool Gateway / Broker
 
 Agent 不应直接持有所有外部系统的长期管理员密钥。
 
-## 三、Agent Sandbox 的定位
+## 3. Agent Sandbox 的定位
 
 Kubernetes SIG Apps 的 Agent Sandbox 提供 `Sandbox` CRD，用于管理具有稳定身份和持久状态的单例工作负载；扩展 API 包括 `SandboxTemplate`、`SandboxClaim` 和 `SandboxWarmPool`。截至 2026-08-03，项目发布线为 `v0.5.4`、API 为 `v1beta1`，但仍属于需要固定版本并演练升级的 pre-1.0 项目。参考：[Agent Sandbox Documentation](https://agent-sandbox.sigs.k8s.io/docs/) 与 [Releases](https://github.com/kubernetes-sigs/agent-sandbox/releases)。
 
@@ -67,7 +67,7 @@ Kubernetes SIG Apps 的 Agent Sandbox 提供 `Sandbox` CRD，用于管理具有�
 
 它不是一种 RuntimeClass，也不是 Prompt 安全产品；它不会替代 gVisor/Kata、NetworkPolicy、Secret 管理和工具授权。
 
-## 四、隔离等级怎么选
+## 4. 隔离等级怎么选
 
 | 风险 | 建议隔离 |
 | --- | --- |
@@ -78,7 +78,7 @@ Kubernetes SIG Apps 的 Agent Sandbox 提供 `Sandbox` CRD，用于管理具有�
 
 Kubernetes 官方说明沙箱 Pod 没有统一安全 API 定义，隔离效果取决于具体运行时；gVisor、Kata 等只能增强内核边界，不能替代最小权限。参考：[Pod Security Standards - Sandboxed Pods](https://kubernetes.io/docs/concepts/security/pod-security-standards/)
 
-## 五、工作区生命周期
+## 5. 工作区生命周期
 
 把数据分为：
 
@@ -98,7 +98,7 @@ Kubernetes 官方说明沙箱 Pod 没有统一安全 API 定义，隔离效果�
 - 不同用户是否可能挂载同一个卷；
 - 自动清理是否满足保留与合规要求。
 
-## 六、工具权限必须逐项建模
+## 6. 工具权限必须逐项建模
 
 对每个工具定义：
 
@@ -113,7 +113,7 @@ Kubernetes 官方说明沙箱 Pod 没有统一安全 API 定义，隔离效果�
 
 “可以执行 Shell”不是一个可接受的细粒度权限模型。
 
-## 七、短期身份与 Tool Gateway
+## 7. 短期身份与 Tool Gateway
 
 推荐 Agent 只持有自己的 Kubernetes 身份，由 Tool Gateway：
 
@@ -126,7 +126,7 @@ Kubernetes 官方说明沙箱 Pod 没有统一安全 API 定义，隔离效果�
 
 即使 Agent 工作区泄露，也不应暴露长期生产密钥。
 
-## 八、网络策略
+## 8. 网络策略
 
 默认拒绝出站，然后按工具代理开放：
 
@@ -140,7 +140,7 @@ Kubernetes 官方说明沙箱 Pod 没有统一安全 API 定义，隔离效果�
 
 只按域名允许访问可能被重定向、DNS 或用户内容绕过，需要代理层检查最终目标。
 
-## 九、Prompt Injection 的平台视角
+## 9. Prompt Injection 的平台视角
 
 Prompt Injection 不能只靠一段系统提示解决。平台控制包括：
 
@@ -154,7 +154,7 @@ Prompt Injection 不能只靠一段系统提示解决。平台控制包括：
 
 模型可以提出动作，授权系统决定动作是否允许。
 
-## 十、资源与成本保护
+## 10. 资源与成本保护
 
 Agent 可能无限循环调用模型和工具。需要：
 
@@ -167,7 +167,7 @@ Agent 可能无限循环调用模型和工具。需要：
 - 检测重复计划或无进展循环；
 - 超预算后的安全终止与状态保存。
 
-## 十一、可观测与审计
+## 11. 可观测与审计
 
 建议记录事件链而非完整思维过程：
 
@@ -194,7 +194,7 @@ session created
 
 日志不要默认保存完整 Prompt、用户代码、工具凭证和敏感返回内容。
 
-## 十二、发布和回收
+## 12. 发布和回收
 
 Agent 产出的代码、配置或镜像不能直接进入生产：
 
@@ -207,7 +207,7 @@ Agent 产出的代码、配置或镜像不能直接进入生产：
 
 Agent 的 Sandbox 身份不应同时拥有生产发布权限。
 
-## 十三、上线清单
+## 13. 上线清单
 
 - [ ] 明确 Agent 与普通服务不同的状态和权限模型；
 - [ ] 执行环境、Agent 控制面和 Tool Gateway 分离；

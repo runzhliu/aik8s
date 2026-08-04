@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 AI 平台最常见的可观测性误区，是只安装 Prometheus 和一个 GPU Dashboard。真正可用的系统必须把基础设施、调度、训练进度、推理请求和模型质量连接到同一条证据链。
 
-## 一、五层可观测模型
+## 1. 五层可观测模型
 
 ```text
 业务与模型质量：正确率、拒答率、用户反馈、安全评估
@@ -21,7 +21,7 @@ AI 平台最常见的可观测性误区，是只安装 Prometheus 和一个 GPU 
 
 只有一层数据时，团队往往只能知道“慢了”，无法回答慢在数据、网络、GPU、调度还是模型本身。
 
-## 二、先统一关联键
+## 2. 先统一关联键
 
 指标、日志和 Trace 至少应携带以下低基数标识：
 
@@ -34,7 +34,7 @@ AI 平台最常见的可观测性误区，是只安装 Prometheus 和一个 GPU 
 
 请求 ID、Prompt、用户 ID 等高基数或敏感字段不要直接成为 Prometheus Label。它们更适合进入受控日志、Trace 或专用分析系统。
 
-## 三、GPU 指标怎么看
+## 3. GPU 指标怎么看
 
 NVIDIA DCGM Exporter 通过 `/metrics` 暴露 GPU 指标，可作为 DaemonSet 或由 GPU Operator 管理，并能借助 kubelet PodResources 把设备指标关联到 Pod。参考：[DCGM Exporter](https://docs.nvidia.com/datacenter/dcgm/latest/gpu-telemetry/dcgm-exporter.html)
 
@@ -51,7 +51,7 @@ NVIDIA DCGM Exporter 通过 `/metrics` 暴露 GPU 指标，可作为 DaemonSet �
 
 “GPU utilization 100%”不等于效率最佳。它可能在执行低效 Kernel，也可能因同步等待呈现误导性的平均值，需要结合吞吐和业务目标判断。
 
-## 四、训练任务的黄金指标
+## 4. 训练任务的黄金指标
 
 训练至少记录：
 
@@ -78,7 +78,7 @@ step_time
 
 如果只记录总 step time，网络抖动、数据饥饿和计算回退会混在一起。
 
-## 五、分布式训练如何找慢 Rank
+## 5. 分布式训练如何找慢 Rank
 
 应同时观察：
 
@@ -91,7 +91,7 @@ step_time
 
 最慢 Rank 决定同步训练的整体速度。不要只看集群平均值，平均值会隐藏单节点异常。
 
-## 六、LLM 推理的核心指标
+## 6. LLM 推理的核心指标
 
 | 指标 | 含义 | 使用方式 |
 | --- | --- | --- |
@@ -107,7 +107,7 @@ step_time
 
 所有延迟都应按模型、输入长度、输出长度、优先级和流式/非流式请求分桶，否则 P95 缺乏可比性。
 
-## 七、从基础设施 SLI 到业务 SLO
+## 7. 从基础设施 SLI 到业务 SLO
 
 建议至少定义三类 SLO：
 
@@ -134,7 +134,7 @@ step_time
 
 基础设施 SLO 达标而模型输出错误，仍然是一次失败发布。
 
-## 八、日志设计
+## 8. 日志设计
 
 训练日志应结构化包含：时间、Job、Rank、step、组件和错误类别。推理日志应区分网关、调度器、模型服务器和下游工具调用。
 
@@ -148,7 +148,7 @@ step_time
 
 为排障临时提高日志级别时，应设置自动过期，并限制访问权限。
 
-## 九、Trace 应覆盖哪些边界
+## 9. Trace 应覆盖哪些边界
 
 一次推理请求可以跨越：
 
@@ -166,7 +166,7 @@ API Gateway
 
 Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提供 Trace、Metric、Log 和 Resource 的语义约定，可用统一资源属性关联信号。参考：[OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/concepts/semantic-conventions/)
 
-## 十、告警应该可行动
+## 10. 告警应该可行动
 
 较好的告警示例：
 
@@ -179,7 +179,7 @@ Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提
 
 “CPU 高”或“Pod 重启”本身通常不够行动化，需要包含影响对象、可能原因和 Runbook 链接。
 
-## 十一、控制指标基数和成本
+## 11. 控制指标基数和成本
 
 - 不把 request ID、用户 ID、文件名作为 Metric Label；
 - 模型版本只保留当前和少量历史版本；
@@ -190,7 +190,7 @@ Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提
 
 可观测系统把生产集群拖慢，是平台常见的二次故障。
 
-## 十二、推荐 Dashboard
+## 12. 推荐 Dashboard
 
 1. **平台总览**：GPU 容量、队列、成本、SLO、告警；
 2. **节点详情**：GPU、NVLink、NIC、CPU、存储、XID；
@@ -199,7 +199,7 @@ Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提
 5. **租户视图**：配额、GPU-hours、成功率、等待时间和成本；
 6. **发布视图**：新旧版本的质量、性能和错误对比。
 
-## 十三、上线清单
+## 13. 上线清单
 
 - [ ] 指标能从集群关联到团队、Job、模型和发布版本；
 - [ ] GPU 指标来自 DCGM，并验证 Pod 映射正确；

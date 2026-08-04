@@ -11,7 +11,7 @@ last_reviewed: 2026-08-02
 
 本页从网络基础讲到 Kubernetes 落地，重点不是某个厂商命令，而是建立一条可以验证和排障的完整通信链路。
 
-## 一、RDMA 到底是什么
+## 1. RDMA 到底是什么
 
 RDMA 是 Remote Direct Memory Access。它允许一台机器直接访问另一台机器已注册的内存区域，数据路径尽量绕过远端 CPU 和传统内核网络协议栈。
 
@@ -45,7 +45,7 @@ RDMA 路径更接近：
 
 RDMA 并不意味着“完全没有 CPU”或“网络绝不丢包”。连接建立、内存注册、控制路径、拥塞控制和错误恢复仍然需要软件参与。
 
-## 二、InfiniBand、RoCE 和 iWARP
+## 2. InfiniBand、RoCE 和 iWARP
 
 | 技术 | 承载网络 | 可路由性 | 常见位置 | 关键特点 |
 | --- | --- | --- | --- | --- |
@@ -62,7 +62,7 @@ InfiniBand 使用专用 HCA、交换机和 Subnet Manager。它的服务等级�
 
 RoCE 在 Ethernet 上承载 RDMA。RoCE v2 使用 UDP/IP，因此更适合大型可路由数据中心网络。它不是“装上支持 RDMA 的网卡就自然变快”：端点、交换机、队列、MTU、PFC、ECN、DSCP/PCP 和拥塞控制必须保持一致。
 
-## 三、AI 为什么依赖 RDMA
+## 3. AI 为什么依赖 RDMA
 
 ### 数据并行：All-Reduce
 
@@ -92,7 +92,7 @@ RoCE 在 Ethernet 上承载 RDMA。RoCE v2 使用 UDP/IP，因此更适合大型
 
 因此 RDMA 不再只属于训练集群，也逐渐进入大型 LLM 推理平台。
 
-## 四、GPUDirect RDMA 解决什么
+## 4. GPUDirect RDMA 解决什么
 
 没有 GPUDirect RDMA 时，GPU 网络数据通常要经过 Host Memory：
 
@@ -118,7 +118,7 @@ GPU Memory → PCIe / PCIe Switch → NIC → Fabric
 
 参考：[GPU Operator GPUDirect RDMA](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-operator-rdma.html)
 
-## 五、Kubernetes 中的一条完整数据路径
+## 5. Kubernetes 中的一条完整数据路径
 
 ```text
 训练 Pod
@@ -151,7 +151,7 @@ GPU Memory → PCIe / PCIe Switch → NIC → Fabric
 
 参考：[Multus CNI](https://github.com/k8snetworkplumbingwg/multus-cni)、[SR-IOV Network Device Plugin](https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin)、[NVIDIA Network Operator](https://docs.nvidia.com/networking/display/kubernetes25100/deployment-guide-kubernetes.html)
 
-## 六、为什么经常使用第二张 Pod 网卡
+## 6. 为什么经常使用第二张 Pod 网卡
 
 默认 CNI 主要优化 Kubernetes 通用连接、Service 和安全策略；训练数据面可能需要：
 
@@ -163,7 +163,7 @@ GPU Memory → PCIe / PCIe Switch → NIC → Fabric
 
 Multus 是 Meta CNI：它保留 `eth0` 作为默认网络，再调用 SR-IOV、Macvlan、IPVLAN 等插件添加 `net1`。应用需要明确选择高速接口；NCCL 如果自动选中不可达的管理接口，可能在初始化阶段卡住。
 
-## 七、三种 Pod 接入方式
+## 7. 三种 Pod 接入方式
 
 ### 1. Host Network
 
@@ -184,7 +184,7 @@ Multus 是 Meta CNI：它保留 `eth0` 作为默认网络，再调用 SR-IOV、M
 | Pod 数量远大于 VF 数量 | 共享 HCA，配合配额和安全边界 |
 | 严格网络隔离和固定性能 | SR-IOV VF / 专用节点池 |
 
-## 八、一个概念性 Pod 示例
+## 8. 一个概念性 Pod 示例
 
 以下示例表达“默认网络 + Multus 高速网络 + GPU + RDMA 资源”的组合。资源名和 NetworkAttachmentDefinition 必须按实际 Operator/Device Plugin 配置调整。
 
@@ -210,7 +210,7 @@ spec:
 
 不要直接复制到生产。不同 RDMA Plugin 可能使用不同资源名；SR-IOV 场景通常还会请求对应 VF Resource。
 
-## 九、RoCE 网络为什么难
+## 9. RoCE 网络为什么难
 
 Ethernet 允许拥塞和丢包，而 RDMA 对丢包、乱序和尾延迟较敏感。RoCE Fabric 通常组合以下机制：
 
@@ -232,7 +232,7 @@ RoCE Traffic Class、DSCP/PCP、交换机 Priority、PFC Queue 和 CNP Queue 必
 
 参考：[NVIDIA RoCE 配置](https://docs.nvidia.com/networking-ethernet-software/cumulus-linux-513/Layer-1-and-Switch-Ports/Quality-of-Service/RDMA-over-Converged-Ethernet-RoCE/)
 
-## 十、拓扑感知比网卡速率更重要
+## 10. 拓扑感知比网卡速率更重要
 
 同样是 400 Gb/s NIC，实际性能还取决于 GPU 到 NIC 的路径：
 
@@ -255,7 +255,7 @@ GPU ─ CPU Socket 0 ─ UPI/Infinity Fabric ─ CPU Socket 1 ─ NIC
 
 Kueue Topology-Aware Scheduling 或专用调度器可以控制 Worker 尽量位于同一 Rack/Block；节点内 GPU/NIC 亲和还需要 Runtime、NCCL 和设备分配策略配合。
 
-## 十一、NCCL 如何选择网络
+## 11. NCCL 如何选择网络
 
 NCCL 会探测 Socket、InfiniBand/RoCE 和拓扑，并选择 Collective 算法与 Transport。常见环境变量适合诊断和明确接口，但不应未经基准就永久复制一大套“调优参数”。
 
@@ -276,7 +276,7 @@ NCCL_IB_DISABLE=1
 
 如果禁用 RDMA 后任务虽然变慢但稳定，问题很可能在 HCA、GID、RoCE Fabric、GPUDirect 或 RDMA Namespace；如果仍失败，应继续检查应用启动、DNS、端口和普通网络。
 
-## 十二、逐层基准测试
+## 12. 逐层基准测试
 
 不要直接用完整训练任务测试网络。建议从底到顶建立测试梯子：
 
@@ -335,7 +335,7 @@ ib_write_lat -d <device> <server-address>
 
 参考：[NCCL Networking Troubleshooting](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/troubleshooting/networking_troubleshooting.html)
 
-## 十三、常见故障模式
+## 13. 常见故障模式
 
 | 现象 | 常见原因 | 优先检查 |
 | --- | --- | --- |
@@ -350,7 +350,7 @@ ib_write_lat -d <device> <server-address>
 
 `rdma statistic` 中持续增长的 `rnr_nak_retry_err`、`packet_seq_err`、`implied_nak_seq_err` 或 `local_ack_timeout_err` 常提示丢包、重试或超时，应与交换机和 HCA Counter 同时观察。
 
-## 十四、可观测性
+## 14. 可观测性
 
 ### 节点/HCA
 
@@ -377,7 +377,7 @@ ib_write_lat -d <device> <server-address>
 
 网络指标必须能关联 Node、NIC、Port、Pod、Job 和 Rank。只保留交换机级总带宽，很难定位一项训练任务的慢节点。
 
-## 十五、安全边界
+## 15. 安全边界
 
 高性能附加网络可能绕过默认 CNI 的 NetworkPolicy。SR-IOV VF、Host Device 和 RDMA 访问意味着工作负载更接近硬件，因此需要额外控制：
 
@@ -391,7 +391,7 @@ ib_write_lat -d <device> <server-address>
 
 不要假设默认 Kubernetes NetworkPolicy 自动覆盖所有 Multus 附加接口；是否生效取决于对应 CNI 和数据路径。
 
-## 十六、上线清单
+## 16. 上线清单
 
 - [ ] 选择 InfiniBand 或 RoCE 的原因和运维责任清楚。
 - [ ] GPU、NIC、PCIe、NUMA、Rack 和 Rail 拓扑有资产记录。

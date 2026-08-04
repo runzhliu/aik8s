@@ -11,7 +11,7 @@ last_reviewed: 2026-08-03
 
 这类系统能够提高规模化效率，但也把网络、拓扑、发布、故障和状态管理引入请求关键路径。
 
-## 一、先区分三种扩展
+## 1. 先区分三种扩展
 
 | 模式 | 扩展对象 | 主要目标 |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ last_reviewed: 2026-08-03
 
 一个生产系统可能同时使用三者：每个副本内部 TP/PP，多份 DP 副本，再拆分 Prefill 和 Decode Pool。
 
-## 二、多机模型副本
+## 2. 多机模型副本
 
 ```text
 一个逻辑模型副本
@@ -43,7 +43,7 @@ last_reviewed: 2026-08-03
 
 普通 Deployment 不具备这些语义。
 
-## 三、LeaderWorkerSet
+## 3. LeaderWorkerSet
 
 LeaderWorkerSet（LWS）用于描述一个 Leader 与多个 Worker 构成的复制单元，适合多机推理和其他 Leader/Worker 工作负载。
 
@@ -64,7 +64,7 @@ LWS 不负责模型请求路由、配额准入或 KV Cache。通常还需要：
 
 参考：[LeaderWorkerSet](https://lws.sigs.k8s.io/)
 
-## 四、拓扑选择
+## 4. 拓扑选择
 
 优先顺序通常是：
 
@@ -77,7 +77,7 @@ LWS 不负责模型请求路由、配额准入或 KV Cache。通常还需要：
 
 “副本内部集中”和“副本之间分散”是两个不同目标，需要分层拓扑策略。
 
-## 五、vLLM 多机并行
+## 5. vLLM 多机并行
 
 vLLM 支持 Tensor/Pipeline 等分布式推理。典型思路：
 
@@ -98,7 +98,7 @@ vllm serve /models/example \
 
 参考：[vLLM Distributed Serving](https://docs.vllm.ai/en/latest/serving/distributed_serving.html)
 
-## 六、Prefill 与 Decode 为什么不同
+## 6. Prefill 与 Decode 为什么不同
 
 | 阶段 | 计算特征 | 主要资源压力 | 关键 SLO |
 | --- | --- | --- | --- |
@@ -112,7 +112,7 @@ vllm serve /models/example \
 - 不同硬件无法各自发挥优势；
 - Queue 和 Batch 互相影响。
 
-## 七、P/D 分离架构
+## 7. P/D 分离架构
 
 ```text
 Client
@@ -141,7 +141,7 @@ Client
 - 发布、回滚和版本兼容；
 - 更多组件和可观测边界。
 
-## 八、什么时候不应该 P/D 分离
+## 8. 什么时候不应该 P/D 分离
 
 - 单机或少量 GPU 已满足 SLO；
 - 请求短、KV 传输成本接近或超过收益；
@@ -153,7 +153,7 @@ Client
 
 P/D 分离是规模优化，不是部署 LLM 的入门前置条件。
 
-## 九、KV 传输路径
+## 9. KV 传输路径
 
 必须明确：
 
@@ -170,7 +170,7 @@ P/D 分离是规模优化，不是部署 LLM 的入门前置条件。
 
 一次模型或引擎升级可能改变 KV 布局，不能让新旧 Worker 任意互连。
 
-## 十、llm-d
+## 10. llm-d
 
 llm-d 是面向 Kubernetes 的分布式 LLM 推理架构，围绕：
 
@@ -186,7 +186,7 @@ llm-d 是面向 Kubernetes 的分布式 LLM 推理架构，围绕：
 
 参考：[llm-d Architecture](https://llm-d.ai/docs/architecture)
 
-## 十一、NVIDIA Dynamo
+## 11. NVIDIA Dynamo
 
 Dynamo 提供 Frontend、Router、Planner、Worker 和分离式推理能力，可组合 vLLM、SGLang、TensorRT-LLM 等 Backend，并通过 NIXL 等机制传输 KV。
 
@@ -201,7 +201,7 @@ Dynamo 提供 Frontend、Router、Planner、Worker 和分离式推理能力，�
 
 参考：[NVIDIA Dynamo Disaggregated Serving](https://docs.nvidia.com/dynamo/latest/user-guides/disaggregated-serving)
 
-## 十二、双池容量规划
+## 12. 双池容量规划
 
 分别测量：
 
@@ -221,7 +221,7 @@ Decode 需求  ≈ 输出 Token 到达率 / 单 Decode Worker 的有效 Token/s
 
 两个 Pool 的 Autoscaler 不能只看自身局部队列。Prefill 扩得过快会淹没 Decode，Decode 过剩又会空等 KV。
 
-## 十三、发布与版本
+## 13. 发布与版本
 
 一个分离式版本至少包括：
 
@@ -247,7 +247,7 @@ Canary 最安全的方式是建立一整套新 Pool，而不是让新 Prefill �
 7. 停止旧 Pool 新请求；
 8. Drain 后回收。
 
-## 十四、故障语义
+## 14. 故障语义
 
 | 故障 | 处理目标 |
 | --- | --- |
@@ -260,7 +260,7 @@ Canary 最安全的方式是建立一整套新 Pool，而不是让新 Prefill �
 | 新旧版本不兼容 | 发布门禁阻止跨版本连接 |
 | 网络分区 | 超时、隔离和恢复不会重复请求 |
 
-## 十五、可观测性
+## 15. 可观测性
 
 必须能从一次请求看到：
 
@@ -284,7 +284,7 @@ Gateway
 - Pool 扩缩容、Ready 和版本；
 - RDMA/NIC/GPU/CPU 指标。
 
-## 十六、安全
+## 16. 安全
 
 - KV Cache 可能包含可还原的用户上下文，按敏感数据处理；
 - Prefill 与 Decode 之间使用网络身份、加密或受控数据平面；
@@ -294,7 +294,7 @@ Gateway
 - 调试日志不记录原始 KV、Prompt 或凭据；
 - 多网卡/RDMA 端口通过网络隔离和节点策略保护。
 
-## 十七、上线清单
+## 17. 上线清单
 
 - [ ] 已证明单机/共置模式无法更简单地满足目标。
 - [ ] 一个多机副本由 LWS/控制器整体创建、调度和发布。

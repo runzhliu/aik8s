@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 传统负载均衡只需要选择一个健康后端。LLM 请求还要考虑模型、Adapter、上下文、队列、KV Cache、优先级、Token 预算和流式连接，因此网关逐渐从“转发 HTTP”发展为策略执行和请求调度层。
 
-## 一、三个容易混淆的角色
+## 1. 三个容易混淆的角色
 
 | 角色 | 主要职责 | 典型能力 |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ last_reviewed: 2026-08-02
 
 同一产品可能覆盖多个角色，但设计文档仍要标出每项策略的唯一权威写入者。
 
-## 二、请求路径
+## 2. 请求路径
 
 ```text
 Client
@@ -43,7 +43,7 @@ Client
 
 请求进入集群前后的每一跳都要保留 Trace Context，但不能默认记录完整 Prompt 和 Tool 参数。
 
-## 三、Gateway API Inference Extension
+## 3. Gateway API Inference Extension
 
 Inference Extension 在 Gateway API 基础上增加面向推理的资源和 Endpoint Selection Extension。
 
@@ -67,7 +67,7 @@ HTTPRoute backendRef
 
 参考：[Gateway API Inference Extension](https://gateway-api-inference-extension.sigs.k8s.io/)、[Kubernetes 项目介绍](https://kubernetes.io/blog/2025/06/05/introducing-gateway-api-inference-extension/)
 
-## 四、AI Gateway 与 Inference Gateway
+## 4. AI Gateway 与 Inference Gateway
 
 AI Gateway 更关注平台级策略：
 
@@ -84,7 +84,7 @@ Inference Gateway 更专注某个推理池的后端选择。2026 年 Kubernetes 
 
 参考：[Kubernetes AI Gateway Working Group](https://kubernetes.io/blog/2026/03/09/announcing-ai-gateway-wg/)
 
-## 五、路由信号
+## 5. 路由信号
 
 | 信号 | 用途 | 风险 |
 | --- | --- | --- |
@@ -99,7 +99,7 @@ Inference Gateway 更专注某个推理池的后端选择。2026 年 Kubernetes 
 
 Router 应在状态缺失时有安全回退，而不是因 Prometheus 或 Cache Indexer 不可用而停止全部请求。
 
-## 六、负载均衡策略
+## 6. 负载均衡策略
 
 ### Round Robin
 
@@ -121,7 +121,7 @@ Router 应在状态缺失时有安全回退，而不是因 Prometheus 或 Cache 
 
 在不同加速器、量化或云区域之间按 SLO 和成本选择。必须确保模型质量、能力和数据地域可互换。
 
-## 七、Flow Control
+## 7. Flow Control
 
 保护 GPU 的顺序通常是：
 
@@ -149,7 +149,7 @@ Router 应在状态缺失时有安全回退，而不是因 Prometheus 或 Cache 
 - 多模态 Body 大小；
 - 每分钟/每天 Token 与费用。
 
-## 八、优先级和公平性
+## 8. 优先级和公平性
 
 至少区分：
 
@@ -163,7 +163,7 @@ Router 应在状态缺失时有安全回退，而不是因 Prometheus 或 Cache 
 
 请求优先级与 Kubernetes Pod Priority 不同：前者选择推理队列，后者影响 Pod 调度和抢占。不要让每个高优先级请求触发高优先级 GPU Pod 扩容。
 
-## 九、超时、重试与取消
+## 9. 超时、重试与取消
 
 LLM 的重试可能非常昂贵：
 
@@ -182,7 +182,7 @@ LLM 的重试可能非常昂贵：
 - 记录重试原因和浪费 Token；
 - 后端故障切换先验证模型版本和能力一致。
 
-## 十、流式协议
+## 10. 流式协议
 
 SSE、HTTP/2 或 gRPC 长连接会影响：
 
@@ -196,7 +196,7 @@ SSE、HTTP/2 或 gRPC 长连接会影响：
 
 端到端验证真实外部入口，不能只用 `kubectl port-forward` 测量生产延迟。
 
-## 十一、模型命名和路由
+## 11. 模型命名和路由
 
 客户端模型名不应直接等于部署对象名。维护逻辑模型目录：
 
@@ -214,7 +214,7 @@ chat-canary
 
 逻辑名可以保持稳定，Artifact、Runtime 和 Pool 独立版本化。
 
-## 十二、Canary 与 Shadow
+## 12. Canary 与 Shadow
 
 ### Canary
 
@@ -232,7 +232,7 @@ chat-canary
 
 Canary 路由按租户或请求 ID 做稳定哈希，避免同一会话在版本间跳动。
 
-## 十三、认证与授权
+## 13. 认证与授权
 
 网关需要将：
 
@@ -245,7 +245,7 @@ Canary 路由按租户或请求 ID 做稳定哈希，避免同一会话在版本
 
 转换为内部可信上下文。后端模型服务只信任来自网关的身份时，必须通过 mTLS、NetworkPolicy 或工作负载身份阻止绕过。
 
-## 十四、观测与隐私
+## 14. 观测与隐私
 
 建议 Trace Span：
 
@@ -264,7 +264,7 @@ gateway.receive
 
 OpenTelemetry 的 GenAI 语义约定仍在演进，属性版本和敏感字段策略应固定并记录。[OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 
-## 十五、高可用
+## 15. 高可用
 
 - Gateway 多副本跨节点/故障域；
 - Endpoint Picker/EPP 不保存唯一状态，或状态可重建；
@@ -274,7 +274,7 @@ OpenTelemetry 的 GenAI 语义约定仍在演进，属性版本和敏感字段�
 - InferencePool 状态与 Pod Ready 变化及时传播；
 - 控制面故障不影响已有数据面连接。
 
-## 十六、生产检查清单
+## 16. 生产检查清单
 
 - [ ] API 治理、Endpoint 选择和 Workload 控制职责分开。
 - [ ] InferencePool 的 Ready 语义代表模型可服务。

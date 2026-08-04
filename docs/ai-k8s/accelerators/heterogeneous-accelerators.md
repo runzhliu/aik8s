@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 “GPU 集群”经常被默认等同于 NVIDIA CUDA 集群，但完整的 AI Kubernetes 平台还应理解 AMD ROCm、Intel GPU/Gaudi、Google TPU、AWS Trainium/Inferentia 等设备。Kubernetes 可以统一生命周期和资源声明，却不能抹平编译器、运行时、通信库和模型兼容差异。
 
-## 一、统一层与非统一层
+## 1. 统一层与非统一层
 
 ### Kubernetes 可以统一
 
@@ -31,7 +31,7 @@ last_reviewed: 2026-08-02
 
 因此平台 API 可以暴露抽象的 `acceleratorClass`，但底层 Runtime、镜像和验收必须按厂商维护。
 
-## 二、生态对比
+## 2. 生态对比
 
 | 平台 | Kubernetes 接入 | 主要软件栈 | 典型通信 | 主要特点 |
 | --- | --- | --- | --- | --- |
@@ -44,7 +44,7 @@ last_reviewed: 2026-08-02
 
 工具和支持状态变化很快，选型时应以目标版本的官方兼容矩阵和真实模型基准为准。
 
-## 三、NVIDIA GPU
+## 3. NVIDIA GPU
 
 典型资源名：
 
@@ -67,7 +67,7 @@ resources:
 
 优点是框架、镜像、诊断、监控和社区示例丰富。代价是版本矩阵复杂，GPU Operator、驱动、CUDA、NCCL、内核和硬件代际仍需严格验证。
 
-## 四、AMD Instinct 与 ROCm
+## 4. AMD Instinct 与 ROCm
 
 AMD GPU Operator 能管理驱动、Device Plugin、节点标签、指标、健康和 DRA。传统资源通常为：
 
@@ -90,7 +90,7 @@ resources:
 
 参考：[AMD GPU Operator](https://instinct.docs.amd.com/projects/gpu-operator/en/latest/)、[AMD DRA Driver](https://instinct.docs.amd.com/projects/gpu-operator/en/main/dra/dra-driver.html)
 
-## 五、Intel GPU 与 Gaudi
+## 5. Intel GPU 与 Gaudi
 
 Intel Device Plugins Operator 可以管理 GPU、NPU、QAT、SGX、DSA 等插件。Intel GPU 需要关注：
 
@@ -104,7 +104,7 @@ Intel Gaudi 使用独立的 Gaudi Device Plugin 和 SynapseAI 软件栈。平台
 
 参考：[Intel Device Plugins](https://intel.github.io/intel-device-plugins-for-kubernetes/README.html)、[Intel Gaudi Device Plugin](https://docs.habana.ai/en/latest/Installation_Guide/Additional_Installation/Kubernetes_Installation/Intel_Gaudi_Kubernetes_Device_Plugin.html)
 
-## 六、Google TPU
+## 6. Google TPU
 
 GKE 以 TPU Slice 和拓扑组织设备。单主机与多主机 Slice 的扩缩容行为不同，多主机 Slice 通常需要按完整拓扑原子创建或缩到零。
 
@@ -128,7 +128,7 @@ spec:
 
 参考：[Plan TPUs in GKE](https://cloud.google.com/kubernetes-engine/docs/concepts/plan-tpus)、[Deploy TPU Workloads](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/tpus)
 
-## 七、AWS Trainium 与 Inferentia
+## 7. AWS Trainium 与 Inferentia
 
 AWS Neuron 设备可以通过 Device Plugin 暴露为扩展资源，也可以在适用的 EKS 版本和节点类型上使用 Neuron DRA Driver。
 
@@ -155,7 +155,7 @@ Neuron DRA 可以表达设备属性、连接子集、Logical NeuronCore 和 EFA 
 
 参考：[EKS Hardware Device Management](https://docs.aws.amazon.com/eks/latest/userguide/device-management.html)、[EKS Neuron Devices](https://docs.aws.amazon.com/eks/latest/userguide/device-management-neuron.html)
 
-## 八、CPU、NPU 与边缘加速器
+## 8. CPU、NPU 与边缘加速器
 
 并非所有推理都需要数据中心 GPU。小模型、Embedding、Reranker、语音和边缘任务还可能使用：
 
@@ -167,7 +167,7 @@ Neuron DRA 可以表达设备属性、连接子集、Logical NeuronCore 和 EFA 
 
 这类设备可能通过 Device Plugin、DRA、RuntimeClass 或厂商 Operator 接入。平台仍应使用相同验收框架：库存、隔离、模型兼容、性能、故障和可观测。
 
-## 九、平台抽象方式
+## 9. 平台抽象方式
 
 不要让用户直接记住所有底层标签和资源名。可以提供受控的 Flavor：
 
@@ -191,7 +191,7 @@ capabilities:
 
 抽象应该减少重复配置，而不是隐藏不可互换的事实。
 
-## 十、可移植镜像策略
+## 10. 可移植镜像策略
 
 常见方式：
 
@@ -211,7 +211,7 @@ trainer:2026.08-neuron
 
 生产部署仍使用 Digest，Tag 只用于人类识别。
 
-## 十一、跨硬件基准方法
+## 11. 跨硬件基准方法
 
 必须固定：
 
@@ -226,7 +226,7 @@ trainer:2026.08-neuron
 
 训练比较 Time-to-Quality，不只看 samples/s；推理同时比较 TTFT、TPOT、吞吐、质量和单位 Token 成本。
 
-## 十二、监控的统一与差异
+## 12. 监控的统一与差异
 
 平台层可以统一以下维度：
 
@@ -238,7 +238,7 @@ trainer:2026.08-neuron
 
 但底层指标名称和错误码由厂商决定。应建立归一化 Dashboard，同时保留原始厂商指标和诊断证据。
 
-## 十三、选型顺序
+## 13. 选型顺序
 
 1. 确认目标模型和框架的生产支持；
 2. 验证数值质量和功能完整性；
@@ -249,7 +249,7 @@ trainer:2026.08-neuron
 7. 检查可观测、升级、故障和供应商支持；
 8. 用 Canary 工作负载持续防止回归。
 
-## 十四、生产检查清单
+## 14. 生产检查清单
 
 - [ ] 平台没有把所有加速器都写成 `nvidia.com/gpu`。
 - [ ] 每种硬件有独立支持矩阵、Runtime 镜像和验收测试。

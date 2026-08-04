@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 AI 平台的扩缩容不是一个 HPA。一次流量变化可能依次触发推理副本扩容、Pending Pod、GPU 节点创建、驱动和设备组件就绪、镜像拉取、模型下载以及缓存预热。任何一层缺少时间预算，自动扩容都可能在容量到达前超时。
 
-## 一、四层弹性
+## 1. 四层弹性
 
 ```text
 请求层
@@ -27,7 +27,7 @@ Pod/Workload 层
 
 Kueue 不创建节点，HPA 也不理解 GPU 是否能从云厂商获得。每层要有独立 SLO 和失败原因。
 
-## 二、扩容时间线
+## 2. 扩容时间线
 
 ```text
 T0  流量或排队增长
@@ -43,7 +43,7 @@ T8  Pod Ready，Gateway 开始送流量
 
 记录每个阶段的时间。只监控 T0 到 T1 会严重低估大型模型的冷启动。
 
-## 三、工作负载扩缩容信号
+## 3. 工作负载扩缩容信号
 
 ### 传统 HPA
 
@@ -76,7 +76,7 @@ KEDA 可以根据 Prometheus、消息队列等外部信号生成 HPA，并负责
 
 只使用 GPU Utilization 容易误判：Decode 可能显存带宽受限但 SM 利用率不高，长 Prompt 又会让 Prefill 出现短时尖峰。
 
-## 四、一个 KEDA 思路示例
+## 4. 一个 KEDA 思路示例
 
 ```yaml
 apiVersion: keda.sh/v1alpha1
@@ -100,7 +100,7 @@ spec:
 
 指标名是平台契约示例，应根据实际引擎指标和聚合方式调整。扩容前需要处理缺失指标、Prometheus 不可用和高基数问题。
 
-## 五、Cluster Autoscaler 与 Karpenter
+## 5. Cluster Autoscaler 与 Karpenter
 
 | 能力 | Cluster Autoscaler | Karpenter |
 | --- | --- | --- |
@@ -114,7 +114,7 @@ Kubernetes 官方将二者都列为 SIG Autoscaling 相关的 Node Autoscaler。
 
 参考：[Kubernetes Node Autoscaling](https://kubernetes.io/docs/concepts/cluster-administration/node-autoscaling/)
 
-## 六、GPU NodePool 约束
+## 6. GPU NodePool 约束
 
 一个 GPU NodePool 至少限制：
 
@@ -156,7 +156,7 @@ spec:
 
 Provider 还需要 NodeClass 等云资源配置，本例不能直接作为完整安装清单。
 
-## 七、Scale from Zero 的前提
+## 7. Scale from Zero 的前提
 
 Node Autoscaler 必须在节点不存在时仍能推断：
 
@@ -169,7 +169,7 @@ Node Autoscaler 必须在节点不存在时仍能推断：
 
 如果自动扩容器看不到未来 GPU 资源，Pending Pod 不会触发节点创建。厂商托管 Kubernetes 常通过节点模板或 NodePool 元数据补充这些信息。
 
-## 八、队列与节点供给
+## 8. 队列与节点供给
 
 Kueue 通常只在配额可用时准入 Workload。常见策略：
 
@@ -187,7 +187,7 @@ Kueue 通常只在配额可用时准入 Workload。常见策略：
 
 必须让用户看见“等待配额”“等待云容量”“等待节点启动”和“等待模型预热”的区别。
 
-## 九、多节点任务与原子扩容
+## 9. 多节点任务与原子扩容
 
 一个 16 节点任务不能接受只创建 9 个节点后无限等待。需要考虑：
 
@@ -200,7 +200,7 @@ Kueue 通常只在配额可用时准入 Workload。常见策略：
 
 对于 TPU Slice、UltraServer 或高带宽网络域，节点数量和拓扑是同一个资源请求的一部分。
 
-## 十、缩容与中断
+## 10. 缩容与中断
 
 节点缩容不应只看“GPU 利用率低”。先判断工作负载是否可安全移动：
 
@@ -214,7 +214,7 @@ Kueue 通常只在配额可用时准入 Workload。常见策略：
 
 在线 GPU 节点建议使用保守整合策略，批处理节点可以在 Job 完成后更积极地缩容。
 
-## 十一、Spot 与抢占
+## 11. Spot 与抢占
 
 适合 Spot：
 
@@ -232,7 +232,7 @@ Kueue 通常只在配额可用时准入 Workload。常见策略：
 
 中断通知要同时触发停止准入、Checkpoint/Drain 和指标记录。
 
-## 十二、防止弹性控制器打架
+## 12. 防止弹性控制器打架
 
 典型冲突：
 
@@ -245,7 +245,7 @@ Kueue 通常只在配额可用时准入 Workload。常见策略：
 
 每个可扩对象只能有一个最终写入者。不同控制器之间通过明确指标和保护窗口协调。
 
-## 十三、容量保护
+## 13. 容量保护
 
 建议分层：
 
@@ -258,7 +258,7 @@ Kueue 通常只在配额可用时准入 Workload。常见策略：
 
 当生产流量上升时，应先停止训练借用或新任务准入，而不是直接抢占已加载但低流量的推理副本。
 
-## 十四、必须监控的指标
+## 14. 必须监控的指标
 
 | 层级 | 指标 |
 | --- | --- |
@@ -272,7 +272,7 @@ Kueue 通常只在配额可用时准入 Workload。常见策略：
 
 端到端扩容 SLO 应从信号产生算到新增 Ready 容量，而不是只统计 Autoscaler Reconcile。
 
-## 十五、故障模式
+## 15. 故障模式
 
 | 现象 | 常见原因 |
 | --- | --- |
@@ -284,7 +284,7 @@ Kueue 通常只在配额可用时准入 Workload。常见策略：
 | 选择错误 GPU 型号 | NodePool 约束太宽或平台标签不一致 |
 | 成本异常增长 | 创建后未准入、模型加载失败、整合被永久阻止 |
 
-## 十六、生产检查清单
+## 16. 生产检查清单
 
 - [ ] 已记录从扩容信号到模型 Ready 的完整时间线。
 - [ ] 推理扩容基于队列、Token 或延迟，而不是只看 CPU。

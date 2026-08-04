@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 Kubernetes 能保证声明的工作负载持续运行，但不会自动回答“这个模型由哪份数据和代码产生”“谁批准上线”“质量是否退化”。MLOps 的任务是把研究过程、制品、部署和反馈闭合成可追溯的工程系统。
 
-## 一、推荐的职责分层
+## 1. 推荐的职责分层
 
 ```text
 开发体验        Notebook / IDE / Python SDK / CLI
@@ -26,7 +26,7 @@ Kubernetes 能保证声明的工作负载持续运行，但不会自动回答“
 
 Notebook 本身只负责交互式开发，不应成为长训练任务的执行器。JupyterHub、Kubeflow、GPU 规格、用户 Home、模型缓存和任务移交的完整设计见[大模型时代的 GPU Notebook 平台与存储选型](development/gpu-notebook-platform.md)。
 
-## 二、可复现需要六个版本
+## 2. 可复现需要六个版本
 
 一次训练或推理至少应关联：
 
@@ -39,7 +39,7 @@ Notebook 本身只负责交互式开发，不应成为长训练任务的执行�
 
 只有模型文件而缺少上述关联，通常无法可靠复现，也无法解释线上差异。
 
-## 三、流水线怎么选
+## 3. 流水线怎么选
 
 | 工具 | 优势 | 适合团队 |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ Argo Workflows 需要配置 Artifact Repository，生产中通常使用 S3 兼�
 
 参考：[Argo Workflows](https://argoproj.github.io/argo-workflows/)、[Artifact Repository](https://argoproj.github.io/argo-workflows/configure-artifact-repository/)
 
-## 四、实验追踪和模型注册
+## 4. 实验追踪和模型注册
 
 MLflow Tracking 记录 Run 的参数、指标、数据引用和制品；Model Registry 负责模型版本、别名、标签和晋级状态。推荐把职责分开：
 
@@ -73,7 +73,7 @@ Candidate → Offline Evaluated → Security Checked
 
 参考：[MLflow Tracking](https://mlflow.org/docs/latest/ml/tracking/)、[MLflow Model Registry](https://mlflow.org/docs/latest/ml/model-registry/workflow)
 
-## 五、CI、Pipeline 和 GitOps 的边界
+## 5. CI、Pipeline 和 GitOps 的边界
 
 ### CI
 
@@ -96,7 +96,7 @@ Candidate → Offline Evaluated → Security Checked
 
 将长时间训练直接塞进普通 CI Runner，或让训练 Pipeline 持有生产集群管理员权限，都是常见反模式。
 
-## 六、多租户设计
+## 6. 多租户设计
 
 | 控制面 | 推荐边界 |
 | --- | --- |
@@ -111,7 +111,7 @@ Candidate → Offline Evaluated → Security Checked
 
 注意 Namespace 不是完整安全沙箱。能运行任意训练代码的用户可能访问节点内核、设备 Driver 和共享网络，因此还要使用 Pod Security、Seccomp、最小权限 ServiceAccount 和受控 RuntimeClass。
 
-## 七、三层可观测性
+## 7. 三层可观测性
 
 ### 1. 基础设施层
 
@@ -134,7 +134,7 @@ Candidate → Offline Evaluated → Security Checked
 
 Prometheus、Grafana、Loki 和 OpenTelemetry 负责系统遥测；MLflow/Phoenix/Langfuse 等负责实验、生成式 AI Trace 或评估。基础设施健康不代表模型输出正确，两类告警不能混为一谈。
 
-## 八、评估必须进入发布流程
+## 8. 评估必须进入发布流程
 
 传统模型常见指标是 Accuracy、F1、AUC 和校准；LLM 还需要：
 
@@ -149,7 +149,7 @@ Prometheus、Grafana、Loki 和 OpenTelemetry 负责系统遥测；MLflow/Phoeni
 
 参考：[MLflow Evaluation](https://mlflow.org/docs/latest/ml/evaluation)、[MLflow LLM 与 Agent 能力](https://www.mlflow.org/docs/latest/)
 
-## 九、平台 API 应该长什么样
+## 9. 平台 API 应该长什么样
 
 一个好的平台接口只暴露用户真正需要的字段：
 
@@ -171,7 +171,7 @@ spec:
 
 平台再将它转换为 TrainJob、Kueue Workload、NetworkPolicy、ServiceAccount 和监控规则。这个例子是接口设计思路，不是建议再发明一个无边界的大型 CRD；如果现有 TrainJob/RayJob 已满足需求，优先直接提供模板和 SDK。
 
-## 十、成熟度阶梯
+## 10. 成熟度阶梯
 
 | 等级 | 特征 | 下一步 |
 | --- | --- | --- |
@@ -183,7 +183,7 @@ spec:
 
 成熟度不是安装组件的数量，而是一次变更能否被复现、解释、审批、观测和回滚。
 
-## 十一、生产检查清单
+## 11. 生产检查清单
 
 - [ ] 代码、镜像、数据、配置、模型和评估均有不可变版本。
 - [ ] Workflow、Kubernetes Job、MLflow Run 和模型版本可互相追踪。

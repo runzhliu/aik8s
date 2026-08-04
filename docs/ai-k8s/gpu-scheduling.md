@@ -11,7 +11,7 @@ GPU 集群最难的部分通常不是“安装 CUDA”，而是长期保持驱�
 
 面向交互式研发环境的整卡、MIG、Time-Slicing、显存估算、用户规格和空闲回收，见[大模型时代的 GPU Notebook 平台与存储选型](development/gpu-notebook-platform.md)。
 
-## 一、GPU 软件栈的职责边界
+## 1. GPU 软件栈的职责边界
 
 ```text
 训练或推理容器
@@ -33,7 +33,7 @@ NVIDIA GPU Operator 将驱动、Container Toolkit、Device Plugin、GPU Feature 
 
 参考：[NVIDIA GPU Operator](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/)
 
-## 二、四种 GPU 使用方式
+## 2. 四种 GPU 使用方式
 
 | 方式 | 隔离 | 适合场景 | 主要限制 |
 | --- | --- | --- | --- |
@@ -53,7 +53,7 @@ NVIDIA 官方文档明确指出，Time-Slicing 不提供 MIG 的显存或故障�
 - 开发环境可以使用 Time-Slicing，但要限制命名空间、并发和显存使用。
 - 同一资源池不要让“独占”和“共享”只靠口头约定，应该用节点池、标签、RuntimeClass 或不同 ResourceFlavor 明确隔离。
 
-## 三、从节点标签到设备属性
+## 3. 从节点标签到设备属性
 
 传统 Device Plugin 将 GPU 暴露为整数扩展资源：
 
@@ -88,7 +88,7 @@ nodeSelector:
 
 参考：[Kubernetes DRA](https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/)
 
-## 四、Pod 调度、队列准入和集群扩容不是一件事
+## 4. Pod 调度、队列准入和集群扩容不是一件事
 
 | 决策 | 常见组件 | 回答的问题 |
 | --- | --- | --- |
@@ -99,7 +99,7 @@ nodeSelector:
 
 如果这四层边界不清楚，经常会出现“队列已经准入，但节点扩不出来”“节点已经创建，但分布式任务只调度了一半”或“Pod 在运行，却拿错 GPU 型号”等问题。
 
-## 五、Kueue 与 Volcano 怎么选
+## 5. Kueue 与 Volcano 怎么选
 
 ### Kueue
 
@@ -136,7 +136,7 @@ Volcano 适合已有大量批任务、需要统一调度算法或对 Gang/抢占
 
 参考：[Kueue Overview](https://kueue.sigs.k8s.io/docs/overview/)、[Kueue Topology-Aware Scheduling](https://kueue.sigs.k8s.io/docs/concepts/topology_aware_scheduling/)、[Volcano Architecture](https://volcano.sh/docs/home/architecture/)
 
-## 六、拓扑为什么直接影响训练成本
+## 6. 拓扑为什么直接影响训练成本
 
 多机训练的 All-Reduce 或 All-to-All 会大量交换数据。GPU 数量相同，跨机架、跨交换机与同机 NVLink 的实际训练时间可能完全不同。因此调度不能只满足“总共有 32 张 GPU”，还要考虑：
 
@@ -148,7 +148,7 @@ Volcano 适合已有大量批任务、需要统一调度算法或对 Gang/抢占
 
 建议给节点维护稳定的拓扑标签，由 Kueue TAS 或调度器决定 Pod 组需要“尽量集中”还是“必须位于同一拓扑域”。不要让训练脚本自己猜测物理拓扑。
 
-## 七、容量与配额模型
+## 7. 容量与配额模型
 
 GPU 平台至少需要三种口径：
 
@@ -171,7 +171,7 @@ DCGM Exporter 可以把 GPU、MIG 和部分 DRA 归属信息暴露给 Prometheus
 
 参考：[DCGM Exporter](https://docs.nvidia.com/datacenter/dcgm/latest/installation/install-dcgm-exporter.html)
 
-## 八、生产检查清单
+## 8. 生产检查清单
 
 - [ ] 固定并记录 Kubernetes、内核、驱动、Toolkit、GPU Operator 版本矩阵。
 - [ ] 节点池按 GPU 型号、共享策略和网络能力分组。

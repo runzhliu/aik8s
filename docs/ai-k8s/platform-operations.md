@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 AI 平台的版本矩阵比普通 Kubernetes 更复杂：内核、驱动、CUDA、Container Toolkit、Device Plugin、GPU Operator、RDMA、训练框架和推理引擎彼此约束。升级成功的标准不是 Pod 全绿，而是代表性训练和推理仍然满足性能与可靠性基线。
 
-## 一、先定义责任边界
+## 1. 先定义责任边界
 
 | 领域 | 平台团队 | 模型/业务团队 |
 | --- | --- | --- |
@@ -22,7 +22,7 @@ AI 平台的版本矩阵比普通 Kubernetes 更复杂：内核、驱动、CUDA�
 
 没有明确归属时，驱动问题会被认为是模型问题，模型回归又会被当成集群问题。
 
-## 二、维护版本清单
+## 2. 维护版本清单
 
 至少记录：
 
@@ -39,7 +39,7 @@ AI 平台的版本矩阵比普通 Kubernetes 更复杂：内核、驱动、CUDA�
 
 清单要同时包含“当前版本”“目标版本”“支持来源”“验证状态”和“回滚方式”。
 
-## 三、不要跳过兼容矩阵
+## 3. 不要跳过兼容矩阵
 
 Kubernetes 只维护最近若干个次版本，并对 apiserver、kubelet、kubectl 等组件定义版本偏差和升级顺序。当前规则以官方 Version Skew Policy 为准。参考：[Kubernetes Version Skew Policy](https://kubernetes.io/releases/version-skew-policy/)
 
@@ -47,7 +47,7 @@ GPU Operator 也有独立的 Kubernetes、OS、容器运行时、驱动和组件
 
 “某个版本能安装”不等于处于供应商支持组合。
 
-## 四、推荐升级顺序
+## 4. 推荐升级顺序
 
 一次平台升级可以按以下阶段设计：
 
@@ -65,7 +65,7 @@ GPU Operator 也有独立的 Kubernetes、OS、容器运行时、驱动和组件
 
 实际顺序必须遵循发行版和厂商文档，不能把这张列表当成通用命令序列。
 
-## 五、Canary GPU 节点池
+## 5. Canary GPU 节点池
 
 Canary 节点应覆盖生产硬件型号，并运行：
 
@@ -81,7 +81,7 @@ Canary 节点应覆盖生产硬件型号，并运行：
 
 Canary 通过后再按故障域滚动，避免同一模型所有副本同时进入新驱动版本。
 
-## 六、节点维护流程
+## 6. 节点维护流程
 
 ```text
 确认容量与 PDB
@@ -99,7 +99,7 @@ Canary 通过后再按故障域滚动，避免同一模型所有副本同时进�
 
 长训练不应在没有 Checkpoint 协议时被强制 drain。
 
-## 七、CRD 和 Webhook 是升级高风险点
+## 7. CRD 和 Webhook 是升级高风险点
 
 检查：
 
@@ -113,7 +113,7 @@ Canary 通过后再按故障域滚动，避免同一模型所有副本同时进�
 
 GPU Operator 官方升级流程明确提示 Helm 对 CRD 的处理需要额外注意。参考：[Upgrading GPU Operator](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/upgrade.html)
 
-## 八、GitOps 管什么
+## 8. GitOps 管什么
 
 适合 GitOps：
 
@@ -134,7 +134,7 @@ GPU Operator 官方升级流程明确提示 Helm 对 CRD 的处理需要额外�
 
 集群内手工热修必须尽快回写 Git 或撤销，否则状态会漂移。
 
-## 九、多集群何时必要
+## 9. 多集群何时必要
 
 合理原因：
 
@@ -149,7 +149,7 @@ GPU Operator 官方升级流程明确提示 Helm 对 CRD 的处理需要额外�
 
 多集群会增加 Registry、身份、策略、可观测、成本和版本分布复杂度。
 
-## 十、工作负载放置
+## 10. 工作负载放置
 
 多集群调度要区分：
 
@@ -162,7 +162,7 @@ GPU Operator 官方升级流程明确提示 Helm 对 CRD 的处理需要额外�
 
 Kueue MultiKueue 可以把工作负载分发到 Worker Cluster，但模型制品、Secret、RuntimeClass 和监控仍需平台准备。
 
-## 十一、备份与灾备
+## 11. 备份与灾备
 
 定期验证：
 
@@ -177,7 +177,7 @@ Kueue MultiKueue 可以把工作负载分发到 Worker Cluster，但模型制品
 
 灾备文档应给出实际恢复时间，而不是只描述架构。
 
-## 十二、升级验收
+## 12. 升级验收
 
 | 层级 | 验收 |
 | --- | --- |
@@ -191,7 +191,7 @@ Kueue MultiKueue 可以把工作负载分发到 Worker Cluster，但模型制品
 
 与升级前基线比较，性能偏差超过阈值必须解释。
 
-## 十三、变更记录
+## 13. 变更记录
 
 每次变更至少保留：
 
@@ -204,7 +204,7 @@ Kueue MultiKueue 可以把工作负载分发到 Worker Cluster，但模型制品
 - 回滚触发条件；
 - 实际故障和后续行动。
 
-## 十四、上线清单
+## 14. 上线清单
 
 - [ ] 有完整版本清单和供应商支持矩阵；
 - [ ] Kubernetes、GPU Operator 和 AI 组件升级顺序明确；

@@ -15,7 +15,7 @@ Kubernetes 跨集群不是把多个集群简单拼成一个更大的集群。它
 
 如果忽略 GPU 拓扑、RDMA、数据位置和模型预热，只聚合各集群的空闲卡数，跨集群调度很容易得到一个“容量数字正确、任务却无法运行”的平台。
 
-## 一、为什么 AI 平台会走向多集群
+## 1. 为什么 AI 平台会走向多集群
 
 常见驱动力包括：
 
@@ -30,7 +30,7 @@ Kubernetes 跨集群不是把多个集群简单拼成一个更大的集群。它
 
 多集群的收益主要是隔离、选择和独立故障，而不是免费获得一个更大的低延迟计算域。每新增一个集群，也会增加版本、身份、策略、Secret、镜像、模型、观测和灾备的一致性成本。
 
-## 二、从 Federation 到可组合多集群
+## 2. 从 Federation 到可组合多集群
 
 ### 2016—2017：Federation v1
 
@@ -79,7 +79,7 @@ MultiKueue 采用 Manager Cluster + Worker Cluster：Manager 接收 Job，在候
 
 多集群仍不是 Kubernetes 核心中的一个总开关，也没有一个上游实现同时成为集群生命周期、应用分发、网络和 Job 调度的唯一标准。SIG Multicluster 更侧重 Cluster Identity、MCS、Work、ClusterProfile 等互操作 API；具体数据面和高级策略由不同项目实现。生产平台的主流方向是按职责组合少量组件，并让成员集群保留自治能力。
 
-## 三、先把七个平面拆开
+## 3. 先把七个平面拆开
 
 | 平面 | 需要回答的问题 | 常见能力/项目 | 不负责什么 |
 | --- | --- | --- | --- |
@@ -93,7 +93,7 @@ MultiKueue 采用 Manager Cluster + Worker Cluster：Manager 接收 Job，在候
 
 不要只按“多集群产品”选型。先确定需要哪几个平面，再决定每个平面的唯一权威来源和控制器所有权。
 
-## 四、当前常见架构模式
+## 4. 当前常见架构模式
 
 ### 模式 A：Fleet / Hub-Spoke
 
@@ -132,7 +132,7 @@ GPU 场景必须额外验证扩展资源、设备属性、Gang、拓扑、网络
 
 除非站点之间具备经过验证的低延迟专网、明确故障模型和厂商支持，否则不建议把跨地域 GPU 资源做成一个拉伸集群。多个自治集群通常更容易定义故障边界。
 
-## 五、主流能力怎样组合
+## 5. 主流能力怎样组合
 
 | 能力 | 适合场景 | 对 GPU 平台的价值 | 关键限制 |
 | --- | --- | --- | --- |
@@ -149,7 +149,7 @@ GPU 场景必须额外验证扩展资源、设备属性、Gang、拓扑、网络
 
 参考：[Cluster API](https://cluster-api.sigs.k8s.io/)、[OCM Architecture](https://open-cluster-management.io/docs/concepts/architecture/)、[Karmada Concepts](https://karmada.io/docs/core-concepts/concepts/)、[Liqo](https://docs.liqo.io/)、[MCS API](https://multicluster.sigs.k8s.io/concepts/multicluster-services-api/)
 
-## 六、Karmada 怎样与 AI/GPU 结合
+## 6. Karmada 怎样与 AI/GPU 结合
 
 Karmada 的核心定位是：使用 Kubernetes 风格的 API，把资源模板按策略放置和传播到多个自治集群，并汇总状态、处理差异和故障迁移。它不是集群创建工具、跨集群 CNI，也不是把所有成员集群变成一个 Node/GPU 调度域。
 
@@ -267,7 +267,7 @@ Karmada 的 Application State Preservation 可以在故障迁移时提取并重�
 
 参考：[Karmada Application-level Failover](https://karmada.io/docs/userguide/failover/application-failover)
 
-## 七、跨集群 GPU 训练：优先整作业放置
+## 7. 跨集群 GPU 训练：优先整作业放置
 
 ### 推荐数据流
 
@@ -349,7 +349,7 @@ DDP/FSDP、Tensor Parallel、Expert Parallel 会频繁执行 All-Reduce、All-Ga
 
 长训练从 Cluster A 切到 Cluster B，通常是：停止或失败 → 保存/选择 Checkpoint → 在 B 重新排队 → 恢复。平台应显式定义 RPO、RTO、Checkpoint 兼容性和数据可达性，不应把它描述成无损 Pod 迁移。
 
-## 八、跨集群 GPU 推理：复制服务，调度请求
+## 8. 跨集群 GPU 推理：复制服务，调度请求
 
 ### 推荐架构
 
@@ -412,7 +412,7 @@ Model Registry / Object Storage
 
 MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和访问，但它们通常不了解模型、KV Cache、Token 队列和 TTFT。生产 LLM 平台仍需把全局流量选择与集群内 Inference-aware Routing 分层。
 
-## 九、训练与推理的结论并不相同
+## 9. 训练与推理的结论并不相同
 
 | 问题 | 大规模训练 | 在线推理 |
 | --- | --- | --- |
@@ -423,7 +423,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 | 跨集群数据 | 数据集、Checkpoint、模型制品 | 模型、配置、Adapter，必要时会话状态 |
 | 最不适合跨 WAN 的部分 | 每 Step Collective | TP/PP、KV 传输、P/D 内部链路 |
 
-## 十、一个可落地的分层参考架构
+## 10. 一个可落地的分层参考架构
 
 ```text
 全局管理层（不在同步数据路径）
@@ -452,7 +452,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 5. **故障域显式。** 集群、区域、网络 Block 和存储故障要有不同恢复策略。
 6. **版本是一组制品。** Kubernetes、驱动、Runtime、Operator、CRD、模型和 Connector 一起发布。
 
-## 十一、跨集群故障语义
+## 11. 跨集群故障语义
 
 | 故障 | 训练平台应如何处理 | 推理平台应如何处理 |
 | --- | --- | --- |
@@ -466,7 +466,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 
 跨集群控制器必须有唯一任务身份、幂等创建、Lease/Ownership 和最终对账机制。网络分区后最危险的情况不是“暂时看不到”，而是同一个训练或发布在两个集群被重复执行。
 
-## 十二、常见反模式
+## 12. 常见反模式
 
 - 把 4 个集群各 8 张空闲 GPU 当成一个可运行 32 卡同步任务的资源池；
 - 全局调度器直接依赖几秒甚至几分钟之前的 GPU 空闲数承诺容量；
@@ -479,7 +479,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 - 把 MCS/Service Mesh 当作全局 GPU 调度或 LLM 智能路由；
 - 只做正常路径 Demo，没有演练 Hub 失联、双写、取消和状态对账。
 
-## 十三、怎样选择起点
+## 13. 怎样选择起点
 
 | 需求 | 建议起点 |
 | --- | --- |
@@ -502,7 +502,7 @@ MCS、ClusterMesh 或 Service Mesh 可以让服务在多个集群中被发现和
 6. 只有出现明确应用依赖时再增加 MCS、ClusterMesh 或 Offloading。
 7. 最后才评估跨集群同步训练、P/D 或 KV 传输等高耦合方案。
 
-## 十四、上线检查清单
+## 14. 上线检查清单
 
 - [ ] 每个集群有稳定唯一 ID、所有者、地域、故障域和版本信息。
 - [ ] Inventory 能表达 GPU 型号、显存、互联、RDMA、数据和价格，不只表达卡数。

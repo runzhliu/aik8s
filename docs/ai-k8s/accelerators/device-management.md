@@ -11,7 +11,7 @@ Kubernetes 管理 GPU、NIC、FPGA 和 AI ASIC 时涉及三个容易混淆的机
 
 它们解决的是相互关联但不同的问题。
 
-## 一、职责对照
+## 1. 职责对照
 
 | 机制 | 主要回答 | 典型对象或文件 |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Kubernetes 管理 GPU、NIC、FPGA 和 AI ASIC 时涉及三个容易混淆的机
 
 DRA 不替代驱动安装，CDI 不负责调度，Kueue 也不选择具体设备。
 
-## 二、Device Plugin 工作方式
+## 2. Device Plugin 工作方式
 
 典型流程：
 
@@ -63,7 +63,7 @@ Device Plugin 的优点：
 - 多种相关设备的联合分配能力有限；
 - 选择逻辑经常退化为节点标签。
 
-## 三、CDI 工作方式
+## 3. CDI 工作方式
 
 一个概念性 CDI Spec：
 
@@ -101,7 +101,7 @@ CDI 的价值是让设备注入从运行时特定 Hook 走向标准化描述。�
 - 陈旧 Spec 是否会引用已不存在的设备；
 - RuntimeClass 是否使用相同的 CDI 路径。
 
-## 四、DRA API 模型
+## 4. DRA API 模型
 
 DRA 的核心角色：
 
@@ -137,7 +137,7 @@ spec:
 
 参考：[Kubernetes 1.34 DRA GA](https://kubernetes.io/blog/2025/09/01/kubernetes-v1-34-dra-updates/)、[Kubernetes 1.36 DRA](https://kubernetes.io/blog/2026/05/07/kubernetes-v1-36-dra-136-updates/)
 
-## 五、DRA 比节点标签多表达什么
+## 5. DRA 比节点标签多表达什么
 
 传统方式：
 
@@ -161,7 +161,7 @@ resources:
 
 是否真正支持取决于 Kubernetes 版本和厂商 DRA Driver，不应只根据上游 API 存在就承诺功能。
 
-## 六、ResourceClaim 生命周期
+## 6. ResourceClaim 生命周期
 
 必须验证：
 
@@ -176,7 +176,7 @@ resources:
 
 有状态设备分配不能只做一次“Pod 能跑”的 Smoke Test。
 
-## 七、Device Plugin 与 DRA 如何选择
+## 7. Device Plugin 与 DRA 如何选择
 
 | 场景 | 建议 |
 | --- | --- |
@@ -190,7 +190,7 @@ resources:
 
 DRA 不是 Device Plugin 的立即替代品，而是设备 API 的长期演进方向。生产平台可以在不同节点池并行使用两种模式，但同一设备通常不能由两个 Driver 同时管理。
 
-## 八、迁移策略
+## 8. 迁移策略
 
 ### 第 1 阶段：库存与兼容性
 
@@ -220,7 +220,7 @@ DRA 不是 Device Plugin 的立即替代品，而是设备 API 的长期演进�
 
 按硬件型号和业务风险迁移，保留回滚到旧节点池的能力。不要在一次集群升级中同时更换 Kubernetes、驱动、DRA 和训练框架。
 
-## 九、与队列和调度的关系
+## 9. 与队列和调度的关系
 
 Kueue 的配额可能仍以资源 Flavor 表达，而 DRA Claim 选择具体设备。平台需要确保：
 
@@ -232,7 +232,7 @@ Kueue 的配额可能仍以资源 Flavor 表达，而 DRA Claim 选择具体设�
 
 Kubernetes 1.36 的 Workload/PodGroup 与 ResourceClaim 集成代表这一层仍在快速演进，应在文档中明确目标版本和 Feature State。
 
-## 十、可观测性
+## 10. 可观测性
 
 至少采集：
 
@@ -247,7 +247,7 @@ Kubernetes 1.36 的 Workload/PodGroup 与 ResourceClaim 集成代表这一层仍
 
 使用 Device Plugin 时也应建立 Pod UID 到设备 UUID 的映射，不能只按节点聚合 GPU 指标。
 
-## 十一、故障场景
+## 11. 故障场景
 
 | 故障 | 需要验证的行为 |
 | --- | --- |
@@ -260,7 +260,7 @@ Kubernetes 1.36 的 Workload/PodGroup 与 ResourceClaim 集成代表这一层仍
 | API Server/etcd 恢复 | ResourceSlice/Claim 与节点实际状态一致 |
 | Driver 升级失败 | 可回滚且旧 Claim 可读取 |
 
-## 十二、安全边界
+## 12. 安全边界
 
 - Device Plugin、DRA Node Plugin 和 CDI 生成器通常具有主机权限；
 - 限制其镜像来源、hostPath、ServiceAccount 和升级权限；
@@ -269,7 +269,7 @@ Kubernetes 1.36 的 Workload/PodGroup 与 ResourceClaim 集成代表这一层仍
 - CDI Spec 目录应只允许可信组件写入；
 - 设备直通、共享和 Kata Runtime 需要独立威胁模型。
 
-## 十三、生产检查清单
+## 13. 生产检查清单
 
 - [ ] 能区分 Driver 安装、设备发现、容器注入和配额准入。
 - [ ] Device Plugin 或 DRA 的选择有明确业务理由。

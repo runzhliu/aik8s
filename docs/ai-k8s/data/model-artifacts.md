@@ -9,7 +9,7 @@ last_reviewed: 2026-08-03
 
 模型权重不是一个随手复制的大文件。生产平台需要把模型、Tokenizer、配置、量化参数、推理引擎兼容性、许可证、评估和签名组成不可变制品，并确保它能在目标 Kubernetes 节点上高效、安全地分发。
 
-## 一、模型制品包含什么
+## 1. 模型制品包含什么
 
 一个可部署模型版本通常包括：
 
@@ -27,7 +27,7 @@ last_reviewed: 2026-08-03
 
 模型 Registry 的元数据和权重存储可以分开，但必须通过不可变 URI 和 Digest 关联。
 
-## 二、常见模型格式
+## 2. 常见模型格式
 
 | 格式 | 典型用途 | 主要特点 | 注意事项 |
 | --- | --- | --- | --- |
@@ -43,7 +43,7 @@ safetensors 降低了反序列化执行风险，但模型仓库还可能包含 P
 
 参考：[Safetensors](https://huggingface.co/docs/safetensors/main/index)
 
-## 三、基础模型、微调和量化的关系
+## 3. 基础模型、微调和量化的关系
 
 ```text
 基础模型 Revision
@@ -60,7 +60,7 @@ safetensors 降低了反序列化执行风险，但模型仓库还可能包含 P
 
 每个派生制品都应记录父模型 Digest、转换工具、命令、校准数据和质量变化。只记录一个模型名称无法重现部署。
 
-## 四、模型版本标识
+## 4. 模型版本标识
 
 不推荐：
 
@@ -80,7 +80,7 @@ registry.example.com/models/chat@sha256:<digest>
 
 业务别名如 `chat-production` 可以指向不可变版本，但别名变更本身必须审计并可快速回退。
 
-## 五、制品 Manifest
+## 5. 制品 Manifest
 
 概念示例：
 
@@ -109,7 +109,7 @@ spec:
 
 这不是标准 Kubernetes API，而是一种元数据契约示例。可以由 Kubeflow Hub、MLflow、OCI Annotation 或内部 Catalog 实现。
 
-## 六、存储方式
+## 6. 存储方式
 
 ### 对象存储
 
@@ -135,7 +135,7 @@ spec:
 
 模型作为 OCI Artifact 或 Modelcar 可以复用 Registry 的 Digest、权限、镜像分发和节点缓存。需要评估大 Layer、垃圾回收、签名、Registry 带宽和 Snapshotter。
 
-## 七、KServe Modelcar
+## 7. KServe Modelcar
 
 KServe 支持用 `oci://` 指向包含模型数据的 OCI Image：
 
@@ -162,7 +162,7 @@ spec:
 
 参考：[KServe OCI Modelcars](https://kserve.github.io/website/docs/model-serving/storage/providers/oci)
 
-## 八、本地模型缓存
+## 8. 本地模型缓存
 
 模型冷启动路径：
 
@@ -188,7 +188,7 @@ spec:
 
 不能用 Prefix Cache 命中率衡量模型权重缓存，也不能把 Pod Running 当成 GPU 权重已经加载。
 
-## 九、KServe LocalModelCache
+## 9. KServe LocalModelCache
 
 KServe LocalModelCache 可以在目标节点预下载模型，并维护节点缓存状态。典型对象包括 `LocalModelNodeGroup`、`LocalModelCache` 和 `LocalModelNode`。
 
@@ -206,7 +206,7 @@ KServe LocalModelCache 可以在目标节点预下载模型，并维护节点缓
 
 参考：[KServe Local Model Cache](https://kserve.github.io/website/docs/model-serving/generative-inference/modelcache/localmodel)、[LocalModel Installation](https://kserve.github.io/website/docs/install/localmodel-install)
 
-## 十、分发策略
+## 10. 分发策略
 
 ### 每个 Pod 下载
 
@@ -232,7 +232,7 @@ KServe LocalModelCache 可以在目标节点预下载模型，并维护节点缓
 
 引擎可以从 HTTP/S3 等远端源并发读取 Tensor，或通过特定格式边下载边反序列化，减少完整落盘和 CPU 内存峰值。它优化的是“远端字节进入引擎/GPU”的路径，不能替代不可变版本、区域复制、权限、缓存和回滚。
 
-## 十一、主流生产分层
+## 11. 主流生产分层
 
 当前主流做法不是在对象存储、OCI、PVC、P2P 中四选一，而是让它们承担不同层次：
 
@@ -274,7 +274,7 @@ Traffic Ready
 
 这套分层避免让一个系统同时承担制品治理、跨地域复制、节点缓存和请求发布。最常见的生产组合是：**对象存储或 OCI Registry 作为权威源，区域内保留副本，发布前预热到 GPU 节点本地 NVMe；节点规模很大时再加入 P2P。**
 
-## 十二、跨地域模型分发
+## 12. 跨地域模型分发
 
 多地域平台不应让每个 Pod 从中央 Bucket 或公网 Model Hub 跨 WAN 拉取。更稳健的路径是：
 
@@ -308,7 +308,7 @@ Global Artifact Digest
 
 OCI Registry 的 Layer 去重只对内容完全相同的 Layer 有效。一个权重分片中的少量数值变化也会产生新的 Digest，因此不要把增量同步收益建立在“模型版本相近”的直觉上；应根据真实分片和 Registry 行为测量。
 
-## 十三、百节点与 TB 级 P2P 分发
+## 13. 百节点与 TB 级 P2P 分发
 
 直接回源的理论流量近似为：
 
@@ -346,7 +346,7 @@ P2P 上线前要明确：
 
 P2P 是分发数据面，不是权威 Registry。Peer Cache 可以随时丢失和重建，模型审批、签名、生命周期与回滚仍由上层制品系统负责。
 
-## 十四、分发完成不等于模型可服务
+## 14. 分发完成不等于模型可服务
 
 一个模型从权威存储到真正提供请求，至少有四个不同状态：
 
@@ -369,7 +369,7 @@ P2P 是分发数据面，不是权威 Registry。Peer Cache 可以随时丢失�
 
 对于严格在线 SLO，更稳妥的默认值仍是先把完整、校验过的模型放到本地 NVMe，再由引擎并行加载；Streaming 用于经过基准证明的启动优化或长尾模型。
 
-## 十五、训练与推理的分发路径不同
+## 15. 训练与推理的分发路径不同
 
 | 维度 | 训练/Checkpoint | 在线推理权重 |
 | --- | --- | --- |
@@ -384,7 +384,7 @@ P2P 是分发数据面，不是权威 Registry。Peer Cache 可以随时丢失�
 
 基础模型与 Adapter 也可以分层：大型基础模型长期驻留节点，较小的 LoRA/Adapter 独立版本化并按需分发。仍需验证 Adapter 与基础模型 Digest、Tokenizer、引擎版本和租户权限，不能只按文件名拼装。
 
-## 十六、模型发布状态机
+## 16. 模型发布状态机
 
 一个可控的模型发布流程可以表示为：
 
@@ -416,7 +416,7 @@ Build
 
 不要让 Autoscaler 在流量峰值到来后才第一次下载几百 GB 权重。在线推理的节点供给、模型预热和副本扩容需要联合规划；必要时保留空 GPU 节点或 Warm Pool。
 
-## 十七、容量与带宽规划
+## 17. 容量与带宽规划
 
 单节点下载时间可以粗略估算为：
 
@@ -448,7 +448,7 @@ Build
 
 模型 Shard 也有权衡：过大的 Shard 降低元数据数量，但单片失败重试成本高、并发度低；过小的 Shard 会增加请求、文件系统元数据和打开文件压力。应让分片大小、引擎并行加载能力、对象存储 Multipart 和 P2P Piece 策略共同基准，而不是机械地统一文件大小。
 
-## 十八、冷启动预算
+## 18. 冷启动预算
 
 ```text
 冷启动 = 节点供给
@@ -464,7 +464,7 @@ Build
 
 对每一项测量 P50/P95，并记录缓存冷/热两种情况。一个 100 GiB 模型即使远端带宽为 10 Gbit/s，理论传输下限也超过一分钟，实际还包括协议、并发、解压和存储瓶颈。
 
-## 十九、完整性和签名
+## 19. 完整性和签名
 
 推荐链路：
 
@@ -481,7 +481,7 @@ Build
 
 不仅签名权重，还要关联 Tokenizer、配置、量化 Scale 和自定义代码。Digest 一致只能证明内容未变，不能证明模型质量或来源可信。
 
-## 二十、权限模型
+## 20. 权限模型
 
 - 模型发现、读取、发布、晋级和删除使用不同权限；
 - 生产 Pod 只读特定已审批 Digest；
@@ -491,7 +491,7 @@ Build
 - 模型许可证和数据使用限制进入元数据；
 - 审计谁让哪个模型版本进入哪个环境。
 
-## 二十一、垃圾回收
+## 21. 垃圾回收
 
 清理对象包括：
 
@@ -504,7 +504,7 @@ Build
 
 删除前检查线上部署、Canary、回滚策略、训练血缘和合规保留。缓存可以按 LRU 清理，权威制品不能用同一策略。
 
-## 二十二、可观测性
+## 22. 可观测性
 
 至少记录：
 
@@ -524,7 +524,7 @@ Build
 
 所有指标至少带上 `model_digest`、`region`、`cluster_id`、`node`、`source` 和 `release_id` 中适用的维度。模型名称或 Tag 不足以区分实际字节版本。
 
-## 二十三、常见故障
+## 23. 常见故障
 
 | 现象 | 可能原因 |
 | --- | --- |
@@ -542,7 +542,7 @@ Build
 | Streaming 首次请求抖动 | 远端读取、惰性 Page Fault 或未完成 Engine Warmup |
 | 回滚失败 | 旧模型或对应 Runtime 已被清理 |
 
-## 二十四、生产检查清单
+## 24. 生产检查清单
 
 - [ ] 模型版本关联权重、Tokenizer、配置、量化和评估。
 - [ ] 所有生产部署使用不可变 Revision 或 Digest。

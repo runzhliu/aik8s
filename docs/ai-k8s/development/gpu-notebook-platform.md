@@ -11,7 +11,7 @@ last_reviewed: 2026-08-03
 
 因此，Notebook 平台的真正选型对象不是某个 Web UI，而是一套**交互式开发工作区**：身份、镜像、计算规格、GPU 隔离、持久目录、数据访问、缓存、空闲回收和任务移交必须一起设计。
 
-## 一、先给结论
+## 1. 先给结论
 
 ### 推荐的默认架构
 
@@ -52,7 +52,7 @@ JupyterHub + KubeSpawner
 
 参考：[Kubeflow 26.03.1 发布说明](https://blog.kubeflow.org/kubeflow-26.03-release/)、[Kubeflow Notebooks Overview](https://www.kubeflow.org/docs/components/notebooks/overview/)
 
-## 二、先确定 Notebook 的职责边界
+## 2. 先确定 Notebook 的职责边界
 
 Notebook 适合：
 
@@ -89,7 +89,7 @@ Job / TrainJob / RayJob / Pipeline
 
 这样 Idle Culler 停止 Notebook 时，不会误杀正式训练；Notebook 损坏也不会破坏生产作业。
 
-## 三、平台能力应该怎样拆分
+## 3. 平台能力应该怎样拆分
 
 ```text
 企业 IdP / OIDC / SSO
@@ -121,7 +121,7 @@ Workspace Pod：JupyterLab / VS Code / Terminal
 | 成本 | 能否识别空闲 Kernel、停止 Pod、回收 GPU 又保留 PVC？ |
 | 运维 | 镜像预拉取、升级、备份、审计和容量告警是否完整？ |
 
-## 四、JupyterHub、Kubeflow 与托管 Workbench 怎么选
+## 4. JupyterHub、Kubeflow 与托管 Workbench 怎么选
 
 | 维度 | JupyterHub on Kubernetes | Kubeflow Notebook/Workspace | 云托管 Workbench | 自建 Pod 门户 |
 | --- | --- | --- | --- | --- |
@@ -191,7 +191,7 @@ Kubeflow 官方提醒：Pod 启动后临时安装的包会随 Pod 消失，除�
 
 例如，当前 SageMaker Studio 的不同 Space 通常使用各自的 EBS 卷，Azure ML 明确建议不要把训练数据放在 Notebook 文件共享中，并建议把大量临时小文件放到本地临时目录。参考：[SageMaker Studio Spaces](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-updated-spaces.html)、[Azure ML Compute Instance](https://learn.microsoft.com/en-us/azure/machine-learning/concept-compute-instance?view=azureml-api-2)、[Vertex AI Workbench](https://cloud.google.com/vertex-ai/docs/workbench/introduction)
 
-## 五、不要让用户自由填写任意规格
+## 5. 不要让用户自由填写任意规格
 
 平台应发布一个版本化的资源目录，而不是暴露完整 Pod 表单。
 
@@ -216,7 +216,7 @@ Kubeflow 官方提醒：Pod 启动后临时安装的包会随 Pod 消失，除�
 
 `ResourceQuota` 用来限制团队资源总量，`LimitRange` 和准入策略用来阻止无边界的 CPU、内存和临时存储；GPU 总量还应进入团队配额、审批或队列体系。
 
-## 六、先估算显存，再选择 GPU
+## 6. 先估算显存，再选择 GPU
 
 只看模型参数量通常会低估显存。最基本的权重估算是：
 
@@ -241,7 +241,7 @@ INT4：约 0.5 Byte，加量化元数据
 
 正式采购前必须用目标模型、框架、精度、上下文和 Batch 实测峰值显存，不要只按参数量乘字节做容量承诺。
 
-## 七、整卡、MIG、Time-Slicing 和 MPS 怎么选
+## 7. 整卡、MIG、Time-Slicing 和 MPS 怎么选
 
 | 模式 | 显存隔离 | 故障隔离 | 性能稳定性 | 适合 Notebook | 主要代价 |
 | --- | --- | --- | --- | --- | --- |
@@ -272,7 +272,7 @@ NVIDIA 明确说明 Time-Slicing Replica 之间没有 MIG 所提供的显存和�
 
 共享 GPU 还需要额外监控物理卡级 XID、显存 OOM 和利用率。仅按 Pod 的扩展资源数量计费会误导用户，因为它不能代表实际获得的 GPU 时间。
 
-## 八、把 Notebook 数据分成八类
+## 8. 把 Notebook 数据分成八类
 
 | 数据 | 是否需要持久 | 是否需要共享 | 推荐位置 |
 | --- | --- | --- | --- |
@@ -287,7 +287,7 @@ NVIDIA 明确说明 Time-Slicing Replica 之间没有 MIG 所提供的显存和�
 
 最重要的规则是：**Home PVC 不是数据湖，RWX 共享盘不是所有数据的默认归宿，本地 NVMe 不是唯一副本。**
 
-## 九、存储类型选型矩阵
+## 9. 存储类型选型矩阵
 
 | 存储类型 | 访问模式 | 性能特点 | 适合 | 不适合 |
 | --- | --- | --- | --- | --- |
@@ -304,7 +304,7 @@ Kubernetes 的 PersistentVolume 生命周期独立于单个 Pod；`emptyDir` 等
 
 `ReadWriteOnce` 表示卷可以在一个节点上读写，并不一定严格限制为一个 Pod；需要确保同一时刻只被一个 Pod 使用时，应评估 CSI 驱动是否支持 `ReadWriteOncePod`。多数 Notebook 平台依靠“一个用户服务器 + 一个 PVC”的控制面约束已经足够，但迁移和故障场景仍要验证重复挂载行为。
 
-## 十、推荐的目录与挂载约定
+## 10. 推荐的目录与挂载约定
 
 ```text
 /home/jovyan        每用户 SSD PVC；Notebook、脚本、配置、小型虚拟环境
@@ -324,7 +324,7 @@ Kubernetes 的 PersistentVolume 生命周期独立于单个 Pod；`emptyDir` 等
 - 正式 Checkpoint 必须同步到哪个对象存储前缀；
 - 禁止把 Token、云密钥或 kubeconfig 写入 Notebook 输出和 Git。
 
-## 十一、推荐的存储分层
+## 11. 推荐的存储分层
 
 ```text
 权威层：对象存储
@@ -357,7 +357,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 第一版可以采用“对象存储权威副本 + 节点 NVMe LRU 缓存”。当缓存未命中、校验失败或节点丢失时，系统必须能从权威层重建。
 
-## 十二、不要把所有用户都放进一个巨大 RWX Home
+## 12. 不要把所有用户都放进一个巨大 RWX Home
 
 “所有 Home 共用一个 RWX 文件系统”看起来迁移简单，但常见问题包括：
 
@@ -369,7 +369,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 默认采用每用户 RWO/RWOP SSD PVC，团队确实需要共享的内容再挂载到独立 RWX 路径。共享目录应有项目级 ACL、配额、快照和生命周期策略。
 
-## 十三、环境应该放在镜像还是 Home
+## 13. 环境应该放在镜像还是 Home
 
 ### 放进不可变镜像
 
@@ -389,7 +389,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 推荐发布少量黄金镜像，用 Digest 固定版本，并保留镜像 SBOM、漏洞扫描和 CUDA/Driver 兼容记录。用户确实需要新依赖时，先在项目 Lockfile 中验证，再进入下一版镜像。
 
-## 十四、启动速度和 GPU 节点弹性
+## 14. 启动速度和 GPU 节点弹性
 
 ```text
 总启动时间
@@ -414,7 +414,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 交互式 Notebook 不适合无限期在 Kueue 中排队。更合理的方式是给交互池保留小额配额和明确最大会话时间，正式训练则由 Notebook 提交到 Kueue 管理的 Job 队列。
 
-## 十五、Idle Culler 不是简单看浏览器是否打开
+## 15. Idle Culler 不是简单看浏览器是否打开
 
 空闲回收至少要区分：
 
@@ -437,7 +437,7 @@ Notebook Scratch、/dev/shm、临时解压和中间结果
 
 成本报表至少区分 Allocation、GPU 实际利用、Active User Time 和 Idle Allocated Time。只统计“分配了几张卡”无法判断平台是否有效。
 
-## 十六、安全隔离
+## 16. 安全隔离
 
 Notebook 是带浏览器入口、终端和任意代码执行能力的长生命周期 Shell，应按高风险工作负载治理。
 
@@ -464,7 +464,7 @@ Notebook 是带浏览器入口、终端和任意代码执行能力的长生命�
 - Secret 使用外部 Secret 系统或短期令牌，避免显示在环境变量、Notebook 输出和日志中；
 - 对外分享 Notebook 必须经过脱敏和输出清理。
 
-## 十七、可观测性与审计
+## 17. 可观测性与审计
 
 每个 Workspace Pod 建议统一用户、团队、Workspace、Profile、镜像 Digest、成本中心和 GPU 模式等标签。
 
@@ -479,7 +479,7 @@ Notebook 是带浏览器入口、终端和任意代码执行能力的长生命�
 
 审计至少保留：谁创建、启动、停止、删除或改变了 Workspace；选择了哪个镜像、Profile 和数据挂载；谁申请了整卡或多卡；Notebook 以什么身份提交了哪个 Job；谁访问了受限数据；管理员何时升级控制面、镜像、CSI 和 GPU 组件。
 
-## 十八、三套参考架构
+## 18. 三套参考架构
 
 ### A. 10–50 人研发团队
 
@@ -522,7 +522,7 @@ Cloud IAM → Managed Workbench
 
 特点：优先减少平台运维，重点控制 Idle Shutdown、私网、实例配额、持久卷费用和跨区数据。随着租户隔离、自定义调度或多云需求增长，再评估迁移到 Kubernetes 工作区平台。
 
-## 十九、一个平台规格契约示例
+## 19. 一个平台规格契约示例
 
 不要直接让用户填写完整 Pod。内部平台可以维护类似下面的目录对象，再渲染为 JupyterHub Profile、Kubeflow Workspace 或托管服务模板：
 
@@ -568,7 +568,7 @@ spec:
 
 这不是建议立即发明一个新的 CRD。第一版可以用 Git 中的 JupyterHub Helm Values、Kubeflow 模板或内部 Portal 配置表达同样的契约。关键是用户看到的是稳定产品规格，平台内部才处理 StorageClass、Resource Name、Taint 和网络策略。
 
-## 二十、PoC 必须测什么
+## 20. PoC 必须测什么
 
 ### 功能测试
 
@@ -603,7 +603,7 @@ spec:
 - 尝试使用特权容器、HostPath、Host Network 和未批准镜像；
 - 检查 Notebook 输出、终端历史、Git 历史和日志是否泄露 Token。
 
-## 二十一、备份与生命周期
+## 21. 备份与生命周期
 
 ### Home PVC
 
@@ -628,7 +628,7 @@ spec:
 
 参考：[Kubernetes Volume Snapshots](https://kubernetes.io/docs/concepts/storage/volume-snapshots/)
 
-## 二十二、常见反模式
+## 22. 常见反模式
 
 | 反模式 | 后果 | 修正 |
 | --- | --- | --- |
@@ -643,7 +643,7 @@ spec:
 | Snapshot 当成唯一备份 | 同故障域或误删仍可能无法恢复 | Git + 独立备份 + 恢复演练 |
 | Idle 只看浏览器连接 | 误杀计算或永不回收后台进程 | Kernel、Terminal、GPU 和最长时限联合判断 |
 
-## 二十三、选型评分表
+## 23. 选型评分表
 
 建议先给以下维度设置权重，再用实际 PoC 数据打分：
 
@@ -659,7 +659,7 @@ spec:
 
 总分接近不代表产品等价。安全、数据恢复或 GPU 隔离中的任何一项没有达到硬门槛，都不应被更好的 UI 分数抵消。
 
-## 二十四、分阶段落地
+## 24. 分阶段落地
 
 ### 第一阶段：建立可用入口
 
@@ -689,7 +689,7 @@ spec:
 - 缓存预热、热点预测和容量预约；
 - Kubeflow Notebooks v1 到 Workspaces v2 或其他平台的迁移。
 
-## 二十五、上线清单
+## 25. 上线清单
 
 - [ ] Notebook 只承担交互开发，正式长任务有独立执行系统。
 - [ ] 用户只能选择批准的镜像、资源和挂载 Profile。

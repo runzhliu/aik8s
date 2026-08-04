@@ -9,7 +9,7 @@ last_reviewed: 2026-08-03
 
 参考架构不是产品清单，而是职责、数据流、故障域和演进边界。下面五套架构从最小平台到大规模推理逐步增加组件，每套都说明何时使用、最小组件、关键 SLO 和不应提前引入的复杂度。
 
-## 一、架构 A：小型 GPU 平台
+## 1. 架构 A：小型 GPU 平台
 
 ### 适用范围
 
@@ -63,7 +63,7 @@ Object Storage
 - Checkpoint 可恢复；
 - GPU 分配与利用率。
 
-## 二、架构 B：多租户分布式训练平台
+## 2. 架构 B：多租户分布式训练平台
 
 ### 适用范围
 
@@ -123,7 +123,7 @@ MLflow/Kubeflow Hub + Observability + Cost
 - Notebook 长期占卡；
 - 队列公平与业务紧急需求冲突。
 
-## 三、架构 C：高可用在线 LLM 推理
+## 3. 架构 C：高可用在线 LLM 推理
 
 ### 适用范围
 
@@ -187,7 +187,7 @@ Artifact + Runtime + Gateway Policy
 - 限流服务故障时明确 Fail Open/Closed；
 - 模型和 Runtime 可同时回滚。
 
-## 四、架构 D：大规模分离式推理
+## 4. 架构 D：大规模分离式推理
 
 ### 适用范围
 
@@ -243,7 +243,7 @@ Model Cache + RDMA + Observability
 
 如果 P/D 分离相比共置没有稳定 Goodput/成本收益，或者故障复杂度超出团队能力，应退回共置模式。
 
-## 五、架构 E：Agent 与不可信工具执行
+## 5. 架构 E：Agent 与不可信工具执行
 
 ### 适用范围
 
@@ -285,7 +285,7 @@ External Tools / Data / Browser
 - 不可信执行使用适当的 RuntimeClass 或独立集群；
 - 审计动作链但不泄露 Prompt、Secret 和个人数据。
 
-## 六、共享基础能力
+## 6. 共享基础能力
 
 五套架构都需要：
 
@@ -300,7 +300,7 @@ External Tools / Data / Browser
 | 交付 | GitOps、Canary、版本矩阵和回滚 |
 | 成本 | 租户标签、分配/利用/产出和预算 |
 
-## 七、演进路径
+## 7. 演进路径
 
 ```text
 小型 GPU 平台
@@ -313,7 +313,7 @@ External Tools / Data / Browser
 
 每一阶段都应先建立 SLO、基准和故障演练，再增加下一个控制器。
 
-## 八、架构评审模板
+## 8. 架构评审模板
 
 ```text
 目标工作负载与规模：
@@ -332,7 +332,7 @@ External Tools / Data / Browser
 退出/简化条件：
 ```
 
-## 九、通用上线清单
+## 9. 通用上线清单
 
 - [ ] 架构由工作负载和 SLO 驱动，不是产品数量驱动。
 - [ ] 每个组件只有一个清楚职责和 Owner。

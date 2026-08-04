@@ -14,7 +14,7 @@ tested_with:
 
 示例 Manifest 同时保存在仓库的 [`examples/gpu-platform-baseline`](https://github.com/runzhliu/aik8s/tree/main/examples/gpu-platform-baseline)。
 
-## 一、前提和安全说明
+## 1. 前提和安全说明
 
 需要：
 
@@ -29,7 +29,7 @@ tested_with:
 
 不要在承载重要训练或生产推理的节点上直接进行故障实验。
 
-## 二、建立实验 Namespace
+## 2. 建立实验 Namespace
 
 ```yaml
 apiVersion: v1
@@ -49,7 +49,7 @@ kubectl get namespace ai-lab --show-labels
 
 预期：Namespace 为 `Active`，Pod Security 标签存在。
 
-## 三、检查 GPU 库存
+## 3. 检查 GPU 库存
 
 ```bash
 kubectl get nodes -o custom-columns='NAME:.metadata.name,GPU:.status.capacity.nvidia\.com/gpu,ALLOCATABLE:.status.allocatable.nvidia\.com/gpu'
@@ -73,7 +73,7 @@ kubectl get pods -A -o wide --field-selector spec.nodeName=<gpu-node>
 
 如果 GPU 列为空，先修复 Driver/Device Plugin，不继续模型实验。
 
-## 四、运行 GPU Smoke Test
+## 4. 运行 GPU Smoke Test
 
 ```yaml
 apiVersion: v1
@@ -108,7 +108,7 @@ kubectl describe pod -n ai-lab gpu-smoke-test
 
 预期日志包含测试通过信息。保存 Pod YAML、Event 和日志作为验收证据。
 
-## 五、观察设备归属
+## 5. 观察设备归属
 
 Smoke Test 运行时或对长运行测试，检查：
 
@@ -127,7 +127,7 @@ kubectl get pod -n ai-lab gpu-smoke-test -o jsonpath='{.metadata.uid}{"\n"}'
 
 只看到节点级 GPU 利用率还不足以完成多租户计费和排障。
 
-## 六、部署最小推理服务
+## 6. 部署最小推理服务
 
 以下示例使用 vLLM 和小模型，只表达 Deployment 基线。GPU 显存、镜像 Tag 和引擎参数必须按实际环境调整。
 
@@ -210,7 +210,7 @@ kubectl logs -n ai-lab deployment/llm-server --tail=100
 
 首次启动需要拉取模型。不要把本实验的公网下载方式直接用于生产。
 
-## 七、发送请求
+## 7. 发送请求
 
 ```bash
 kubectl port-forward -n ai-lab service/llm-server 8000:8000
@@ -235,7 +235,7 @@ curl -sS http://127.0.0.1:8000/v1/chat/completions \
 
 Port Forward 仅用于功能验证，不能代表生产 Gateway 的性能。
 
-## 八、记录冷启动
+## 8. 记录冷启动
 
 删除 Pod 触发重建：
 
@@ -256,7 +256,7 @@ kubectl get pod -n ai-lab -l app=llm-server -w
 
 第一次是缓存冷启动，第二次可能命中镜像和模型缓存。两者都要保存。
 
-## 九、验证终止行为
+## 9. 验证终止行为
 
 在持续流式请求期间执行：
 
@@ -275,7 +275,7 @@ kubectl rollout status deployment/llm-server -n ai-lab --timeout=15m
 
 单副本实验会有中断风险。生产应使用多个副本、PDB、拓扑分散和受控滚动策略。
 
-## 十、基础 NetworkPolicy
+## 10. 基础 NetworkPolicy
 
 本实验可以应用默认拒绝入站，再仅允许同 Namespace：
 
@@ -302,7 +302,7 @@ spec:
 
 确认 CNI 实际支持并执行 NetworkPolicy。生产还应限制出站、对象存储、DNS 和元数据服务。
 
-## 十一、证据模板
+## 11. 证据模板
 
 ```text
 Date:
@@ -323,7 +323,7 @@ Known deviations:
 Evidence location:
 ```
 
-## 十二、清理
+## 12. 清理
 
 ```bash
 kubectl delete namespace ai-lab
@@ -331,7 +331,7 @@ kubectl delete namespace ai-lab
 
 确认实验 Pod、Service、NetworkPolicy 和临时模型缓存已按平台策略清理。本地节点缓存是否保留由缓存控制器决定。
 
-## 十三、通过标准
+## 13. 通过标准
 
 - [ ] Kubernetes 正确报告 GPU Capacity/Allocatable。
 - [ ] GPU Smoke Test 完成并保存日志/Event。

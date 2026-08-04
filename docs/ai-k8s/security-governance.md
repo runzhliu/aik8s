@@ -11,7 +11,7 @@ AI on Kubernetes 同时继承了容器平台、数据平台和模型供应链的
 
 安全设计必须先画清信任边界，再选择控制措施。
 
-## 一、威胁面分层
+## 1. 威胁面分层
 
 | 层级 | 主要风险 |
 | --- | --- |
@@ -25,7 +25,7 @@ AI on Kubernetes 同时继承了容器平台、数据平台和模型供应链的
 
 不要把“集群内”当作可信网络，也不要把模型权重当成被动数据文件。
 
-## 二、身份优先于网络位置
+## 2. 身份优先于网络位置
 
 推荐：
 
@@ -39,7 +39,7 @@ AI on Kubernetes 同时继承了容器平台、数据平台和模型供应链的
 
 能在 Notebook 中执行代码的用户，通常可以读取该 Pod 挂载的所有凭证，必须按等价权限治理。
 
-## 三、Pod Security Standards 怎么落地
+## 3. Pod Security Standards 怎么落地
 
 Kubernetes 定义 `privileged`、`baseline`、`restricted` 三个安全级别，并可通过 Pod Security Admission 在 namespace 级以 `enforce`、`audit`、`warn` 模式执行。参考：[Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)、[Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/)
 
@@ -51,7 +51,7 @@ Kubernetes 定义 `privileged`、`baseline`、`restricted` 三个安全级别，
 - 特权例外按组件、版本和责任人记录；
 - 不因为 GPU Operator 需要特权，就让所有 GPU 工作负载进入特权 namespace。
 
-## 四、GPU 节点的特殊风险
+## 4. GPU 节点的特殊风险
 
 GPU 节点上通常存在：
 
@@ -64,7 +64,7 @@ GPU 节点上通常存在：
 
 这些组件往往需要主机权限，应该限制镜像来源、固定版本、独立升级并监控所有 hostPath。租户容器不应直接访问 Docker/containerd Socket 或 kubelet 管理接口。
 
-## 五、镜像供应链
+## 5. 镜像供应链
 
 最低控制链：
 
@@ -82,7 +82,7 @@ Cosign 可以签名容器镜像，Kyverno 等策略引擎能在准入阶段验�
 
 不要只扫描镜像标签。标签可变，部署和审计应记录 Digest。
 
-## 六、模型供应链
+## 6. 模型供应链
 
 模型制品需要类似镜像的控制：
 
@@ -97,7 +97,7 @@ Cosign 可以签名容器镜像，Kyverno 等策略引擎能在准入阶段验�
 
 “来自知名模型社区”不等于已经通过企业信任审查。
 
-## 七、Secret 管理
+## 7. Secret 管理
 
 - Secret 不进入 Git、镜像、模型包或 Notebook；
 - 使用外部 Secret Manager/KMS，并通过短期身份获取；
@@ -109,7 +109,7 @@ Cosign 可以签名容器镜像，Kyverno 等策略引擎能在准入阶段验�
 
 Kubernetes Secret 只是 API 对象，不应被当成完整的企业密钥管理系统。
 
-## 八、网络与出站访问
+## 8. 网络与出站访问
 
 默认拒绝策略至少覆盖：
 
@@ -123,7 +123,7 @@ Kubernetes Secret 只是 API 对象，不应被当成完整的企业密钥管理
 
 NetworkPolicy 是否真正覆盖 Host Network、RDMA VF 和多网卡 Pod，取决于 CNI 与部署方式，必须实测。
 
-## 九、推理 API 的治理
+## 9. 推理 API 的治理
 
 - 身份验证和租户隔离；
 - 每用户/模型的请求与 Token 限额；
@@ -136,7 +136,7 @@ NetworkPolicy 是否真正覆盖 Host Network、RDMA VF 和多网卡 Pod，取�
 
 LLM 的成本型 DoS 往往不是高请求数，而是少量超长上下文和输出请求。
 
-## 十、Notebook 与交互环境
+## 10. Notebook 与交互环境
 
 Notebook 风险高于普通无状态服务，因为用户可以：
 
@@ -148,7 +148,7 @@ Notebook 风险高于普通无状态服务，因为用户可以：
 
 建议使用短生命周期、独立 ServiceAccount、默认拒绝出网、资源上限、自动休眠和受控基础镜像。高风险用户代码可以使用 gVisor、Kata 等 RuntimeClass 增强隔离，但仍需结合网络与身份控制。
 
-## 十一、策略例外治理
+## 11. 策略例外治理
 
 每个例外必须包含：
 
@@ -161,7 +161,7 @@ Notebook 风险高于普通无状态服务，因为用户可以：
 
 没有自动到期的例外，最终会变成默认策略。
 
-## 十二、审计证据
+## 12. 审计证据
 
 应能回答：
 
@@ -175,7 +175,7 @@ Notebook 风险高于普通无状态服务，因为用户可以：
 
 审计日志本身也可能包含敏感信息，应限制访问并设置保留周期。
 
-## 十三、上线清单
+## 13. 上线清单
 
 - [ ] 人员和工作负载身份分开，RBAC 最小化；
 - [ ] 普通 workload namespace 执行 Baseline/Restricted 策略；

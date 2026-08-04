@@ -19,7 +19,7 @@ Agent 能执行 Shell、运行用户代码、克隆仓库、打开网页或调�
 
 这些结论都必须通过自己的兼容性、安全和性能测试验证，不能把项目名称当成安全认证。
 
-## 一、先拆成三层
+## 1. 先拆成三层
 
 ```text
 Agent / Application
@@ -59,7 +59,7 @@ Sandbox API 与生命周期控制面
 
 生命周期控制器不自动提供强隔离；微虚机也不自动阻止数据外传或误删生产资源。三层必须组合。
 
-## 二、先写威胁模型，再看产品
+## 2. 先写威胁模型，再看产品
 
 ### 1. 需要保护什么
 
@@ -93,7 +93,7 @@ Sandbox API 与生命周期控制面
 
 同一个 Agent 可以因工具不同跨越等级。例如只读搜索可能是 L1，执行陌生仓库测试是 L2，操作生产数据库则需要额外的业务授权边界，不能只靠更强运行时解决。
 
-## 三、十二个选型维度
+## 3. 十二个选型维度
 
 不要只比较启动速度和 SDK。至少记录以下维度：
 
@@ -112,7 +112,7 @@ Sandbox API 与生命周期控制面
 | 运维成熟度 | API 稳定性、升级路径、CVE 响应、HA、备份和 Runbook 是否完整？ |
 | 锁定与合规 | 数据在哪里、能否自托管、API 可移植性、审计导出和删除证明如何？ |
 
-## 四、方案全景：不要跨层误比
+## 4. 方案全景：不要跨层误比
 
 ### 1. 自建 Kubernetes 路线
 
@@ -136,7 +136,7 @@ Sandbox API 与生命周期控制面
 
 托管平台能力变化很快。表格只用于确定 PoC 候选，采购前必须以目标区域、套餐和合同中的安全/数据条款为准。
 
-## 五、Kubernetes SIG Agent Sandbox 深入分析
+## 5. Kubernetes SIG Agent Sandbox 深入分析
 
 ### 1. 它解决什么
 
@@ -201,7 +201,7 @@ Agent Sandbox 用 Kubernetes CRD 表达有稳定身份、单例、可持久化�
 - 需要立即获得桌面、浏览器、快照、PTY 和文件 API；
 - 可以接受数据边界、价格和 API 锁定。
 
-## 六、隔离运行时怎么选
+## 6. 隔离运行时怎么选
 
 ### 1. Hardened runc Pod
 
@@ -273,7 +273,7 @@ Firecracker 是基于 KVM 的精简 VMM，强调 microVM 隔离、低开销和�
 
 需要完整 OS、Windows、systemd、复杂嵌套容器或 VM 级运维时，可评估 KubeVirt 或云 VM API。代价是更高的启动延迟、容量碎片和镜像管理复杂度。
 
-## 七、Runtime 决策矩阵
+## 7. Runtime 决策矩阵
 
 | 需求 | runc + 加固 | gVisor | Kata/microVM | 完整 VM |
 | --- | --- | --- | --- | --- |
@@ -289,7 +289,7 @@ Firecracker 是基于 KVM 的精简 VMM，强调 microVM 隔离、低开销和�
 
 这里的“高”是相对隔离潜力，不是安全保证。运行时漏洞、错误配置、开放网络和泄露凭据都能绕过预期边界。
 
-## 八、托管平台怎么选
+## 8. 托管平台怎么选
 
 ### 1. E2B
 
@@ -321,7 +321,7 @@ Daytona 提供容器 Sandbox、Linux/Windows VM、GPU Sandbox、Snapshot/Fork、
 
 Docker Sandboxes 在开发机上用微虚机隔离 Coding Agent，每个环境有独立 Docker daemon、文件系统和网络。它适合保护本地宿主和组织统一开发策略，不负责服务端 Namespace、租户配额、跨节点调度、API 并发和生产回收。参考：[Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) 与 [Security model](https://docs.docker.com/ai/sandboxes/security/)。
 
-## 九、四套推荐组合
+## 9. 四套推荐组合
 
 ### 组合 A：内部 Agent，低风险受控工具
 
@@ -371,7 +371,7 @@ Application Backend
 
 即使执行环境托管，工具授权、用户身份、审批、预算和业务审计仍应由自己的控制面负责，避免把所有长期凭据放进 Sandbox。
 
-## 十、Kubernetes 模板基线
+## 10. Kubernetes 模板基线
 
 下面只展示结构，不是可直接上线的完整清单。它要求已经安装 Agent Sandbox `v0.5.x`、名为 `gvisor` 的 RuntimeClass，并准备好固定 Digest 的内部镜像。
 
@@ -468,7 +468,7 @@ spec:
 
 域名 Allowlist 应在代理层解析和检查最终连接目标，不能只靠静态 IP 或初始 DNS 响应。
 
-## 十一、身份与工具边界
+## 11. 身份与工具边界
 
 推荐的调用链：
 
@@ -491,7 +491,7 @@ Sandbox 无长期凭据
 - Tool 返回内容修改平台策略；
 - Sandbox 身份同时拥有生产部署权限。
 
-## 十二、Workspace、快照与持久化
+## 12. Workspace、快照与持久化
 
 工作区不是越持久越好。把数据分为：
 
@@ -507,7 +507,7 @@ Sandbox 无长期凭据
 
 暂停、恢复和快照会保留攻击者写入的状态。恢复前要绑定原始租户、Template/Runtime 版本和策略版本；不能把未知状态的 Sandbox 重新放回 Warm Pool 给其他租户。
 
-## 十三、Warm Pool 的容量模型
+## 13. Warm Pool 的容量模型
 
 Warm Pool 不是一个全局数字，而是多个维度的笛卡尔积：
 
@@ -526,7 +526,7 @@ Pool 数量
 6. 发布新镜像时先建新 Pool，Drain 旧 Pool，不原地混用；
 7. 控制器升级时测试已有 Warm Sandbox 的 Adoption 和状态保持。
 
-## 十四、PoC 必测项目
+## 14. PoC 必测项目
 
 ### 1. 功能兼容
 
@@ -572,7 +572,7 @@ Pool 数量
 - 版本回滚和无法降级时的迁移方案；
 - Orphan Pod、PVC、Service、NetworkPolicy 和路由清理。
 
-## 十五、评分模板
+## 15. 评分模板
 
 先按业务设置权重，再打分，避免“功能最多”自动获胜。
 
@@ -592,7 +592,7 @@ Pool 数量
 
 安全硬门槛应独立于总分：任何无法满足隔离、数据驻留或删除要求的候选，即使综合分高也不能进入下一轮。
 
-## 十六、推荐决策树
+## 16. 推荐决策树
 
 ```text
 是否只保护开发者本机？
@@ -620,7 +620,7 @@ Pool 数量
       └─ 是 → 独立集群/账户 + VM/Confidential Containers
 ```
 
-## 十七、常见误区
+## 17. 常见误区
 
 ### “用了 Agent Sandbox CRD 就安全了”
 
@@ -646,7 +646,7 @@ Pool 数量
 
 错误。托管方负责执行基础设施的一部分，用户仍负责业务授权、数据分类、密钥、Prompt Injection、合规和删除验证。
 
-## 十八、上线清单
+## 18. 上线清单
 
 - [ ] 已按 L0～L4 对代码、用户、数据和工具分类；
 - [ ] 生命周期控制面、隔离运行时、工具/数据边界分别选型；

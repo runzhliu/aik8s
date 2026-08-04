@@ -11,7 +11,7 @@ GPU 平台的多租户问题，不是简单地给每个团队建一个 namespace
 
 本章以 Kueue 的模型为主线，同时说明它与 Kubernetes 调度、RBAC 和网络隔离之间的边界。
 
-## 一、多租户至少有五层
+## 1. 多租户至少有五层
 
 | 层级 | 解决的问题 | 常用机制 |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ GPU 平台的多租户问题，不是简单地给每个团队建一个 namespace
 
 Namespace 是边界的一部分，但它不提供公平排队，也不会自动阻止某团队长期占用全部 GPU。
 
-## 二、Kueue 的对象关系
+## 2. Kueue 的对象关系
 
 ```text
 用户提交 Job
@@ -46,7 +46,7 @@ ClusterQueue（集群配额与策略）
 
 Kueue 只负责准入和配额，不替代 kube-scheduler 的 Pod 到 Node 放置。参考：[Kueue Overview](https://kueue.sigs.k8s.io/docs/overview/)
 
-## 三、配额应该表达业务承诺
+## 3. 配额应该表达业务承诺
 
 建议把配额拆成三部分：
 
@@ -56,7 +56,7 @@ Kueue 只负责准入和配额，不替代 kube-scheduler 的 Pod 到 Node 放�
 
 名义配额不是机器的静态切片。合理的共享可以提高利用率，但借用任务必须接受等待、缩容或被抢占的风险。
 
-## 四、ResourceFlavor 不只是 GPU 型号
+## 4. ResourceFlavor 不只是 GPU 型号
 
 一个 Flavor 可以表达：
 
@@ -69,7 +69,7 @@ Kueue 只负责准入和配额，不替代 kube-scheduler 的 Pod 到 Node 放�
 
 不要让用户直接绑定具体节点名。让用户声明性能或能力等级，再由队列和调度策略映射到硬件。
 
-## 五、一个最小 Kueue 配置
+## 5. 一个最小 Kueue 配置
 
 ```yaml
 apiVersion: kueue.x-k8s.io/v1beta1
@@ -105,7 +105,7 @@ spec:
 
 生产配置还需要明确 CPU、内存、GPU 的比例，避免任务拿到 GPU 却因 CPU 或内存配额不足无法启动。
 
-## 六、公平不等于 FIFO
+## 6. 公平不等于 FIFO
 
 严格 FIFO 很容易被一个无法满足的大任务阻塞。常见策略包括：
 
@@ -117,7 +117,7 @@ spec:
 
 Kueue 的 Admission Fair Sharing 会考虑 LocalQueue 的历史使用量，优先准入使用较少的队列。参考：[Admission Fair Sharing](https://kueue.sigs.k8s.io/docs/concepts/admission_fair_sharing/)
 
-## 七、抢占要有明确契约
+## 7. 抢占要有明确契约
 
 抢占不是免费的调度动作，它可能丢失数小时训练进度。平台应规定：
 
@@ -130,7 +130,7 @@ Kueue 的 Admission Fair Sharing 会考虑 LocalQueue 的历史使用量，优�
 
 高优先级不应由普通用户任意填写，应该通过准入策略、独立队列或受控模板赋予。
 
-## 八、Gang 与 All-or-Nothing
+## 8. Gang 与 All-or-Nothing
 
 一个需要 8 个 Worker 的训练任务，如果只启动 5 个，既不能训练又占住资源。平台需要保证：
 
@@ -142,7 +142,7 @@ Kueue 的 Admission Fair Sharing 会考虑 LocalQueue 的历史使用量，优�
 
 Kueue、JobSet、Kubeflow Trainer 和 KubeRay 可以组合表达工作负载级准入；Volcano 则提供更强调度器内的 Gang 能力。
 
-## 九、拓扑感知准入
+## 9. 拓扑感知准入
 
 多机训练拿到正确数量的 GPU 仍可能很慢，因为资源分散在不同机架、网络 Block 或可用区。拓扑策略应回答：
 
@@ -154,7 +154,7 @@ Kueue、JobSet、Kubeflow Trainer 和 KubeRay 可以组合表达工作负载级�
 
 Kueue 的 `Topology` 与 `ResourceFlavor` 可以把配额准入和数据中心拓扑联系起来。参考：[Kueue Concepts](https://kueue.sigs.k8s.io/docs/concepts/)
 
-## 十、Namespace 与 RBAC 设计
+## 10. Namespace 与 RBAC 设计
 
 推荐模式：
 
@@ -167,7 +167,7 @@ Kueue 的 `Topology` 与 `ResourceFlavor` 可以把配额准入和数据中心�
 
 共享 Jupyter 环境尤其要小心：能在 Notebook 中执行任意代码的用户，往往等同于拥有该 Pod 的 ServiceAccount 权限。
 
-## 十一、在线推理和训练是否共池
+## 11. 在线推理和训练是否共池
 
 共池可以提高利用率，但必须满足：
 
@@ -179,7 +179,7 @@ Kueue 的 `Topology` 与 `ResourceFlavor` 可以把配额准入和数据中心�
 
 小规模平台通常先分池更容易运营；达到稳定 SLO 和可观测能力后，再逐步混部。
 
-## 十二、需要监控什么
+## 12. 需要监控什么
 
 | 对象 | 指标或状态 |
 | --- | --- |
@@ -191,7 +191,7 @@ Kueue 的 `Topology` 与 `ResourceFlavor` 可以把配额准入和数据中心�
 
 “Pending”必须拆分成配额不足、拓扑不满足、准入检查未通过和 Pod 调度失败，否则用户只会看到一个模糊状态。
 
-## 十三、治理清单
+## 13. 治理清单
 
 - [ ] 每个租户有明确名义配额和借用规则；
 - [ ] 优先级创建和使用权限受控；

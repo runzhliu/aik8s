@@ -9,7 +9,7 @@ last_reviewed: 2026-08-02
 
 传统模型服务多半是“一个请求对应一次短计算”，而 LLM 推理具有长连接、流式输出、动态批处理、巨量显存和 KV Cache 等特征。平台设计因此从普通 Service 负载均衡，演进到模型感知、缓存感知和请求感知的调度。
 
-## 一、先分清四层
+## 1. 先分清四层
 
 ```text
 客户端 / OpenAI-Compatible API
@@ -34,7 +34,7 @@ GPU、模型权重、KV Cache、网络与存储
 
 把这几层混成一个“Serving 工具”会造成选型误判。例如 KServe 和 vLLM 通常是组合关系，不是二选一。
 
-## 二、推理引擎怎么选
+## 2. 推理引擎怎么选
 
 | 引擎 | 主要特点 | 常见场景 |
 | --- | --- | --- |
@@ -46,7 +46,7 @@ GPU、模型权重、KV Cache、网络与存储
 
 评测时必须固定模型、精度、上下文长度、输入/输出 Token 分布、并发、硬件和 SLO。只比较“每秒 Token”而不看 TTFT 与尾延迟，结论通常没有生产意义。
 
-## 三、KServe 的两个主要入口
+## 3. KServe 的两个主要入口
 
 ### InferenceService
 
@@ -66,7 +66,7 @@ KServe 官方建议先从标准 InferenceService 开始，确实遇到高级 LLM
 
 参考：[KServe Administrator Guide](https://kserve.github.io/website/docs/admin-guide/overview)、[LLMInferenceService Architecture](https://kserve.github.io/website/docs/concepts/architecture/control-plane-llmisvc)
 
-## 四、多机模型需要 LeaderWorkerSet
+## 4. 多机模型需要 LeaderWorkerSet
 
 当单个模型副本跨多台机器分片时，一个“副本”已经不再是一个 Pod。LeaderWorkerSet（LWS）把一个 Leader 和若干 Worker 作为整体复制和管理，提供稳定身份、并行创建和统一生命周期。
 
@@ -81,7 +81,7 @@ LWS 解决工作负载编排，不自动解决队列准入和 GPU 配额。生�
 
 参考：[LeaderWorkerSet](https://lws.sigs.k8s.io/)
 
-## 五、为什么普通轮询不够
+## 5. 为什么普通轮询不够
 
 两个 vLLM Pod 即使副本规格相同，真实状态也可能不同：
 
@@ -103,7 +103,7 @@ LWS 解决工作负载编排，不自动解决队列准入和 GPU 配额。生�
 
 参考：[Gateway API Inference Extension](https://gateway-api-inference-extension.sigs.k8s.io/)
 
-## 六、KV Cache 是一种分布式资源
+## 6. KV Cache 是一种分布式资源
 
 KV Cache 直接影响显存占用、吞吐和延迟。平台要明确四类缓存：
 
@@ -116,7 +116,7 @@ KV Cache 直接影响显存占用、吞吐和延迟。平台要明确四类缓�
 
 “把请求发给最空闲实例”不总是最优；如果另一个稍忙的实例已有高价值 Prefix Cache，总成本可能反而更低。因此现代推理路由是多目标优化，而不是简单 Least Connections。
 
-## 七、Prefill / Decode 分离
+## 7. Prefill / Decode 分离
 
 LLM 请求大致分为：
 
@@ -134,7 +134,7 @@ llm-d 将 vLLM、Inference Gateway、KV Cache 感知路由、流控和分离式�
 
 参考：[llm-d](https://llm-d.ai/)
 
-## 八、扩缩容应该看什么
+## 8. 扩缩容应该看什么
 
 CPU 使用率通常不是 LLM 服务的有效扩缩容信号。更有价值的指标包括：
 
@@ -164,7 +164,7 @@ CPU 使用率通常不是 LLM 服务的有效扩缩容信号。更有价值的�
 
 安全并发必须来自压测曲线，不能直接采用引擎理论上限。扩容还要计入节点创建、镜像拉取、模型下载和权重加载时间；大型模型的冷启动可能远长于流量突增窗口。
 
-## 九、发布和回滚
+## 9. 发布和回滚
 
 LLM 发布至少有四种变化：
 
@@ -182,7 +182,7 @@ LLM 发布至少有四种变化：
 - 回滚必须同时恢复模型、引擎参数、Prompt 和路由配置；
 - 不要让 HPA 在 Canary 期间改变样本比例而影响结论。
 
-## 十、安全与多租户
+## 10. 安全与多租户
 
 - 在网关做认证、租户配额、Token Rate Limit 和最大上下文限制。
 - 不信任用户输入时，对 Tool Calling 和外部连接设置独立权限边界。
@@ -192,7 +192,7 @@ LLM 发布至少有四种变化：
 - 公网接口设置超时、最大 Body、并发和流式连接上限。
 - NetworkPolicy 应限制模型 Pod 仅访问必要对象存储、缓存和观测服务。
 
-## 十一、生产检查清单
+## 11. 生产检查清单
 
 - [ ] 用真实输入/输出 Token 分布完成基准测试。
 - [ ] 定义 TTFT、TPOT、P99、可用性和拒绝率 SLO。

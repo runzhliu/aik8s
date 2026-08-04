@@ -11,7 +11,7 @@ Kubernetes 不理解“训练”“推理”或“模型”，它首先理解的
 
 理解各层职责，是排查 AI 平台问题的起点。否则很容易把模型加载失败归咎于调度器，或者把 GPU 节点无法创建误认为 Kueue 配额不足。
 
-## 一、完整运行路径
+## 1. 完整运行路径
 
 ```text
 用户提交 TrainJob / RayJob / InferenceService / Deployment
@@ -40,7 +40,7 @@ CNI 配置网络，CSI 挂载卷，Runtime 注入设备和驱动库
 
 这条链路中的每一层都有独立状态。看到 Pod `Pending` 时，应先确认它是否已经被队列准入，再看 scheduler 事件；看到容器已启动但 `torch.cuda.is_available()` 为 false，则重点检查设备分配、Runtime 和容器镜像。
 
-## 二、Kubernetes 原生对象负责什么
+## 2. Kubernetes 原生对象负责什么
 
 | 对象 | 主要职责 | AI 场景中的典型用法 |
 | --- | --- | --- |
@@ -58,7 +58,7 @@ CNI 配置网络，CSI 挂载卷，Runtime 注入设备和驱动库
 
 Job 不表达多角色训练，Deployment 也不理解一个模型副本跨多个节点。Kubeflow Trainer、KubeRay、JobSet 和 LeaderWorkerSet 等控制器用于补齐这些语义，而不是替代 Kubernetes。
 
-## 三、四类扩展接口
+## 3. 四类扩展接口
 
 ### CRI：容器运行时
 
@@ -98,7 +98,7 @@ Device Plugin 把设备暴露为整数扩展资源，例如 `nvidia.com/gpu: 1`�
 
 两者都只负责设备发现与分配，不负责安装内核驱动，也不负责训练任务的配额和排队。
 
-## 四、控制器与 Operator
+## 4. 控制器与 Operator
 
 控制器不断比较期望状态和实际状态，并通过 Reconcile 让系统收敛。例如一个训练控制器可能：
 
@@ -113,7 +113,7 @@ Operator 往往还负责安装、升级和配置某个软件栈，例如 GPU Ope
 
 不要把所有平台逻辑塞进一个自研 CRD。优先复用职责单一、状态语义清晰的上游 API，并通过模板或平台 API 组合它们。
 
-## 五、三次不同的调度决策
+## 5. 三次不同的调度决策
 
 AI 平台至少有三次容易混淆的决策：
 
@@ -125,7 +125,7 @@ AI 平台至少有三次容易混淆的决策：
 
 此外，节点自动扩缩容器会根据 Pending Pod 决定是否创建节点，Device Plugin/DRA 则在节点范围内决定分配哪块设备。
 
-## 六、资源请求如何影响 AI
+## 6. 资源请求如何影响 AI
 
 一个 Pod 的可调度性由所有容器的资源请求共同决定。只填写 GPU 而忽略 CPU 和内存会产生两个问题：
 
@@ -155,7 +155,7 @@ spec:
 
 生产环境还要考虑 `/dev/shm`、临时存储、HugePages、锁页内存和 PID 数量。它们不会因为申请 GPU 自动获得合理默认值。
 
-## 七、Pod 生命周期与 AI 语义
+## 7. Pod 生命周期与 AI 语义
 
 Kubernetes 只知道容器退出码、探针和重启策略，并不知道：
 
@@ -167,7 +167,7 @@ Kubernetes 只知道容器退出码、探针和重启策略，并不知道：
 
 这些健康信号必须由框架、控制器和业务探针补充。推理 Pod 的 `Ready` 应表示能够接收目标模型的请求，而不是仅仅进程端口已监听。
 
-## 八、Namespace 不是完整隔离边界
+## 8. Namespace 不是完整隔离边界
 
 Namespace 适合组织资源、RBAC、配额和策略，但多个 Pod 仍共享节点内核和设备驱动。运行不可信 Notebook、外部训练代码或 Agent 工具时，需要组合：
 
@@ -180,7 +180,7 @@ Namespace 适合组织资源、RBAC、配额和策略，但多个 Pod 仍共享�
 
 GPU Time-Slicing 也不是显存或故障隔离。平台必须准确描述不同共享模式的安全承诺。
 
-## 九、最小排障顺序
+## 9. 最小排障顺序
 
 ### Pod 一直 Pending
 
@@ -208,7 +208,7 @@ kubectl logs -n <operator-namespace> <device-plugin-pod>
 
 先把问题拆成数据、CPU、GPU Kernel、GPU 间通信、节点间网络和存储六层，再分别做基准。不要直接通过增加 GPU 数量掩盖瓶颈。
 
-## 十、基础设施验收清单
+## 10. 基础设施验收清单
 
 - [ ] 能画出从用户 API 到容器和设备的完整控制路径。
 - [ ] CRI、CNI、CSI、Device Plugin/DRA 的负责人和版本清楚。

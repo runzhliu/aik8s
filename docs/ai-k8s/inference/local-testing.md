@@ -11,7 +11,7 @@ last_reviewed: 2026-08-03
 
 对于第一次尝试，优先使用 **Ollama**；需要图形界面时用 **LM Studio**；需要直接控制 GGUF、线程和显存卸载时用 **llama.cpp**；Apple Silicon 上做原生实验可用 **MLX-LM**；需要多模态、多后端统一 API 时评估 **LocalAI**；需要模拟数据中心高并发服务时直接使用 **vLLM 或 SGLang**。
 
-## 一、本地测试能回答什么
+## 1. 本地测试能回答什么
 
 适合在本地验证：
 
@@ -32,7 +32,7 @@ last_reviewed: 2026-08-03
 
 因此，本地验证通过表示“功能基线成立”，不表示“生产容量已经验证”。
 
-## 二、工具怎么选
+## 2. 工具怎么选
 
 | 工具 | 最适合的场景 | 主要特点 | 注意事项 |
 | --- | --- | --- | --- |
@@ -45,7 +45,7 @@ last_reviewed: 2026-08-03
 
 “OpenAI-Compatible”只代表兼容一部分请求与响应协议，不保证 Tool Calling、JSON Schema、Responses API、Embedding、Usage、错误码和流式事件完全相同。应用必须有自己的 API 契约测试。
 
-## 三、先看硬件和模型大小
+## 3. 先看硬件和模型大小
 
 模型运行内存至少包括：
 
@@ -69,7 +69,7 @@ last_reviewed: 2026-08-03
 4. 上下文越长，KV Cache 通常越大；不要一开始就把 Context 拉到模型上限。
 5. 下载前确认模型许可证、用途限制、上下文长度、Chat Template 和量化来源。
 
-## 四、Ollama：默认入门路径
+## 4. Ollama：默认入门路径
 
 Ollama 支持 macOS、Windows 和 Linux。桌面系统可从[官方下载页](https://ollama.com/download)安装；Linux 可按[官方安装文档](https://docs.ollama.com/linux)部署。服务默认监听 `127.0.0.1:11434`。
 
@@ -152,7 +152,7 @@ ollama run aik8s-assistant
 
 Ollama 也支持通过 `Modelfile` 导入受支持的 Safetensors 目录或 GGUF 文件。它适合本地复现，但进入生产供应链后还应记录原始仓库 Revision、文件 Digest、Tokenizer、Chat Template、量化方法和许可证，不能只保存一个本地模型别名。
 
-## 五、llama.cpp：直接验证 GGUF
+## 5. llama.cpp：直接验证 GGUF
 
 llama.cpp 适合 CPU、Apple Silicon、消费级 GPU 和边缘设备，也适合排查 Ollama 抽象之下的 GGUF、Chat Template、线程和 GPU Offload 问题。
 
@@ -184,7 +184,7 @@ curl http://localhost:8080/v1/chat/completions \
 
 调优时记录模型文件 Digest、量化格式、Context、Batch、线程数和 GPU Offload 层数，否则两次结果无法公平比较。参考：[llama.cpp README](https://github.com/ggml-org/llama.cpp) 与 [llama-server 文档](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)。
 
-## 六、LM Studio：图形界面与本地 API
+## 6. LM Studio：图形界面与本地 API
 
 LM Studio 适合通过 GUI 搜索、下载和试用模型，也可以用 `lms` 管理模型和服务：
 
@@ -199,7 +199,7 @@ curl http://localhost:1234/v1/models
 
 LM Studio 默认不要求认证，也默认只监听 `127.0.0.1`。启用 `--bind 0.0.0.0` 或 CORS 前，应先配置 API Token、来源限制和防火墙。参考：[LM Studio Local Server](https://lmstudio.ai/docs/developer/core/server) 与 [`lms server start`](https://lmstudio.ai/docs/cli/serve/server-start)。
 
-## 七、Apple Silicon 与多后端选择
+## 7. Apple Silicon 与多后端选择
 
 ### MLX-LM
 
@@ -234,7 +234,7 @@ curl http://localhost:8080/v1/chat/completions \
 
 GPU 镜像和设备参数取决于 NVIDIA、AMD、Intel 或 Vulkan Backend，必须按照目标版本文档选择。对外暴露时至少启用 API Key 或用户认证。参考：[LocalAI Quickstart](https://localai.io/basics/getting_started/)。
 
-## 八、用 vLLM/SGLang 做生产前复测
+## 8. 用 vLLM/SGLang 做生产前复测
 
 如果最终会部署到 Kubernetes，不要只测 Ollama。准备一台与生产同代或接近的 GPU 服务器，使用生产候选的 Runtime 镜像、模型 Revision 和参数再测一次。
 
@@ -259,7 +259,7 @@ SGLang 同样提供 OpenAI-Compatible Server，适合共享长前缀、结构化
 - Tool Calling、结构化输出、Embedding 和多模态等真实功能；
 - Runtime 重启、模型切换和客户端重试。
 
-## 九、一套可复用的验证流程
+## 9. 一套可复用的验证流程
 
 ### 第一步：定义固定测试样本
 
@@ -305,7 +305,7 @@ Context、Batch、并行和 Cache 参数
 
 应用代码保持不变，只替换 Endpoint、认证和模型名。随后用[性能基准、压测与回归](../benchmarking.md)验证并发，用[模型制品、分发与缓存](../data/model-artifacts.md)验证冷启动和模型分发，用[LLM 推理性能优化](optimization.md)调整 Runtime。
 
-## 十、从本地到 Kubernetes 的映射
+## 10. 从本地到 Kubernetes 的映射
 
 | 本地概念 | Kubernetes 生产对应物 |
 | --- | --- |
@@ -320,7 +320,7 @@ Context、Batch、并行和 Cache 参数
 
 Ollama 也可以容器化并运行在 Kubernetes 上，但“能运行”与“适合大规模在线服务”是两个问题。生产选型仍需比较批处理、Cache、并行、指标、滚动升级和目标负载下的单位成本。
 
-## 十一、安全与数据边界
+## 11. 安全与数据边界
 
 - 默认只监听 Loopback，不要为了手机或同事访问就直接绑定 `0.0.0.0`。
 - 必须远程访问时，增加身份认证、TLS、防火墙、请求大小限制和审计。
@@ -329,7 +329,7 @@ Ollama 也可以容器化并运行在 Kubernetes 上，但“能运行”与“�
 - Agent 工具权限与模型是否本地无关。Shell、浏览器、文件和凭据仍应最小授权并置于沙箱。
 - 不要把生产密钥、客户原始数据或敏感日志放入未受管控的个人模型目录和测试数据集。
 
-## 十二、最短落地路径
+## 12. 最短落地路径
 
 1. 用 Ollama 启动一个 1B～4B Instruct 模型。
 2. 通过 `/v1/chat/completions` 接入应用，完成 Prompt、RAG 和 Tool Calling 功能验证。
