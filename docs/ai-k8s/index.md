@@ -14,6 +14,7 @@ last_reviewed: 2026-08-04
 [按主题浏览](#topic-map){ .md-button .md-button--primary }
 [查看参考架构](guides/reference-architectures.md){ .md-button }
 [运行 GPU 平台实验](guides/gpu-platform-lab.md){ .md-button }
+[进入实战与排障](practices/index.md){ .md-button }
 
 ## 基础设施全景
 
@@ -119,6 +120,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 ### 参考架构与实验
 
+- [实战、排障与选型](practices/index.md)：GPU Pending、低利用率、推理引擎实测、成本计算、模型分发、Spot 恢复和安全攻防。
 - [生产参考架构](guides/reference-architectures.md)：小型 GPU 平台、多租户训练、高可用推理、分离式推理和 Agent 沙箱。
 - [GPU 平台最小闭环实验](guides/gpu-platform-lab.md)：资源发现、GPU 冒烟、vLLM 服务、网络策略、冷启动和优雅下线。
 - [AI/LLM 集群组件清单](../cases/ai-cluster-component-checklist.md)：按目标场景列出组件、必要性、引入理由和验收条件。

@@ -13,7 +13,9 @@ hide:
 
 [进入完整技术地图](ai-k8s/index.md){ .md-button .md-button--primary }
 [查看生产参考架构](ai-k8s/guides/reference-architectures.md){ .md-button }
+[实战与排障](ai-k8s/practices/index.md){ .md-button }
 [浏览工程案例](cases/index.md){ .md-button }
+[RSS 订阅](https://aik8s.run/rss.xml){ .md-button }
 
 ## 文档覆盖范围
 

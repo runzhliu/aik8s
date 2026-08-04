@@ -6,6 +6,8 @@ repo_url = "https://github.com/runzhliu/aik8s"
 repo_name = "runzhliu/aik8s"
 docs_dir = "docs"
 site_dir = "site"
+extra_css = ["stylesheets/engagement.css"]
+extra_javascript = ["javascripts/engagement.js"]
 nav = [
   {"首页" = "index.md"},
   {"AI/LLM on Kubernetes" = [
@@ -64,6 +66,25 @@ nav = [
       {"性能基准与回归" = "ai-k8s/benchmarking.md"},
       {"平台运维与升级" = "ai-k8s/platform-operations.md"},
       {"落地路线图" = "ai-k8s/adoption-roadmap.md"},
+    ]},
+    {"实战、排障与选型" = [
+      "ai-k8s/practices/index.md",
+      {"GPU Pending 排障" = "ai-k8s/practices/gpu-pending.md"},
+      {"GPU 利用率排障" = "ai-k8s/practices/low-gpu-utilization.md"},
+      {"推理引擎同机实测" = "ai-k8s/practices/inference-engine-benchmark.md"},
+      {"模型显存与成本计算器" = "ai-k8s/practices/model-memory-calculator.md"},
+      {"Ollama 到生产推理" = "ai-k8s/practices/ollama-to-production.md"},
+      {"70B 模型百节点分发" = "ai-k8s/practices/model-distribution-100-nodes.md"},
+      {"P/D 分离性能拐点" = "ai-k8s/practices/pd-break-even.md"},
+      {"Kueue 与 Volcano 实验" = "ai-k8s/practices/kueue-vs-volcano.md"},
+      {"Kubernetes 还是 Slurm" = "ai-k8s/practices/kubernetes-vs-slurm.md"},
+      {"Spot GPU 恢复实验" = "ai-k8s/practices/spot-checkpoint.md"},
+      {"GPU 节点故障图鉴" = "ai-k8s/practices/gpu-failure-atlas.md"},
+      {"AI 集群事故复盘" = "ai-k8s/practices/incident-review.md"},
+      {"国内外 GPU 云选型" = "ai-k8s/practices/cloud-gpu-selection.md"},
+      {"国产 GPU/NPU 实践" = "ai-k8s/practices/domestic-accelerators.md"},
+      {"离线 AI 平台部署" = "ai-k8s/practices/air-gapped-ai-platform.md"},
+      {"Agent Sandbox 攻防" = "ai-k8s/practices/agent-sandbox-red-team.md"},
     ]},
     {"参考架构与实验" = [
       {"生产参考架构" = "ai-k8s/guides/reference-architectures.md"},

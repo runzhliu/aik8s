@@ -39,6 +39,22 @@ make build
 
 构建结果保存在 `site/`，该目录不会提交到 Git。
 
+生产构建还会生成 RSS/Atom、页面分享与社交元数据，并注入站点统计脚本：
+
+```bash
+make build-production
+```
+
+## 订阅、分享与评论
+
+- RSS：<https://aik8s.run/rss.xml>
+- Atom：<https://aik8s.run/atom.xml>
+- 通用 Feed 地址：<https://aik8s.run/feed.xml>
+- 每篇文章支持系统分享、复制链接，以及微博、X、LinkedIn、Telegram 和 WhatsApp 分享；移动端可通过系统分享面板转发到微信等已安装应用。
+- 评论使用 [Giscus](https://github.com/giscus/giscus)，内容保存在本仓库的 GitHub Discussions，不需要单独部署服务或数据库。
+
+首次启用评论时，需要为 `runzhliu/aik8s` 安装 [Giscus GitHub App](https://github.com/apps/giscus/installations/new)，安装范围选择 **Only select repositories** 并只勾选 `aik8s`。仓库必须保持 Discussions 已启用。
+
 ## 添加内容
 
 在 `docs/` 中创建文件夹和 Markdown 文件即可。目录名和文件名会形成公开 URL，建议只使用小写英文字母、数字和连字符；中文展示名称放在一级标题或 `zensical.toml` 的 `nav` 配置中。
