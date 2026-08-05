@@ -76,6 +76,7 @@ nav = [
       {"Ollama 到生产推理" = "ai-k8s/practices/ollama-to-production.md"},
       {"70B 模型百节点分发" = "ai-k8s/practices/model-distribution-100-nodes.md"},
       {"P/D 分离性能拐点" = "ai-k8s/practices/pd-break-even.md"},
+      {"GPU 资源银行与潮汐平台" = "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"},
       {"Kueue 与 Volcano 实验" = "ai-k8s/practices/kueue-vs-volcano.md"},
       {"Kubernetes 还是 Slurm" = "ai-k8s/practices/kubernetes-vs-slurm.md"},
       {"KubeVirt 单节点桌面实战" = "ai-k8s/practices/kubevirt-local-desktop-lab.md"},

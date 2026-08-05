@@ -2,7 +2,7 @@
 title: 实战、排障与选型
 description: 用可复现的实验、性能数字、事故证据和决策树回答 AI/LLM on Kubernetes 的高频问题
 status: evolving
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-05
 ---
 
 # 实战、排障与选型
@@ -25,6 +25,7 @@ last_reviewed: 2026-08-04
 
 ## 平台和调度
 
+- [GPU 资源银行与潮汐推理平台实践蓝图](gpu-resource-bank-tidal-platform.md)
 - [Kueue 与 Volcano 对比实验](kueue-vs-volcano.md)
 - [Kubernetes 还是 Slurm](kubernetes-vs-slurm.md)
 - [KubeVirt 单节点桌面实战：本地盘、CDI 与浏览器 noVNC](kubevirt-local-desktop-lab.md)
