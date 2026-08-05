@@ -2,7 +2,7 @@
 title: KubeVirt 单节点桌面实战：本地盘、CDI 与浏览器 noVNC
 description: 在没有 Ceph 的 Kubernetes 集群中，把 KubeVirt VM 限制到单个节点，使用本地盘保存完整系统环境，并通过受限 noVNC 网关从浏览器访问桌面
 status: lab
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-05
 ---
 
 # KubeVirt 单节点桌面实战：本地盘、CDI 与浏览器 noVNC
@@ -616,7 +616,184 @@ Ubuntu 24.04 LTS QCOW cloud image（或经过 GPU 兼容验证的 Ubuntu 22.04 L
 
 如果只是标准化教学或短期实验，容器镜像 + PVC 更轻、更快；如果核心问题正是用户会在任意目录安装环境，持久 VM 根盘才真正覆盖问题边界。
 
-## 13. 从实验走向生产
+## 13. VM 内网 DNS：为什么宿主机能访问，VM 却解析失败
+
+KubeVirt VM 使用默认 Pod 网络和 `masquerade` 接口时，guest 并不会直接继承宿主机的 `/etc/resolv.conf`。典型解析链路是：
+
+```text
+guest 应用
+  → systemd-resolved 或 guest resolver
+  → KubeVirt DHCP 下发的 Kubernetes DNS Service IP
+  → masquerade 网关，例如 10.0.2.1
+  → kube-dns/CoreDNS ClusterIP
+  → CoreDNS Pod
+  → 企业 DNS 或公共上游 DNS
+```
+
+因此，“宿主机可以 `curl`，VM 不可以”不能直接归因于企业 DNS。宿主机可能直接查询企业 DNS，VM 却先依赖 Kubernetes Service VIP；两条路径中间还隔着 guest 网卡、KubeVirt NAT、`virt-launcher` 网络命名空间和 CNI Service 负载均衡。
+
+### 13.1 一次真实故障的证据链
+
+本次实验出现了以下现象，地址和域名已泛化：
+
+| 检查位置 | 结果 | 说明 |
+| --- | --- | --- |
+| 宿主机查询 `<internal-fqdn>` | 企业 DNS 返回内网 IP | 企业 DNS 记录正常 |
+| 宿主机 `curl http://<internal-fqdn>` | 收到 HTTP 403 | 网络已经到达目标，403 属于应用鉴权，不是 DNS 或连接失败 |
+| VM `/etc/resolv.conf` | 指向 `127.0.0.53` | 这是 systemd-resolved 的本地 stub，不是真正的上游 DNS |
+| VM `resolvectl status` | 上游为 `<kube-dns-cluster-ip>` | KubeVirt DHCP 把 Pod 的 ClusterFirst DNS 传给 guest |
+| VM 到 `<kube-dns-cluster-ip>:53` | TCP/UDP 超时 | 故障点位于 VM 到 Kubernetes Service VIP 的路径 |
+| VM 到两个 CoreDNS Pod IP | 端口可达 | CoreDNS 进程和 Pod 网络并未整体中断 |
+| VM 到两个企业 DNS IP | 端口可达 | guest 的默认路由与企业 DNS ACL 正常 |
+| VM 临时改用企业 DNS | 解析成功，HTTP 403 | 进一步证明问题不是域名记录，而是 kube-dns ClusterIP 路径 |
+
+先在宿主机确认真实上游：
+
+```bash
+cat /etc/resolv.conf
+getent hosts <internal-fqdn>
+curl -I --connect-timeout 5 "http://<internal-fqdn>/"
+```
+
+再在 guest 内检查：
+
+```bash
+cat /etc/resolv.conf
+resolvectl status
+ip route
+
+getent hosts <internal-fqdn>
+timeout 3 bash -c '</dev/tcp/<kube-dns-cluster-ip>/53'
+timeout 3 bash -c '</dev/tcp/<corp-dns-1>/53'
+timeout 3 bash -c '</dev/tcp/<corp-dns-2>/53'
+```
+
+最后查看集群 DNS 和 CNI，不要只在 guest 中反复改 `/etc/hosts`：
+
+```bash
+kubectl -n kube-system get service kube-dns -o wide
+kubectl -n kube-system get pod -l k8s-app=kube-dns -o wide
+kubectl -n kube-system get configmap coredns -o yaml
+kubectl -n kube-system get configmap cilium-config -o yaml
+```
+
+如果 CoreDNS 使用 `forward . /etc/resolv.conf`，而 CoreDNS Pod 又采用 `dnsPolicy: Default`，非 `cluster.local` 查询通常会继续交给节点的企业 DNS。此时不必为每个内网域名向 CoreDNS `hosts` 插件增加静态记录；先修复 VM 到 DNS 服务的路径。
+
+### 13.2 单台 VM：直接指定企业 DNS
+
+对只需要访问企业服务、不要求解析 Kubernetes Service 名称的 VM，最小变更是在 VM 模板中显式设置 DNS：
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ai-workstation
+spec:
+  template:
+    spec:
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - <corp-dns-1>
+          - <corp-dns-2>
+        searches:
+          - <corp-search-domain-1>
+          - <corp-search-domain-2>
+        options:
+          - name: timeout
+            value: "1"
+          - name: attempts
+            value: "2"
+```
+
+`dnsPolicy: None` 很重要。仅在 `ClusterFirst` 下追加 `dnsConfig.nameservers`，不可达的 kube-dns 仍可能排在最前面，让每次查询先等待超时。VM 模板修改只会作用于新建的 `virt-launcher`/VMI，已有 VMI 需要安排重启。
+
+也可以在 Ubuntu guest 内覆盖 DHCP DNS。下面是持久化示例：
+
+```yaml
+# /etc/netplan/50-cloud-init.yaml
+network:
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true
+      dhcp4-overrides:
+        use-dns: false
+      nameservers:
+        addresses:
+          - <corp-dns-1>
+          - <corp-dns-2>
+        search:
+          - <corp-search-domain-1>
+          - <corp-search-domain-2>
+```
+
+```bash
+netplan generate
+netplan apply
+resolvectl flush-caches
+getent hosts <internal-fqdn>
+```
+
+VM 模板配置更适合平台统一管理；guest Netplan 适合验证或保留工作站自己的 DNS 策略。不要直接编辑由 systemd-resolved 管理的 `/etc/resolv.conf`，它通常是符号链接，重启或 DHCP 续租后会被覆盖。
+
+直接使用企业 DNS 的代价是无法解析 `*.svc.cluster.local`。如果 VM 同时需要企业域名和 Kubernetes Service 域名，应优先修复 CNI Service 路径或使用节点本地 DNS，而不是把 CoreDNS Pod IP 固定在模板里；Pod IP 会随滚动升级和故障恢复变化。
+
+### 13.3 集群根治：检查 Cilium kube-proxy replacement
+
+本次故障集群没有运行 kube-proxy，而由 Cilium eBPF 处理 ClusterIP：
+
+```yaml
+kube-proxy-replacement: "true"
+```
+
+KubeVirt guest 的连接来自 QEMU/tap，经 `virt-launcher` 的 NAT 后进入 CNI。它不像普通 Pod 进程那样直接从 Pod cgroup 发起 socket 调用，因此可能无法命中以 socket hook 为主的 Service 转换路径。Cilium 官方把 KubeVirt、Kata Containers 和 gVisor 明确列为需要考虑 socket LB bypass 的工作负载，并给出以下配置方向：
+
+```yaml
+socketLB:
+  hostNamespaceOnly: true
+```
+
+它让非宿主机命名空间绕过 socket-level rewrite，并在 tc 层处理原始 ClusterIP。参见 [Cilium kube-proxy replacement：Socket LB bypass](https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#socket-loadbalancer-bypass-in-pod-namespace)。
+
+如果抓包和 Cilium monitor 表明 guest 流量被识别为集群外流量，还要评估：
+
+```yaml
+bpf:
+  lbExternalClusterIP: true
+```
+
+这个开关会扩大 ClusterIP 的可访问边界，不能仅为修复 DNS 就直接在生产集群开启。应先核对 NetworkPolicy、安全模型和所有节点的 Cilium 配置，再在测试节点验证。推荐顺序是：
+
+1. 记录 Cilium 版本、Helm values、路由模式和 kube-proxy replacement 状态；
+2. 用 `cilium-dbg monitor` 或 Hubble 观察 guest 到 kube-dns ClusterIP 的丢包位置；
+3. 优先验证 `socketLB.hostNamespaceOnly=true`；
+4. 只有确认流量被视为 external 时，才评估 `bpf.lbExternalClusterIP=true`；
+5. 同时回归普通 Pod DNS、ClusterIP、NodePort、NetworkPolicy 和 VM 网络；
+6. 验证通过后再滚动更新 Cilium，保留回滚 values。
+
+### 13.4 多 VM 平台：NodeLocal DNSCache
+
+当平台要运行大量 Notebook VM，更稳定的结构是给每个节点部署 NodeLocal DNSCache，并让 VM 查询一个稳定的节点本地地址：
+
+```text
+KubeVirt VM
+  → 节点本地 DNS，例如 <node-local-dns-ip>
+      ├─ cluster.local → CoreDNS
+      └─ 其他域名 → 企业 DNS
+```
+
+它可以减少跨节点 DNS 请求、避开 guest 直接依赖 kube-dns ClusterIP，并同时保留 Kubernetes Service 与企业内网域名解析。上线前仍要验证 KubeVirt masquerade guest 能访问选定的节点本地地址，以及缓存失败、CoreDNS 故障和企业 DNS 切换时的行为。参考 [Kubernetes NodeLocal DNSCache](https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/)。
+
+建议把 DNS 纳入黄金镜像与 VM 平台验收，而不是等用户安装 Python 包失败后才处理：
+
+- FQDN、短域名、企业搜索域和 `*.svc.cluster.local` 分别测试；
+- UDP 53 与 TCP 53 都要测试，避免大响应或截断回退到 TCP 时失败；
+- 验证 DNS 超时和重试值，避免不可达 nameserver 让 `apt`、`pip`、Conda 长时间假死；
+- 区分 NXDOMAIN、超时、连接拒绝和 HTTP 401/403，它们属于完全不同的故障层；
+- 记录 DNS 由 VM 模板、guest Netplan、NodeLocal DNS 还是 CoreDNS 管理，避免多处配置互相覆盖。
+
+## 14. 从实验走向生产
 
 | 实验做法 | 生产替换 |
 | --- | --- |
@@ -634,7 +811,7 @@ Ubuntu 24.04 LTS QCOW cloud image（或经过 GPU 兼容验证的 Ubuntu 22.04 L
 2. **重置环境**：从黄金镜像重新克隆根盘，必须提供快照或二次确认；
 3. **删除用户**：经过保留期后删除 PVC/PV 和备份，不能与停止操作共用按钮或权限。
 
-## 14. 验收清单
+## 15. 验收清单
 
 - [ ] 候选节点存在可用的 `/dev/kvm`，且 `virt-handler` 只落在预期节点；
 - [ ] CirrOS VMI Ready，串口 console 能连接和退出；
@@ -646,6 +823,9 @@ Ubuntu 24.04 LTS QCOW cloud image（或经过 GPU 兼容验证的 Ubuntu 22.04 L
 - [ ] 停止并重启 VM 后，写入持久根盘的测试文件仍存在；
 - [ ] 已记录本地盘不可迁移、节点故障不可用和 `Retain` 回收流程；
 - [ ] 正式工作站改用 Ubuntu LTS 黄金镜像，并固定 Jupyter/code-server 版本；
+- [ ] VM 能解析企业内网 FQDN，DNS 查询不会先等待不可达的 kube-dns 超时；
+- [ ] 需要访问 Kubernetes Service 的 VM 已验证 `*.svc.cluster.local`，没有把动态 CoreDNS Pod IP 固定进模板；
+- [ ] Cilium kube-proxy replacement 场景已回归 VM 到 ClusterIP 的 TCP/UDP 访问；
 - [ ] 生产入口具备 HTTPS、统一认证、授权、审计和网络访问控制。
 
 这次实验最有价值的结论不是“浏览器里出现了桌面”，而是把状态边界验证清楚了：`containerDisk` 和 Live ISO 负责分发启动介质，DataVolume/PVC 才负责保存用户完整环境；本地盘能验证持久工作站体验，但不能假装具备共享存储的故障恢复能力。
