@@ -152,6 +152,125 @@ Kueue 可通过 `ResourceFlavor` 把节点标签、Taint 容忍和配额组织�
 
 开发环境可以评估 MIG 或共享 GPU，提高小任务密度；核心在线推理和多卡训练默认使用整卡或经过验证的 MIG Profile。Time-Slicing 能提高并发，却没有等价的显存隔离和性能保证，不能与整卡 SLO 混在同一个口径中。
 
+### 3.1 二开 NVIDIA Device Plugin 按 GPU 型号暴露资源是否有意义
+
+有意义，但不是所有异构集群都需要。先区分两种硬件形态：
+
+| 节点形态 | 默认问题 | 推荐方案 |
+| --- | --- | --- |
+| 每台节点内 GPU 型号一致，不同节点型号不同 | `nvidia.com/gpu` 不表达型号，但节点本身可以准确标记 | GFD Node Label + NodeSelector/Affinity + Kueue ResourceFlavor，通常无需二开 |
+| 同一节点混插 H100、A100、L40S 等不同型号 | Scheduler 只看到同一个 `nvidia.com/gpu` 数量，选中节点后 Device Plugin 可能分到错误型号 | 按型号拆分 Extended Resource、使用能够表达属性的 DRA，或避免节点内混插 |
+
+GPU Feature Discovery 会给节点增加 Product、Memory、Compute Capability、MIG Strategy 等标签。对于“一个节点一种卡”，Pod 仍申请标准资源，再用节点标签选择型号即可：
+
+```yaml
+spec:
+  containers:
+    - name: trainer
+      resources:
+        limits:
+          nvidia.com/gpu: 8
+  nodeSelector:
+    nvidia.com/gpu.product: NVIDIA-H100-80GB-HBM3
+```
+
+实际 Product Label 以目标节点为准，不要从示例猜字符串。NVIDIA GPU Operator 包含 GFD，用来自动发现并标记 GPU 节点；Device Plugin 负责上报数量、健康和容器设备分配。两者职责不同，参见 [NVIDIA GPU Operator](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/)和 [NVIDIA Device Plugin](https://github.com/NVIDIA/k8s-device-plugin)。
+
+同一节点混插不同型号时，Node Label 只能说明“节点里有什么”，标准 Device Plugin 暴露的却仍是一个同质 `nvidia.com/gpu` 资源池。Scheduler 无法在 Pod 绑定前表达“必须从这个节点的八张卡里选择两张 H100，不要选择旁边的 A100”。这时二开 Device Plugin 按稳定型号分类有直接调度价值，例如：
+
+```text
+accelerator.aik8s.run/h100-80gb: 4
+accelerator.aik8s.run/a100-80gb: 4
+accelerator.aik8s.run/l40s-48gb: 2
+```
+
+工作负载申请明确的资源：
+
+```yaml
+resources:
+  limits:
+    accelerator.aik8s.run/h100-80gb: 2
+```
+
+这种方式让 Scheduler、ResourceQuota、Kueue/Volcano 和监控都能看到不同型号的独立数量，避免调度到正确节点却由 Kubelet 分配错误设备。
+
+### 3.2 Device Plugin 二开的关键实现点
+
+传统 Device Plugin 的 Resource Name 在向 Kubelet 注册时确定。按型号拆分通常意味着在同一个节点插件进程中运行多个逻辑 Device Plugin Server：
+
+```text
+NVML 枚举 GPU
+  → UUID、Product、Memory、Compute Capability、MIG 状态
+  → 使用版本化规则归一为平台 Device Class
+      ├─ h100-80gb → accelerator.aik8s.run/h100-80gb
+      ├─ a100-80gb → accelerator.aik8s.run/a100-80gb
+      └─ unknown   → 隔离或只进入管理员测试池
+  → 每个 Resource Name 独立执行 Register/ListAndWatch/Allocate
+  → Allocate 只返回属于本 Resource Class 的 Device ID/CDI Device
+```
+
+需要特别保证：
+
+- 同一张独占 GPU 只能计入一个 Extended Resource，禁止同时出现在 `nvidia.com/gpu` 和自定义资源中；
+- 型号映射以配置和测试固化，不用包含 Driver、VBIOS 等易变化字段；
+- Device ID 使用 UUID，而不是可能随重启改变的 Index；
+- `ListAndWatch` 的 Health 变化只影响对应型号资源；
+- `Allocate` 再次校验 Device ID 属于请求的 Resource Class，失败时拒绝而不是降级成任意 GPU；
+- CDI、环境变量、Mount 和 Device Spec 的行为与上游版本保持一致；
+- 未识别的新卡进入 `unknown/quarantine`，不能静默当作最低或最高型号；
+- GFD Label、节点 Capacity、Exporter 指标和平台 Flavor 使用同一份型号归一规则；
+- Fork 保留上游 Commit、补丁集、镜像 Digest、兼容矩阵和回归流水线。
+
+二开的真正难点不是从 NVML 读出 Product Name，而是维护一个长期稳定的资源 API。资源名一旦进入 Deployment、Queue、Quota 和 Helm Chart，改名会导致大量 Workload Pending。建议业务用户申请平台 Flavor，例如 `gpu-training-high`，由 Admission/模板映射到底层资源名，不让所有项目直接依赖显卡营销名称。
+
+### 3.3 MIG、Time-Slicing 与自定义型号资源的冲突
+
+NVIDIA Device Plugin 在 `MIG_STRATEGY=mixed` 时已经按 MIG Profile 暴露类似 `nvidia.com/mig-<slice>g.<memory>gb` 的资源。Time-Slicing/MPS 的 `renameByDefault` 也可以把共享资源重命名为 `.shared`；这些是上游已有语义，不要在 Fork 中再次以另一套规则重复拆分。参见 [NVIDIA Device Plugin MIG 与 Sharing 配置](https://github.com/NVIDIA/k8s-device-plugin)。
+
+建议保持资源命名维度正交：
+
+```text
+物理型号：h100-80gb / a100-80gb
+切分规格：full / mig-1g.10gb / mig-3g.40gb
+共享语义：exclusive / shared
+```
+
+但不一定要把三个维度笛卡尔积全部变成 Extended Resource。资源名过多会使 Queue、Quota 和应用模板迅速膨胀。平台应只发布真实有人使用、经过容量与性能验证的组合。
+
+Time-Slicing 还有一个直接影响前一节可观测性的限制：NVIDIA 文档明确指出，使用 NVIDIA Device Plugin Time-Slicing 时，DCGM Exporter 不能把指标准确关联到各共享容器。共享开发卡不能使用与独占推理相同的个人利用率排名和资源回收证据，参见 [NVIDIA GPU Time-Slicing Limitations](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-sharing.html)。
+
+### 3.4 什么时候应该转向 DRA
+
+Extended Resource 把设备压缩成“资源名 + 整数数量”，很难表达显存、Compute Capability、NUMA、Fabric、健康和其他设备属性。Kubernetes DRA 通过 `ResourceSlice` 暴露具体设备和属性，`DeviceClass`/`ResourceClaim` 可以用 CEL 选择满足条件的设备。相比为每个型号持续增加资源名，它更适合长期异构设备建模。[Kubernetes DRA](https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/)
+
+NVIDIA 也提供 DRA Driver for GPUs；GPU Operator 文档要求使用 DRA GPU Allocation 时禁用传统 NVIDIA Kubernetes Device Plugin，避免两套分配器冲突。参见 [NVIDIA DRA Driver for GPUs](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/dra-gpus.html)。
+
+迁移前仍要核对现实边界：
+
+- Kubernetes 与 NVIDIA DRA Driver 版本和 Feature Gate；
+- Kueue/Volcano、监控、计费和平台模板对 ResourceClaim 的支持；
+- MIG、共享、CDI 和拓扑能力；
+- 当前 Kubernetes DRA 文档所列的 Preemption 限制；如果资源互借依赖高优先级任务自动抢占 GPU，必须先做完整验证；
+- Device Plugin 与 DRA 切换期间不能双重上报同一物理 GPU。
+
+因此，按型号二开 Device Plugin 可以是旧版本集群或混插节点的务实过渡方案；新建、版本较新的平台则应优先评估 DRA，避免维护越来越多的自定义 Extended Resource。
+
+### 3.5 调度二开的验收矩阵
+
+| 实验 | 预期证据 |
+| --- | --- |
+| 混插节点分别申请 H100 与 A100 | 容器内 `nvidia-smi -L` UUID、型号与请求一致 |
+| 同时申请两种自定义 GPU | Scheduler、Allocate 和容器 CDI 注入均正确 |
+| 一张 GPU 出现 Health Error | 只从对应 Resource Class 的 Allocatable 中移除 |
+| Device Plugin 重启 | Capacity/Allocatable 恢复，无重复设备和正在运行 Pod 破坏 |
+| 新增未识别型号 | 进入 Unknown/Quarantine 并告警，不被普通任务分配 |
+| MIG 或 Sharing 配置切换 | 节点先 Cordon/Drain，资源名和数量符合预期且无双重上报 |
+| Kueue/Volcano 配额耗尽 | Workload 在正确 Flavor/Queue 等待，原因可观测 |
+| 回滚上游 Device Plugin | 自定义资源 Workload 被安全阻止，标准资源没有重复计数 |
+| 指标与账单核对 | Resource Name、实际 GPU UUID、型号和 Owner 能完整关联 |
+
+最后核对一个硬约束：对独占整卡资源，节点上所有自定义型号 Allocatable 之和必须等于实际可分配物理 GPU 数，而不是在保留 `nvidia.com/gpu` 的同时再加一遍。
+
 ## 4. 业务组 GPU 资源互借
 
 ### 4.1 五个基本配额量
@@ -883,12 +1002,19 @@ max by (Hostname) (DCGM_FI_DEV_GPU_TEMP)
 - 缩容直接删除有长请求的推理 Pod；
 - Prometheus 使用 Request ID、User ID 和完整 Pod Label，造成高基数；
 - Time-Slicing、MIG 和整卡使用同一份性能 SLO；
+- 节点内混插不同型号却仍只暴露一个 `nvidia.com/gpu`，误以为 Node Label 能选择具体物理卡；
+- 同一 GPU 同时通过上游资源名、自定义资源名或 DRA 上报，造成容量翻倍；
+- 自定义资源名直接包含易变化的 Product String，升级后大量 Workload Pending；
 - 同一 Workload 同时由 Kueue、Volcano 和自研 Controller 修改 Suspend/Priority；
 - 以最新文档字段直接操作旧集群，未固定版本和验证 Feature Gate。
 
 ## 12. 上线验收清单
 
 - [ ] GPU Pool、Flavor、拓扑、驱动和健康状态有统一来源；
+- [ ] 同型号节点优先使用 GFD + ResourceFlavor；只有混插或明确设备级选择需求才二开 Device Plugin；
+- [ ] 自定义 Extended Resource 与 `nvidia.com/gpu`/DRA 没有重复上报同一物理 GPU；
+- [ ] 按 UUID 验证请求型号与容器实际设备一致，并覆盖 Health、重启、MIG、共享和回滚；
+- [ ] 自定义资源名是版本化的平台 API，应用优先引用稳定 Flavor 而不是易变化 Product String；
 - [ ] 每个业务组都有保证量、借入上限、借出底线、硬上限和 Owner；
 - [ ] Kueue 或 Volcano 的准入与抢占所有权唯一；
 - [ ] 借用资源只承载允许回收的工作负载；
