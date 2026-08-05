@@ -45,7 +45,238 @@ last_reviewed: 2026-08-05
 
 如果已有 Ceph RBD，生产设计参见[用 KubeVirt 与 Ceph RBD 构建持久 GPU Notebook](kubevirt-rbd-notebook.md)。
 
-## 2. 实验组件
+## 2. 先读懂 KubeVirt：CRD、控制器和虚拟机运行链路
+
+KubeVirt 不是另一套独立于 Kubernetes 的虚拟化平台，也不是把 Kubernetes 节点替换成传统 Hypervisor。它通过 CRD、Controller、Webhook 和节点 DaemonSet，把虚拟机变成 Kubernetes API 能声明和协调的一类工作负载。网络仍由 CNI 提供，磁盘仍由 CSI/PVC 提供，调度、配额、优先级、ServiceAccount、审计和 Namespace 仍沿用 Kubernetes。
+
+官方概念与组件说明可对照 [KubeVirt Architecture](https://kubevirt.io/user-guide/architecture/) 和 [Virtual Machines](https://kubevirt.io/user-guide/user_workloads/virtual_machines/)。
+
+可以把它理解成四层：
+
+```text
+用户与平台层
+  kubectl / virtctl / KubeVirt Manager / 自研 Workspace Portal
+                     │ 创建和修改 Kubernetes 对象
+                     ▼
+声明式 API 层
+  VirtualMachine、VMI、Migration、Snapshot、DataVolume 等 CRD
+                     │ Controller 持续比较期望状态与实际状态
+                     ▼
+Kubernetes 编排层
+  scheduler、Pod、PVC/CSI、CNI、Service、RBAC、Quota、PriorityClass
+                     │ 把 virt-launcher 调度到具体节点
+                     ▼
+节点虚拟化层
+  virt-handler → virt-launcher → libvirt/QEMU/KVM → guest OS
+```
+
+CRD 是 CustomResourceDefinition，作用是给 Kubernetes API 增加新的资源类型；CR 是这些类型的具体对象。安装 KubeVirt 后，API Server 才会认识 `VirtualMachine`、`VirtualMachineInstance` 等资源。只有 CRD 还不能运行虚拟机，真正执行协调逻辑的是 KubeVirt Controller、Webhook 和节点组件。
+
+### 2.1 最容易混淆的 VM、VMI 与 Pod
+
+这三个对象分别表达不同层次：
+
+| 对象 | 类比 | 生命周期 | 主要保存什么 |
+| --- | --- | --- | --- |
+| `VirtualMachine`，简称 VM | Deployment 一类的长期期望状态 | 可以长期存在，停止后仍保留 | 开关机策略、VM 模板、CPU/内存、卷和网络声明 |
+| `VirtualMachineInstance`，简称 VMI | 正在运行的 Pod | 每次启动创建，停止后删除 | 本次运行实例、节点、Guest IP、运行条件和迁移能力 |
+| `virt-launcher` Pod | 承载进程的 Pod | 与 VMI 同生共死 | QEMU/libvirt 进程、卷挂载、tap/NAT 和 Console/VNC socket |
+
+创建一个 `runStrategy: Always` 的 VM 后，核心链路是：
+
+```text
+VirtualMachine
+  → virt-controller 创建 VirtualMachineInstance
+  → virtualmachine-controller 创建 virt-launcher Pod
+  → kube-scheduler 结合资源、亲和性和 PV nodeAffinity 选择节点
+  → 目标节点 virt-handler 通知 virt-launcher 定义 libvirt domain
+  → QEMU 打开 PVC/块设备，创建 tap，启动 guest OS
+  → VMI status 回报节点、IP、Guest Agent 和 Ready 条件
+```
+
+所以：
+
+- `kubectl get vm` 回答“这台机器应该开机还是关机”；
+- `kubectl get vmi` 回答“当前是否存在一个正在运行的实例”；
+- `kubectl get pod` 回答“QEMU 进程落在哪个节点、容器为什么 Pending 或退出”；
+- `virtctl stop <vm>` 通常删除 VMI 和 `virt-launcher`，但 VM 与独立 PVC 继续存在；
+- 删除 VM 是否连带删除磁盘，取决于磁盘是独立 PVC，还是由 `dataVolumeTemplates` 等方式被 VM 拥有，不能仅凭名称判断。
+
+### 2.2 常见 KubeVirt CRD 到底负责什么
+
+安装后会看到几十个 CRD，它们不是都需要业务用户直接创建。按职责理解比背名称有效：
+
+| API 资源 | 谁通常创建 | 作用与使用时机 |
+| --- | --- | --- |
+| `KubeVirt` | 集群管理员 | 集群级安装实例；配置 feature gate、节点放置、允许直通的设备和证书策略。通常一个集群只有一个 |
+| `VirtualMachine` | 用户或平台 | 长期 VM 定义，管理启动、停止和模板 |
+| `VirtualMachineInstance` | VM Controller；也可直接创建 | 一次实际运行。普通平台不应把直接创建 VMI 当默认方式，否则缺少长期 VM 对象管理重启 |
+| `VirtualMachineInstanceMigration` | 运维或迁移控制器 | 请求 VMI 热迁移；本地盘、PCI Passthrough GPU 等条件可能使其不可迁移 |
+| `VirtualMachineInstanceReplicaSet` | 平台 | 维持一组同构 VMI，语义类似 ReplicaSet；个人工作站通常不需要 |
+| `VirtualMachinePool` | 平台 | 管理一组 VM 及副本，适合 VM 池而非单人宠物工作站 |
+| `VirtualMachineSnapshot` / `VirtualMachineRestore` | 用户或备份平台 | 协调 VM 配置和 CSI 卷快照、恢复；底层仍依赖 CSI Snapshot 能力 |
+| `VirtualMachineExport` | 用户或镜像平台 | 通过临时导出服务下载 VM、PVC 或快照内容 |
+| `VirtualMachineInstancetype` / `ClusterInstancetype` | 平台管理员 | 复用 CPU、内存等规格，类似云主机 Flavor |
+| `VirtualMachinePreference` / `ClusterPreference` | 平台管理员 | 复用机器类型、磁盘总线、固件等偏好；与 Instancetype 分工 |
+| `VirtualMachineTemplate` | 新版 KubeVirt 的模板平台 | 把 VM 及相关资源组织成参数化模板；是否默认部署取决于 KubeVirt 版本 |
+
+先看集群实际安装了什么，不要根据另一篇文章猜测：
+
+```bash
+kubectl api-resources --api-group=kubevirt.io
+kubectl get crd | grep -E 'kubevirt.io|cdi.kubevirt.io'
+kubectl explain virtualmachine.spec
+kubectl explain virtualmachineinstance.status.conditions
+```
+
+`KubeVirt` CR 与业务 VM 不是一回事。前者由 Operator 持续协调，用来安装和配置整个虚拟化控制面；后者是 Namespace 内的用户工作负载。修改 `KubeVirt` CR 可能滚动整个控制面或改变所有 VMI 行为，权限应只给集群管理员。
+
+### 2.3 常驻组件和按需组件
+
+KubeVirt 的常驻组件负责“管理”，运行中的 VM 才产生真正的 QEMU 工作负载：
+
+| 组件 | 形态 | 职责 |
+| --- | --- | --- |
+| `virt-operator` | Deployment | 安装、升级、回滚并协调 KubeVirt CR |
+| `virt-api` | Deployment + APIService/Webhook | 提供准入、验证以及 Console、VNC、start/stop 等子资源 API |
+| `virt-controller` | Deployment | 协调 VM、VMI、迁移、快照及 `virt-launcher` Pod |
+| `virt-handler` | DaemonSet | 每个可运行 VM 的节点一个，连接节点上的 libvirt/QEMU 生命周期 |
+| `virt-launcher` | 每个活跃 VMI 一个 Pod | 承载该 VMI 的 QEMU/libvirt 进程；不是常驻控制面 |
+| `virt-exportproxy` / `virt-exportserver` | 常驻入口 + 按需服务 | 处理 VM/PVC/快照导出；没有导出任务时不应把 export server 当常驻 VM 开销 |
+
+排障时先判断问题属于哪一层：VM Controller 没创建 VMI、scheduler 没调度 Pod、CSI 没绑定 PVC、virt-handler 没同步 domain，还是 guest 自己没有启动服务。只看一个 `kubectl get vm` 状态往往不够。
+
+### 2.4 CDI 是什么，为什么装 KubeVirt 时经常一起出现
+
+CDI 全称 Containerized Data Importer，是 KubeVirt 生态里独立的存储数据准备项目。KubeVirt 本身擅长“拿一块已经准备好的磁盘启动 VM”，但不会替你完成以下工作：
+
+- 从 HTTP 下载 Ubuntu QCOW2/RAW 镜像并写入 PVC；
+- 从 OCI Registry 导入 `containerDisk` 风格的磁盘内容；
+- 接收 `virtctl image-upload` 上传的本地镜像；
+- 从已有 PVC 或 `VolumeSnapshot` 克隆出用户独立根盘；
+- 创建空白磁盘，并在数据准备完成前阻止 VM 过早启动。
+
+CDI 为此引入 `DataVolume`。可以把 DataVolume 理解为“带数据来源和准备状态的 PVC 上层对象”：
+
+```text
+DataVolume
+  ├─ source：http / registry / upload / pvc / snapshot / blank
+  ├─ storage：StorageClass / accessModes / volumeMode / size
+  ├─ 目标 PVC
+  └─ status：Pending / ImportInProgress / CloneInProgress / Succeeded
+```
+
+最小导入示例：
+
+```yaml
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: ubuntu-golden
+  namespace: kubevirt-lab
+spec:
+  source:
+    http:
+      url: https://example.invalid/ubuntu.qcow2
+  storage:
+    storageClassName: <storage-class>
+    accessModes: [ReadWriteOnce]
+    volumeMode: Block
+    resources:
+      requests:
+        storage: 100Gi
+```
+
+CDI Controller 创建或填充目标 PVC，Importer/Cloner/Upload Server 是按任务出现的 Pod。数据完成后，这些临时 Pod 消失，VM 最终只消费 PVC；CDI 不在每次 guest 读写磁盘的数据路径上，因此它不是一个长期 I/O 代理。
+
+完整来源类型和行为以 [Containerized Data Importer](https://kubevirt.io/user-guide/storage/containerized_data_importer/) 为准。
+
+CDI 自己也有几类 CRD：
+
+| CDI 资源 | 作用 |
+| --- | --- |
+| `CDI` | Operator 管理的集群级安装与配置对象 |
+| `CDIConfig` | CDI 运行配置和能力状态 |
+| `DataVolume` | 声明目标卷的数据来源、容量和准备流程 |
+| `DataSource` | 为黄金镜像提供稳定引用，可在后台切换到新 PVC 或 Snapshot |
+| `StorageProfile` | 记录每个 StorageClass 的默认访问模式、卷模式、快照类和克隆策略 |
+| `ObjectTransfer` | 在特定场景跨 Namespace 转移 DataVolume/PVC 所有权 |
+
+### 2.5 CDI 克隆为什么有时快、有时会复制很久
+
+CDI 会结合 `StorageProfile` 和 CSI 能力选择克隆策略：
+
+| 策略 | 数据路径 | 优点 | 风险与前提 |
+| --- | --- | --- | --- |
+| CSI Volume Clone | 存储驱动原生克隆 PVC | 通常最快、数据不经过 Pod 网络 | CSI 必须正确实现可写克隆、拓扑和扩容 |
+| CSI Snapshot Clone | 先快照，再由快照恢复 PVC | 适合黄金镜像和批量派生 | 快照恢复必须产生可写卷；一致性仍需 guest freeze/停机配合 |
+| Host-assisted Copy | Source Pod 读取源卷，Upload/Clone Pod 写目标卷 | 不依赖存储原生克隆，兼容面广 | 会真实读取和写入磁盘，占网络、CPU 和 I/O，几十台并发会压垮 HDD |
+
+这次 Local LVM 实验验证了一个很重要的边界：`VolumeSnapshot ReadyToUse=True` 只说明快照对象已经准备好，不保证“恢复出的 PVC 一定适合当可写 VM 根盘”。实际恢复出的 PV 带有只读属性，QEMU 最终报根盘为只读文件系统。把 CDI 强制切到 host-assisted copy 后，又暴露了存储驱动对文件系统开销取整和 Block 设备权限的兼容问题。
+
+因此批量创建用户 VM 前必须先做一台完整金丝雀：
+
+1. 停止或 freeze 黄金 VM，创建 Snapshot；
+2. 恢复一个独立目标 PVC；
+3. 检查 PV 的 `volumeMode`、`nodeAffinity`、CSI `volumeAttributes` 和只读标记；
+4. 启动 VM，实际在 guest 根盘创建文件并重启；
+5. 删除金丝雀并确认底层卷被正确回收；
+6. 再决定批量采用原生快照、CSI Clone、CDI Copy，还是由镜像流水线生成新的 RAW/QCOW2。
+
+不要一次创建 50 个克隆后才验证第一台能否写盘。对本地 HDD，host-assisted copy 还应限制并发；对 Ceph RBD，则要验证快照分层、flatten、深度、回收和故障域行为。
+
+### 2.6 PVC、DataVolume、containerDisk、cloud-init 分别放什么
+
+| 机制 | 是否持久 | 典型用途 | 不应承担的职责 |
+| --- | --- | --- | --- |
+| PVC | 是 | VM 根盘、数据盘；最终由 CSI 提供块设备或文件系统 | 不描述镜像从哪里来 |
+| DataVolume | 目标 PVC 持久，准备 Pod 临时 | 导入、上传、克隆和初始化 PVC | 不替代 CSI，也不长期代理磁盘 I/O |
+| `containerDisk` | 随镜像/Pod，可视为只读分发介质 | Smoke test、只读系统盘、安装介质 | 保存用户长期修改 |
+| `cloudInitNoCloud` | 启动配置介质；内容来自 VM 定义/Secret | 首次用户、SSH Key、hostname、网络和初始化脚本 | 保存大量数据或作为持续配置管理系统 |
+| `emptyDisk` / ephemeral | 否 | 临时 scratch、一次性测试 | 用户环境和重要结果 |
+
+`containerDisk` 是 OCI 容器镜像中的磁盘文件，不等于“VM 的所有磁盘都变成容器镜像”。Ubuntu ISO、QCOW2 和 RAW 也不是同一种东西：ISO 通常是安装介质；QCOW2 是支持稀疏、压缩和快照元数据的磁盘格式；RAW 更接近直接块内容，体积可能稀疏但写入路径简单。CDI 可以负责格式识别与转换，最终写入 PVC。
+
+### 2.7 调度为什么会同时看到 VM、Pod 和 PVC Pending
+
+VM 最终还是 `virt-launcher` Pod，因此调度器需要同时满足：
+
+- VM 的 CPU、内存、扩展资源、Node Selector、Affinity 和 Toleration；
+- KubeVirt 自动增加的 KVM、网络和设备条件；
+- PVC 的可用区与 PV `nodeAffinity`；
+- Local Storage 的 `WaitForFirstConsumer` 拓扑决策；
+- CDI Importer/Cloner 等临时 Pod 的调度条件。
+
+使用本地盘时，WFFC 会形成一个看似循环、其实有意设计的过程：PVC 先 Pending，等真正消费者暴露目标节点；scheduler 选出节点后，CSI 才在该节点创建卷。排障顺序应是：
+
+```bash
+kubectl -n <ns> get vm,vmi,pod,dv,pvc -o wide
+kubectl -n <ns> describe vmi <name>
+kubectl -n <ns> describe pod <virt-launcher-pod>
+kubectl -n <ns> describe pvc <pvc>
+kubectl -n <ns> get events --sort-by=.lastTimestamp
+```
+
+如果 VMI Pending，不要只给 VM 增加资源；先确认到底是 scheduler、PVC 拓扑、CDI 临时 Pod还是 KubeVirt 节点能力在等待。
+
+### 2.8 KubeVirt Manager 在架构中处于哪里
+
+KubeVirt Manager 是浏览器管理界面，不是新的 Hypervisor，也不替代 `virt-controller`。它通过 ServiceAccount 和 Kubernetes API 读取或修改上述 CRD，并调用 Console/VNC 等子资源。因此 UI 能看到多少 Namespace、能否删除磁盘或修改集群对象，最终取决于它的 Kubernetes RBAC。
+
+安装、认证与 WebSocket 入口配置可参考 [KubeVirt Manager documentation](https://docs.kubevirt-manager.io/)。
+
+实验环境可以使用官方 bundled manifest 快速安装，但上线前至少要检查：
+
+- Deployment 的镜像 tag/digest、Pod 标签和 Service selector 是否一致；
+- ServiceAccount 被绑定了哪些 ClusterRole，是否远超实际管理范围；
+- HTTP Basic/OIDC 是否启用，入口是否使用 HTTPS；
+- Ingress/Gateway 是否正确代理 VNC 与 XTerm WebSocket；
+- 管理端是否只对办公网或管理网开放；
+- “前端登录认证”与“Kubernetes API 授权”是两层控制，不能只做其中一层。
+
+KubeVirt Manager 适合管理员和实验室运维；面向多用户的 Notebook Portal 仍应实现用户到 VM 的所有权映射、配额、最多同时启动数量、空闲关机、删除保护和审计。
+
+## 3. 实验组件
 
 | 组件 | 作用 | 本次选择 |
 | --- | --- | --- |
@@ -58,9 +289,9 @@ last_reviewed: 2026-08-05
 
 KubeVirt 的 `containerDisk` 会随 Pod 生命周期变化，不适合保存需要长期修改的根文件系统。持久状态应写入 DataVolume/PVC。参考 [KubeVirt disks and volumes](https://kubevirt.io/user-guide/storage/disks_and_volumes/)。
 
-## 3. 前置检查
+## 4. 前置检查
 
-### 3.1 节点虚拟化能力
+### 4.1 节点虚拟化能力
 
 只在候选节点执行以下只读检查：
 
@@ -82,7 +313,7 @@ lsmod | grep -E 'kvm|vhost'
 
 安装前应查看 [KubeVirt releases](https://github.com/kubevirt/kubevirt/releases) 和对应版本的支持信息，不要把本文实验版本当成长期固定版本。
 
-### 3.2 本地 StorageClass
+### 4.2 本地 StorageClass
 
 ```bash
 kubectl --context <context> get storageclass
@@ -98,7 +329,7 @@ kubectl --context <context> get storageclass <local-storage-class> -o yaml
 
 `Immediate` 模式可能先把卷创建在另一个节点，随后 VM 因节点选择与卷亲和性冲突而一直 Pending。
 
-## 4. 将虚拟机限制到一个节点
+## 5. 将虚拟机限制到一个节点
 
 先给实验节点增加专用标签：
 
@@ -142,9 +373,9 @@ kubectl --context <context> -n <vm-namespace> get pods -o wide
 
 VM 和普通 Pod 可以同时运行在同一个节点。KubeVirt 的 VM 最终也是由 `virt-launcher` Pod 承载，仍参与 Kubernetes 调度和资源核算。生产上若担心相互争抢，应增加 ResourceQuota、PriorityClass、CPU Manager、Topology Manager、污点和专用节点池，而不是假设 VM 会天然隔离普通 Pod。
 
-## 5. 安装 KubeVirt 与 CDI
+## 6. 安装 KubeVirt 与 CDI
 
-### 5.1 KubeVirt 1.7 与 1.9：为什么控制面 Pod 变多了
+### 6.1 KubeVirt 1.7 与 1.9：为什么控制面 Pod 变多了
 
 KubeVirt 1.7 和 1.9 的核心架构没有改变。常驻的核心组件仍然是：
 
@@ -204,7 +435,7 @@ spec:
 
 不建议仅仅为了减少组件数量而选择不支持当前 Kubernetes 版本的旧 KubeVirt。对于 1.9，更重要的是在上线前审计 [feature gate report](https://github.com/kubevirt/kubevirt/releases/tag/v1.9.0)，明确哪些 Beta 功能应保留默认开启、哪些应通过 `disabledFeatureGates` 退出。
 
-### 5.2 固定版本并安装
+### 6.2 固定版本并安装
 
 固定经过兼容性验证的版本，不要在生产清单中使用浮动地址：
 
@@ -235,7 +466,7 @@ kubectl --context <context> -n cdi get pods
 
 CDI 与后端存储解耦：它负责导入、上传、克隆或初始化 DataVolume，底层既可以是 Ceph RBD，也可以是本地 LVM。没有 Ceph 并不妨碍本实验创建空白持久盘。
 
-## 6. 先用 CirrOS 验证 KVM 和 Console
+## 7. 先用 CirrOS 验证 KVM 和 Console
 
 桌面系统涉及存储、图形和 WebSocket，直接排障会把问题混在一起。先运行一个极小的 CirrOS VM，验证 KVM、调度和串口控制台：
 
@@ -279,7 +510,7 @@ virtctl --context <context> console -n kubevirt-lab cirros-smoke
 
 退出 `virtctl console` 使用 **Ctrl+]**。这是控制字符：在英文输入法下按住 Control 再按 `]`，不是输入字符串 `Ctrl+]`。如果终端客户端仍无法退出，结束本地 `virtctl` 进程即可；这只断开控制台，不会关闭 VM。
 
-## 7. 创建本地持久盘
+## 8. 创建本地持久盘
 
 下面创建一个 40 GiB 空白 DataVolume。8 GiB 足以验证 Tiny Core，但 Ubuntu、Conda、模型缓存和 IDE 插件很快会写满，正式工作站建议从 80–200 GiB 起步，并按团队数据量设置配额。
 
@@ -310,7 +541,7 @@ kubectl --context <context> get pv -o wide
 
 DataVolume 在没有消费者时保持 `WaitForFirstConsumer` 是正常现象。创建带目标节点选择器的 VM 后，调度器才会触发卷创建。绑定后检查 PV 的 `nodeAffinity` 是否指向 `<vm-node>`。
 
-## 8. 用 Tiny Core 验证桌面
+## 9. 用 Tiny Core 验证桌面
 
 从 [Tiny Core Linux 下载页](http://www.tinycorelinux.net/downloads.html)获取 ISO，并校验官网提供的散列。把 ISO 封装成 KubeVirt `containerDisk`：
 
@@ -377,7 +608,7 @@ spec:
 
 第一次启动时，空白根盘没有操作系统，固件会继续从 ISO 启动。此时看到桌面只说明图形链路已经成功，**并不代表系统状态已经写入持久盘**。必须在 guest 内运行安装程序，把系统写到 `desktop-root`，随后移除 ISO 或调整启动顺序。若只运行 Live ISO，重启后操作系统层的修改仍会丢失。
 
-## 9. 浏览器访问：最小权限 noVNC 代理
+## 10. 浏览器访问：最小权限 noVNC 代理
 
 `virtctl vnc` 默认面向本地客户端。为了从浏览器访问，可以构建一个只包含匹配版本 `virtctl`、noVNC 和 websockify 的小型代理镜像：
 
@@ -521,9 +752,9 @@ http://<vm-node-ip>:6080/vnc.html?autoconnect=1&resize=scale
 
 Basic Auth 只适合受控网络 PoC，而且明文 HTTP 无法保护密码。生产环境至少要改成 HTTPS，并通过 Ingress/Gateway 接入 OIDC、短期授权、审计和网络策略。防火墙只应允许办公网 CIDR 访问该节点端口。
 
-## 10. 怎样验证链路真的工作
+## 11. 怎样验证链路真的工作
 
-### 10.1 VM、调度和存储
+### 11.1 VM、调度和存储
 
 ```bash
 kubectl --context <context> -n kubevirt-lab get vm,vmi,pod -o wide
@@ -539,7 +770,7 @@ kubectl --context <context> get pv <pv-name> -o yaml
 - PV `nodeAffinity` 与 VM 节点一致；
 - VMI condition 中本地盘导致 `LiveMigratable=False` 是预期结果。
 
-### 10.2 noVNC
+### 11.2 noVNC
 
 ```bash
 kubectl --context <context> -n kubevirt-lab get deploy,pod -l app=tinycore-novnc -o wide
@@ -550,7 +781,7 @@ curl -u 'vmuser:<password>' -I 'http://<vm-node-ip>:6080/vnc.html'
 
 页面请求应返回 200，浏览器 WebSocket 应完成 101 Switching Protocols。若 HTML 能加载但顶部显示“无法连接到服务器”，应检查代理日志和 5900 连接生命周期，而不是先怀疑 guest 密码。
 
-## 11. 常见故障
+## 12. 常见故障
 
 | 现象 | 常见原因 | 处理 |
 | --- | --- | --- |
@@ -564,11 +795,11 @@ curl -u 'vmuser:<password>' -I 'http://<vm-node-ip>:6080/vnc.html'
 | Console 无法退出 | 没有发送正确控制字符 | 英文输入法按 Ctrl+]，或结束本地客户端进程 |
 | VM 重启后修改丢失 | 仍从 Live ISO 启动，系统没有装进 DataVolume | 完成 guest 安装并从持久根盘启动 |
 
-## 12. Jupyter Notebook 与 code-server 镜像怎么选
+## 13. Jupyter Notebook 与 code-server 镜像怎么选
 
 这里要先区分“容器应用镜像”和“VM 系统镜像”。
 
-### 12.1 只运行容器 Notebook
+### 13.1 只运行容器 Notebook
 
 | 场景 | 推荐起点 | 说明 |
 | --- | --- | --- |
@@ -579,7 +810,7 @@ curl -u 'vmuser:<password>' -I 'http://<vm-node-ip>:6080/vnc.html'
 
 Jupyter Docker Stacks 已只把新镜像发布到 Quay.io，JupyterLab 是默认前端，并建议为可复现性固定日期或 Git SHA tag。不要继续把 Docker Hub 的旧 `jupyter/*` 当作更新来源。参见 [Jupyter Docker Stacks](https://jupyter-docker-stacks.readthedocs.io/en/latest/)和[镜像选择说明](https://jupyter-docker-stacks.readthedocs.io/en/latest/using/selecting.html)。NVIDIA 镜像说明参见 [NGC PyTorch](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch)。
 
-### 12.2 只运行容器 code-server
+### 13.2 只运行容器 code-server
 
 使用官方镜像：
 
@@ -591,7 +822,7 @@ codercom/code-server:<pinned-version>
 
 不要把 `ghcr.io/coder/coder` 与 `codercom/code-server` 混为一谈：前者是多用户开发环境平台 Coder 的控制服务，后者才是浏览器中的 VS Code 服务。
 
-### 12.3 同时需要 Jupyter 和 code-server，而且环境必须完整保留
+### 13.3 同时需要 Jupyter 和 code-server，而且环境必须完整保留
 
 本文场景的默认选择不是把两个服务硬塞进一个应用容器，而是：
 
@@ -616,7 +847,7 @@ Ubuntu 24.04 LTS QCOW cloud image（或经过 GPU 兼容验证的 Ubuntu 22.04 L
 
 如果只是标准化教学或短期实验，容器镜像 + PVC 更轻、更快；如果核心问题正是用户会在任意目录安装环境，持久 VM 根盘才真正覆盖问题边界。
 
-## 13. VM 内网 DNS：为什么宿主机能访问，VM 却解析失败
+## 14. VM 内网 DNS：为什么宿主机能访问，VM 却解析失败
 
 KubeVirt VM 使用默认 Pod 网络和 `masquerade` 接口时，guest 并不会直接继承宿主机的 `/etc/resolv.conf`。典型解析链路是：
 
@@ -632,7 +863,7 @@ guest 应用
 
 因此，“宿主机可以 `curl`，VM 不可以”不能直接归因于企业 DNS。宿主机可能直接查询企业 DNS，VM 却先依赖 Kubernetes Service VIP；两条路径中间还隔着 guest 网卡、KubeVirt NAT、`virt-launcher` 网络命名空间和 CNI Service 负载均衡。
 
-### 13.1 一次真实故障的证据链
+### 14.1 一次真实故障的证据链
 
 本次实验出现了以下现象，地址和域名已泛化：
 
@@ -679,7 +910,7 @@ kubectl -n kube-system get configmap cilium-config -o yaml
 
 如果 CoreDNS 使用 `forward . /etc/resolv.conf`，而 CoreDNS Pod 又采用 `dnsPolicy: Default`，非 `cluster.local` 查询通常会继续交给节点的企业 DNS。此时不必为每个内网域名向 CoreDNS `hosts` 插件增加静态记录；先修复 VM 到 DNS 服务的路径。
 
-### 13.2 单台 VM：直接指定企业 DNS
+### 14.2 单台 VM：直接指定企业 DNS
 
 对只需要访问企业服务、不要求解析 Kubernetes Service 名称的 VM，最小变更是在 VM 模板中显式设置 DNS：
 
@@ -739,7 +970,7 @@ VM 模板配置更适合平台统一管理；guest Netplan 适合验证或保留
 
 直接使用企业 DNS 的代价是无法解析 `*.svc.cluster.local`。如果 VM 同时需要企业域名和 Kubernetes Service 域名，应优先修复 CNI Service 路径或使用节点本地 DNS，而不是把 CoreDNS Pod IP 固定在模板里；Pod IP 会随滚动升级和故障恢复变化。
 
-### 13.3 集群根治：检查 Cilium kube-proxy replacement
+### 14.3 集群根治：检查 Cilium kube-proxy replacement
 
 本次故障集群没有运行 kube-proxy，而由 Cilium eBPF 处理 ClusterIP：
 
@@ -772,7 +1003,7 @@ bpf:
 5. 同时回归普通 Pod DNS、ClusterIP、NodePort、NetworkPolicy 和 VM 网络；
 6. 验证通过后再滚动更新 Cilium，保留回滚 values。
 
-### 13.4 多 VM 平台：NodeLocal DNSCache
+### 14.4 多 VM 平台：NodeLocal DNSCache
 
 当平台要运行大量 Notebook VM，更稳定的结构是给每个节点部署 NodeLocal DNSCache，并让 VM 查询一个稳定的节点本地地址：
 
@@ -793,7 +1024,7 @@ KubeVirt VM
 - 区分 NXDOMAIN、超时、连接拒绝和 HTTP 401/403，它们属于完全不同的故障层；
 - 记录 DNS 由 VM 模板、guest Netplan、NodeLocal DNS 还是 CoreDNS 管理，避免多处配置互相覆盖。
 
-## 14. 从实验走向生产
+## 15. 从实验走向生产
 
 | 实验做法 | 生产替换 |
 | --- | --- |
@@ -811,7 +1042,7 @@ KubeVirt VM
 2. **重置环境**：从黄金镜像重新克隆根盘，必须提供快照或二次确认；
 3. **删除用户**：经过保留期后删除 PVC/PV 和备份，不能与停止操作共用按钮或权限。
 
-## 15. 验收清单
+## 16. 验收清单
 
 - [ ] 候选节点存在可用的 `/dev/kvm`，且 `virt-handler` 只落在预期节点；
 - [ ] CirrOS VMI Ready，串口 console 能连接和退出；
