@@ -1024,7 +1024,274 @@ KubeVirt VM
 - 区分 NXDOMAIN、超时、连接拒绝和 HTTP 401/403，它们属于完全不同的故障层；
 - 记录 DNS 由 VM 模板、guest Netplan、NodeLocal DNS 还是 CoreDNS 管理，避免多处配置互相覆盖。
 
-## 15. 从实验走向生产
+## 15. 固定 IP 与稳定访问入口
+
+讨论 KubeVirt 固定 IP 之前，必须先确认要固定的是哪一层。默认 Pod 网络配合 `masquerade` 时，guest、`virt-launcher` Pod 和办公网入口拥有不同的地址语义：
+
+| 层级 | 典型地址 | 谁分配 | 生命周期与可达性 |
+| --- | --- | --- | --- |
+| guest 私网 IP | `10.0.2.2` | KubeVirt 内置 DHCP | 位于每个 VMI 独立的 NAT 网络中；不同 VM 可以重复，办公网不能把它当作唯一可路由地址 |
+| VMI/`virt-launcher` Pod IP | `<pod-cidr-address>` | 集群主 CNI | 集群内可达性取决于 CNI；VMI 重建或迁移后可能变化，不应写入用户书签和外部 DNS |
+| Kubernetes Service IP | `<cluster-ip>` | Kubernetes | Service 存续期间稳定，但通常只在集群网络内可达 |
+| 办公网入口 IP/VIP | `<office-routable-vip>` | 企业网络、负载均衡或二层 IP 通告系统 | 面向用户的稳定入口，可绑定域名、TLS 和统一认证 |
+| VM underlay IP | `<office-routable-vm-ip>` | 企业 DHCP、静态地址或 underlay IPAM | 直接配置在 guest 的第二张网卡上，表现最像传统虚拟机，但网络改造和治理成本最高 |
+
+当前实验使用的是：
+
+```text
+办公网或集群客户端
+  → VMI Pod IP / Kubernetes Service
+  → virt-launcher 网络命名空间中的 NAT
+  → guest 10.0.2.2
+```
+
+`10.0.2.2` 看起来很固定，却只是每台 VM 自己 NAT 空间里的私网地址。VMI 状态中看到的 `<pod-cidr-address>` 才是本次运行对应的 Pod IP，但它也不是长期身份。KubeVirt 官方建议 `masquerade` 工作负载通过 Kubernetes Service 暴露，因为 Service 可以在 VMI 硬重启或迁移导致 Pod IP 变化后继续选择新的实例。参见 [KubeVirt Interfaces and Networks](https://kubevirt.io/user-guide/network/interfaces_and_networks/)。
+
+### 15.1 Notebook 首选固定域名，而不是固定 guest IP
+
+JupyterLab 和 code-server 都是 HTTP/WebSocket 应用，适合使用一个固定 Gateway/Ingress VIP，再按域名转发到每台 VM 的 Service：
+
+```text
+user01.notebook.example.internal ─┐
+user02.notebook.example.internal ─┼→ HTTPS Gateway/Ingress 固定 VIP
+user03.notebook.example.internal ─┘        │
+                                           ├→ Service/notebook-user01
+                                           ├→ Service/notebook-user02
+                                           └→ Service/notebook-user03
+                                                    │
+                                                    ▼
+                                          动态 VMI Pod IP → guest
+```
+
+每台 VM 的 Service 只需要选择稳定的 domain 标签：
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: notebook-user01
+spec:
+  selector:
+    kubevirt.io/domain: notebook-user01
+  ports:
+    - name: code
+      port: 8080
+      targetPort: 8080
+    - name: jupyter
+      port: 8888
+      targetPort: 8888
+```
+
+Service 的 ClusterIP 不等于办公网 VIP。完整生产链路还需要 Gateway/Ingress Controller、企业负载均衡或 MetalLB 一类的地址通告机制，把一个办公网可路由地址交给入口。MetalLB 分配的是 Service VIP，并不会把该 IP 配置到 guest 网卡，概念说明参见 [MetalLB Concepts](https://metallb.io/concepts/)。
+
+这个方案的优点是：
+
+- VM 重启、重建和未来迁移时不要求保持 VMI Pod IP；
+- 多个用户共享少量 VIP，不需要为每台 Notebook 消耗办公网地址；
+- TLS、OIDC、访问日志、限流和 WebSocket 可以统一治理；
+- 用户只记域名，平台可以在后台替换 VM、Service 或存储实现。
+
+SSH 不是 HTTP，通常通过统一 SSH Bastion、TCP Gateway 或受控 LoadBalancer Service 暴露。不要为了让浏览器访问 Jupyter 而给每台 VM 都接入办公网二层网络。
+
+### 15.2 真正需要 VM 固定 IP：Multus 双网卡
+
+某些场景确实要求 guest 像传统虚拟机一样直接出现在办公网，例如旧软件按源 IP 授权、网络设备主动回连 VM、需要完整端口空间，或者运维工具只接受一机一 IP。此时可以保留默认 Pod 网络作为管理面，再通过 Multus 增加一张 underlay 网卡：
+
+```text
+VM eth0：Pod network + masquerade
+  用途：Kubernetes Service、平台探测和默认管理链路
+
+VM office0：Multus + bridge/SR-IOV/macvtap
+  用途：办公网或业务 VLAN 中的可路由固定 IP
+```
+
+KubeVirt 的 `network` 声明连接到哪张逻辑网络，`interface` 声明该网络如何接入 guest，两者名称必须一一对应。一个精简的双网卡 VM 片段如下：
+
+```yaml
+spec:
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: office
+              bridge: {}
+              macAddress: "02:00:00:00:01:01"
+      networks:
+        - name: default
+          pod: {}
+        - name: office
+          multus:
+            networkName: office-network
+```
+
+`office-network` 是一个 `NetworkAttachmentDefinition`，它通常引用 Linux Bridge、OVS、macvlan、macvtap 或 SR-IOV CNI。以 Linux Bridge 为例，宿主机必须先有接入目标 VLAN 的 `br-office`；Multus 只是调用对应 CNI，把 VMI Pod 中的第二张接口接到这座桥上，不会自动替管理员配置交换机、VLAN、网关和路由。
+
+生产上更稳妥的固定地址方式是“固定 MAC + 企业 DHCP 保留地址”：
+
+1. 平台为每台 VM 分配全局唯一、不可随重启变化的 MAC；
+2. 网络/IPAM 系统根据该 MAC 保留一个办公网 IP；
+3. guest 第二张网卡使用 DHCP；
+4. CMDB 同时记录用户、VM、MAC、IP、VLAN 和回收状态。
+
+Ubuntu cloud-init 可以按 MAC 为第二张网卡固定名称并启用 DHCP：
+
+```yaml
+networkData: |
+  version: 2
+  ethernets:
+    office0:
+      match:
+        macaddress: "02:00:00:00:01:01"
+      set-name: office0
+      dhcp4: true
+```
+
+如果企业网络没有 DHCP，也可以在 `networkData` 中写预留的静态地址、前缀、路由和 DNS。但必须先由 IPAM/CMDB 完成唯一性校验，不能让用户在 guest 中随意挑选地址。动态地址池插件能避免并发分配冲突，却不天然等于“删除 VMI 后仍拿到同一个 IP”；使用 Whereabouts、Spiderpool、Kube-OVN 或云厂商 IPAM 时，要额外确认其固定地址、保留和回收语义。
+
+### 15.3 宿主机与网络侧前置条件
+
+在单节点实验中给 VM 接入办公网之前，至少确认：
+
+- 节点有独立业务网卡、Bond VLAN 子接口或经过评审的共享链路；
+- `br-office`、OVS Bridge 或 SR-IOV VF 的配置能够在节点重启后自动恢复；
+- 交换机 Trunk/Access VLAN、MTU、网关、DHCP Relay 和 ACL 已匹配；
+- Multus 与对应 CNI 二进制已安装，`NetworkAttachmentDefinition` 能在目标 Namespace 使用；
+- MAC/IP 地址由平台统一分配，具备冲突检测、审计和回收流程；
+- 办公网到 VM 网段有双向路由，返回路径不会错误地走 masquerade 网卡；
+- NetworkPolicy 主要约束 Pod 网络，underlay 流量是否受控要单独验证；
+- 本地盘 VM 不能迁移到没有相同二层网络和本地卷的节点，节点故障边界没有因为固定 IP 而消失。
+
+不要直接把承载 Kubernetes 管理流量的物理接口加入新 Bridge 后在线试错，这可能让节点立刻失联。优先使用专用网卡或 VLAN 子接口；修改前保存 NetworkManager/systemd-networkd 配置和带外恢复手段，先用一台测试 VM 验证 ARP、DHCP、DNS、MTU、路由和重启恢复。
+
+### 15.4 三种方案怎么选
+
+| 需求 | 推荐入口 | 是否需要每 VM 固定 IP |
+| --- | --- | --- |
+| 浏览器访问 JupyterLab/code-server | 固定域名 + HTTPS Gateway/Ingress + VM Service | 否 |
+| 管理员 SSH 进入用户 VM | Bastion/TCP Gateway，或受控的 LoadBalancer Service | 通常不需要 |
+| 用户从办公网 SSH，且必须保持传统一机一 IP | Multus 第二网卡 + 固定 MAC + DHCP 保留 | 是 |
+| 旧系统主动连接 VM 任意端口 | Multus underlay IP，并配套 ACL/IPAM | 是 |
+| 只要求服务入口地址固定 | LoadBalancer Service + 企业 LB/MetalLB | 固定的是 Service VIP，不是 guest IP |
+| GPU/RDMA 高性能数据面 | 管理网保留 masquerade，数据面按需使用 Multus + SR-IOV | 数据面地址按网络方案治理 |
+
+对多用户 Notebook 平台，默认选择应是“稳定域名和身份入口”，而不是“50 个永不变化的 Pod IP”。只有无法通过 Service/Gateway 表达的网络需求，才给个别 VM 增加 Multus underlay 网卡。这样既保留 Kubernetes 的服务发现和生命周期能力，也不会过早把平台绑定到办公网 VLAN、地址容量和物理交换机配置。
+
+## 16. KubeVirt 还有哪些适合工作站平台的能力
+
+KubeVirt 提供的是 VM 生命周期和虚拟化能力，不会直接替平台判断“用户是否还在工作”。对多用户 Notebook 平台，比较实用的能力包括：
+
+| 能力 | 解决什么问题 | 关键边界 |
+| --- | --- | --- |
+| `runStrategy` 与 start/stop/restart 子资源 | 声明 VM 应持续运行、失败重启、只运行一次、手动控制或保持关机 | 它只执行期望状态，不负责判断用户是否空闲 |
+| VM Snapshot/Restore | 保存 VM 配置并协调 CSI 卷快照与恢复 | 数据卷能否快照取决于 CSI 与 `VolumeSnapshotClass`；在线一致性最好配合 QEMU Guest Agent |
+| Live Migration | 节点维护时迁移正在运行的 VM | 本地盘、部分直通设备和网络绑定不可迁移；本文 Local LVM VM 不具备这一能力 |
+| DataVolume、Clone 与 Export | 导入黄金镜像、创建用户盘、复制或导出 VM/PVC | 批量 Host-assisted Copy 会产生真实网络与磁盘 I/O，应限并发 |
+| Instancetype 与 Preference | 把 4C16G、48C192G、GPU 工作站等规格和机器偏好标准化 | 规格变更是否可以在线生效取决于版本、LiveUpdate 与 guest 支持 |
+| 磁盘和网卡热插拔 | 不关机增加数据盘或附加网络 | 需要对应 feature gate、CNI/CSI 能力和 guest 驱动；不等于所有设备都能热插拔 |
+| QEMU Guest Agent | 上报 guest OS、接口、文件系统、登录用户等信息，并辅助一致性快照 | Agent 是观测与协作通道，不应把它当成完整的终端审计或唯一空闲信号 |
+| 持久 TPM/UEFI 状态 | 支持需要持久固件变量或虚拟 TPM 的工作负载 | 需要后端状态 StorageClass，并增加备份与恢复对象 |
+| VM Pool | 维护一组同构 VM，适合教学池、临时桌面池和预热实例 | 个人长期工作站更适合一人一 VM/PVC，避免池控制器误回收用户状态 |
+
+这些能力应以集群实际版本和 feature gate 为准。不要因为最新文档出现了某个 API，就假设当前安装版本已经可用；上线前用 `kubectl api-resources`、`kubectl explain` 和测试 VM 验证。
+
+### 16.1 多久不用自动关机：KubeVirt 提供动作，平台负责策略
+
+KubeVirt 当前没有一个内置字段可以表达：
+
+```yaml
+idleTimeout: 2h
+```
+
+它提供的是可靠的生命周期原语。Controller 判定 VM 空闲后，可以调用 stop 子资源，或者把 VM 改成 `runStrategy: Halted`；再次访问时，再通过 start 子资源恢复为运行状态。KubeVirt 支持 `Always`、`RerunOnFailure`、`Once`、`Manual` 和 `Halted` 等运行策略，具体语义参见 [KubeVirt Run Strategies](https://kubevirt.io/user-guide/compute/run_strategies/)。
+
+真正释放资源的停机链路是：
+
+```text
+空闲检测器确认超时
+  → 给用户发送即将停机通知并进入宽限期
+  → 再次确认没有活跃会话和后台任务
+  → 调用 VM stop / 设置 runStrategy: Halted
+  → guest 尽量优雅关机
+  → VMI 与 virt-launcher Pod 删除
+  → CPU、内存和临时网络资源释放
+  → VirtualMachine、PVC 和用户完整根文件系统继续保留
+```
+
+不要用 `virtctl pause` 代替自动停机。Pause 会冻结 guest 的 vCPU 和 I/O，但 QEMU 进程与 VM 内存仍留在宿主机，不能解决多人共享节点的内存容量问题。KubeVirt 官方生命周期文档也明确说明暂停时 domain memory 继续分配，参见 [KubeVirt Lifecycle](https://kubevirt.io/user-guide/user_workloads/lifecycle/)。Memory Dump 同样只用于故障分析，并不是保存内存状态后释放资源的休眠机制。
+
+### 16.2 空闲不能只看“网页多久没有请求”
+
+Notebook 工作站可能在浏览器关闭后继续训练、下载数据、运行终端任务或编译代码。仅根据 Ingress 最后请求时间或 CPU 低利用率停机，都容易误伤。推荐综合以下信号：
+
+| 信号 | 能发现什么 | 局限 |
+| --- | --- | --- |
+| Gateway/Jupyter 最后请求时间 | 浏览器是否仍在交互 | 发现不了 SSH、后台 Kernel 和 detached 任务 |
+| Jupyter Session/Kernel 状态 | Notebook Kernel 是否繁忙、最后活动时间 | 看不到 code-server、系统进程和独立 Python 脚本 |
+| code-server WebSocket/心跳 | IDE 是否在线 | 用户断网不代表后台任务可以终止 |
+| SSH 登录与 PTY | 是否存在交互式终端 | `tmux`、`screen`、systemd user service 可能在退出后继续运行 |
+| CPU、GPU、磁盘和网络利用率 | 是否存在持续计算或 I/O | 阈值过低会误判等待数据、睡眠或间歇运行的任务 |
+| QEMU Guest Agent/平台 Agent | guest 登录用户、进程摘要和自定义心跳 | Agent 可能故障，不能把“无数据”解释成“空闲” |
+| 用户显式租约 | 用户声明“今晚保持运行” | 必须设置最长时限、配额和审计，不能允许永久绕过回收 |
+
+JupyterHub 已有 `jupyterhub-idle-culler`，可以根据 Hub 记录的用户活动停止单用户 Server，参见 [JupyterHub Idle Culler](https://jupyterhub.readthedocs.io/en/latest/tutorial/getting-started/services-basics.html)。但本文是一台 VM 内同时运行 JupyterLab、code-server、SSH 和任意后台进程，不能直接把“Jupyter Server 空闲”等同于“整台 VM 可以关机”。更合适的是让 Jupyter 活动成为平台 Controller 的一个输入，再结合 VM 级指标和保护租约做最终决策。
+
+### 16.3 推荐的自动停机与按需唤醒流程
+
+可以在 VM 上声明平台策略，而不是让 guest 自己永久掌握开关机权限：
+
+```yaml
+metadata:
+  labels:
+    workstation.aik8s.run/autostop: "enabled"
+  annotations:
+    workstation.aik8s.run/idle-timeout: "2h"
+    workstation.aik8s.run/grace-period: "10m"
+    workstation.aik8s.run/max-keep-running: "24h"
+```
+
+这些不是 KubeVirt 内置字段，而是自研 Workspace Controller 的示例约定。Controller 可以按下面的状态机工作：
+
+```text
+Running
+  ├─ 有活动 → 更新 last-active，继续运行
+  └─ 超过 idle-timeout
+       → StoppingPending，页面与消息通知用户
+       ├─ 宽限期内恢复活动 → Running
+       └─ 宽限期结束且无保护租约
+            → 调用 stop → Stopped
+
+Stopped
+  └─ 用户访问固定域名
+       → Gateway 跳转到“工作站启动中”页面
+       → Controller 调用 start
+       → 等待 VMI Ready、SSH/Jupyter readiness 成功
+       → 重新转发到用户工作站
+```
+
+建议的初始策略是：
+
+- 普通开发工作站连续 2 小时无有效活动后进入停机宽限期；
+- 停机前至少提前 10 分钟通知，并允许用户点击“继续运行”；
+- 后台任务通过最长 24 小时的显式租约保护，超时后要求重新申请；
+- 停机动作先请求 guest 优雅关机，超时后才由平台决定是否强制停止；
+- 只有 PVC 已 Bound、根盘可恢复且应用服务可自动启动的 VM 才开启 autostop；
+- 记录判定信号、停机原因、执行者和恢复耗时，方便解释误停与调优阈值。
+
+如果 VM 使用 `runStrategy: Always`，guest 内执行 `shutdown` 后 KubeVirt 会把它再次拉起，因此不要只在 guest 里放一个 idle shutdown 脚本。由外部 Controller 调用 VM stop 最清晰；或者使用 `Manual`/`RerunOnFailure` 并明确其重启语义。对于当前 Notebook VM，可以让平台在开机时调用 start、空闲回收时调用 stop，根盘仍保留在独立 DataVolume/PVC 中。
+
+### 16.4 推荐启用顺序
+
+1. 先安装并验证 QEMU Guest Agent、Service readiness 和优雅关机；
+2. 建立固定域名入口，让停止状态可以显示“启动中”而不是直接返回 502；
+3. 只记录活动数据一周，不执行停机，用真实分布确定阈值；
+4. 选择少量测试用户启用通知式 autostop，保留一键续租；
+5. 验证停止后 VMI 消失、CPU/内存释放、PVC 保留，重新启动后环境和服务恢复；
+6. 最后再推广到全部用户，并给训练、推理、教学和临时开发设置不同策略。
+
+## 17. 从实验走向生产
 
 | 实验做法 | 生产替换 |
 | --- | --- |
@@ -1035,6 +1302,7 @@ KubeVirt VM
 | 手工创建 VM | Workspace Portal/Operator 自动创建、停止、快照和回收 |
 | `Retain` 本地 PV | CSI Snapshot、异地备份、恢复演练和生命周期策略 |
 | CPU/内存尽力共享 | Quota、优先级、NUMA/CPU 拓扑和专用 GPU 节点池 |
+| 直接使用 VMI Pod IP | 稳定域名 + Service + HTTPS Gateway；特殊场景再增加 Multus underlay 网卡 |
 
 还需要明确三类生命周期：
 
@@ -1042,7 +1310,7 @@ KubeVirt VM
 2. **重置环境**：从黄金镜像重新克隆根盘，必须提供快照或二次确认；
 3. **删除用户**：经过保留期后删除 PVC/PV 和备份，不能与停止操作共用按钮或权限。
 
-## 16. 验收清单
+## 18. 验收清单
 
 - [ ] 候选节点存在可用的 `/dev/kvm`，且 `virt-handler` 只落在预期节点；
 - [ ] CirrOS VMI Ready，串口 console 能连接和退出；
@@ -1057,6 +1325,12 @@ KubeVirt VM
 - [ ] VM 能解析企业内网 FQDN，DNS 查询不会先等待不可达的 kube-dns 超时；
 - [ ] 需要访问 Kubernetes Service 的 VM 已验证 `*.svc.cluster.local`，没有把动态 CoreDNS Pod IP 固定进模板；
 - [ ] Cilium kube-proxy replacement 场景已回归 VM 到 ClusterIP 的 TCP/UDP 访问；
+- [ ] 用户入口使用稳定域名或 Service，没有把 VMI Pod IP 当作 VM 的永久地址；
+- [ ] 需要固定办公网 IP 的 VM 已验证 Multus、固定 MAC、IPAM、VLAN、返回路由和地址回收；
+- [ ] underlay 网络不会绕过预期的 ACL、审计和租户隔离；
+- [ ] 自动停机综合 Jupyter、SSH、后台任务与资源信号，不会把单一 HTTP 空闲当作 VM 空闲；
+- [ ] 自动停机经过通知和宽限期，并提供有上限、可审计的保持运行租约；
+- [ ] 停止 VM 后 VMI/`virt-launcher` 消失、计算资源释放、PVC 保留，按需唤醒后服务自动恢复；
 - [ ] 生产入口具备 HTTPS、统一认证、授权、审计和网络访问控制。
 
 这次实验最有价值的结论不是“浏览器里出现了桌面”，而是把状态边界验证清楚了：`containerDisk` 和 Live ISO 负责分发启动介质，DataVolume/PVC 才负责保存用户完整环境；本地盘能验证持久工作站体验，但不能假装具备共享存储的故障恢复能力。
