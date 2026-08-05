@@ -163,7 +163,7 @@ kubectl taint node <node> workload.example.com/kubevirt=true:NoSchedule
 
 KubeVirt 的专用 vCPU 依赖 Kubernetes CPU Manager；NUMA passthrough 还要求 Dedicated CPU 和可分配 HugePages。参考：[Dedicated CPU](https://kubevirt.io/user-guide/compute/dedicated_cpu_resources/)、[NUMA](https://kubevirt.io/user-guide/compute/numa/)
 
-`domain.cpu` 中的 vCPU 数量、`virt-launcher` Pod 的 CPU request/limit 和宿主机 pCPU 是三个不同层次。需要在“每位用户固定 2 核”和“保底 2 核、空闲时可突发到 8 核”之间做选择时，见 [Notebook 容器、KubeVirt 与共享大机的资源隔离](../development/gpu-notebook-platform.md#6-kubevirt)。
+`domain.cpu` 中的 vCPU 数量、`virt-launcher` Pod 的 CPU request/limit 和宿主机 pCPU 是三个不同层次。需要在“每位用户固定 2 核”“保底 2 核、空闲时突发”以及“80 vCPU / 600 GiB Guest 的 Best Effort 超卖”之间做选择，并理解 Guest OOM、cgroup OOM 与节点驱逐的差异时，见 [Notebook 容器、KubeVirt 与共享大机的资源隔离](../development/gpu-notebook-platform.md#6-kubevirt)。
 
 ### 4.4 GPU 直通宿主机准备
 
@@ -316,6 +316,60 @@ kubectl -n notebook-alice wait datavolume alice-rootdisk \
 kubectl -n notebook-alice get datavolume,pvc
 ```
 
+### 7.1 封存前清理 cloud-init 和固定网卡身份
+
+不能把一台已经启动过的 VM 直接关机后当作黄金镜像。cloud-init 会缓存 instance-id、网络渲染结果和初始化状态，Ubuntu 的 `/etc/netplan/50-cloud-init.yaml` 还可能包含首次启动网卡的 MAC。克隆后的 VM 会获得新 MAC；如果 cloud-init 把它误判为旧实例，Netplan 仍只匹配旧 MAC，最终表现为：
+
+```text
+VMI Phase：Running
+VMI Ready：True
+Guest Agent：Connected
+VMI IP：空
+Guest enp1s0：DOWN / unmanaged
+```
+
+这类问题不是 CNI 或 KubeVirt DHCP 一定发生了故障。先通过 Console 对比当前网卡和 Netplan：
+
+```bash
+virtctl console -n notebook-alice alice-gpu-workstation
+
+ip -br address
+networkctl status enp1s0 --no-pager
+sed -n '1,160p' /etc/netplan/50-cloud-init.yaml
+cloud-init status --long
+```
+
+如果当前 `ip link` 中的 MAC 与 Netplan 的 `match.macaddress` 不同，修复时应同时移除 `match` 和依赖它的 `set-name`，保留按可预测接口名启用 DHCP 的配置：
+
+```yaml
+network:
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: true
+      dhcp6: false
+```
+
+修改后先验证再封存：
+
+```bash
+netplan generate
+netplan apply
+ip -br address
+ip route
+getent hosts kubernetes.default.svc
+```
+
+确认 qemu-guest-agent、SSH、JupyterLab、code-server 和磁盘扩容流程全部正常后，在基础镜像 VM 内执行：
+
+```bash
+cloud-init clean --logs --machine-id --configs all
+```
+
+预期 `/etc/machine-id` 变为 `uninitialized`，cloud-init instance cache 和生成的 Netplan 被清除。随后优雅停止 VM，再克隆其 PVC；不要在清理后又启动一次才制作镜像，否则会重新写入实例身份。`--configs` 是否可用取决于 cloud-init 版本，应以镜像内 `cloud-init clean --help` 为准。参考：[cloud-init clean](https://docs.cloud-init.io/en/latest/reference/cli.html#clean)
+
+清理 machine-id 不只是解决 DHCP：它还避免多个克隆共享 systemd machine-id。平台还应确认首次启动会重新生成 SSH Host Key，不能让几十台 Notebook 继承同一套主机身份。
+
 ## 8. 创建一台持久 GPU Notebook VM
 
 下面是最小骨架。`runStrategy: Halted` 表示创建后默认不启动；GPU 资源名、SSH 公钥、域名和镜像初始化方式必须按环境调整。
@@ -365,6 +419,13 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
+              ports:
+                - name: ssh
+                  port: 22
+                - name: code-server
+                  port: 8080
+                - name: jupyterlab
+                  port: 8888
           gpus:
             - name: gpu0
               deviceName: nvidia.com/A100-PCIE-40GB
@@ -377,6 +438,12 @@ spec:
             claimName: alice-rootdisk
         - name: cloudinit
           cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                enp1s0:
+                  dhcp4: true
+                  dhcp6: false
             userData: |
               #cloud-config
               hostname: alice-gpu-workstation
@@ -386,22 +453,72 @@ spec:
                 - [systemctl, enable, --now, qemu-guest-agent]
 ```
 
-如果要暴露 Jupyter，可以让平台代理访问 guest，或创建指向 VMI 标签的 Service，再由 Gateway/Ingress 做 OIDC 和 TLS：
+`networkData` 是 NoCloud 的独立网络配置，内容本身不带顶层 `network:`。单网卡、固定 q35 拓扑可以使用可预测名称 `enp1s0`；多网卡 VM 应由平台按接口逐项生成配置，不能在黄金盘中固化某个克隆的 MAC。参考：[KubeVirt cloud-init Startup Scripts](https://kubevirt.io/user-guide/user_workloads/startup_scripts/)
+
+如果要通过稳定地址访问 SSH、code-server 和 JupyterLab，可以创建指向 VMI 模板标签的 Service，再由 Gateway/Ingress 做 OIDC 和 TLS：
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: alice-jupyter
+  name: alice-notebook
   namespace: notebook-alice
 spec:
   selector:
     app: alice-gpu-workstation
   ports:
-    - name: http
+    - name: ssh
+      port: 22
+      targetPort: 22
+    - name: code-server
+      port: 8080
+      targetPort: 8080
+    - name: jupyterlab
       port: 8888
       targetPort: 8888
 ```
+
+### 8.1 Guest IP、VMI IP 和 Service IP
+
+默认 Pod 网络配合 `masquerade` 时会同时出现三类地址，不应混为一谈：
+
+| 地址 | 示例 | 含义 | 稳定性 |
+| --- | --- | --- | --- |
+| Guest 内部地址 | `10.0.2.2` | KubeVirt 内置 DHCP 分配给 Guest，位于 NAT 内部 | 当前 VMI 生命周期内使用 |
+| VMI `IP` | `10.42.x.x` | `virt-launcher` Pod IP；集群工作负载通过它进入 Masquerade 转发 | VMI 重建后可能变化 |
+| Service ClusterIP | `10.43.x.x` | Kubernetes Service 的稳定虚拟 IP，转发到当前 `virt-launcher` Endpoint | Service 存续期间稳定 |
+
+KubeVirt Masquerade 会把 Guest 隐藏在 `virt-launcher` Pod 后，通过 Pod IP 对外转发；VM 重启或迁移可能更换 Pod IP，因此固定入口应使用 Service。参考：[KubeVirt Interfaces and Networks](https://kubevirt.io/user-guide/network/interfaces_and_networks/)、[KubeVirt Service Objects](https://kubevirt.io/user-guide/network/service_objects/)
+
+当 `kubectl get vmi` 的 `IP` 为空时，按以下顺序排查：
+
+```bash
+kubectl -n notebook-alice get vmi alice-gpu-workstation -o wide
+kubectl -n notebook-alice describe vmi alice-gpu-workstation
+kubectl -n notebook-alice get pod -l kubevirt.io=virt-launcher -o wide
+virtctl console -n notebook-alice alice-gpu-workstation
+```
+
+判断规则：
+
+1. `virt-launcher` 有 Pod IP，而 VMI `status.interfaces` 没有地址：进入 Guest 检查 DHCP、Netplan 和 cloud-init；
+2. `AgentConnected=True`、接口存在但无地址：优先检查旧 MAC、错误接口名和 DHCP；
+3. Guest 已有地址但 Service 不通：检查 Service selector、EndpointSlice、接口 `ports` 和 Guest 监听地址；
+4. Service 有 Endpoint 但 Web 不通：在 Guest 内确认服务监听 `0.0.0.0`，而不是只有 `127.0.0.1`。
+
+Service 验证示例：
+
+```bash
+kubectl -n notebook-alice describe service alice-notebook
+kubectl -n notebook-alice get endpointslice \
+  -l kubernetes.io/service-name=alice-notebook
+
+curl -I http://<cluster-ip>:8080/
+curl -I http://<cluster-ip>:8888/
+ssh alice@<cluster-ip>
+```
+
+ClusterIP 只能从集群节点、Pod 或能路由 Service CIDR 的网络访问。办公电脑需要通过 Gateway/Ingress、LoadBalancer、受控 NodePort、VPN 或跳板机进入；不能因为 ClusterIP 不可达就把无认证的 Jupyter 直接暴露到公网。
 
 不要把无认证的 Jupyter 直接暴露到公网，也不要在 YAML 中保存密码或长期 Token。Notebook VM 默认不应持有集群管理员 kubeconfig；提交正式任务时使用最小权限平台 API、短期凭据或单独的 Job 提交身份。
 

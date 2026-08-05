@@ -285,6 +285,75 @@ CPU 时间可以在多个 vCPU 之间调度，Guest 内存则更接近启动时�
 
 生产上可以积极超卖 CPU，但应谨慎超卖内存。即使 `virt-launcher` 没有 memory limit，Guest 也不会因此自动看到宿主机全部内存；反过来，设置过紧的 memory limit 可能直接导致 VM 崩溃。Notebook 的模型、数据和缓存应放入对象存储、共享数据层和本地缓存，而不是靠给所有 VM 分配接近整机容量解决。
 
+### 接受 OOM 时复刻共享大机语义
+
+如果原有 Notebook 平台本来就是“小 request、无 limit、资源用尽后接受 OOM”的 Best Effort 模式，KubeVirt 也能提供相近语义。假设单节点有 120 核、800 GiB 内存，需要运行 50 台 VM，并希望每台 Guest 都看见 80 vCPU 和 600 GiB：
+
+```text
+总虚拟 CPU：50 × 80 = 4000 vCPU
+CPU 超卖比例：4000 / 120 ≈ 33.3:1
+
+总 Guest 内存：50 × 600 GiB = 30000 GiB
+内存超卖比例：30000 / 800 = 37.5:1
+```
+
+可为每台 VM 显式设置较小的调度 request，并且不设置 CPU、内存 limit：
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: notebook-user01
+spec:
+  runStrategy: Always
+  template:
+    spec:
+      domain:
+        cpu:
+          sockets: 1
+          cores: 80
+          threads: 1
+        memory:
+          guest: 600Gi
+        resources:
+          overcommitGuestOverhead: true
+          requests:
+            cpu: "2"
+            memory: 8Gi
+          # 不设置 limits.cpu 和 limits.memory
+        devices:
+          autoattachGraphicsDevice: false
+```
+
+50 台 VM 共请求 100 核、400 GiB，调度器仍会给节点和突发负载留下账面余量。单台 VM 在其他用户空闲时可以使用接近 80 个 vCPU；50 台同时满载时，受 120 个物理或逻辑 CPU 的总吞吐约束，平均只能得到约 2.4 核。必须显式覆盖 CPU request，否则按默认 `cpuAllocationRatio: 10`，一台 80 vCPU VM 会请求约 8 核，50 台总计 400 核而无法调度。
+
+`memory.guest: 600Gi` 只是 Guest 可见上限，不是容量保证。只要节点仍有空闲内存，单台 VM 可以继续增长；所有 `virt-launcher` 的实际 RSS、宿主机进程和系统预留之和接近 800 GiB 后，就会进入节点内存压力处理。例如一台 VM 使用 600 GiB、其他 49 台平均使用 4 GiB，合计已经达到 796 GiB，尚未计算宿主机与虚拟化开销。
+
+这种模式不要启用 HugePages。HugePages 需要提前预留，不能提供普通页的稀疏分配效果。还应先按 5、20、50 台分阶段压测启动和内存增长，而不是直接把 37.5 倍超卖当作稳定容量承诺。参考：[KubeVirt Node Overcommit](https://kubevirt.io/user-guide/compute/node_overcommit/)、[KubeVirt Resources Requests and Limits](https://kubevirt.io/user-guide/compute/resources_requests_and_limits/)
+
+### KubeVirt VM 的三层 OOM
+
+KubeVirt 的外层资源管理遵循 Pod 的 request、limit、QoS 与驱逐规则，但 VM 内还有一个独立 Guest OS，因此要区分三种故障：
+
+| OOM 或驱逐位置 | 触发条件 | 结果 | 恢复方式 |
+| --- | --- | --- | --- |
+| Guest OS 内部 | Guest 内进程用完 600 GiB | Guest Linux 通常杀掉高内存进程；VM、SSH 或其他服务可能继续运行 | 重启进程或由进程管理器拉起 |
+| `virt-launcher` cgroup | `virt-launcher` 实际内存超过 `limits.memory` | 宿主机杀死 QEMU，整台 VM 类似突然断电 | VM 控制器按 `runStrategy` 重新创建 VMI |
+| 节点内存压力 | 所有 Pod、VMI 与宿主机的实际使用逼近物理内存 | kubelet 按 QoS/用量驱逐，或 Node OOM Killer 杀进程；硬驱逐接近拔电 | VMI 重建，文件系统执行崩溃恢复 |
+
+因此，“接受 OOM”与旧 Pod 平台相似，但故障单位不同：Guest OOM 可能只损失一个 Jupyter Kernel，而宿主机杀掉 QEMU 会同时中断该用户的 JupyterLab、code-server、SSH 和整套 Guest 服务。`runStrategy: Always` 可以让控制器维持 VM 的运行状态，却不能把异常断电变成无损恢复。
+
+如果 Namespace 中存在包含 `limits.memory` 的 `ResourceQuota`，KubeVirt 可能自动为 VMI 设置约为 request 两倍的 memory limit。此时上例虽然声明 Guest 为 600 GiB，QEMU 仍可能在约 16 GiB 附近被 cgroup OOM。部署前应检查最终生成的 VMI 和 `virt-launcher` Pod，而不只查看 VM 模板：
+
+```bash
+kubectl get resourcequota -n notebooks -o yaml
+kubectl get vmi -n notebooks notebook-user01 -o yaml
+kubectl get pod -n notebooks <virt-launcher-pod> \
+  -o jsonpath='{.spec.containers[?(@.name=="compute")].resources}'
+```
+
+Best Effort VM 仍应给宿主机和 kubelet 保留内存，并设置能够保持节点可管理的 soft/hard eviction threshold。系统盘与 Home 使用 PVC，Notebook 自动保存，模型、数据集和 Checkpoint 使用对象存储；这样 VMI 被驱逐后的故障语义才接近“环境重启”，而不是“数据丢失”。
+
 ### 8 张 GPU 如何提供给 50 个用户
 
 | 模式 | 用户看到的资源 | 隔离 | 50 人共享 8 卡的含义 |
@@ -299,14 +368,15 @@ CPU 时间可以在多个 vCPU 之间调度，Guest 内存则更接近启动时�
 
 NVIDIA Time-Slicing 可以扩大并发，但官方明确说明它不提供 MIG 的显存和故障隔离；申请多个共享资源也不保证获得成比例的算力。它适合同一信任域的开发测试，不应包装成强隔离规格。参考：[NVIDIA GPU Time-Slicing](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/25.3.4/gpu-sharing.html)
 
-### 100 核、8 卡、50 人的推荐组合
+### 120 核、800 GiB、8 卡、50 人的推荐组合
 
 不要强迫所有用户只使用一种隔离模型，更实用的是混合平台：
 
 1. **默认交互 Notebook 使用非特权容器**：CPU request 设为 1–2 核，不设置或设置较高 CPU limit；内存设置合理 request 和硬 limit；GPU 使用 MIG 或经过风险说明的 Time-Slicing。
-2. **需要 root、systemd、任意系统包或更强安全边界时使用 KubeVirt**：例如给 Guest 8 vCPU、CPU request 2 核且不设 CPU limit，内存按真实容量分配；GPU 选择整卡 Passthrough 或 vGPU。
-3. **必须保留“所有人都看见 8 张卡”的旧体验时使用单台大型 GPU VM**：把大部分 CPU、内存和 8 张 GPU 分给一台 VM，再在 VM 内运行 JupyterHub 和用户容器。它缩小了对 Kubernetes 宿主机的攻击面，但没有解决 VM 内 50 个用户之间的资源干扰。
-4. **正式训练从 Notebook 移交到 Job/TrainJob/RayJob**：通过队列、配额和优先级获得整卡或多卡，避免一个交互环境长期持有昂贵资源。
+2. **需要 root、systemd、任意系统包或更强安全边界时使用 KubeVirt**：稳健规格可以给 Guest 8–16 vCPU、CPU request 2 核且不设 CPU limit，内存按真实容量分配；GPU 选择整卡 Passthrough 或 vGPU。
+3. **需要兼容旧平台的 Best Effort 体验时提供独立规格**：可以让 50 台 Guest 都看见 80 vCPU / 600 GiB，同时只请求 2 CPU / 8 GiB 且不设 limit；必须明确它是可被驱逐的共享池，不是 50 份容量承诺。
+4. **必须保留“所有人都看见 8 张卡”的旧体验时使用单台大型 GPU VM**：把大部分 CPU、内存和 8 张 GPU 分给一台 VM，再在 VM 内运行 JupyterHub 和用户容器。它缩小了对 Kubernetes 宿主机的攻击面，但没有解决 VM 内 50 个用户之间的资源干扰。
+5. **正式训练从 Notebook 移交到 Job/TrainJob/RayJob**：通过队列、配额和优先级获得整卡或多卡，避免一个交互环境长期持有昂贵资源。
 
 不建议尝试制造“特权 KubeVirt VM”。Guest root 默认只控制 Guest；需要的 GPU、网卡、NVMe 和网络能力应逐项声明。把 HostPath、Host PID、任意 PCI 设备和宿主机管理权限一起暴露给用户，只会重新制造旧平台的宿主机级风险。
 
