@@ -609,6 +609,8 @@ envoy-<namespace>-<gateway>-<hash>.envoy-gateway-system.svc.cluster.local:80
 
 企业已经有成熟 Higress 时，不建议把所有存量模型都切到 AIBrix。现有单机单卡/多卡 Deployment 继续由 Higress 直连；只有需要多副本模型感知、P/D、KV/Prefix 或 Role-aware 路由的模型，才按 Route 渐进转入内部 AIBrix Gateway。单个固定多机多卡副本如果始终只访问一个 Leader Service，也不因“多机”自动获得第二层网关的必要性。
 
+例如 DeepSeek-V4-Pro 的 vLLM 官方多节点配方可以把 2 个 GB200 NVL4 Tray、共 8 张 GPU 组成一个 DP + EP Replica。只有这一组时，Higress 可以直连它的 Leader/API Service；当部署第二个同构 8-GPU Replica，或增加独立 Prefill/Decode Pool 后，AIBrix 才在完整组之间做模型感知选择。组内 Rank 的生命周期和通信仍由 StormService/RoleSet、LeaderWorkerSet、KubeRay 或 Runtime 负责，Gateway 不能把不同 Replica 的 Worker 随意拼接。详见 [多机与分离式 LLM 推理](../inference/distributed-serving.md#deepseek-v4-multi-node-example)。
+
 ### 10.2 Higress 与 AIBrix 在不同集群
 
 跨集群同样可行，但不能使用 `*.svc.cluster.local`。AIBrix 集群需要提供一个稳定且可路由的内部地址：

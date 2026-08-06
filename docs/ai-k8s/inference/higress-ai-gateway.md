@@ -313,6 +313,19 @@ Client → Higress 统一入口 ──────┼─→ 现有单机多卡 D
 
 这里的“模型感知选副本”不是选择模型参数或 GPU 数量，而是先从请求 Body/Header 识别逻辑模型，排除没有加载该模型或 Adapter 的 Endpoint，再在合格副本中按排队数、并发、Session、Prefix/KV 命中、Prefill/Decode 角色和健康状态选择目标。普通 Service 负载均衡只看到一组 Endpoint，并不天然理解这些模型运行时信号。只有一个整体副本时没有选择空间，这项能力自然没有明显收益。
 
+以 DeepSeek-V4-Pro 为例，官方规格为 1.6T 总参数、49B 激活参数和 1M Context；vLLM 官方配方中的混合精度 Checkpoint 约 960GB，并给出 2 个 GB200 NVL4 Tray、共 8 张 GPU 的多节点 DP + EP 部署。这 8 张 GPU 是一个完整 Replica，而不是 8 个可以由网关独立选择的副本：
+
+```text
+Higress：识别企业逻辑模型 deepseek-v4-pro、执行认证和配额
+  → AIBrix Gateway：在 Replica A 与 Replica B 之间选择
+      ├── Replica A：2 Tray / 8 GPU，内部由 vLLM DP + EP 协同
+      └── Replica B：2 Tray / 8 GPU，内部由 vLLM DP + EP 协同
+```
+
+如果当前只有 Replica A，Higress 直接访问它的 Leader/API Service 就能工作；当增加 Replica B，或者把 Prefill/Decode 拆成不同 Pool 后，AIBrix 才负责组间选择。AIBrix 不能把请求发送给 A1 的一半 GPU 和 B2 的另一半 GPU，完整副本的 Rank 组成由 StormService/RoleSet、LeaderWorkerSet、KubeRay 或 Runtime 控制。
+
+参考：[DeepSeek-V4 官方发布](https://api-docs.deepseek.com/news/news260424/)、[vLLM DeepSeek-V4-Pro Recipe](https://github.com/vllm-project/recipes/blob/main/models/deepseek-ai/DeepSeek-V4-Pro.yaml)、[多机与分离式 LLM 推理](distributed-serving.md#deepseek-v4-multi-node-example)
+
 | 场景 | 推荐链路 | 原因 |
 | --- | --- | --- |
 | 已稳定运行的单机单卡/多卡 Deployment | Higress → Service | 没有必要增加一次代理和一个故障域 |

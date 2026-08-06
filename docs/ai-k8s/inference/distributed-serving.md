@@ -43,6 +43,41 @@ last_reviewed: 2026-08-05
 
 普通 Deployment 不具备这些语义。
 
+### 2.1 用 DeepSeek-V4-Pro 理解“多机副本”和“多个副本” { #deepseek-v4-multi-node-example }
+
+DeepSeek-V4-Pro 很适合说明这两个容易混淆的层次。官方公开规格为 1.6T 总参数、49B 激活参数、1M Context；模型权重采用 FP4 与 FP8 混合精度。vLLM 官方配方估算混合精度 Checkpoint 约 960GB，并给出一个明确的多节点例子：一个 GB200 NVL4 Tray 有 4 张 GPU，单 Tray 放不下该 Checkpoint，因此使用 2 个 Tray、共 8 张 GPU，以 DP + EP 方式共同承载模型。
+
+参考：[DeepSeek-V4 官方发布](https://api-docs.deepseek.com/news/news260424/)、[DeepSeek-V4 开放权重](https://huggingface.co/collections/deepseek-ai/deepseek-v4)、[vLLM DeepSeek-V4-Pro Recipe](https://github.com/vllm-project/recipes/blob/main/models/deepseek-ai/DeepSeek-V4-Pro.yaml)
+
+这 2 个节点、8 张 GPU 在平台层首先是**一个完整模型副本**：
+
+```text
+DeepSeek-V4-Pro Replica A
+  Leader / API Endpoint
+    ├── GB200 NVL4 Tray A1：4 GPU
+    └── GB200 NVL4 Tray A2：4 GPU
+        └── vLLM DP + Expert Parallel 通信域
+```
+
+调度器需要一次性为整个组准备节点、GPU、网络和模型数据；任何必要 Rank 未 Ready 时，Replica A 都不应进入外部 Endpoint。Higress 或 AIBrix 也不应该把用户请求直接发送给某个 Worker Pod，只能访问这个组的 Leader/API Service。
+
+当企业为了吞吐和可用性再部署一组相同资源时，才出现“多个完整副本”：
+
+```text
+逻辑模型 deepseek-v4-pro
+  ├── Replica A：2 Tray / 8 GPU
+  └── Replica B：2 Tray / 8 GPU
+```
+
+这时有两次不同的调度：
+
+1. Kubernetes、Kueue 和 StormService/RoleSet、LeaderWorkerSet 或 KubeRay 决定每个 8-GPU 组如何整体落到节点；
+2. AIBrix Gateway 决定一次 `model=deepseek-v4-pro` 请求进入 Replica A 还是 B，不能把 A/B 内部 Worker 混成普通 Endpoint 池。
+
+如果只有 Replica A，一个稳定 Leader Service 就足够承接流量，AIBrix 的“选副本”价值有限；如果有 A/B 多组、P/D 两类 Pool、长上下文导致的显著队列差异，或希望做 KV/Session 感知，内部推理路由才开始成为必要能力。
+
+硬件数字不能直接照搬。vLLM 同一配方也给出 8×B300、8×H200 和其他平台的不同参数；实际节点数取决于 GPU 显存、权重精度、Context/并发产生的 KV Cache、Runtime 版本和并行策略。上线前必须按目标硬件复测，而不是由“1.6T 参数”直接推导节点数量。
+
 ## 3. LeaderWorkerSet
 
 LeaderWorkerSet（LWS）用于描述一个 Leader 与多个 Worker 构成的复制单元，适合多机推理和其他 Leader/Worker 工作负载。
