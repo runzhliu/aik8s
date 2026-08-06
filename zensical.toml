@@ -50,6 +50,7 @@ nav = [
       {"Serving 与微服务框架" = "ai-k8s/inference/serving-frameworks.md"},
       {"推理性能优化" = "ai-k8s/inference/optimization.md"},
       {"AI Gateway 与智能路由" = "ai-k8s/inference/gateway-routing.md"},
+      {"Higress AI Gateway 实战" = "ai-k8s/inference/higress-ai-gateway.md"},
       {"分布式与 P/D 分离推理" = "ai-k8s/inference/distributed-serving.md"},
     ]},
     {"RAG、Agent 与边缘" = [

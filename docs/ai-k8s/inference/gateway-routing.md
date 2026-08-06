@@ -289,6 +289,7 @@ OpenTelemetry 的 GenAI 语义约定仍在演进，属性版本和敏感字段�
 
 ## 延伸阅读
 
+- [Higress AI Gateway：架构、安装与 AIBrix 接入实战](higress-ai-gateway.md)
 - [Gateway API](https://gateway-api.sigs.k8s.io/)
 - [Gateway API Inference Extension](https://gateway-api-inference-extension.sigs.k8s.io/)
 - [Kubernetes AI Gateway Working Group](https://kubernetes.io/blog/2026/03/09/announcing-ai-gateway-wg/)

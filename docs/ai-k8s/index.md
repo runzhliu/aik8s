@@ -48,7 +48,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 建设大数据与 AI 数据平台 | [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [数据与缓存](data-storage.md) → [模型制品](data/model-artifacts.md) → [MLOps](mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
 | 建设 Ray 大模型平台 | [Ray 训练与推理](ray-llm-platform.md) → [分布式训练](distributed-training.md) → [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [可靠性](reliability.md) |
-| 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [Serving 框架](inference/serving-frameworks.md) → [网关与路由](inference/gateway-routing.md) |
+| 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [Serving 框架](inference/serving-frameworks.md) → [网关与路由](inference/gateway-routing.md) → [Higress 实战](inference/higress-ai-gateway.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
 | 建设 RAG 或 Agent 平台 | [RAG 基础设施](rag-agent/rag-infrastructure.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [工具与执行治理](agentic-workloads.md) → [安全治理](security-governance.md) |
 | 负责 SRE、成本或容量 | [可观测性](observability.md) → [性能基准](benchmarking.md) → [成本与容量](cost-capacity.md) → [落地路线图](adoption-roadmap.md) |
@@ -99,6 +99,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [LLM Serving 与 AI 微服务框架](inference/serving-frameworks.md)：vLLM、KServe、AIBrix、Ray Serve、BentoML、NVIDIA NIM 与应用层框架。
 - [LLM 推理性能优化](inference/optimization.md)：TTFT、TPOT、批处理、KV Cache、量化、并行和推测解码。
 - [AI Gateway 与智能路由](inference/gateway-routing.md)：Gateway API Inference Extension、前缀感知、负载感知和流控。
+- [Higress AI Gateway 实战](inference/higress-ai-gateway.md)：隔离安装、AI Proxy、Token 治理、可观测性，以及与 AIBrix 同集群和跨集群接入。
 - [分布式与 Prefill/Decode 分离推理](inference/distributed-serving.md)：模型并行、LeaderWorkerSet、llm-d、Dynamo 和 KV 传输。
 
 ### RAG、Agent 与边缘

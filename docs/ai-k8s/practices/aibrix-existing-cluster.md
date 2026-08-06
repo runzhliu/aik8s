@@ -620,7 +620,7 @@ Higress 把这个地址注册为静态、DNS 或注册中心 Upstream。网络�
 
 两层网关还要避免重复策略：重试只由一层负责或明确预算；限流区分租户入口与模型容量；Higress 生成的 Request ID 应透传到 AIBrix；AIBrix 的 `target-pod` 等内部诊断头不应默认暴露给公网。
 
-本次实验没有修改任何实际 Higress 资源。先独立验证 AIBrix，再在隔离环境验证网关串联，可以降低误改现有入口的风险。
+后续已在同一集群使用独立 `higress-system` Namespace、`higress-sr1` IngressClass 和 ClusterIP Service 安装 Higress v2.2.3，并用独立回显服务验证基础转发；未修改已有 nginx、AIBrix Gateway 或业务路由。安装与职责边界见 [Higress AI Gateway 实战](../inference/higress-ai-gateway.md)。Higress → AIBrix 的真实串联、流式、认证和故障语义仍应在隔离环境继续验证。
 
 ## 11. 换成真实 GPU vLLM 前还缺什么
 

@@ -1,0 +1,57 @@
+# Isolated sr1 lab profile for higress.io/higress 2.2.3.
+global:
+  ingressClass: higress-sr1
+  createIngressClass: true
+  # Keep namespace watching cluster-wide so the gateway namespace receives
+  # the Higress root CA ConfigMap. The dedicated IngressClass provides route
+  # isolation from the existing nginx ingress controller.
+  watchNamespace: ""
+  enableIstioAPI: false
+  enableGatewayAPI: false
+  enableAlphaGatewayAPI: false
+  enableInferenceExtension: false
+  enableRedis: false
+  enablePluginServer: false
+
+higress-core:
+  gateway:
+    replicas: 1
+    service:
+      type: ClusterIP
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+  controller:
+    replicas: 1
+    automaticHttps:
+      enabled: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+  pilot:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+higress-console:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
