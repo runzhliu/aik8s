@@ -1,8 +1,8 @@
 ---
 title: 多机与分离式 LLM 推理
-description: 设计多机模型副本、LeaderWorkerSet、Prefill/Decode 分离、KV 传输、llm-d 和 NVIDIA Dynamo
+description: 设计多机模型副本、LeaderWorkerSet、Prefill/Decode 分离和 KV 传输，并对比 AIBrix、llm-d、KServe、Dynamo、Ray Serve 与 vLLM Production Stack
 status: evolving
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-05
 ---
 
 # 多机与分离式 LLM 推理
@@ -201,7 +201,41 @@ Dynamo 提供 Frontend、Router、Planner、Worker 和分离式推理能力，�
 
 参考：[NVIDIA Dynamo Disaggregated Serving](https://docs.nvidia.com/dynamo/latest/user-guides/disaggregated-serving)
 
-## 12. 双池容量规划
+## 12. AIBrix 之外还有哪些选择
+
+先区分三层，避免把推理引擎、Kubernetes 编排组件和完整推理控制面当作同类产品：
+
+```text
+平台控制面：AIBrix / llm-d / KServe / Ray Serve / Dynamo
+集群编排层：Kubernetes / LeaderWorkerSet / KubeRay
+推理执行层：vLLM / SGLang / TensorRT-LLM
+```
+
+一个平台经常同时采用三层组件。例如 KServe 负责服务生命周期，LeaderWorkerSet 表达跨节点副本，vLLM 执行模型计算；它们不是互相替代的三个产品。
+
+| 项目 | 主要定位 | 多机多卡与分离式推理能力 | 更适合的场景 |
+| --- | --- | --- | --- |
+| AIBrix | Kubernetes LLM 推理控制面 | Gateway、模型感知路由、Autoscaling、LoRA、KV Cache 和 P/D 等能力 | 希望建设包含流量、模型和弹性管理的通用推理平台 |
+| llm-d | Kubernetes 原生分布式推理栈 | InferencePool/EPP、Prefix/KV-aware Routing、KV 索引与卸载、P/D 分离 | 重点优化大规模请求调度、KV 命中率和分离式推理，可作为 AIBrix 的重点对标对象 |
+| KServe LLMInferenceService | 模型服务 CRD 和生命周期控制面 | 通过 LeaderWorkerSet 表达跨节点副本，支持 Tensor/Data/Expert Parallelism，并组合 Gateway 和 Autoscaler | 已有 KServe，希望统一模型服务 API、发布和弹性治理 |
+| NVIDIA Dynamo | NVIDIA 高性能分布式推理框架 | Frontend、Router、Prefill/Decode Pool、KV-aware Routing、NIXL/RDMA 数据路径 | NVIDIA GPU 和高速网络完备，优先追求 P/D、KV 传输和极限性能 |
+| Ray Serve LLM + KubeRay | 可编程分布式应用与服务平台 | 跨节点 TP/PP/EP、P/D 分离、模型感知路由和副本弹性 | 已使用 Ray Data/Train/Jobs，希望把数据、训练、评测和推理放在同一运行时 |
+| vLLM Production Stack | vLLM 官方 Kubernetes 生产部署栈 | 多 Serving Engine、Router、Prefix/KV-aware Routing、P/D、KEDA、LoRA 和监控 | 已确定使用 vLLM，希望以较小平台成本快速上线 |
+| SGLang 与其 Router/Model Gateway | 高性能推理引擎及路由能力 | 多节点并行、Radix Cache、P/D 分离和多种路由策略 | 重视 SGLang 引擎能力，并愿意自行组合 Kubernetes 生命周期和治理组件 |
+| LeaderWorkerSet | 多 Pod 组成一个逻辑副本的 Kubernetes API | 统一创建、扩缩和更新 Leader/Worker Pod 组 | 给 KServe、llm-d 或自研控制面提供多机副本编排；它不是完整推理平台 |
+
+### 12.1 选型结论
+
+- 寻找与 AIBrix 定位最接近的开源方案：优先评估 **llm-d**；
+- 已有 KServe 平台：使用 **KServe LLMInferenceService + LeaderWorkerSet**；
+- NVIDIA GPU、RDMA 和拓扑条件成熟：测试 **Dynamo + TensorRT-LLM/vLLM**；
+- 数据处理、训练和推理已经大量使用 Ray：选择 **KubeRay + Ray Serve LLM**；
+- 想先让 vLLM 生产化，不急于建设统一控制面：从 **vLLM Production Stack** 起步；
+- 需要自研企业推理平台：可组合 **Gateway API + llm-d Router/EPP + KServe/LWS + vLLM/SGLang**，但必须明确每个资源只有一个生命周期和扩缩控制器。
+
+参考：[llm-d Architecture](https://llm-d.ai/docs/0.7/architecture)、[KServe LLMInferenceService](https://kserve.github.io/website/docs/model-serving/generative-inference/llmisvc/llmisvc-configuration)、[Ray Serve LLM](https://docs.ray.io/en/latest/serve/llm/index.html)、[vLLM Production Stack](https://github.com/vllm-project/production-stack)、[SGLang](https://github.com/sgl-project/sglang)
+
+## 13. 双池容量规划
 
 分别测量：
 
@@ -221,7 +255,7 @@ Decode 需求  ≈ 输出 Token 到达率 / 单 Decode Worker 的有效 Token/s
 
 两个 Pool 的 Autoscaler 不能只看自身局部队列。Prefill 扩得过快会淹没 Decode，Decode 过剩又会空等 KV。
 
-## 13. 发布与版本
+## 14. 发布与版本
 
 一个分离式版本至少包括：
 
@@ -247,7 +281,7 @@ Canary 最安全的方式是建立一整套新 Pool，而不是让新 Prefill �
 7. 停止旧 Pool 新请求；
 8. Drain 后回收。
 
-## 14. 故障语义
+## 15. 故障语义
 
 | 故障 | 处理目标 |
 | --- | --- |
@@ -260,7 +294,7 @@ Canary 最安全的方式是建立一整套新 Pool，而不是让新 Prefill �
 | 新旧版本不兼容 | 发布门禁阻止跨版本连接 |
 | 网络分区 | 超时、隔离和恢复不会重复请求 |
 
-## 15. 可观测性
+## 16. 可观测性
 
 必须能从一次请求看到：
 
@@ -284,7 +318,7 @@ Gateway
 - Pool 扩缩容、Ready 和版本；
 - RDMA/NIC/GPU/CPU 指标。
 
-## 16. 安全
+## 17. 安全
 
 - KV Cache 可能包含可还原的用户上下文，按敏感数据处理；
 - Prefill 与 Decode 之间使用网络身份、加密或受控数据平面；
@@ -294,7 +328,7 @@ Gateway
 - 调试日志不记录原始 KV、Prompt 或凭据；
 - 多网卡/RDMA 端口通过网络隔离和节点策略保护。
 
-## 17. 上线清单
+## 18. 上线清单
 
 - [ ] 已证明单机/共置模式无法更简单地满足目标。
 - [ ] 一个多机副本由 LWS/控制器整体创建、调度和发布。

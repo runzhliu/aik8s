@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aibrix-demo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mocked-app-sa
+  namespace: aibrix-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mocked-app-reader
+  namespace: aibrix-demo
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mocked-app-reader
+  namespace: aibrix-demo
+subjects:
+  - kind: ServiceAccount
+    name: mocked-app-sa
+    namespace: aibrix-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mocked-app-reader
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-llama2-7b
+  namespace: aibrix-demo
+  labels:
+    app: mock-llama2-7b
+    model.aibrix.ai/name: llama2-7b
+    model.aibrix.ai/port: "8000"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mock-llama2-7b
+      model.aibrix.ai/name: llama2-7b
+  template:
+    metadata:
+      labels:
+        app: mock-llama2-7b
+        model.aibrix.ai/name: llama2-7b
+        model.aibrix.ai/port: "8000"
+    spec:
+      serviceAccountName: mocked-app-sa
+      containers:
+        - name: llm-engine
+          # 离线环境应先镜像到内部 Registry，并把这里替换为固定 tag 或 digest。
+          image: aibrix/vllm-mock:nightly
+          imagePullPolicy: IfNotPresent
+          command:
+            - python3
+            - app.py
+            - --api_key
+            - test-key-1234567890
+          ports:
+            - name: http
+              containerPort: 8000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama2-7b
+  namespace: aibrix-demo
+  labels:
+    prometheus-discovery: "true"
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: "8000"
+spec:
+  selector:
+    model.aibrix.ai/name: llama2-7b
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
