@@ -7,12 +7,13 @@ last_reviewed: 2026-08-05
 
 # 在既有 Kubernetes 集群落地 AIBrix：版本、离线镜像、路由验证与 Higress 边界
 
-这次实验不是在干净的 Kind 集群中执行 Quickstart，而是在一套已经运行数据库、虚拟机、存储和其他控制器的 Kubernetes 集群中增量安装 AIBrix。目标是先回答四个问题：
+这次实验不是在干净的 Kind 集群中执行 Quickstart，而是在一套已经运行数据库、虚拟机、存储和其他控制器的 Kubernetes 集群中增量安装 AIBrix。目标是先回答五个问题：
 
 1. 现有 Kubernetes 版本适合安装哪个 AIBrix 版本；
 2. 外部 Registry 不稳定时，如何先把依赖镜像完整准备好；
 3. 没有可分配 GPU 时，能否先验证 AIBrix 控制面与模型感知路由；
-4. 业务入口使用 Higress 时，Higress 和 AIBrix Gateway 应如何分工。
+4. 能否用 CPU demo 观察 StormService/RoleSet 与 KVCache 两套资源抽象；
+5. 业务入口使用 Higress 时，Higress 和 AIBrix Gateway 应如何分工。
 
 最终验证结果：AIBrix v0.7.0 的六个控制面 Deployment、Envoy Gateway 控制面和数据面全部 Ready；两个 mock vLLM 副本运行在不同节点；通过 AIBrix Gateway 请求 `/v1/chat/completions` 返回 HTTP 200，响应头包含 `routing-strategy`、`target-pod`、`target-pod-ip` 和 `request-id`。这证明请求经过了 AIBrix 的模型发现与路由，而不是直接访问普通 Kubernetes Service。
 
@@ -338,7 +339,56 @@ spec:
 
 不能把“部署了 KVCache”直接等同于“吞吐一定提升”。只有共享 System Prompt、长前缀或多轮上下文带来的命中收益，大于查询和传输成本时，L2 缓存才值得。缓存故障也应允许回源重新计算，不能让推理正确性依赖缓存永久可用。
 
-当前 sr1 只跑通了 CPU mock 路由，节点没有向 Kubernetes 发布 GPU，也没有验证 RDMA 扩展资源、缓存 Backend 镜像和匹配版本的 vLLM Connector。因此现阶段适合保留这份设计，等单 GPU vLLM 基线完成后，依次验证 P/D 直传和 L2 KVCache，不应现在就把缓存集群装上并宣称可用。
+### 7.4 在无 GPU 的 sr1 中把两套抽象都部署出来
+
+仓库提供两个独立示例：
+
+- [`stormservice-role-demo.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/stormservice-role-demo.yaml)：创建一个 StormService，其中包含 Prefill、Decode 两个 CPU mock Role；
+- [`kvcache-vineyard-demo.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/kvcache-vineyard-demo.yaml)：创建一个集中式 Vineyard KVCache，其中包含 Etcd 元数据和 Vineyard Cache Engine。
+
+离线集群先把示例中的公开镜像映射到集群可访问的 Registry，再执行：
+
+```bash
+kubectl apply -f examples/aibrix-sr1/stormservice-role-demo.yaml
+kubectl apply -f examples/aibrix-sr1/kvcache-vineyard-demo.yaml
+
+kubectl -n aibrix-demo get stormservice,roleset,kvcache
+kubectl -n aibrix-demo get deploy,pod,svc,endpoints -o wide
+```
+
+本次 StormService 实测结果为：
+
+```text
+StormService/aibrix-role-demo  Ready=True
+└─ RoleSet/aibrix-role-demo-roleset-...  Ready=True
+   ├─ Pod/...-prefill-...  Running  node=<node-a>
+   └─ Pod/...-decode-...   Running  node=<node-b>
+```
+
+`status.roleStatuses` 显示 Prefill 和 Decode 均为 `replicas=1, readyReplicas=1`。通过 AIBrix Gateway 请求模型 `aibrix-role-demo` 返回 HTTP 200，响应头记录：
+
+```text
+routing-strategy: least-request
+target-pod: aibrix-role-demo-roleset-...-decode-...
+target-pod-ip: <pod-ip>:8000
+```
+
+这里遇到一个很典型的坑：不要为 StormService 手工创建同名普通 ClusterIP Service。Controller 会自动创建同名 Headless Service；如果普通 Service 先存在，Controller 尝试把 `clusterIP` 改成 `None` 时会因为字段不可变而持续失败，RoleSet 也不会生成。删除冲突 Service 后，StormService 立即恢复为 Ready。
+
+KVCache 实测生成的资源为：
+
+```text
+KVCache/vineyard-demo
+├─ Pod/vineyard-demo-etcd-0       role=metadata
+├─ Deployment/vineyard-demo
+│  └─ Pod/vineyard-demo-...       role=cache
+├─ Service/vineyard-demo-etcd-service:2379
+└─ Service/vineyard-demo-rpc:9600
+```
+
+两个工作负载的 OwnerReference 都指向 `KVCache/vineyard-demo`。日志确认 Etcd 单节点选主完成、Vineyard 成功连接元数据服务，并监听 `/var/run/vineyard.sock` 和 `0.0.0.0:9600`；由于节点没有 RDMA，Vineyard 明确回退到 TCP。
+
+这两个 demo 证明了 CRD、Controller、OwnerReference、角色状态和基础缓存进程可以工作，但不能证明真实 P/D 或 KV 卸载性能：Prefill/Decode 使用的是相同 CPU mock，没有 NIXL/LMCache Connector；Vineyard 没有接入真实 vLLM；节点也没有向 Kubernetes 发布 GPU/RDMA。下一阶段应先完成单 GPU vLLM 基线，再依次验证 P/D 直传、缓存命中率和分布式 InfiniStore，而不是把 demo 的 `Running` 当成生产数据路径已经跑通。
 
 参考：[AIBrix StormService](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html)、[AIBrix KVCache Offloading Framework](https://aibrix.readthedocs.io/latest/designs/aibrix-kvcache-offloading-framework.html)
 
@@ -428,7 +478,8 @@ mock 请求成功只证明以下链路：
 5. **完整 API Group 能避免 CRD 歧义。** 大型企业集群常有多个同名 Kind；
 6. **LoadBalancer Pending 不等于 Listener 不工作。** 要分别看 Service、Gateway 和 Listener Condition；
 7. **Higress 与 AIBrix 是两层职责。** 前者做统一入口，后者做 LLM 感知数据面；
-8. **跨集群入口必须稳定。** 使用 VIP/DNS/服务注册，不能依赖 Pod IP。
+8. **StormService 拥有同名 Headless Service。** 不要提前创建同名普通 ClusterIP Service；
+9. **跨集群入口必须稳定。** 使用 VIP/DNS/服务注册，不能依赖 Pod IP。
 
 ## 12. 验收清单
 
@@ -441,6 +492,9 @@ mock 请求成功只证明以下链路：
 - [x] 两个 mock 模型 Pod Ready，Service 有两个 Endpoint；
 - [x] Gateway 请求返回 HTTP 200；
 - [x] 响应头与 Gateway Plugin 日志能定位目标 Pod；
+- [x] StormService 自动生成 RoleSet，Prefill/Decode Role 均为 Ready；
+- [x] CPU mock 模型通过 AIBrix Gateway 路由到 Role Pod；
+- [x] 集中式 KVCache 自动生成 Etcd、Vineyard 和对应 Service；
 - [ ] 为 Gateway 配置生产可用的内部 VIP 或同集群 ClusterIP 入口；
 - [ ] Kubernetes 发布 GPU 资源并跑通真实 vLLM；
 - [ ] 在隔离环境验证 Higress → AIBrix 的超时、流式、认证和故障语义。
