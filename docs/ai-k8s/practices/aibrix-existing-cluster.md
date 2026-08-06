@@ -1,6 +1,6 @@
 ---
 title: 在既有 Kubernetes 集群落地 AIBrix：路由、P/D、自动扩缩容与可观测性实测
-description: 在 Kubernetes 1.30 集群安装 AIBrix v0.7.0，用 CPU mock 跑通模型路由、P/D、StormService、KPA、APA、HPA、Prometheus 自定义指标和 Higress 接入边界
+description: 在 Kubernetes 1.30 集群安装 AIBrix v0.7.0，用 CPU mock 跑通模型路由、P/D、StormService、自动扩缩容、Prometheus 指标和 Higress 两层网关串联
 status: lab
 last_reviewed: 2026-08-06
 ---
@@ -16,7 +16,7 @@ last_reviewed: 2026-08-06
 5. 没有 GPU 时，KPA、APA、原生 HPA 和 Prometheus 自定义指标能测到哪一层；
 6. 业务入口使用 Higress 时，Higress 和 AIBrix Gateway 应如何分工。
 
-最终验证结果：AIBrix v0.7.0 的六个控制面 Deployment、Envoy Gateway 控制面和数据面全部 Ready；两个 mock vLLM 副本运行在不同节点；普通模型路由、按角色过滤、Session Affinity、P/D 控制流和错误语义均获得了实际响应证据。补装 Metrics Server 后，KPA、APA、资源 HPA 和 Prometheus 自定义指标 HPA 都触发了真实扩容；最小 Prometheus Operator、Prometheus 与 Adapter 也已经采集并暴露 vLLM 指标。
+最终验证结果：AIBrix v0.7.0 的六个控制面 Deployment、Envoy Gateway 控制面和数据面全部 Ready；两个 mock vLLM 副本运行在不同节点；普通模型路由、按角色过滤、Session Affinity、P/D 控制流和错误语义均获得了实际响应证据。补装 Metrics Server 后，KPA、APA、资源 HPA 和 Prometheus 自定义指标 HPA 都触发了真实扩容；最小 Prometheus Operator、Prometheus 与 Adapter 也已经采集并暴露 vLLM 指标。后续还在同一集群跑通 Higress → AIBrix → mock vLLM，并验证了边界响应头清洗。
 
 ```text
 测试客户端
@@ -607,6 +607,8 @@ envoy-<namespace>-<gateway>-<hash>.envoy-gateway-system.svc.cluster.local:80
 - `routing-strategy` 等受控路由头；
 - SSE/流式响应、长请求超时和取消传播。
 
+企业已经有成熟 Higress 时，不建议把所有存量模型都切到 AIBrix。现有单机单卡/多卡 Deployment 继续由 Higress 直连；只有需要多副本模型感知、P/D、KV/Prefix 或 Role-aware 路由的模型，才按 Route 渐进转入内部 AIBrix Gateway。单个固定多机多卡副本如果始终只访问一个 Leader Service，也不因“多机”自动获得第二层网关的必要性。
+
 ### 10.2 Higress 与 AIBrix 在不同集群
 
 跨集群同样可行，但不能使用 `*.svc.cluster.local`。AIBrix 集群需要提供一个稳定且可路由的内部地址：
@@ -620,7 +622,7 @@ Higress 把这个地址注册为静态、DNS 或注册中心 Upstream。网络�
 
 两层网关还要避免重复策略：重试只由一层负责或明确预算；限流区分租户入口与模型容量；Higress 生成的 Request ID 应透传到 AIBrix；AIBrix 的 `target-pod` 等内部诊断头不应默认暴露给公网。
 
-后续已在同一集群使用独立 `higress-system` Namespace、`higress-sr1` IngressClass 和 ClusterIP Service 安装 Higress v2.2.3，并用独立回显服务验证基础转发；未修改已有 nginx、AIBrix Gateway 或业务路由。安装与职责边界见 [Higress AI Gateway 实战](../inference/higress-ai-gateway.md)。Higress → AIBrix 的真实串联、流式、认证和故障语义仍应在隔离环境继续验证。
+后续已在同一集群使用独立 `higress-system` Namespace、`higress-sr1` IngressClass 和 ClusterIP Service 安装 Higress v2.2.3，并通过稳定别名 Service 跑通 Higress → AIBrix → CPU mock vLLM。请求返回 HTTP 200，AIBrix `least-request` 选择了具体模型 Pod，Plugin 日志记录输入/输出 Token；Higress 日志同时记录了目标 Upstream。首次响应暴露 AIBrix 内部 Pod/IP 头，补充 Route 级响应头删除后复测通过；两层 Request ID 尚未统一。未修改已有 nginx、AIBrix Gateway 或业务路由。完整清单、证据和选型边界见 [Higress AI Gateway 实战](../inference/higress-ai-gateway.md)。
 
 ## 11. 换成真实 GPU vLLM 前还缺什么
 
@@ -697,12 +699,13 @@ mock 请求成功只证明以下链路：
 - [x] Prometheus Operator 与单实例 Prometheus Ready，两个 vLLM Target 均为 Up；
 - [x] Prometheus Adapter 暴露 `pods/gpu_cache_usage_perc`；
 - [x] 自定义 vLLM 指标 HPA 把 mock Deployment 从 2 扩到 3，并已恢复；
+- [x] 同集群 Higress → AIBrix → mock vLLM 返回 HTTP 200，并完成内部诊断响应头清洗；
 - [ ] 为 Gateway 配置生产可用的内部 VIP 或同集群 ClusterIP 入口；
 - [ ] Kubernetes 发布 GPU 资源并跑通真实 vLLM；
 - [ ] 修复 Kubelet Serving Certificate 过期并移除 `--kubelet-insecure-tls`；
 - [ ] 修复节点 Kubelet 10250 拒绝连接导致的 Metrics `<unknown>`；
 - [ ] 验证 RayClusterFleet、ModelAdapter/LoRA、Batch、BrixBench 与 Semantic Router；
-- [ ] 在隔离环境验证 Higress → AIBrix 的超时、流式、认证和故障语义。
+- [ ] 统一 Higress 与 AIBrix 的 Request ID，并验证超时、流式、认证和故障语义。
 
 ## 延伸阅读
 

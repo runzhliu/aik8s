@@ -292,7 +292,39 @@ Higress Gateway 的访问日志和 Prometheus Endpoint 能回答入口层问题�
 
 Request ID 和 Trace Context 要从 Higress 透传到 AIBrix 与 vLLM。Prompt、Response、Authorization、API Key 和 Tool 参数默认不进入普通访问日志；调试采样需要脱敏、授权和保存期限。
 
-## 11. 与 AIBrix 同集群串联
+## 11. 成熟 Higress 平台引入 AIBrix，要不要混合
+
+结论是：**建议分层串联，但只让需要 AIBrix 高级调度的模型经过第二层，不要把两个网关合并成一个控制面，也不要一次性迁移全部存量服务。**
+
+企业已经用 Higress 稳定承载单机单卡或单机多卡 Deployment 时，现有域名、TLS、认证、租户、配额、审计和发布流程已经形成平台资产。为了引入 AIBrix 而替换入口，迁移风险远大于收益。AIBrix Gateway 应被视为 Higress 后面的“内部推理路由器”，而不是第二个对外 API Gateway：
+
+```text
+                                ┌─→ 现有单机单卡 Deployment Service
+Client → Higress 统一入口 ──────┼─→ 现有单机多卡 Deployment Service
+                                │
+                                └─→ AIBrix 内部 Gateway
+                                      ├─→ 多机多卡 Replica A
+                                      ├─→ 多机多卡 Replica B
+                                      ├─→ Prefill Role / Decode Role
+                                      └─→ KV/Prefix/Session 感知 Endpoint
+```
+
+“多机多卡”本身不是必须增加 AIBrix Gateway 的理由。多机执行通常由 LeaderWorkerSet、StormService、KubeRay 或 Runtime 编排；如果只有一个固定模型副本，请求永远进入同一个 Leader Service，Higress 仍可直接代理。只有需要在多个模型副本、角色或 Endpoint 之间根据运行时状态做选择时，AIBrix Gateway 才体现价值。
+
+这里的“模型感知选副本”不是选择模型参数或 GPU 数量，而是先从请求 Body/Header 识别逻辑模型，排除没有加载该模型或 Adapter 的 Endpoint，再在合格副本中按排队数、并发、Session、Prefix/KV 命中、Prefill/Decode 角色和健康状态选择目标。普通 Service 负载均衡只看到一组 Endpoint，并不天然理解这些模型运行时信号。只有一个整体副本时没有选择空间，这项能力自然没有明显收益。
+
+| 场景 | 推荐链路 | 原因 |
+| --- | --- | --- |
+| 已稳定运行的单机单卡/多卡 Deployment | Higress → Service | 没有必要增加一次代理和一个故障域 |
+| 单个固定多机多卡副本，只暴露 Leader Service | 初期可 Higress → Leader Service | 多机编排与请求选副本是两个问题 |
+| 多个多机多卡副本，需要负载/Session 感知 | Higress → AIBrix → Replica | AIBrix 负责推理池内部 Endpoint 选择 |
+| P/D 分离、KV/Prefix-aware、Role-aware | Higress → AIBrix → Role/Pod | 普通七层网关不掌握这些实时推理信号 |
+| 仅供集群内部调用，没有统一 API 治理要求 | 可直接 AIBrix Gateway | 外层 Higress 的企业治理价值不明显 |
+| 外部用户、多租户、多模型和云 API 混合 | Higress → AIBrix/云模型 Upstream | Higress 保持统一身份、协议、预算和审计 |
+
+渐进迁移时按模型或 Route 分流：存量路径不动，先为一个新逻辑模型建立 Higress → AIBrix Canary，验证完成后再扩大范围。不要让 Higress 和 AIBrix 同时成为重试、鉴权、租户限流或模型映射的权威写入者。
+
+## 12. 与 AIBrix 同集群串联实测
 
 同集群时，Higress Upstream 应指向 AIBrix Envoy 数据面的稳定 Service DNS：
 
@@ -320,7 +352,73 @@ AIBrix 负责：
 
 不要让 Higress 直接负载均衡 AIBrix 管理的所有 vLLM Service，否则 AIBrix 的模型感知选择会被绕过。
 
-## 12. 与 AIBrix 跨集群串联
+### 12.1 用稳定 Service 隐藏 Envoy Gateway 哈希名
+
+Envoy Gateway 自动生成的 Service 名含哈希。实验创建一个 `aibrix-gateway-upstream` ClusterIP Service，用 owning-gateway 标签选择 AIBrix Envoy Pod，再让 Higress Ingress 指向这个稳定名称。完整清单见 [`higress-to-aibrix.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/higress-sr1/higress-to-aibrix.yaml)：
+
+```text
+aibrix.higress.lab
+  → higress-gateway.higress-system.svc:80
+  → aibrix-gateway-upstream.envoy-gateway-system.svc:80
+  → Envoy targetPort 10080
+  → AIBrix ext_proc
+  → selected mock vLLM Pod:8000
+```
+
+```bash
+kubectl apply -f examples/higress-sr1/higress-to-aibrix.yaml
+kubectl -n envoy-gateway-system \
+  get svc,endpointslice,ingress -l app.kubernetes.io/part-of=higress-aibrix-lab
+```
+
+这个别名 Service 是实验中的稳定入口。生产环境可以用 Envoy Gateway 定制的 Service、内部 VIP 或经平台管理的别名 Service，但必须监控 Selector 是否仍能选中 Endpoint，不能悄悄退化为零 Endpoint。
+
+### 12.2 OpenAI-Compatible 请求证据
+
+通过 Higress Gateway 发送请求，Body 中模型为 `llama2-7b`，路由策略为 `least-request`：
+
+```bash
+curl http://<HIGRESS_INTERNAL_ADDRESS>/v1/chat/completions \
+  -H 'Host: aibrix.higress.lab' \
+  -H 'Authorization: Bearer <TEST_API_KEY>' \
+  -H 'Content-Type: application/json' \
+  -H 'routing-strategy: least-request' \
+  -d '{
+    "model": "llama2-7b",
+    "messages": [{"role": "user", "content": "reply pong"}],
+    "max_tokens": 8
+  }'
+```
+
+实测返回 HTTP 200、模型名 `llama2-7b` 和 10 个总 Token。Higress 访问日志记录：
+
+```text
+route_name=envoy-gateway-system/aibrix-via-higress
+upstream_cluster=aibrix-gateway-upstream.envoy-gateway-system.svc.cluster.local
+response_code=200
+duration=57ms
+upstream_service_time=56ms
+```
+
+AIBrix Gateway Plugin 同一时刻记录：
+
+```text
+model=llama2-7b
+routing_strategy=least-request
+target_pod=mock-llama2-7b-...
+prompt_tokens=2 completion_tokens=8 total_tokens=10
+routing_time_taken=363µs total_time_taken=54.7ms
+```
+
+这证明请求依次经过 Higress、AIBrix ext_proc 和被选中的 mock vLLM Pod。57ms/56ms 只是单次 CPU mock 观测，不是性能基准；生产是否接受额外一跳，必须用真实模型、SSE、并发和连接复用做对照压测。
+
+### 12.3 实测发现的两个生产缺口
+
+第一次请求中，AIBrix 返回的 `target-pod`、`target-pod-ip`、路由耗时等内部诊断头被 Higress 原样传给客户端。实验随后在 Ingress 增加 `higress.io/response-header-control-remove`，再次请求时这些头已经消失。Higress 官方支持在后端响应返回客户端前按 Route 删除指定 Header，参考 [Ingress Annotation 高阶流量治理](https://higress.cn/en/docs/latest/user/annotation-use-case/#response-header-control)。
+
+第二个缺口是两层 Request ID 不一致：Higress Access Log 和 AIBrix Plugin Log 分别生成了自己的 ID，即使客户端同时发送 `x-request-id` 和 `request-id` 也没有形成统一关联。上线前需要规定唯一入口生成 ID，并通过请求转换或 OpenTelemetry Trace Context 映射到 AIBrix；否则一次故障仍要靠时间戳人工拼接两层日志。
+
+## 13. 与 AIBrix 跨集群串联
 
 Higress 和 AIBrix 可以部署在不同集群，但不能把 AIBrix 的 `*.svc.cluster.local` 直接注册给 Higress。AIBrix 集群要先暴露一个稳定的内部入口：
 
@@ -340,7 +438,7 @@ Higress 和 AIBrix 可以部署在不同集群，但不能把 AIBrix 的 `*.svc.
 
 不能注册单个 Envoy Pod IP，它会随重建变化。跨集群也不意味着一定需要服务网格：稳定 VIP 加 mTLS 往往更容易运维。
 
-## 13. 两层网关最容易犯的错误
+## 14. 两层网关最容易犯的错误
 
 ### 重复重试
 
@@ -358,7 +456,7 @@ Higress 的租户 Token 配额与 AIBrix 的模型池容量保护不是同一个
 
 AIBrix 的目标 Pod、内部模型标签和调试头不应默认返回公网。Higress 应移除内部诊断头，只保留对用户稳定的错误契约。
 
-## 14. 生产化清单
+## 15. 生产化清单
 
 - [ ] Chart、四个核心镜像和 Wasm 插件全部固定版本或 digest。
 - [ ] `higress-sr1` 不是默认 IngressClass，未接管已有 nginx 路由。
@@ -371,20 +469,21 @@ AIBrix 的目标 Pod、内部模型标签和调试头不应默认返回公网。
 - [ ] Token、并发、上下文、Body 大小和费用都有租户级上限。
 - [ ] Prompt、响应和 Tool 参数默认不写普通日志。
 - [ ] Higress 与 AIBrix 的重试、限流、错误码和路由职责只有一个权威来源。
+- [ ] AIBrix 的 Pod/IP/路由诊断头已在 Higress 边界删除。
+- [ ] Higress、AIBrix 和 Runtime 使用可关联的 Request ID 或 Trace Context。
 - [ ] Gateway 数据面故障不影响 Controller，Controller 故障不切断已有连接。
 - [ ] 配置进入 GitOps，Console 临时修改可以被发现并回收。
 - [ ] 升级前验证旧 CRD、插件 ABI、配置转换和回滚路径。
 
-## 15. 本次实验还没有证明什么
+## 16. 本次实验还没有证明什么
 
-普通回显成功只证明 Higress 基础链路正常。下一阶段仍需在隔离 Namespace 中补充：
+普通回显和 CPU mock 串联成功只证明两层网关控制流正常。下一阶段仍需在隔离 Namespace 中补充：
 
 - AI Proxy 到一个 CPU mock OpenAI-Compatible Endpoint；
 - API Key、模型映射和协议转换；
 - 非流式与 SSE 流式请求；
 - Token 统计、TTFT 和 Prometheus 抓取；
 - 租户 Token 限流和错误语义；
-- Higress → AIBrix Gateway 的实际串联；
 - AIBrix 故障、超时、取消和扩缩容期间的入口行为；
 - 内网 VIP、TLS、SSO 与多副本高可用。
 

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aibrix-gateway-upstream
+  namespace: envoy-gateway-system
+  labels:
+    app.kubernetes.io/name: aibrix-gateway-upstream
+    app.kubernetes.io/part-of: higress-aibrix-lab
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/managed-by: envoy-gateway
+    app.kubernetes.io/name: envoy
+    gateway.envoyproxy.io/owning-gateway-name: aibrix-eg
+    gateway.envoyproxy.io/owning-gateway-namespace: aibrix-system
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 10080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aibrix-via-higress
+  namespace: envoy-gateway-system
+  labels:
+    app.kubernetes.io/part-of: higress-aibrix-lab
+  annotations:
+    # AIBrix diagnostic headers are valuable inside the platform, but should
+    # not expose Pod identity or internal addresses to external clients.
+    higress.io/response-header-control-remove: "target-pod,target-pod-ip,routing-strategy,req-cost-time,req-arrive-time,resp-start-time,x-went-into-req-headers"
+spec:
+  ingressClassName: higress-sr1
+  rules:
+    - host: aibrix.higress.lab
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aibrix-gateway-upstream
+                port:
+                  number: 80
