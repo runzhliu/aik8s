@@ -314,9 +314,171 @@ Prefill Pod 负责处理 Prompt 并生成初始 KV，Decode Pod 接收 KV 后继
 
 `StormService.spec.replicas > 1` 时，每个 RoleSet 可以作为一个完整服务副本按组扩缩；`spec.replicas = 1` 时，各 Role 形成共享池。AIBrix v0.7.0 已提供共享池角色级自动扩缩示例：分别创建指向同一 StormService 的 `PodAutoscaler`，再用 `subTargetSelector.roleName` 选择 Prefill 或 Decode，并增加 `autoscaling.aibrix.ai/storm-service-mode: pool` 注解。生产环境仍要用真实指标验证扩缩、预热、P/D 容量比例和缩容中的请求排空，不能只看 CRD 能否表达。
 
-如果服务内部本来就使用 Ray，可改用 `RayClusterFleet`：每个 RayCluster 是一个完整副本，Ray 负责集群内部进程调度，AIBrix 只把请求送到 Head/API Pod。StormService 则不依赖 KubeRay，由 `RoleSet` 直接描述 Prefill、Decode 或多 Pod Role，更适合角色级弹性。两者的完整差异见 [RayClusterFleet 与 StormService/RoleSet 怎么选](../inference/distributed-serving.md#rayclusterfleet-vs-stormservice)。
+如果服务内部本来就使用 Ray，也可以改用 `RayClusterFleet`：每个 RayCluster 是一个完整副本，Ray 负责集群内部进程调度，AIBrix 只把请求送到 Head/API Pod。两条路线的边界需要单独说清楚。
 
-### 7.2 独立 KV Cache 集群不只有一个“管理 Pod”
+### 7.2 两条 AIBrix 编排路线：RayClusterFleet 与 StormService/RoleSet { #rayclusterfleet-vs-stormservice }
+
+`StormService` 和 `RoleSet` 不是两个平级方案。真正的二选一是 **RayClusterFleet 与 StormService**；RoleSet 是 StormService 管理的下一层资源：
+
+```text
+Ray 路线
+RayClusterFleet（类似 Deployment）
+  └─ RayClusterReplicaSet（类似 ReplicaSet）
+       └─ RayCluster × N（每个都是完整推理副本）
+            ├─ Ray Head / vLLM API
+            └─ Ray Worker × M
+
+Role 路线
+StormService（整个推理服务）
+  └─ RoleSet × N（完整副本或共享池）
+       ├─ Role: prefill → Pod / 多 Pod Group
+       ├─ Role: decode  → Pod / 多 Pod Group
+       └─ Role: 其他自定义角色
+```
+
+| 维度 | RayClusterFleet | StormService / RoleSet |
+| --- | --- | --- |
+| 核心抽象 | 一份应用实例就是一个完整 RayCluster | 一份服务由一个或多个具名 Role 组成 |
+| 内部编排 | Ray 负责分布式进程、Actor/Task 和资源调度，KubeRay 负责 Head/Worker Pod | AIBrix Controller 直接管理 Role、Pod、索引、状态和更新顺序；Runtime 自己完成分布式进程通信 |
+| 依赖 | 需要 KubeRay，并在镜像中准备 Ray | 不依赖 KubeRay；AIBrix v0.7.0 安装文档明确允许只使用 StormService |
+| 典型拓扑 | 固定的 Ray Head + 一个或多个 Worker Group | Prefill/Decode、同构 Worker、代理等任意角色；单个 Role 还可用 `podGroupSize > 1` 表达多机实例 |
+| 对外 Endpoint | 只暴露 Ray Head 上的 vLLM API，Worker 不能进入 Gateway Endpoint | 共置模式暴露服务 Role；P/D 模式由 AIBrix 按 Role 和 RoleSet 选择 Prefill/Decode |
+| 扩缩单位 | `spec.replicas` 增减完整 RayCluster，即完整模型副本 | Replica 模式增减完整 RoleSet；Pool 模式可按 `roleName` 分别增减 Prefill/Decode Pod |
+| 更新 | Deployment 风格 RollingUpdate/Recreate、Revision 和回滚，更新单位是 RayCluster | StormService 支持 Rolling/InPlace；RoleSet 支持 Parallel、Sequential、Interleave，并可声明 `upgradeOrder` |
+| 状态与故障边界 | KubeRay 修复 Cluster 内 Head/Worker，Fleet 统计完整 RayCluster 副本状态 | RoleSet 聚合每个 Role 的 Ready 状态；Stateful Role 保留稳定 Slot，Stateless Role 可互换替换 |
+| 调度能力 | 主要依赖 Kubernetes/KubeRay；需要另行验证整组 GPU 的 Gang 和拓扑约束 | RoleSet 可引用 Volcano、Coscheduling 或 Godel PodGroup 策略，但集群仍须安装相应调度器 |
+| 最适合 | 已经使用 Ray，或 vLLM 以 Ray Backend 启动；希望复用 Ray Dashboard、任务和集群模型 | P/D 分离、角色异构/独立扩缩、希望去掉 Ray，或希望平台直接理解角色边界 |
+
+三种配置最容易说明扩缩语义：
+
+1. `RayClusterFleet.replicas=2`，每个 RayCluster 含 1 Head + 1 Worker：得到两个完整模型副本，AIBrix 只在两个 Head Endpoint 之间选路；
+2. `StormService.replicas=2`，每个 RoleSet 含 2 Prefill + 1 Decode：得到两个相互隔离的 P/D 完整副本，扩容一次会增加整套 RoleSet；
+3. `StormService.replicas=1`，RoleSet 内 Prefill=4、Decode=8：得到一个共享 P/D Pool，可以为两个 Role 分别创建 `PodAutoscaler`，通过 `subTargetSelector.roleName` 独立扩缩。
+
+因此，**模型跨节点不等于必须选 RayClusterFleet**。如果团队已经用 Ray 跑 vLLM，RayClusterFleet 的改造最小；如果目标是 AIBrix 原生 P/D、角色级弹性或不想引入 Ray，优先 StormService。
+
+参考：[AIBrix Installation](https://aibrix.readthedocs.io/latest/getting_started/installation/installation.html)、[AIBrix Multi-Node Inference](https://aibrix.readthedocs.io/latest/features/multi-node-inference.html)、[AIBrix StormService](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html)、[StormService Role-Level Autoscaling](https://aibrix.readthedocs.io/latest/features/autoscaling/metric-based-autoscaling.html#stormservice-role-level-autoscaling)
+
+### 7.3 用裸 Kubernetes 启动多个 8-GPU Pod，能否替代它们
+
+可以做出相同的**推理数据面**，但不会自动得到相同的**运维控制面**。几个申请 `nvidia.com/gpu: 8` 的 Pod 可以各自跑完整模型，也可以组成一个跨 Pod 模型，甚至可以手工分成 Prefill 和 Decode 池。但 `sleep infinity` 后再 `kubectl exec` 启动进程只适合调试：Pod 重建后命令丢失，Kubernetes 也不知道哪些 Pod 属于同一个完整副本。
+
+| 目标 | 最小可行做法 | 与 AIBrix 抽象的差距 |
+| --- | --- | --- |
+| 模型可装入单个 8-GPU Pod，多副本 | `Deployment + Service`，每个 Pod 启动一个 vLLM，`replicas=N` | 对普通共置模型已经足够；缺少 Fleet 级 Revision/回滚和角色语义 |
+| 一个模型跨多个 8-GPU Pod | `StatefulSet + Headless Service + Leader Service`，通过稳定序号确定 Rank | 要自己处理整组启停、就绪、Gang Scheduling、组故障和 Leader-only Endpoint |
+| 手工 Ray 集群 | Head Pod 执行 `ray start --head`，Worker Pod 执行 `ray start --address=...`，再在 Head 启动 vLLM | 可得到 Ray 运行时，但没有 KubeRay 的 RayCluster 协调，更没有 Fleet 的多完整副本管理 |
+| 手工 P/D 分离 | Prefill 和 Decode 各一组 Workload/Service，配置 NIXL/KV Connector 和 P/D Router | 标签本身不会传 KV；需自己处理配对、独立扩缩、请求排空和故障降级 |
+
+对于跨 Pod 的静态实验，最小骨架可以是：
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-headless
+spec:
+  clusterIP: None
+  selector:
+    app: vllm-multinode
+  ports:
+    - {name: control, port: 29500}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vllm
+spec:
+  serviceName: vllm-headless
+  podManagementPolicy: Parallel
+  replicas: 2
+  selector:
+    matchLabels: {app: vllm-multinode}
+  template:
+    metadata:
+      labels: {app: vllm-multinode}
+    spec:
+      containers:
+        - name: vllm
+          image: <预装模型、vLLM 和通信依赖的镜像>
+          command: ["/opt/aik8s/start-vllm-rank.sh"]
+          env:
+            - {name: WORLD_SIZE, value: "2"}
+            - {name: MASTER_ADDR, value: vllm-0.vllm-headless}
+          resources:
+            requests:
+              nvidia.com/gpu: 8
+            limits:
+              nvidia.com/gpu: 8
+```
+
+`start-vllm-rank.sh` 需从 Pod 名的序号推导 `node-rank`，为 Rank 0 启动 API/Leader，为其他 Rank 启动 Headless Worker。若选 Ray，则改为启动 Ray Head/Worker，并在 Head 上启动 vLLM。对外 Service 只能选 Rank 0，例如通过 `statefulset.kubernetes.io/pod-name: vllm-0` 筛选；Readiness 必须在所有 Rank 入组且模型可服务后才成功。
+
+要接近生产可用，还需要自己补齐：
+
+- 不再使用 `sleep + exec`，把启动逻辑固化到镜像 EntryPoint 或版本化 ConfigMap；
+- 为完整副本设计 Group ID、Rank、稳定 DNS、Leader-only Service 和整组 Readiness；
+- 引入 Volcano/Coscheduling 等 Gang Scheduling，避免只抢到部分 GPU Pod 后长期占位；
+- 配置 GPU/RDMA 资源、拓扑亲和性、NCCL/NIXL 网络和一致的模型路径；
+- 实现整组重启、滚动更新、缩容排空、自动扩缩、故障摘除和可观测性。
+
+选型上，**单 Pod 8 卡、每个 Pod 就是一个完整副本**时，原生 Deployment 往往最简单，再让 AIBrix 按 `model.aibrix.ai/name` 和 `model.aibrix.ai/port` 发现就够了。**一个副本需要跨多个 8-GPU Pod** 时，至少使用 LWS、RayClusterFleet 或 StormService/RoleSet 之一；如果坚持只用原生 Workload，实际上就是由自己承担一个小型 Operator 的设计和运维工作。
+
+参考：[vLLM Multi-Node Serving](https://docs.vllm.ai/en/latest/examples/ray_serving/multi-node-serving/)、[vLLM on LeaderWorkerSet](https://docs.vllm.ai/en/latest/deployment/frameworks/lws/)、[vLLM Parallelism and Scaling](https://docs.vllm.ai/en/latest/serving/parallelism_scaling/)
+
+#### 自己实践 P/D 和 KV Cache，核心还是 vLLM 数据路径
+
+对本文当前这套技术栈来说，答案是**是**：真正执行模型、生成 KV Tensor 并通过 Connector 移动 KV 的仍是 vLLM。AIBrix 不是另一个推理引擎，它把同一套数据路径纳入 Kubernetes 的服务发现、角色编排、请求路由和扩缩容。
+
+| 分层 | 自己组装 | 加入 AIBrix 后 |
+| --- | --- | --- |
+| 推理引擎 | vLLM Prefill/Decode 进程 | 还是 vLLM，也可换成 AIBrix 支持的其他引擎 |
+| KV 传输 | vLLM `NixlConnector` 等 Connector | 仍是匹配版本的 Connector 和 NIXL/UCX 数据面 |
+| P/D 配对和路由 | vLLM 示例 Proxy 或自己编写 Router | AIBrix Gateway 按 RoleSet、负载和缓存信号选 Prefill/Decode |
+| Workload 编排 | Deployment/StatefulSet、Service 和启动脚本 | StormService/RoleSet 或 RayClusterFleet |
+| KV 存储 | vLLM 本地 HBM/CPU，或 LMCache 等独立 Backend | AIBrix Offloading Connector + L1 DRAM，可选 `KVCache` CR 管理的 L2 Backend |
+| 物理数据面 | TCP，或 NIXL + UCX/RDMA | 不变；AIBrix CRD 不会把慢网络自动变成 RDMA |
+
+需要特别区分三个目标：
+
+1. **P/D 直传**：同一次请求先进 Prefill，计算出的 KV 再传给 Decode。它不需要一个长期保存 KV 的独立缓存集群。
+2. **KV Offload**：把本应留在 GPU HBM 的 KV 放到本机 CPU DRAM、SSD 或远端存储，主要目标是扩大容量或腾出 HBM。
+3. **跨引擎共享 KV**：不同 vLLM 副本通过共享 L2 Backend 复用相同前缀。这才需要元数据、Cache Engine、容量治理和命中/回源逻辑。
+
+一条可验证、也容易定位问题的实验顺序是：
+
+1. **单个共置 vLLM 基线**：固定模型、镜像、TP、上下文长度和请求集，记录 TTFT、TPOT、Throughput 和 HBM。
+2. **裸 vLLM 1P1D**：部署一个 Prefill Pod 和一个 Decode Pod，两端使用完全匹配的 vLLM/NIXL/UCX 镜像和 `--kv-transfer-config`，先用 TCP，再换 RDMA。
+3. **加入最小 Proxy**：先使用 vLLM 官方 `disagg_proxy_demo.py`，让它调用 Prefill、传递 `kv_transfer_params`、再调用 Decode。这一步证明 P/D 数据面，与 AIBrix 无关。
+4. **把 Proxy 换成 AIBrix Gateway**：同样的两个引擎放进 StormService/RoleSet，请求使用 `routing-strategy: pd`。对比请求配对、故障摘除和角色独立扩缩。
+5. **再做 L1 KV Offload**：只把 KV 卸载到本机 CPU DRAM，验证 HBM 释放量、PCIe 开销和端到端延迟。
+6. **最后加共享 L2 KVCache**：使用 AIBrix `KVCache` CR 创建 InfiniStore/Vineyard 等 Backend，并在真实 vLLM 中启用对应 Offloading Connector。用重复长 System Prompt 验证跨副本命中，再测 Backend 中断时能否回源重算。
+
+裸 vLLM P/D 的命令形态大致如下，应放入 Pod 的 `command/args` 而不是人工 `exec`：
+
+```bash
+# Prefill
+vllm serve <MODEL> --port 8100 \
+  --kv-transfer-config \
+  '{"kv_connector":"NixlConnector","kv_role":"kv_producer"}'
+
+# Decode
+vllm serve <MODEL> --port 8200 \
+  --kv-transfer-config \
+  '{"kv_connector":"NixlConnector","kv_role":"kv_consumer"}'
+
+# 实验用 P/D Router
+python examples/disaggregated/disaggregated_serving/disagg_proxy_demo.py \
+  --model <MODEL> --prefill prefill:8100 --decode decode:8200 --port 8000
+```
+
+这个片段用来说明组件边界，不应脱离镜像版本直接复制到生产。vLLM 的 Connector 参数和 P/D 协议还在迭代；AIBrix 官方示例的特定镜像也可能要求两端使用 `kv_role=kv_both`。必须将 **AIBrix、vLLM、AIBrix KVCache Connector、NIXL、UCX/CUDA/PyTorch** 作为一个经过验证的版本组合锁定，不能分别追求最新。
+
+验收时不只看 Pod `Running` 或请求能返回，至少还要证明：Prefill 真的只做 Prompt 阶段、Decode 真的接收了远端 KV，同一长前缀的第二次请求有可观测命中，以及关闭 Connector/缓存 Backend 后能观察到预期的性能回退或重算。
+
+参考：[vLLM Disaggregated Serving](https://docs.vllm.ai/en/stable/examples/disaggregated/disaggregated_serving/)、[vLLM NixlConnector Usage Guide](https://docs.vllm.ai/en/stable/features/nixl_connector_usage/)、[vLLM KV Offloading Usage Guide](https://docs.vllm.ai/en/latest/features/kv_offloading_usage/)、[AIBrix Prefill-Decode Disaggregation](https://aibrix.readthedocs.io/latest/features/pd-disaggregation.html)、[AIBrix KVCache Offloading Framework](https://aibrix.readthedocs.io/latest/designs/aibrix-kvcache-offloading-framework.html)
+
+### 7.4 独立 KV Cache 集群不只有一个“管理 Pod”
 
 如果要把 KV 从 GPU HBM 或单机内存进一步卸载到共享 L2 缓存，AIBrix 使用独立的 `KVCache` CR。以 InfiniStore Backend 为例，它通常包含：
 
@@ -370,7 +532,7 @@ spec:
 
 本次安装生成的 `aibrix-redis-master` 是 AIBrix 平台控制面使用的 Redis，不能因为它已经存在，就认为分布式 KV 数据面已经部署；`KVCache` CR 还会按 Backend 和配置创建自己的元数据及缓存工作负载。
 
-### 7.3 三种模式怎么选
+### 7.5 三种模式怎么选
 
 | 模式 | 组成 | 适用场景 | 主要代价 |
 | --- | --- | --- | --- |
@@ -380,7 +542,7 @@ spec:
 
 不能把“部署了 KVCache”直接等同于“吞吐一定提升”。只有共享 System Prompt、长前缀或多轮上下文带来的命中收益，大于查询和传输成本时，L2 缓存才值得。缓存故障也应允许回源重新计算，不能让推理正确性依赖缓存永久可用。
 
-### 7.4 在无 GPU 的 sr1 中把两套抽象都部署出来
+### 7.6 在无 GPU 的 sr1 中把两套抽象都部署出来
 
 仓库提供两个独立示例：
 

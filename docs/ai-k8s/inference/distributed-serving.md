@@ -129,48 +129,11 @@ AIBrix 并没有一张只允许特定模型的白名单。对普通共置式 vLL
 4. 再加入第二个完整副本，验证 AIBrix 的队列、Prefix/Session 感知、故障摘除和扩缩；
 5. 最后才测试 Kimi-K2.5 等 1T 模型以及跨节点 P/D，并用 TTFT、TPOT、Goodput 和故障恢复时间决定是否上线。
 
-### 2.4 RayClusterFleet 与 StormService/RoleSet 怎么选 { #rayclusterfleet-vs-stormservice }
+### 2.4 AIBrix 的两条编排路线
 
-`StormService` 和 `RoleSet` 不是两个平级方案。真正的二选一是 **RayClusterFleet 与 StormService**；RoleSet 是 StormService 管理的下一层资源：
+AIBrix 既可以用 `RayClusterFleet` 管理多个完整 RayCluster 副本，也可以用 `StormService → RoleSet → Pod` 直接表达 Prefill、Decode 或其他角色。`RoleSet` 不是与前两者平级的第三种方案，而是 StormService 管理的下一层资源。
 
-```text
-Ray 路线
-RayClusterFleet（类似 Deployment）
-  └─ RayClusterReplicaSet（类似 ReplicaSet）
-       └─ RayCluster × N（每个都是完整推理副本）
-            ├─ Ray Head / vLLM API
-            └─ Ray Worker × M
-
-Role 路线
-StormService（整个推理服务）
-  └─ RoleSet × N（完整副本或共享池）
-       ├─ Role: prefill → Pod / 多 Pod Group
-       ├─ Role: decode  → Pod / 多 Pod Group
-       └─ Role: 其他自定义角色
-```
-
-| 维度 | RayClusterFleet | StormService / RoleSet |
-| --- | --- | --- |
-| 核心抽象 | 一份应用实例就是一个完整 RayCluster | 一份服务由一个或多个具名 Role 组成 |
-| 内部编排 | Ray 负责分布式进程、Actor/Task 和资源调度，KubeRay 负责 Head/Worker Pod | AIBrix Controller 直接管理 Role、Pod、索引、状态和更新顺序；Runtime 自己完成分布式进程通信 |
-| 依赖 | 必须安装 KubeRay，并在镜像中准备 Ray | 不依赖 KubeRay；AIBrix v0.7.0 安装文档明确允许只使用 StormService |
-| 典型拓扑 | 固定的 Ray Head + 一个或多个 Worker Group | Prefill/Decode、同构 Worker、代理等任意角色；单个 Role 还可用 `podGroupSize > 1` 表达多机实例 |
-| 对外 Endpoint | 只暴露 Ray Head 上的 vLLM API，Worker 不能进入 Gateway Endpoint | 共置模式暴露服务 Role；P/D 模式由 AIBrix 按 Role 和 RoleSet 选择 Prefill/Decode |
-| 扩缩单位 | `spec.replicas` 增减完整 RayCluster，即完整模型副本 | Replica 模式增减完整 RoleSet；Pool 模式可按 `roleName` 分别增减 Prefill/Decode Pod |
-| 更新 | Deployment 风格 RollingUpdate/Recreate、Revision 和回滚，更新单位是 RayCluster | StormService 支持 Rolling/InPlace；RoleSet 支持 Parallel、Sequential、Interleave，并可声明 `upgradeOrder` |
-| 状态与故障边界 | KubeRay 修复 Cluster 内 Head/Worker，Fleet 统计完整 RayCluster 副本状态 | RoleSet 聚合每个 Role 的 Ready 状态；Stateful Role 保留稳定 Slot，Stateless Role 可互换替换 |
-| 调度能力 | 主要依赖 Kubernetes/KubeRay；需要另行验证整组 GPU 的 Gang 和拓扑约束 | RoleSet 原生可引用 Volcano、Coscheduling 或 Godel PodGroup 策略，但集群仍须安装相应调度器 |
-| 最适合 | 已经使用 Ray，或 vLLM 以 Ray Backend 启动；希望复用 Ray Dashboard、任务和集群模型 | P/D 分离、角色异构/独立扩缩、希望去掉 Ray，或希望平台直接理解角色边界 |
-
-三种配置最容易说明扩缩语义：
-
-1. `RayClusterFleet.replicas=2`，每个 RayCluster 含 1 Head + 1 Worker：得到两个完整模型副本，AIBrix 只在两个 Head Endpoint 之间选路；
-2. `StormService.replicas=2`，每个 RoleSet 含 2 Prefill + 1 Decode：得到两个相互隔离的 P/D 完整副本，扩容一次会增加整套 RoleSet；
-3. `StormService.replicas=1`，RoleSet 内 Prefill=4、Decode=8：得到一个共享 P/D Pool，可以为两个 Role 分别创建 `PodAutoscaler`，通过 `subTargetSelector.roleName` 独立扩缩。
-
-因此，**模型跨节点不等于必须选 RayClusterFleet**。如果团队已经用 Ray 跑 vLLM，RayClusterFleet 的改造最小；如果目标是 AIBrix 原生 P/D、角色级弹性或不想引入 Ray，优先 StormService。两者都只解决编排，不会自动解决 RDMA、NCCL、Gang Scheduling、模型缓存和所有 Rank 就绪后的 Endpoint 发布，这些仍要单独验收。
-
-参考：[AIBrix Multi-Node Inference](https://aibrix.readthedocs.io/latest/features/multi-node-inference.html)、[AIBrix StormService](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html)、[StormService Role-Level Autoscaling](https://aibrix.readthedocs.io/latest/features/autoscaling/metric-based-autoscaling.html#stormservice-role-level-autoscaling)
+这里只建立概念边界：已经使用 Ray 时通常优先 RayClusterFleet；需要 P/D 分离、角色级弹性或想去掉 Ray 时通常优先 StormService。CRD 层级、依赖、Endpoint、扩缩、更新和故障边界的完整对比，以及裸 Kubernetes 的替代做法，统一放在 [AIBrix 实战中的编排方案选型](../practices/aibrix-existing-cluster.md#rayclusterfleet-vs-stormservice)。
 
 ## 3. LeaderWorkerSet
 
