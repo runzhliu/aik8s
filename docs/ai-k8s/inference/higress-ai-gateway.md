@@ -429,7 +429,32 @@ routing_time_taken=363µs total_time_taken=54.7ms
 
 第一次请求中，AIBrix 返回的 `target-pod`、`target-pod-ip`、路由耗时等内部诊断头被 Higress 原样传给客户端。实验随后在 Ingress 增加 `higress.io/response-header-control-remove`，再次请求时这些头已经消失。Higress 官方支持在后端响应返回客户端前按 Route 删除指定 Header，参考 [Ingress Annotation 高阶流量治理](https://higress.cn/en/docs/latest/user/annotation-use-case/#response-header-control)。
 
-第二个缺口是两层 Request ID 不一致：Higress Access Log 和 AIBrix Plugin Log 分别生成了自己的 ID，即使客户端同时发送 `x-request-id` 和 `request-id` 也没有形成统一关联。上线前需要规定唯一入口生成 ID，并通过请求转换或 OpenTelemetry Trace Context 映射到 AIBrix；否则一次故障仍要靠时间戳人工拼接两层日志。
+这个边界还必须处理请求方向。AIBrix v0.7.0 会读取 `user`、`external-filter`、`routing-strategy`、`config-profile` 和 `x-session-id` 等 Header；如果公网用户能自行设置，就可能伪造身份、选择内部配置或操纵负载策略。实验清单使用两类 Annotation：
+
+```yaml
+higress.io/request-header-control-remove: "user,external-filter,config-profile,x-session-id,target-pod,target-pod-ip,request-id"
+higress.io/request-header-control-update: "routing-strategy least-request"
+higress.io/response-header-control-remove: "target-pod,target-pod-ip,routing-strategy,req-cost-time,req-arrive-time,resp-start-time,x-went-into-req-headers"
+```
+
+复测时客户端故意发送 `routing-strategy: random`、伪造的 `user`、`config-profile`、`external-filter` 和 `x-session-id`，请求仍返回 HTTP 200；AIBrix 日志最终记录 `routing_strategy=least-request`，证明外部值已被平台策略覆盖。生产中的可信 `user` 和租户级 Session ID 应由 Higress 在认证后重新注入，而不是直接信任同名客户端 Header。
+
+第二个缺口是两层本地 Request ID 不一致。AIBrix v0.7.0 源码在没有追踪上下文时生成 UUID，但会读取 W3C `traceparent` 并把其中的 Trace ID 用作内部 Request ID。因此不需要强求 Higress 与 AIBrix 的本地 Request ID 相同，应统一跨层 Trace Context：
+
+```text
+traceparent: 00-0123456789abcdef0123456789abcdef-0123456789abcdef-01
+                 └──────────── Trace ID ────────────┘
+```
+
+实测 AIBrix `request_start`、`request_end` 和返回的 `request-id` 都变成 `0123456789abcdef0123456789abcdef`。Higress 默认 Access Log 仍记录自身 `x-request-id`，生产应开启 Higress OpenTelemetry Tracing，并在日志中增加 Trace ID/`traceparent` 字段，让日志和 Trace 都能用同一 Trace ID 查询。Higress 支持在 `higress-config` 中配置 OpenTelemetry Collector，参考 [Higress Tracing 配置](https://higress.cn/docs/latest/user/configmap/#tracing-配置说明)。
+
+Trace Context 只是关联键，不是身份凭据。边界网关应生成或校验其格式，不能因为客户端提供了某个 Trace ID 就授予权限、去重计费或信任其唯一性。
+
+| 缺口 | 直接风险 | 优先级 | sr1 状态 |
+| --- | --- | --- | --- |
+| 内部响应头外泄 | 暴露 Pod/IP、拓扑、调度策略和耗时 | 外部上线前 P0 | 已删除并复测 |
+| 客户端伪造 AIBrix 控制头 | 绕过平台路由/身份策略、制造负载偏斜 | 外部上线前 P0 | 已清除/覆盖并复测 |
+| Request ID/Trace 不可关联 | 故障、审计、重试与成本无法端到端定位 | 规模化前 P1；强审计场景 P0 | `traceparent` 已验证，Collector/日志字段待接入 |
 
 ## 13. 与 AIBrix 跨集群串联
 

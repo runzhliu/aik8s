@@ -28,6 +28,12 @@ metadata:
   labels:
     app.kubernetes.io/part-of: higress-aibrix-lab
   annotations:
+    # Treat AIBrix routing controls as internal platform headers. External
+    # callers cannot select a config profile, filter, Pod or session scope.
+    higress.io/request-header-control-remove: "user,external-filter,config-profile,x-session-id,target-pod,target-pod-ip,request-id"
+    # The platform owns the routing policy even if a caller supplies a
+    # different routing-strategy value.
+    higress.io/request-header-control-update: "routing-strategy least-request"
     # AIBrix diagnostic headers are valuable inside the platform, but should
     # not expose Pod identity or internal addresses to external clients.
     higress.io/response-header-control-remove: "target-pod,target-pod-ip,routing-strategy,req-cost-time,req-arrive-time,resp-start-time,x-went-into-req-headers"
