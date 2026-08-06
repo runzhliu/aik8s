@@ -1,0 +1,70 @@
+# Verified with prometheus-community/kube-prometheus-stack 88.1.5.
+# This lab profile installs only Prometheus Operator and one ephemeral Prometheus.
+defaultRules:
+  create: false
+
+alertmanager:
+  enabled: false
+
+grafana:
+  enabled: false
+
+kubeApiServer:
+  enabled: false
+kubelet:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeDns:
+  enabled: false
+coreDns:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeStateMetrics:
+  enabled: false
+nodeExporter:
+  enabled: false
+
+prometheusOperator:
+  kubeletService:
+    enabled: false
+  serviceMonitor:
+    selfMonitor: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    retention: 2h
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector:
+      matchLabels:
+        monitoring.aik8s.run/instance: aibrix
+    podMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector:
+      matchLabels:
+        monitoring.aik8s.run/instance: aibrix
+    ruleSelectorNilUsesHelmValues: false
+    ruleSelector:
+      matchLabels:
+        monitoring.aik8s.run/instance: aibrix
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi

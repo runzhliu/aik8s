@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aibrix-hpa-cpu-demo
+  namespace: aibrix-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aibrix-hpa-cpu-demo
+  template:
+    metadata:
+      labels:
+        app: aibrix-hpa-cpu-demo
+    spec:
+      containers:
+        - name: cpu-burn
+          image: busybox:stable
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - while true; do :; done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 8Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
+---
+apiVersion: autoscaling.aibrix.ai/v1alpha1
+kind: PodAutoscaler
+metadata:
+  name: aibrix-hpa-cpu-demo
+  namespace: aibrix-demo
+  annotations:
+    autoscaling.aibrix.ai/scale-up-cooldown-window: 0s
+    autoscaling.aibrix.ai/scale-down-cooldown-window: 60s
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aibrix-hpa-cpu-demo
+  minReplicas: 1
+  maxReplicas: 2
+  scalingStrategy: HPA
+  metricsSources:
+    - metricSourceType: resource
+      targetMetric: cpu
+      # Percentage of the container CPU request, matching native HPA semantics.
+      targetValue: "20"

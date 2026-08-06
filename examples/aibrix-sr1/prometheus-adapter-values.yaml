@@ -1,0 +1,31 @@
+# Verified with prometheus-community/prometheus-adapter 5.3.0.
+prometheus:
+  url: http://aibrix-monitoring-kube-pro-prometheus.monitoring.svc
+  port: 9090
+
+replicas: 1
+
+metricsRelistInterval: 30s
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+rules:
+  default: false
+  custom:
+    - seriesQuery: 'vllm:gpu_cache_usage_perc{namespace!="",pod!="",model_name="llama2-7b"}'
+      resources:
+        overrides:
+          namespace:
+            resource: namespace
+          pod:
+            resource: pod
+      name:
+        matches: '^vllm:gpu_cache_usage_perc$'
+        as: gpu_cache_usage_perc
+      metricsQuery: 'avg(<<.Series>>{model_name="llama2-7b",<<.LabelMatchers>>}) by (<<.GroupBy>>)'

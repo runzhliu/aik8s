@@ -1,21 +1,22 @@
 ---
-title: 在既有 Kubernetes 集群落地 AIBrix：版本、离线镜像、路由验证与 Higress 边界
-description: 在 Kubernetes 1.30 集群安装 AIBrix v0.7.0，镜像依赖到内网 Registry，用 mock vLLM 跑通模型感知路由，并设计同集群与跨集群 Higress 接入
+title: 在既有 Kubernetes 集群落地 AIBrix：路由、P/D、自动扩缩容与可观测性实测
+description: 在 Kubernetes 1.30 集群安装 AIBrix v0.7.0，用 CPU mock 跑通模型路由、P/D、StormService、KPA、APA、HPA、Prometheus 自定义指标和 Higress 接入边界
 status: lab
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-06
 ---
 
-# 在既有 Kubernetes 集群落地 AIBrix：版本、离线镜像、路由验证与 Higress 边界
+# 在既有 Kubernetes 集群落地 AIBrix：路由、P/D、自动扩缩容与可观测性实测
 
-这次实验不是在干净的 Kind 集群中执行 Quickstart，而是在一套已经运行数据库、虚拟机、存储和其他控制器的 Kubernetes 集群中增量安装 AIBrix。目标是先回答五个问题：
+这次实验不是在干净的 Kind 集群中执行 Quickstart，而是在一套已经运行数据库、虚拟机、存储和其他控制器的 Kubernetes 集群中增量安装 AIBrix。目标是回答六个问题：
 
 1. 现有 Kubernetes 版本适合安装哪个 AIBrix 版本；
 2. 外部 Registry 不稳定时，如何先把依赖镜像完整准备好；
 3. 没有可分配 GPU 时，能否先验证 AIBrix 控制面与模型感知路由；
 4. 能否用 CPU demo 观察 StormService/RoleSet 与 KVCache 两套资源抽象；
-5. 业务入口使用 Higress 时，Higress 和 AIBrix Gateway 应如何分工。
+5. 没有 GPU 时，KPA、APA、原生 HPA 和 Prometheus 自定义指标能测到哪一层；
+6. 业务入口使用 Higress 时，Higress 和 AIBrix Gateway 应如何分工。
 
-最终验证结果：AIBrix v0.7.0 的六个控制面 Deployment、Envoy Gateway 控制面和数据面全部 Ready；两个 mock vLLM 副本运行在不同节点；通过 AIBrix Gateway 请求 `/v1/chat/completions` 返回 HTTP 200，响应头包含 `routing-strategy`、`target-pod`、`target-pod-ip` 和 `request-id`。这证明请求经过了 AIBrix 的模型发现与路由，而不是直接访问普通 Kubernetes Service。
+最终验证结果：AIBrix v0.7.0 的六个控制面 Deployment、Envoy Gateway 控制面和数据面全部 Ready；两个 mock vLLM 副本运行在不同节点；普通模型路由、按角色过滤、Session Affinity、P/D 控制流和错误语义均获得了实际响应证据。补装 Metrics Server 后，KPA、APA、资源 HPA 和 Prometheus 自定义指标 HPA 都触发了真实扩容；最小 Prometheus Operator、Prometheus 与 Adapter 也已经采集并暴露 vLLM 指标。
 
 ```text
 测试客户端
@@ -54,6 +55,9 @@ kubectl get storageclass
 | KubeRay CRD | 未安装 | 官方 dependency 会安装；AIBrix 不使用 Ray 时可不部署 Ray 工作负载 |
 | `nvidia.com/gpu` | 所有节点均未发布 | 不能声称真实 GPU 推理已跑通，先使用 CPU mock Runtime 验证控制面 |
 | LoadBalancer Controller | 未给 Envoy Service 分配地址 | Gateway Listener 可工作，但外部入口需要 ClusterIP、内网 LB/VIP 或端口转发 |
+| Metrics API | 初始不存在，实验中补装 | 资源 HPA 与 APA 的 CPU/内存数据来源 |
+| Prometheus Operator CRD | 初始不存在，实验中补装最小栈 | 提供 ServiceMonitor、PrometheusRule 等声明式监控资源 |
+| Custom Metrics API | 初始不存在，实验中补装 Adapter | 让原生 HPA 使用 `gpu_cache_usage_perc` 等 vLLM 指标 |
 
 “节点物理上可能有 GPU”和“Kubernetes 已经能分配 GPU”是两回事。只有节点 `status.allocatable` 出现 `nvidia.com/gpu` 或目标 DRA ResourceClaim 能被分配，才可以继续部署真实 GPU vLLM。
 
@@ -242,6 +246,41 @@ request-id: <uuid>
 
 Gateway Plugin 日志同时记录模型名、目标 Pod、路由耗时、输入/输出 Token 和总耗时，形成了完整证据链。
 
+### 6.1 不要只测一种路由策略
+
+同一组 CPU mock 后端实测了以下请求头。除错误用例外，请求均返回 HTTP 200：
+
+| `routing-strategy` | 实测结果 | CPU 环境能证明什么 |
+| --- | --- | --- |
+| `random` | 成功 | 策略被插件接受并完成后端选择 |
+| `least-request` | 成功 | 能走最少请求数的选择路径 |
+| `power-of-two` | 成功 | 能从候选集中执行二选一 |
+| `least-latency` | 成功 | 能读取并参与延迟统计路径 |
+| `throughput` | 成功 | 能进入吞吐感知策略 |
+| `prefix-cache` | 成功 | Prefix 路由代码路径可用；mock 不能证明真实 KV 命中 |
+| `external-filter` | `role=prefill/decode` 精确选中对应 Role | 元数据过滤与 StormService Role 标签生效 |
+| `session-affinity` | 重放响应中的 `x-session-id` 后落到同一个 Pod | 会话粘滞闭环生效 |
+| `pd` | 同时记录 Prefill 与 Decode 目标 | P/D 编排控制流生效 |
+
+`prefix-cache` 连续请求前两次命中同一 Pod、第三次切换了 Pod。这不是错误，也不能据此计算 Prefix 命中率：mock Runtime 没有真实 KV Block、模型上下文和缓存事件。要证明 Prefix 路由收益，必须换成真实推理引擎，并同时观测命中、TTFT、输入 Token 和缓存容量。
+
+### 6.2 P/D 路由要看两段目标和插件日志
+
+对 `aibrix-role-demo` 发送 `routing-strategy: pd` 后，响应同时包含 Decode 目标和 `prefill-target-pod`。Gateway Plugin 日志依次记录：
+
+```text
+selected prefill/decode pair
+prefill request start/end
+prefill_time_taken
+kv_transfer_time_taken
+ttft
+decode_time_taken
+```
+
+这能证明请求经历了 Prefill、模拟 KV 传递和 Decode 控制流，但 `kv_transfer_time_taken` 只是 mock 协议的阶段耗时，不代表 GPU KV Tensor 已经通过 NIXL、RDMA 或 TCP 真实传输。
+
+失败语义也应纳入验收：不存在的模型、请求体缺少模型都返回 HTTP 400，并带 `x-error-no-model-backends`；非法路由策略返回 HTTP 400 和 `x-error-routing: true`。生产网关可据此区分“容量暂不可用”和“客户端请求错误”，不能把所有 4xx/5xx 都做重试。
+
 ## 7. AIBrix 能否按角色部署 Prefill、Decode 和 KV Cache
 
 可以，但需要区分两套资源模型：
@@ -373,6 +412,16 @@ target-pod: aibrix-role-demo-roleset-...-decode-...
 target-pod-ip: <pod-ip>:8000
 ```
 
+随后把 `StormService.spec.replicas` 从 1 调到 2，Controller 创建了两个 RoleSet、四个 Pod，每个 RoleSet 都包含一个 Prefill 和一个 Decode。连续四次 P/D 请求会在两个 RoleSet 间轮转，但每次 Prefill 与 Decode 始终来自同一个 RoleSet，说明成组副本边界没有被打散。恢复为 1 后，多余 RoleSet 被删除，状态回到：
+
+```text
+readyReplicas=1
+roleStatuses[prefill].readyReplicas=1
+roleStatuses[decode].readyReplicas=1
+```
+
+这项测试比“CRD 能创建”更有价值：它验证了 RoleSet 生命周期、成组扩容、P/D 配对与缩容回收。真实 GPU 场景还应继续测试扩容期间的模型加载、连接预热、正在生成请求的优雅终止和 KV 失效。
+
 这里遇到一个很典型的坑：不要为 StormService 手工创建同名普通 ClusterIP Service。Controller 会自动创建同名 Headless Service；如果普通 Service 先存在，Controller 尝试把 `clusterIP` 改成 `None` 时会因为字段不可变而持续失败，RoleSet 也不会生成。删除冲突 Service 后，StormService 立即恢复为 Ready。
 
 KVCache 实测生成的资源为：
@@ -392,7 +441,130 @@ KVCache/vineyard-demo
 
 参考：[AIBrix StormService](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html)、[AIBrix KVCache Offloading Framework](https://aibrix.readthedocs.io/latest/designs/aibrix-kvcache-offloading-framework.html)
 
-## 8. 为什么 Gateway 是 Accepted，但 Programmed=False
+## 8. 把 KPA、APA、HPA 和自定义指标真正跑一遍
+
+四条链路依赖不同，不能笼统地说“装了 Prometheus 就能自动扩缩容”：
+
+```text
+资源 HPA
+  kubelet → Metrics Server → metrics.k8s.io → 原生 HPA
+
+AIBrix APA（resource metric）
+  kubelet → Metrics Server → metrics.k8s.io → AIBrix Controller → Scale
+
+AIBrix KPA / APA（pod metric）
+  推理 Pod /metrics → AIBrix Controller 直接抓取 → Scale
+
+自定义指标 HPA
+  推理 Pod /metrics → Prometheus → Prometheus Adapter
+  → custom.metrics.k8s.io → 原生 HPA
+```
+
+Prometheus Operator 负责管理 Prometheus、ServiceMonitor 和 PrometheusRule；它本身既不提供资源 Metrics API，也不提供 Custom Metrics API。
+
+### 8.1 Kubernetes 1.30 应安装哪个 Metrics Server
+
+sr1 是 Kubernetes 1.30.4。实验时 Metrics Server 最新版已经是 v0.9.0，但官方兼容矩阵要求：0.9.x 对应 Kubernetes 1.34+，0.8.x 对应 1.31+，0.7.x 支持 1.27+。因此这里选择 v0.7.2，而不是机械安装最新版本：
+
+```bash
+kubectl apply -f \
+  https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/components.yaml
+
+kubectl get apiservice v1beta1.metrics.k8s.io
+kubectl top nodes
+```
+
+安装后 `v1beta1.metrics.k8s.io Available=True`，11 个节点能返回 CPU/内存；另一个节点的 Kubelet 10250 端口拒绝连接，所以仍显示 `<unknown>`。
+
+这里还暴露了一个更严重的历史问题：多数节点的 Kubelet Serving Certificate 已经过期。为了先完成实验，Metrics Server 临时增加了：
+
+```text
+--kubelet-insecure-tls
+```
+
+它只关闭 Metrics Server 到 Kubelet 的证书校验，不会关闭 Kubernetes API TLS，但仍不应成为长期配置。生产修复应是轮换 Kubelet 证书、校验证书 SAN 和自动续期，再删除该参数；否则节点身份验证被降级，中间人风险被隐藏。
+
+参考：[Metrics Server compatibility matrix](https://github.com/kubernetes-sigs/metrics-server#compatibility-matrix)
+
+### 8.2 AIBrix v0.7.0 的 APA 还缺一条 RBAC
+
+原生 HPA 安装 Metrics Server 后直接成功，但 AIBrix APA 一直读取到 0。Controller 日志给出了真实原因：
+
+```text
+pods.metrics.k8s.io is forbidden:
+User "system:serviceaccount:aibrix-system:aibrix-controller-manager"
+cannot get resource "pods" in API group "metrics.k8s.io"
+```
+
+也就是说 CRD 状态仍可能显示 Ready，但算法实际上在用 0 做计算。通过独立 ClusterRole 最小化补充 `get/list pods.metrics.k8s.io` 后，APA 才读到实际 CPU 并完成扩容。清单见 [`controller-metrics-rbac.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/controller-metrics-rbac.yaml)。独立 Role 比直接修改发布清单中的大 ClusterRole 更容易审计和升级。
+
+### 8.3 三种策略的 CPU 实测结果
+
+仓库中的实验清单包括：
+
+- [`podautoscaler-cpu-demo.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/podautoscaler-cpu-demo.yaml)：直接抓取 mock `/metrics`；
+- [`podautoscaler-hpa-cpu-demo.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/podautoscaler-hpa-cpu-demo.yaml)：资源 HPA；
+- [`podautoscaler-apa-cpu-demo.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/podautoscaler-apa-cpu-demo.yaml)：APA 读取 Metrics API。
+
+| 策略 | 数据来源 | 实测结果 | 关键发现 |
+| --- | --- | --- | --- |
+| KPA | mock Pod `/metrics` | StormService 1→2，又回到 1 | Controller 能直接抓指标；mock 波动、按副本归一和 0 冷却会振荡 |
+| HPA | `metrics.k8s.io` CPU | Deployment 1→2 | AIBrix 正确生成有 OwnerReference 的 `autoscaling/v2` HPA |
+| APA | `metrics.k8s.io` CPU | 补 RBAC 后 Deployment 1→2 | AIBrix 自己读取 Metrics API；默认安装权限不足会静默得到 0 |
+
+HPA 实测指标为 `cpu: 1000%/20%`，事件是 `SuccessfulRescale`。APA 状态最终为 `desiredScale=2, actualScale=2`。这些 CPU burner 只用于证明控制器和指标链路，完成后都已删除，避免持续占用集群。
+
+KPA 的快速 1→2→1 不是生产策略的理想行为，反而说明冷却窗口、稳定窗口、目标值和真实时序数据必须一起设计。推理扩容还要考虑模型加载分钟级延迟，不能照搬 Web 服务的秒级 HPA 参数。
+
+### 8.4 用最小 Prometheus 栈采集 vLLM 指标
+
+本次使用 `kube-prometheus-stack 88.1.5`，但关闭 Grafana、Alertmanager、node-exporter、kube-state-metrics 和默认规则，只保留 Prometheus Operator 与一个 Prometheus；不申请 PVC，数据保留 2 小时。配置见 [`prometheus-minimal-values.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/prometheus-minimal-values.yaml)：
+
+```bash
+helm upgrade --install aibrix-monitoring \
+  prometheus-community/kube-prometheus-stack \
+  --version 88.1.5 \
+  -n monitoring --create-namespace \
+  -f examples/aibrix-sr1/prometheus-minimal-values.yaml
+
+kubectl apply -f examples/aibrix-sr1/mock-vllm-servicemonitor.yaml
+```
+
+离线环境需要把 Operator、Webhook Certgen、Prometheus 和 Config Reloader 四个镜像预先放入集群可访问的 Registry，再通过 values 覆盖镜像地址。不要忘记 Config Reloader：它由 Operator 动态写入 Prometheus Pod，单看 Helm 渲染出的 Deployment 很容易漏掉。
+
+Prometheus 最终只选择带 `monitoring.aik8s.run/instance=aibrix` 的 Monitor。两个 mock vLLM Target 均为 `health=up`，以下查询返回两个 Pod 的当前值：
+
+```promql
+vllm:gpu_cache_usage_perc{model_name="llama2-7b"}
+```
+
+### 8.5 让原生 HPA 使用 vLLM 自定义指标
+
+Prometheus Adapter 负责把 PromQL 映射为 Kubernetes Custom Metrics API。配置见 [`prometheus-adapter-values.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/prometheus-adapter-values.yaml)：
+
+```bash
+helm upgrade --install aibrix-prometheus-adapter \
+  prometheus-community/prometheus-adapter \
+  --version 5.3.0 \
+  -n monitoring \
+  -f examples/aibrix-sr1/prometheus-adapter-values.yaml
+
+kubectl get apiservice v1beta1.custom.metrics.k8s.io
+kubectl get --raw \
+  '/apis/custom.metrics.k8s.io/v1beta1/namespaces/aibrix-demo/pods/%2A/gpu_cache_usage_perc'
+```
+
+APIService 最终为 `Available=True`，并发现 `pods/gpu_cache_usage_perc`。应用 [`podautoscaler-hpa-vllm-metric-demo.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/aibrix-sr1/podautoscaler-hpa-vllm-metric-demo.yaml) 后，AIBrix 创建原生 HPA，实测显示：
+
+```text
+gpu_cache_usage_perc: 61500m / 10
+SuccessfulRescale: New size: 3
+AIBrix desiredScale=3, actualScale=3
+```
+
+mock vLLM 从 2 扩到 3，测试后删除 PodAutoscaler 并恢复到 2。生产规则不能照抄 `targetValue: 10`；应根据真实 GPU KV 容量、等待队列、请求率、TTFT/TPOT SLO、扩容成本和模型加载时间联合定标，也不能把单个瞬时 Gauge 直接当唯一扩容信号。
+
+## 9. 为什么 Gateway 是 Accepted，但 Programmed=False
 
 Envoy Gateway 默认为数据面创建 `type: LoadBalancer` 的 Service。如果集群没有云 LoadBalancer Controller 或 MetalLB，Service 会长期显示：
 
@@ -409,7 +581,7 @@ LoadBalancer   <pending>
 
 它不代表 Envoy 或 AIBrix 路由失败。本次通过 ClusterIP 后面的端口转发已经获得 HTTP 200。生产入口应根据网络拓扑选择 ClusterIP、内部 LoadBalancer/VIP 或受控的跨集群地址，不要把 `<pending>` 误诊为模型后端故障。
 
-## 9. Higress 与 AIBrix 应如何分工
+## 10. Higress 与 AIBrix 应如何分工
 
 不建议用 Higress 直接替换 AIBrix 固定的 Envoy Gateway。AIBrix 的 Gateway Plugin 通过 Envoy `ext_proc`、`EnvoyExtensionPolicy` 和 `EnvoyPatchPolicy` 获得模型、队列、Prefix/KV 与 P/D 感知能力。更清晰的职责划分是：
 
@@ -420,7 +592,7 @@ LoadBalancer   <pending>
   → vLLM / SGLang / TensorRT-LLM
 ```
 
-### 9.1 Higress 与 AIBrix 在同一集群
+### 10.1 Higress 与 AIBrix 在同一集群
 
 Higress 的 Upstream 指向 AIBrix Envoy 数据面 Service，而不是某个 vLLM Service：
 
@@ -435,7 +607,7 @@ envoy-<namespace>-<gateway>-<hash>.envoy-gateway-system.svc.cluster.local:80
 - `routing-strategy` 等受控路由头；
 - SSE/流式响应、长请求超时和取消传播。
 
-### 9.2 Higress 与 AIBrix 在不同集群
+### 10.2 Higress 与 AIBrix 在不同集群
 
 跨集群同样可行，但不能使用 `*.svc.cluster.local`。AIBrix 集群需要提供一个稳定且可路由的内部地址：
 
@@ -450,7 +622,7 @@ Higress 把这个地址注册为静态、DNS 或注册中心 Upstream。网络�
 
 本次实验没有修改任何实际 Higress 资源。先独立验证 AIBrix，再在隔离环境验证网关串联，可以降低误改现有入口的风险。
 
-## 10. 换成真实 GPU vLLM 前还缺什么
+## 11. 换成真实 GPU vLLM 前还缺什么
 
 mock 请求成功只证明以下链路：
 
@@ -469,7 +641,25 @@ mock 请求成功只证明以下链路：
 - 多机 TP/PP 或 P/D 场景补充高速网络、拓扑、StormService/RoleSet 和故障测试；
 - 把真实 TTFT、TPOT、队列、KV 命中和 GPU 指标接入监控。
 
-## 11. 这次实验暴露的实战经验
+### 11.1 还有哪些能力没测，CPU 能测到哪一层
+
+| 能力 | CPU 是否可测 | 当前状态 | 下一步 |
+| --- | --- | --- | --- |
+| Gateway 多策略、错误语义、Session | 可以完整测控制流 | 已测 | 用真实流量补充质量和性能对比 |
+| StormService/RoleSet 生命周期 | 可以 | 已测 1→2→1 和 P/D 配对 | 加入 Pod 故障、滚动升级、优雅下线 |
+| KPA、APA、HPA | 可以 | 三种策略均已触发扩容 | 用真实时序和冷却参数做稳定性测试 |
+| Prometheus 与自定义指标 HPA | 可以 | 已采集并扩容 | 增加队列、TTFT/TPOT、请求率组合策略 |
+| RayClusterFleet/ReplicaSet | 控制面和 CPU Ray 任务可测 | CRD/Operator 已安装，尚未创建 Fleet | 准备固定 Ray 镜像，测扩缩与 Head 故障 |
+| ModelAdapter / LoRA | CR 生命周期可测，效果需兼容 Runtime | 尚未测 | 用小模型与 CPU 兼容 vLLM 验证加载/卸载，再上 GPU |
+| Batch API / BrixBench | 可以 | 尚未测 | 对 mock Endpoint 做并发、取消、失败重试和报告 |
+| Semantic Router | 控制面可用 CPU | 尚未测 | 需要可访问的 Embedding 模型和至少两个语义后端 |
+| 真实 P/D KV 传输 | 不足 | 只验证 mock 控制流 | GPU + NIXL/LMCache + 高速网络 |
+| KVCache 性能与命中收益 | 不足 | Vineyard 进程与 CR 生命周期已测 | 真实 Connector、共享前缀和容量/故障实验 |
+| 多 GPU、多机、异构与 GPU 故障 | 不可以 | 节点未发布 GPU | Device Plugin/GPU Operator、拓扑、NCCL/RDMA 与故障注入 |
+
+因此下一阶段最值得优先做的不是再创建更多 `Running` 的 CR，而是先跑通单 GPU 真实 vLLM 基线；否则 LoRA、P/D、KVCache、异构调度和 GPU 故障检测都只能验证 Kubernetes 控制对象，无法证明数据面价值。CPU 环境仍适合继续补 Ray、Batch、BrixBench、Semantic Router 和故障生命周期，它们应明确标注“控制面已测”还是“真实模型数据面已测”。
+
+## 12. 这次实验暴露的实战经验
 
 1. **版本要按组合选。** AIBrix、Envoy Gateway、Gateway API 和 Envoy Proxy 是一个兼容单元；
 2. **离线镜像要一次盘全。** 动态生成的 Envoy 数据面镜像最容易漏掉；
@@ -479,9 +669,13 @@ mock 请求成功只证明以下链路：
 6. **LoadBalancer Pending 不等于 Listener 不工作。** 要分别看 Service、Gateway 和 Listener Condition；
 7. **Higress 与 AIBrix 是两层职责。** 前者做统一入口，后者做 LLM 感知数据面；
 8. **StormService 拥有同名 Headless Service。** 不要提前创建同名普通 ClusterIP Service；
-9. **跨集群入口必须稳定。** 使用 VIP/DNS/服务注册，不能依赖 Pod IP。
+9. **跨集群入口必须稳定。** 使用 VIP/DNS/服务注册，不能依赖 Pod IP；
+10. **三类 Metrics API 要分清。** Metrics Server、Prometheus Operator、Prometheus Adapter 解决的是不同问题；
+11. **Ready 不代表指标有效。** APA 在 RBAC Forbidden 时仍可能保持 Ready，必须同时看 Controller 日志和实际 Scale；
+12. **离线监控镜像要考虑动态 Sidecar。** Config Reloader 不一定直接出现在 Helm 的静态 Deployment 镜像清单中；
+13. **扩容参数不能照搬 Web 服务。** LLM 模型加载、KV 预热和 GPU 成本决定了更长的稳定窗口与更谨慎的缩容。
 
-## 12. 验收清单
+## 13. 验收清单
 
 - [x] Kubernetes 与固定 Envoy Gateway 版本在兼容矩阵内；
 - [x] 外部依赖镜像已按节点架构准备到集群可访问的 Registry；
@@ -495,8 +689,19 @@ mock 请求成功只证明以下链路：
 - [x] StormService 自动生成 RoleSet，Prefill/Decode Role 均为 Ready；
 - [x] CPU mock 模型通过 AIBrix Gateway 路由到 Role Pod；
 - [x] 集中式 KVCache 自动生成 Etcd、Vineyard 和对应 Service；
+- [x] `random`、`least-request`、`power-of-two`、延迟、吞吐、Prefix、Session 与过滤路由可用；
+- [x] P/D 请求能选择同一 RoleSet 中的 Prefill 与 Decode；
+- [x] StormService 完成 1→2→1 成组扩缩；
+- [x] Metrics Server APIService 可用，11 个节点返回资源指标；
+- [x] AIBrix KPA、APA 与资源 HPA 都触发过真实扩容；
+- [x] Prometheus Operator 与单实例 Prometheus Ready，两个 vLLM Target 均为 Up；
+- [x] Prometheus Adapter 暴露 `pods/gpu_cache_usage_perc`；
+- [x] 自定义 vLLM 指标 HPA 把 mock Deployment 从 2 扩到 3，并已恢复；
 - [ ] 为 Gateway 配置生产可用的内部 VIP 或同集群 ClusterIP 入口；
 - [ ] Kubernetes 发布 GPU 资源并跑通真实 vLLM；
+- [ ] 修复 Kubelet Serving Certificate 过期并移除 `--kubelet-insecure-tls`；
+- [ ] 修复节点 Kubelet 10250 拒绝连接导致的 Metrics `<unknown>`；
+- [ ] 验证 RayClusterFleet、ModelAdapter/LoRA、Batch、BrixBench 与 Semantic Router；
 - [ ] 在隔离环境验证 Higress → AIBrix 的超时、流式、认证和故障语义。
 
 ## 延伸阅读

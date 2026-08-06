@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: aibrix-mock-vllm
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: aibrix
+    monitoring.aik8s.run/instance: aibrix
+spec:
+  namespaceSelector:
+    matchNames:
+      - aibrix-demo
+  selector:
+    matchLabels:
+      prometheus-discovery: "true"
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s

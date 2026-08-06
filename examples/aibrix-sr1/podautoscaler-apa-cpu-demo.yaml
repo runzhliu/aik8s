@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aibrix-apa-cpu-demo
+  namespace: aibrix-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aibrix-apa-cpu-demo
+  template:
+    metadata:
+      labels:
+        app: aibrix-apa-cpu-demo
+    spec:
+      containers:
+        - name: cpu-burn
+          image: busybox:stable
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - while true; do :; done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 8Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
+---
+apiVersion: autoscaling.aibrix.ai/v1alpha1
+kind: PodAutoscaler
+metadata:
+  name: aibrix-apa-cpu-demo
+  namespace: aibrix-demo
+  annotations:
+    autoscaling.aibrix.ai/scale-up-tolerance: "0"
+    autoscaling.aibrix.ai/scale-down-tolerance: "0"
+    autoscaling.aibrix.ai/scale-up-cooldown-window: 0s
+    autoscaling.aibrix.ai/scale-down-cooldown-window: 60s
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aibrix-apa-cpu-demo
+  minReplicas: 1
+  maxReplicas: 2
+  scalingStrategy: APA
+  metricsSources:
+    - metricSourceType: resource
+      targetMetric: cpu
+      # Percentage of the container CPU request, fetched from Metrics API.
+      targetValue: "20"
