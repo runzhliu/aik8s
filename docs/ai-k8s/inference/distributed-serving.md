@@ -2,7 +2,7 @@
 title: 多机与分离式 LLM 推理
 description: 设计多机模型副本、LeaderWorkerSet、Prefill/Decode 分离和 KV 传输，并对比 AIBrix、llm-d、KServe、Dynamo、Ray Serve 与 vLLM Production Stack
 status: evolving
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-06
 ---
 
 # 多机与分离式 LLM 推理
@@ -77,6 +77,57 @@ DeepSeek-V4-Pro Replica A
 如果只有 Replica A，一个稳定 Leader Service 就足够承接流量，AIBrix 的“选副本”价值有限；如果有 A/B 多组、P/D 两类 Pool、长上下文导致的显著队列差异，或希望做 KV/Session 感知，内部推理路由才开始成为必要能力。
 
 硬件数字不能直接照搬。vLLM 同一配方也给出 8×B300、8×H200 和其他平台的不同参数；实际节点数取决于 GPU 显存、权重精度、Context/并发产生的 KV Cache、Runtime 版本和并行策略。上线前必须按目标硬件复测，而不是由“1.6T 参数”直接推导节点数量。
+
+### 2.2 除了 DeepSeek-V4，还有哪些现成例子 { #other-vllm-aibrix-multi-node-examples }
+
+先区分三种“支持”，否则很容易把模型列表写成已经跑通的生产案例：
+
+1. **AIBrix 官方端到端样例**：仓库里有编排、标签、Service 和路由清单；
+2. **vLLM 官方多机配方**：模型和多机并行策略有上游依据，但需要把 Runtime 接入 AIBrix；
+3. **理论上兼容 OpenAI API**：只能说明 AIBrix 可以发现和转发，不能证明多机通信、P/D 或扩缩容已经验证。
+
+截至 2026 年 8 月，AIBrix 仓库里最值得直接参考的三套样例是：
+
+| 官方样例 | 证明了什么 | 适合怎么用 | 不能直接照搬的部分 |
+| --- | --- | --- | --- |
+| [DeepSeek-R1 671B](https://github.com/vllm-project/aibrix/tree/v0.7.0/samples/deepseek-r1) | 2 个节点、16×H20 96GB、RayClusterFleet、vLLM TP16、Head-only Service、路由、自动扩缩和监控 | 大模型跨节点完整副本的主要蓝本 | 样例基于旧版 vLLM 0.7.3 定制镜像和特定云 RDMA；存储、NIC、镜像和版本必须重做 |
+| [Qwen2.5-Coder-7B 两节点](https://github.com/vllm-project/aibrix/blob/v0.7.0/samples/distributed/fleet-two-node.yaml) | RayClusterFleet 建立 1 个 Head GPU + 1 个 Worker GPU，vLLM TP2，AIBrix 只把请求送给 Head | 用小模型验证 KubeRay、Fleet、Service 和 Gateway 控制链 | 启动时执行 `apt`/`pip`，且使用 vLLM 0.7.1；它是教程，不是生产镜像模板 |
+| [Qwen3-8B P/D](https://github.com/vllm-project/aibrix/tree/v0.7.0/samples/disaggregation/vllm) | StormService 的 Replica/Pool 两种模式、2 Prefill + 1 Decode、NIXL 传输和 `routing-strategy: pd` | 验证 Prefill/Decode 角色编排与动态路由 | 这不是“大模型跨节点装载”样例；RDMA 注解、NIXL 镜像和 NCCL 参数带有环境假设 |
+
+真正的大模型候选不只 DeepSeek。下表中的模型都在 [vLLM 官方 Recipes](https://github.com/vllm-project/recipes) 中明确声明兼容 `multi_node_tp`、`multi_node_tp_pp`、分布式 Expert Parallel 和 `pd_cluster`，因此适合把 vLLM Leader/API Endpoint 接到 AIBrix：
+
+| 开放权重模型 | 规模与上下文 | vLLM 最低版本 | 配方中的典型权重显存 | 更适合验证什么 |
+| --- | --- | --- | --- | --- |
+| [DeepSeek-R1](https://github.com/vllm-project/recipes/blob/main/models/deepseek-ai/DeepSeek-R1.yaml) | 671B / 37B 激活，163K | 0.12.0 | FP8 约 805GB；NVFP4 约 403GB | AIBrix 已有 671B 多机蓝本，适合作为 V4 之外证据最完整的基线 |
+| [Qwen3-235B-A22B-Instruct](https://github.com/vllm-project/recipes/blob/main/models/Qwen/Qwen3-235B-A22B-Instruct-2507.yaml) | 235B / 22B 激活，262K | 0.10.0 | FP8 约 240GB；NVFP4 约 141GB | 资源门槛相对低，适合第一套真实 MoE 多机、EP 和长上下文验证 |
+| [Qwen3-Coder-480B-A35B](https://github.com/vllm-project/recipes/blob/main/models/Qwen/Qwen3-Coder-480B-A35B-Instruct.yaml) | 480B / 35B 激活，262K | 0.10.0 | FP8 约 576GB；NVFP4 约 288GB | 代码与 Agent 请求、Tool Calling、长上下文以及多副本路由 |
+| [GLM-4.7](https://github.com/vllm-project/recipes/blob/main/models/zai-org/GLM-4.7.yaml) | 358B / 32B 激活，202K | 0.11.0 | FP8 约 430GB；NVFP4 约 215GB | 中文、推理与 Tool Calling，且可验证 MTP 推测解码 |
+| [Qwen3.5-397B-A17B](https://github.com/vllm-project/recipes/blob/main/models/Qwen/Qwen3.5-397B-A17B.yaml) | 397B / 17B 激活，262K | 0.17.0 | NVFP4/GPTQ Int4 约 238—239GB | 新版多模态/推理模型，但 Runtime 与连接器版本门槛更高 |
+| [Kimi-K2.5](https://github.com/vllm-project/recipes/blob/main/models/moonshotai/Kimi-K2.5.yaml) | 1T / 32B 激活，262K | 0.19.1 | INT4 约 714GB；NVFP4 约 600GB | 超大 MoE、多模态、P/D 和大规模 Expert Parallel；成本最高的一档 |
+| [MiniMax-M2.5](https://github.com/vllm-project/recipes/blob/main/models/MiniMaxAI/MiniMax-M2.5.yaml) | 230B / 10B 激活，196K | 0.20.2 | FP8 约 276GB；NVFP4 约 138GB | 用较低权重门槛验证多机和 P/D；部分硬件上单机已能容纳，不要为了多机而多机 |
+| [Mistral Large 3 675B](https://github.com/vllm-project/recipes/blob/main/models/mistralai/Mistral-Large-3-675B-Instruct-2512.yaml) | 675B / 22B 激活，294K | 0.11.0 | FP8 约 810GB；NVFP4 约 405GB | 国际开放权重模型、多语言和长上下文，多机 TP/PP/EP 与 P/D |
+
+表中的显存只是配方对**权重变体**给出的最低量级，不包含目标并发所需的全部 KV Cache、CUDA Graph、通信 Buffer 和安全余量；也不等于推荐 GPU 数。尤其 NVFP4 通常要求 Blackwell 原生能力，不能只看总显存相加。
+
+### 2.3 模型接入 AIBrix 的正确边界
+
+AIBrix 并没有一张只允许特定模型的白名单。对普通共置式 vLLM 服务，至少要保证：
+
+- Pod 带有一致的 `model.aibrix.ai/name` 和 `model.aibrix.ai/port`；
+- vLLM 的 `--served-model-name`、请求体 `model`、Service 与路由配置一致；
+- Service 只选择一个完整副本的 Leader/API Pod，不能选中内部 Headless Worker；
+- Readiness 只有在所有必要 Rank 和模型都可服务后才成功；
+- AIBrix Gateway 在多个**完整副本**之间选路，组内 Rank 由 RayClusterFleet、StormService/RoleSet、LWS 或 Runtime 管理。
+
+非 P/D 场景中，AIBrix Gateway 与 vLLM 引擎版本的耦合相对较弱，新版 vLLM 只要保持兼容 API、指标和发现标签，通常可以先作为普通模型 Endpoint 接入。P/D、KV Offload、NIXL Connector 和 Runtime Sidecar 则位于数据路径上，版本耦合很强。Qwen3.5、Kimi-K2.5、MiniMax-M2.5 等配方要求的 vLLM 0.17—0.20 已明显新于 AIBrix v0.7.0 示例镜像，必须重新构建镜像并验证 KV Connector、NIXL、CUDA/NCCL 和指标，而不能只替换 `model` 字段。
+
+推荐按风险递增落地：
+
+1. 先用 Qwen2.5-Coder-7B 两节点样例证明 RayClusterFleet 和 Head-only 路由；
+2. 用 Qwen3-8B 证明 StormService 与 P/D 控制链，但暂不据此宣称性能收益；
+3. 第一套真实大模型优先选择 Qwen3-235B-A22B FP8，或复现证据更完整的 DeepSeek-R1 671B；
+4. 再加入第二个完整副本，验证 AIBrix 的队列、Prefix/Session 感知、故障摘除和扩缩；
+5. 最后才测试 Kimi-K2.5 等 1T 模型以及跨节点 P/D，并用 TTFT、TPOT、Goodput 和故障恢复时间决定是否上线。
 
 ## 3. LeaderWorkerSet
 
