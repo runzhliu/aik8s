@@ -312,7 +312,9 @@ spec:
 
 Prefill Pod 负责处理 Prompt 并生成初始 KV，Decode Pod 接收 KV 后继续逐 Token 生成；两类 Pod 都运行模型、通常都需要 GPU。AIBrix v0.7.0 的 vLLM 1P1D 示例使用 NIXL Connector 在两类推理进程之间传输 KV，它并不要求部署一个长期保存 KV 的独立缓存集群。
 
-`StormService.spec.replicas > 1` 时，每个 RoleSet 可以作为一个完整服务副本按组扩缩；`spec.replicas = 1` 时，各 Role 形成共享池。v0.7.0 对共享池的自动扩缩仍有限制，生产设计不能只看 CRD 能否表达，还要验证 Controller 实际支持的扩缩语义。
+`StormService.spec.replicas > 1` 时，每个 RoleSet 可以作为一个完整服务副本按组扩缩；`spec.replicas = 1` 时，各 Role 形成共享池。AIBrix v0.7.0 已提供共享池角色级自动扩缩示例：分别创建指向同一 StormService 的 `PodAutoscaler`，再用 `subTargetSelector.roleName` 选择 Prefill 或 Decode，并增加 `autoscaling.aibrix.ai/storm-service-mode: pool` 注解。生产环境仍要用真实指标验证扩缩、预热、P/D 容量比例和缩容中的请求排空，不能只看 CRD 能否表达。
+
+如果服务内部本来就使用 Ray，可改用 `RayClusterFleet`：每个 RayCluster 是一个完整副本，Ray 负责集群内部进程调度，AIBrix 只把请求送到 Head/API Pod。StormService 则不依赖 KubeRay，由 `RoleSet` 直接描述 Prefill、Decode 或多 Pod Role，更适合角色级弹性。两者的完整差异见 [RayClusterFleet 与 StormService/RoleSet 怎么选](../inference/distributed-serving.md#rayclusterfleet-vs-stormservice)。
 
 ### 7.2 独立 KV Cache 集群不只有一个“管理 Pod”
 
