@@ -2,7 +2,7 @@
 title: 多机与分离式 LLM 推理
 description: 设计多机模型副本、LeaderWorkerSet、Prefill/Decode 分离和 KV 传输，并对比 AIBrix、llm-d、KServe、Dynamo、Ray Serve 与 vLLM Production Stack
 status: evolving
-last_reviewed: 2026-08-06
+last_reviewed: 2026-08-07
 ---
 
 # 多机与分离式 LLM 推理
@@ -188,7 +188,88 @@ vllm serve /models/example \
 
 这表示一个逻辑副本使用 16 张 GPU 的概念配置，实际还需要多节点启动、地址发现、容器共享内存和网络参数。
 
-参考：[vLLM Distributed Serving](https://docs.vllm.ai/en/latest/serving/distributed_serving.html)
+当前 vLLM 多节点既可以用 Ray，也支持原生 MultiProcessing 的 `--nnodes`、`--node-rank` 和 `--headless` 模式。Ray 是分布式执行 Backend，不是多机推理本身唯一的并行算法；TP、PP、DP、EP 才决定模型计算如何拆分。
+
+参考：[vLLM Parallelism and Scaling](https://docs.vllm.ai/en/latest/serving/parallelism_scaling/)
+
+### 5.1 vLLM Ray 多机与 P/D 分离是什么关系 { #vllm-ray-vs-pd }
+
+它们是两个正交维度：
+
+- **vLLM Ray 多机**回答：一套 vLLM Engine 如何把**同一个模型副本**的计算拆到多张 GPU、多个节点；
+- **P/D 分离**回答：一次请求的 Prefill 和 Decode 是否交给**两套独立 vLLM Engine**，以及如何把 KV Cache 从前者交给后者。
+
+最重要的认知是：**Ray Worker 不是 Decode Worker。** 普通 Ray 多机模式中的 Head/Worker Rank 会共同参与同一个 Engine 的 Prefill 和 Decode；P/D 模式中的 Prefill、Decode 则是两个具有独立 Scheduler、Batch、KV Cache 和 Endpoint 的引擎。
+
+#### 5.1.1 只有 Ray，没有 P/D
+
+```text
+Client
+  → vLLM API / Ray Head
+      → 同一个 vLLM Engine
+          ├─ Ray Rank 0：GPU/权重分片
+          ├─ Ray Rank 1：GPU/权重分片
+          └─ Ray Rank 2：GPU/权重分片
+             所有 Rank 共同执行 Prefill 和 Decode
+```
+
+这里模型通过 TP/PP/EP 跨 GPU 放置。一次请求从开始到结束都属于同一个 Engine；Rank 之间会在层、Token 或 Expert 计算中持续进行 Collective、Activation 或 Pipeline 通信。Ray 负责进程放置和执行协调，vLLM 仍负责推理 Scheduler。
+
+#### 5.1.2 只有 P/D，没有 Ray
+
+```text
+Client
+  → P/D Router
+      → Prefill vLLM Instance：加载模型，计算 Prompt 和初始 KV
+          → NIXL/LMCache/Mooncake 等 Connector 传输 KV
+      → Decode vLLM Instance：也加载模型，接收 KV 后逐 Token 生成
+```
+
+两端可以各自只使用一张 GPU，也可以使用单机多卡 MultiProcessing。P/D 不要求 Ray，但要求 P/D-aware Router、KV Connector、Peer 发现以及兼容的模型、KV Layout 和 Engine 版本。Prefill 和 Decode 都不是“只装半个模型”：两边都要具备执行相应阶段所需的完整逻辑模型能力，因此通常会形成两份权重容量，只是每份内部仍可分片。
+
+#### 5.1.3 Ray 与 P/D 可以组合
+
+```text
+Client
+  → P/D Router
+      → Prefill Engine（RayCluster P）
+          ├─ P-Head
+          └─ P-Worker × N
+              → 跨 Engine 传输 KV
+      → Decode Engine（RayCluster D）
+          ├─ D-Head
+          └─ D-Worker × M
+```
+
+这时 Ray 解决 P、D **各自内部**的模型并行，P/D Router 与 Connector 解决两个 Engine **之间**的请求切换和 KV 交接。Prefill、Decode 可以使用不同 TP/PP 形状，但只有 KV Connector 的 TP Mapping 和兼容矩阵明确支持时才能这样配置，不能任意组合。
+
+AIBrix v0.7.0 的官方例子分别展示了 RayClusterFleet 多机和 StormService P/D，尚不是一份可直接套用的“RayClusterFleet 嵌套 StormService”清单。企业如果需要上图的组合，应把它当作高级集成：分别管理 P/D 分布式 Engine，只向 Router 暴露各自的 Leader/API Endpoint，并单独验证发现、配对、KV 传输和故障恢复。
+
+#### 5.1.4 异同对照
+
+| 维度 | vLLM Ray 多机 | P/D 分离 |
+| --- | --- | --- |
+| 拆分对象 | 一个模型副本内部的 Rank、权重和计算 | 一次请求的两个执行阶段 |
+| Engine 数量 | 通常 1 个 Engine，多个 Ray Rank | 至少 2 个独立 Engine：Prefill 与 Decode |
+| 模型权重 | 按 TP/PP/EP 在 Rank 间分片 | P、D 两边都要加载模型；每边内部可以再次分片 |
+| 请求 Scheduler | 一个 vLLM Scheduler 管完整请求 | P、D 各有 Scheduler，还需要外层 P/D Router |
+| 主要数据通信 | Rank 间频繁传 Activation、Collective 或 Expert 数据 | 阶段切换时跨 Engine 传 KV Cache，Engine 内仍可能有 TP/PP 通信 |
+| 主要目的 | 模型单机放不下、使用更多 GPU 加速一个副本 | 分别优化 TTFT 与 ITL、隔离长 Prompt 对 Decode 的干扰 |
+| 扩缩方式 | 增加完整 RayCluster 副本；改变 Rank 数通常需要重建并重新加载模型 | Prefill、Decode Pool 可以按各自负载独立扩缩 |
+| 故障影响 | 任一必要 Rank 故障可能让整个模型副本不可服务 | Prefill/Decode 或 KV 交接失败会影响请求阶段，还要清理孤儿 KV |
+
+四种常见组合可以快速判断架构：
+
+| 组合 | 是否合理 | 典型场景 |
+| --- | --- | --- |
+| 单机 vLLM，共置 P/D | 是，默认起点 | 模型与 SLO 单机可满足 |
+| Ray 多机，共置 P/D | 是 | 模型单机放不下，但还不需要阶段池化 |
+| 单机/单节点 P Pool + D Pool | 是 | 模型单实例可容纳，但希望隔离 TTFT/ITL 并独立扩缩 |
+| 多机 Ray P Pool + 多机 Ray D Pool | 可以，但最复杂 | 超大模型且确实需要 P/D，网络、Connector 和运维能力成熟 |
+
+不要因为已经用了 Ray 就自然引入 P/D。vLLM 当前官方文档明确把 P/D 的主要价值描述为分别调优 TTFT/ITL、控制尾部 ITL，并提醒它**不会自动提高原始吞吐**。平台层可能通过独立配比获得更高的 SLO Goodput 或利用率，但必须让收益覆盖 KV 传输、双份权重、额外 Router 和故障面的成本。
+
+参考：[vLLM Disaggregated Prefilling](https://docs.vllm.ai/en/stable/features/disagg_prefill/)、[NixlConnector Usage Guide](https://docs.vllm.ai/en/stable/features/nixl_connector_usage/)、[NixlConnector Compatibility Matrix](https://docs.vllm.ai/en/stable/features/nixl_connector_compatibility/)
 
 ## 6. Prefill 与 Decode 为什么不同
 
