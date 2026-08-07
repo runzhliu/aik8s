@@ -329,4 +329,4 @@ kubectl -n <EXPERIMENT_NAMESPACE> delete stormservice <EXPERIMENT_STORM_SERVICE>
 - Ray 或 P/D 在节点故障、网络抖动、取消和超时场景下能无损恢复；
 - 当前镜像组合适合长期生产运行；开发构建仍需锁定 digest 并完成安全扫描。
 
-控制面安装、CPU mock、自动扩缩和 Higress 串联见：[在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)。多机模型并行与 P/D 的概念边界见：[分布式与 P/D 分离推理](../inference/distributed-serving.md)。
+控制面安装、CPU mock、自动扩缩和 Higress 串联见：[在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)。使用相同镜像、模型和 GPU 拓扑改由 RBG 编排后的实测，以及 RBG 与 RayClusterFleet/StormService 的逐项比较见：[RBG 多角色推理编排：从 CPU 控制面到生产 GPU 实测](rbg-existing-cluster.md#rbg-vs-aibrix-production)。多机模型并行与 P/D 的概念边界见：[分布式与 P/D 分离推理](../inference/distributed-serving.md)。

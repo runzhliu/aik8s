@@ -1,15 +1,18 @@
 ---
-title: RBG 多角色推理编排与 sr1 实战
-description: 在 Kubernetes 1.30 集群部署 RoleBasedGroup，实测角色依赖、服务发现、角色级扩缩与自愈，并对比 RBG、AIBrix StormService 和 Higress
+title: RBG 多角色推理编排：从 CPU 控制面到生产 GPU 实测
+description: 在 Kubernetes 1.30 集群部署 RoleBasedGroup，实测角色依赖、服务发现、扩缩、自愈、Ray 两机推理和 NIXL P/D 分离，并以相同镜像与模型对比 RBG 和 AIBrix
 status: lab
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-08
 ---
 
-# RBG 多角色推理编排与 sr1 实战
+# RBG 多角色推理编排：从 CPU 控制面到生产 GPU 实测
 
 RBG 的全称是 **RoleBasedGroup（RBG）**。它不是新的推理引擎，也不是另一个 AI Gateway，而是一组面向分布式、带状态、多角色 AI 工作负载的 Kubernetes API。它把 Router、Prefill、Decode、KV Store 等角色，以及角色内部的多 Pod Rank，作为一个逻辑服务协调创建、发现、扩缩、更新和恢复。
 
-截至 2026 年 8 月，官方最新发布为 `v0.8.0-alpha.3`。本次在 sr1 的 Kubernetes 1.30.4 集群安装该版本，并用 CPU 占位进程验证控制面。结论是：RBG 很适合补齐原生 Deployment 对多角色生命周期表达不足的问题，但它不能替代 vLLM/SGLang/Dynamo、P/D Router、KV Connector、AIBrix Gateway 或 Higress。
+截至 2026 年 8 月，官方最新发布为 `v0.8.0-alpha.3`。本次先在 sr1 的 Kubernetes 1.30.4 集群用 CPU 占位进程验证控制面，再在一套生产 GPU 集群以与现有 AIBrix 服务相同的镜像、模型和运行参数，依次跑通单卡 vLLM、两节点 Ray/vLLM 和两节点 NIXL P/D。结论是：RBG 很适合补齐原生 Deployment 对多角色生命周期表达不足的问题，但它不能替代 vLLM/SGLang/Dynamo、P/D Router、KV Connector、AIBrix Gateway 或 Higress。
+
+!!! warning "生产信息已经脱敏"
+    本文不记录公司内部集群名、节点地址、Registry、Ceph monitor、模型卷真实路径、域名、Pod IP 或 Secret。生产清单没有提交到公开仓库，文中的 `<...>` 需要按自己的环境替换。
 
 参考：[RBG 仓库](https://github.com/sgl-project/rbg)、[RBG v0.8.0-alpha.3](https://github.com/sgl-project/rbg/releases/tag/v0.8.0-alpha.3)、[RBG 官方文档](https://rolebasedgroup.github.io/)
 
@@ -424,29 +427,156 @@ RBG 官方仓库已经提供 SGLang 聚合/P-D、多节点 Leader/Worker，以�
 
 参考：[RBG Inference Examples](https://github.com/sgl-project/rbg/tree/v0.8.0-alpha.3/examples/inference)、[Mooncake RBG Integration](https://kvcache-ai.github.io/Mooncake/deployment/kubernetes-deployment-guide/rbg-integration.html)
 
-## 12. 这次实验没有证明什么
+## 12. sr1 控制面实验的边界
 
-- 没有 GPU，因此未证明模型加载、推理正确性和吞吐；
-- 没有真实 P/D Router 与 KV Connector，因此未证明 KV 传输；
-- 没有测试 `leaderWorkerPattern`、Gang Scheduling 和硬件拓扑；
-- 没有测试 HPA/KEDA 指标闭环、协调伸缩和 Scale-to-Zero；
-- 没有测试滚动、原地升级、CRD 转换和版本回滚；
-- 没有测试 RBG 与 AIBrix Gateway 的原生集成；
-- Controller 只有一个副本，未验证控制面高可用；
-- 没有让 Higress 接管该样例入口，现有 Higress/AIBrix 链路未修改。
+sr1 的 CPU Mock 只证明 RBG 的安装、角色依赖、服务发现、角色级伸缩和普通 Pod 自愈。它没有证明模型加载、GPU 通信、Ray Rank、P/D Router 或 KV Cache 传输。为了避免用 Mock 结果替真实推理背书，下一轮在生产 GPU 集群重新使用真实模型验收。
 
-## 13. 生产验收清单
+## 13. 生产 GPU 三种架构实测
+
+生产验证遵守三个约束：只用标准推理节点池、不修改已有 AIBrix/Higress 服务、所有新模型使用独立名称。每个清单先以 `replicas: 0` 通过 API Server Dry Run 和控制器收敛检查，再逐个扩到 1；任何异常都可以按精确 RBG 名称缩回 0。
+
+为了让 RBG 与 AIBrix 的差异可比较，Ray 和 P/D 两组实验没有重新制作镜像：它们直接复用现有 AIBrix 工作负载的同一运行时镜像、模型目录、精度和 vLLM 参数。变化的主要是 Kubernetes 编排对象，而不是 Runtime。
+
+| 架构 | 模型与拓扑 | RBG 表达 | 实测结果 |
+| --- | --- | --- | --- |
+| 单卡聚合推理 | 7B 蒸馏模型，1 Pod × 1 GPU | `backend` Role + `standalonePattern` | Pod Ready，OpenAI-Compatible 请求成功 |
+| Ray 多机模型并行 | 32B BF16，2 节点 × 1 GPU，PP=2 | `head`、`worker` 两个 Role，各一个 `standalonePattern` | Ray 聚合 2 GPU，17 个权重分片加载完成，请求返回 `RBG_RAY_OK` |
+| NIXL P/D 分离 | 32B GPTQ Int4，Prefill 与 Decode 各 1 节点 × 1 GPU | `prefill`、`decode` 两个 Role，各一个 `standalonePattern` | 两侧 NIXL/UCX Ready，经 AIBrix Gateway 请求返回 `RBG_PD_OK` |
+
+三组 Pod 均使用硬 Pod Anti-Affinity；Ray Head/Worker、Prefill/Decode 都实际落在不同宿主机，整个验证过程 Restart Count 保持为 0。这轮验证最高同时新增 5 张 GPU，没有容忍保留池或离线节点的污点。
+
+### 13.1 单卡 `standalonePattern`
+
+单卡场景先验证最短链路：RBG 创建 RoleInstanceSet、RoleInstance、Pod 和 Headless Service，vLLM 本身仍提供 OpenAI API。
+
+```text
+RoleBasedGroup
+  └─ backend × 1
+       └─ vLLM Pod × 1 GPU
+```
+
+这与 Deployment 的性能没有天然差异。RBG 的价值在于同一个 API 以后还能增加 Router、Worker、Prefill、Decode 或 Store Role；如果服务永远只有一个无状态 Pod，Deployment/KServe 通常更简单。
+
+### 13.2 Ray 两节点 `head + worker`
+
+生产集群没有为了本次实验额外安装 LeaderWorkerSet API，因此使用两个 RBG Role 表达 Ray Head 和 Worker：
+
+```text
+RoleBasedGroup
+  ├─ head × 1：ray start --head，等待 Ray GPU=2，再启动 vLLM API
+  └─ worker × 1：通过 RBG 稳定 DNS 加入 Head
+
+vLLM：TP=1、PP=2、distributed-executor-backend=ray
+```
+
+RBG 自动生成的 Headless Service 即使没有 Service Port，也能提供 Pod 稳定 DNS；脚本仍需显式使用 Ray 端口。Head 日志先持续看到 `GPU=1`，Worker 镜像拉取并加入后变为：
+
+```text
+Active Ray nodes: 2
+GPU: 2.0/2.0 reserved in placement groups
+accelerator type: 2 × L20
+```
+
+随后 vLLM 的两个 `RayWorkerWrapper` 分别运行在两个节点，32B 模型完成 PP=2 初始化。真实请求返回：
+
+```json
+{"model":"rbg-qwen2-5-32b-ray-2n","content":"RBG_RAY_OK"}
+```
+
+本次从创建 Pod 到全部 Ready 约 8 分钟，其中 Worker 所在节点没有镜像缓存，拉取镜像占了约 4 分钟。它不是性能基准，却暴露了一个生产事实：多机服务的启动上限由最慢节点决定，Head 必须等待完整 GPU 数，Startup Probe、发布超时和扩容防抖都要覆盖镜像拉取与模型加载。
+
+### 13.3 RBG 编排角色，AIBrix 完成 P/D 路由
+
+P/D 两端完全复用既有 StormService 使用的 vLLM/NIXL 镜像和 GPTQ 模型，RBG 只接管 Pod 生命周期：
+
+```text
+AIBrix Gateway / P-D Router
+  ├─ RBG prefill Role：vLLM + NixlConnector
+  └─ RBG decode Role：vLLM + NixlConnector
+```
+
+为两个 Pod 增加 AIBrix 的模型名、端口、引擎和 `role-name` 标签，以及 `routingStrategy=pd` 注解后，现有 Gateway 能发现它们。两侧都加载约 18 GiB 权重，初始化 UCX Agent，并为 16K 上下文保留约 21 GiB KV Cache。
+
+同一个 Request ID 的脱敏日志显示：
+
+```text
+Prefill: max_tokens=1, do_remote_decode=true
+Decode:  do_remote_prefill=true,
+         remote_engine_id=<PREFILL_ENGINE>,
+         remote_block_ids=<BLOCKS>
+```
+
+最终经 Gateway 返回 `RBG_PD_OK`。这证明 RBG 管理的 Pod 可以接入当前 AIBrix P/D 数据路径，但不要把它描述为“RBG 自己实现了 P/D”：请求拆分、P/D 配对和 KV Transfer 参数仍由 AIBrix Gateway 产生，真正搬运 KV 的是 vLLM NIXL/UCX。
+
+## 14. 同镜像、同模型下对比 RBG 与 AIBrix { #rbg-vs-aibrix-production }
+
+这次最有价值的对比不是“谁的 YAML 更短”，而是谁拥有哪一层状态。Ray 与 P/D 都沿用相同 Runtime 后，得到下面的职责差异。
+
+| 维度 | RBG 模式 | AIBrix 模式 | 实践判断 |
+| --- | --- | --- | --- |
+| 顶层对象 | `RoleBasedGroup` | Ray 用 `RayClusterFleet/RayCluster`；P/D 用 `StormService/RoleSet` | RBG 用一套通用 Role API；AIBrix 按场景提供专用对象 |
+| Pod 所有权 | RBG → RoleInstanceSet → RoleInstance → Pod | Fleet → RayCluster → KubeRay Pod，或 StormService → RoleSet → Pod | 同一 Pod 只能选一个控制器拥有 |
+| Ray Head/Worker | 本次需要自己写启动、等待 GPU 和 DNS 加入脚本 | KubeRay 原生表达 Head/Worker 和 Ray 状态 | 已经使用 KubeRay 时，AIBrix 路径更省胶水代码 |
+| 多节点完整副本 | 可用 Role + Pattern 表达，扩容语义由清单设计 | RayClusterFleet 管理多份 RayCluster | 两者都能做；必须确认扩的是 Worker 还是完整 Engine |
+| P/D Pod 编排 | Prefill/Decode 是普通 Role，可组合其他 Runtime | StormService/RoleSet 原生表达 Prefill/Decode | RBG 更中立，StormService 与 AIBrix 生态更紧密 |
+| P/D 请求配对 | RBG 不处理请求，需要 AIBrix/SGLang/Dynamo Router | AIBrix Gateway 原生按 Role 选路并注入 KV 参数 | 只部署 RBG CRD 不会自动获得 P/D |
+| 模型感知路由 | 无内置 Gateway；通过 Pod 标签接入外部路由 | Gateway、模型发现和路由策略属于同一平台 | 现有 AIBrix 用户继续走 AIBrix 最自然 |
+| 服务发现 | 每 Role 一个稳定 Headless Service，并注入 RBG 拓扑变量 | KubeRay Head Service、Storm/RoleSet 标签和 Endpoint | RBG 对通用多角色 Peer 发现更统一 |
+| 角色级伸缩 | ScalingAdapter 暴露 Scale 子资源，可接 HPA/KEDA | PodAutoscaler 可按 Role 与模型指标伸缩 | RBG 更通用；AIBrix 更懂推理指标和 P/D 语义 |
+| 更新与恢复 | Role 级策略、依赖、稳定身份和协调策略 | Storm 顺序/原地更新，KubeRay/Fleet 各有恢复语义 | 需要做节点故障与请求排空实测，不能只看 CRD 字段 |
+| Gateway 组合 | 天然可接 Higress；需要模型路由时再接 AIBrix 等 | 常见为 Higress → AIBrix Gateway → Runtime | 企业入口和模型路由仍应分层 |
+| Runtime 倾向 | SGLang、Dynamo、Mooncake、vLLM 等多种 Runtime | 当前生产链路以 vLLM、AIBrix Gateway 为中心 | Runtime 中立是 RBG 的主要选型理由 |
+| 成熟度风险 | 当前发布仍为 alpha，API 和运维经验较新 | 组件更多但已有完整路由、伸缩和实测链路 | 生产默认保留成熟路径，RBG 从旁路模型开始 |
+
+### 14.1 对当前企业环境的建议
+
+如果企业已经用 AIBrix `RayClusterFleet` 跑多机 vLLM，并用 `StormService` 跑 P/D，**不要只为统一 CRD 就迁移到 RBG**。现有路径已经把 KubeRay、P/D Router、模型发现和自动伸缩串起来，迁移会把一部分内置语义重新变成启动脚本和标签约定。
+
+RBG 更适合从这些场景切入：
+
+- 同一平台要同时承载 SGLang、Dynamo、Mooncake、vLLM 和自研 Runtime；
+- 一个服务除 P/D 外还有 Router、KV Store、Metadata、Tokenizer 等多角色；
+- 需要稳定身份、角色依赖、协调更新或完整副本级生命周期；
+- 希望工作负载控制器与 AIBrix Gateway 解耦，允许将来替换路由层。
+
+`AIBrix Gateway + RBG Pod` 已在本次功能实验中跑通，但它目前是一种**基于标签契约的组合**，不是 AIBrix 控制器原生管理 RBG。生产化还应补模型注册延迟、Pod 滚动期间 Endpoint 一致性、标签契约回归和双控制器升级矩阵。
+
+### 14.2 不要混淆两种“多机多卡”
+
+| 模式 | 两张 GPU 在做什么 | 扩容单位 |
+| --- | --- | --- |
+| Ray PP=2 | 两个 Rank 共同执行一个模型 Engine | 一整套 Head + Worker |
+| P/D 分离 | 两个完整 Engine 分别处理 Prefill 和 Decode，再传 KV | Prefill Pool 与 Decode Pool 可分别扩 |
+
+RBG 与 AIBrix 都只是把这些 Runtime 放到 Kubernetes。选择哪种 CRD 不会改变 PP 与 P/D 的计算本质，也不会自动让某种模式吞吐更高。
+
+## 15. 生产实测暴露的缺口
+
+- Ray Worker 节点首次拉取大镜像使整组 Ready 明显变慢，应建设镜像预热、P2P 分发或节点缓存；
+- vLLM/c10d 对 Pod FQDN 做地址族探测时出现 IPv6 不可用告警，虽然本次回退 IPv4 成功，生产仍应固定 `GLOO_SOCKET_IFNAME`、`NCCL_SOCKET_IFNAME` 并验证多网卡；
+- 当前 Ray 镜像缺少部分 `ray[default]` Dashboard 依赖，不影响推理，但会损失一部分 Ray 指标和页面能力；
+- P/D 样例为了兼容 AIBrix 路由打开了 vLLM Development Endpoint，不能直接暴露到不可信网络；
+- RBG Headless Service 本次主要用于 DNS，Gateway Endpoint 来自 Pod 标签；需要明确哪个系统负责端口发现和 Ready 过滤；
+- 没有测试 Worker/Prefill/Decode 节点故障、网络分区、滚动升级、请求取消和流式响应中断；
+- 没有进行同流量、同并发的 TTFT、TPOT、吞吐、Goodput 和成本对比，因此不能从“请求成功”推导性能优劣；
+- 没有验证 `leaderWorkerPattern`、Gang Scheduling、ScalingAdapter 指标闭环和 Scale-to-Zero；
+- 没有让 Higress 接管新样例入口，现有外部访问链路未修改。
+
+## 16. 生产验收清单
 
 - [x] RBG 版本固定，Chart、Controller 镜像和 Kubernetes 版本已记录；
-- [x] Controller、CRD 和 Webhook 安装完成；
-- [x] 角色启动依赖、Headless Service 和环境变量已验证；
-- [x] Decode Role 完成 2→3→2 独立扩缩，并验证副本字段所有权冲突保护；
+- [x] Controller 使用两个副本并分散到不同节点；
+- [x] Controller、CRD、Webhook 和证书注入正常；
+- [x] 角色启动依赖、Headless Service、拓扑变量和 CPU Mock 已验证；
+- [x] Decode Role 完成 2→3→2 独立扩缩，并验证字段所有权保护；
 - [x] Prefill Pod 删除后恢复，RBG 回到 Ready；
-- [ ] Controller 多副本和反亲和已验证；
-- [ ] 真实引擎、模型、OpenAI API 与流式响应已验证；
-- [ ] P/D Router、KV Connector、超时和失效语义已验证；
-- [ ] 多节点 Rank、Gang、GPU/NIC 拓扑和整体恢复已验证；
+- [x] 单卡真实模型和 OpenAI-Compatible API 已验证；
+- [x] Ray 两节点、2 GPU、PP=2 与真实请求已验证；
+- [x] Prefill/Decode 跨节点、NIXL KV Transfer 与 Gateway 请求已验证；
+- [x] RBG 与 AIBrix 对照使用相同镜像、模型和关键 Runtime 参数；
+- [ ] 多节点 Gang、GPU/NIC 拓扑和完整 Engine 故障恢复已验证；
 - [ ] HPA/KEDA 指标、预热、排空和防抖已验证；
+- [ ] 流式响应、取消、超时、节点故障和网络抖动已验证；
 - [ ] 升级、回滚、CRD 转换、备份与灾难恢复已验证；
 - [ ] Higress/AIBrix/RBG/Runtime 的路由、伸缩、重试和故障职责只有一个权威来源。
 
@@ -455,5 +585,6 @@ RBG 官方仓库已经提供 SGLang 聚合/P-D、多节点 Leader/Worker，以�
 - [RBG Installation](https://github.com/sgl-project/rbg/blob/v0.8.0-alpha.3/doc/install.md)
 - [RBG Deploy Inference Service](https://github.com/sgl-project/rbg/blob/v0.8.0-alpha.3/doc/best-practice/zh/01-deploy-inference-service.md)
 - [AIBrix 既有集群实战](aibrix-existing-cluster.md)
+- [AIBrix 真实 GPU：Ray 多机与 NIXL P/D](aibrix-gpu-multinode-pd-production.md)
 - [Higress AI Gateway 实战](../inference/higress-ai-gateway.md)
 - [多机与分离式 LLM 推理](../inference/distributed-serving.md)
