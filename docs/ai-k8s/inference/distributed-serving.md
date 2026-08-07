@@ -380,7 +380,7 @@ Dynamo 提供 Frontend、Router、Planner、Worker 和分离式推理能力，�
 
 ```text
 平台控制面：AIBrix / llm-d / KServe / Ray Serve / Dynamo
-集群编排层：Kubernetes / LeaderWorkerSet / KubeRay
+集群编排层：Kubernetes / RBG / LeaderWorkerSet / KubeRay
 推理执行层：vLLM / SGLang / TensorRT-LLM
 ```
 
@@ -389,6 +389,7 @@ Dynamo 提供 Frontend、Router、Planner、Worker 和分离式推理能力，�
 | 项目 | 主要定位 | 多机多卡与分离式推理能力 | 更适合的场景 |
 | --- | --- | --- | --- |
 | AIBrix | Kubernetes LLM 推理控制面 | Gateway、模型感知路由、Autoscaling、LoRA、KV Cache 和 P/D 等能力 | 希望建设包含流量、模型和弹性管理的通用推理平台 |
+| RBG（RoleBasedGroup） | 多角色、带状态推理工作负载编排 API | Router/Prefill/Decode 角色依赖、稳定发现、角色级扩缩、Leader/Worker 和协调更新；不实现请求路由或 KV 数据路径 | 希望在 SGLang、Dynamo、Mooncake 或自研 Runtime 之上使用独立编排层；与 AIBrix 最应直接对比的是 StormService/RoleSet |
 | llm-d | Kubernetes 原生分布式推理栈 | InferencePool/EPP、Prefix/KV-aware Routing、KV 索引与卸载、P/D 分离 | 重点优化大规模请求调度、KV 命中率和分离式推理，可作为 AIBrix 的重点对标对象 |
 | KServe LLMInferenceService | 模型服务 CRD 和生命周期控制面 | 通过 LeaderWorkerSet 表达跨节点副本，支持 Tensor/Data/Expert Parallelism，并组合 Gateway 和 Autoscaler | 已有 KServe，希望统一模型服务 API、发布和弹性治理 |
 | NVIDIA Dynamo | NVIDIA 高性能分布式推理框架 | Frontend、Router、Prefill/Decode Pool、KV-aware Routing、NIXL/RDMA 数据路径 | NVIDIA GPU 和高速网络完备，优先追求 P/D、KV 传输和极限性能 |
@@ -404,9 +405,10 @@ Dynamo 提供 Frontend、Router、Planner、Worker 和分离式推理能力，�
 - NVIDIA GPU、RDMA 和拓扑条件成熟：测试 **Dynamo + TensorRT-LLM/vLLM**；
 - 数据处理、训练和推理已经大量使用 Ray：选择 **KubeRay + Ray Serve LLM**；
 - 想先让 vLLM 生产化，不急于建设统一控制面：从 **vLLM Production Stack** 起步；
+- 需要独立于 Gateway 的多角色生命周期 API：评估 **RBG**；若已经采用 AIBrix 全栈，先比较 StormService，避免两个控制器同时拥有一批 Pod；
 - 需要自研企业推理平台：可组合 **Gateway API + llm-d Router/EPP + KServe/LWS + vLLM/SGLang**，但必须明确每个资源只有一个生命周期和扩缩控制器。
 
-参考：[llm-d Architecture](https://llm-d.ai/docs/0.7/architecture)、[KServe LLMInferenceService](https://kserve.github.io/website/docs/model-serving/generative-inference/llmisvc/llmisvc-configuration)、[Ray Serve LLM](https://docs.ray.io/en/latest/serve/llm/index.html)、[vLLM Production Stack](https://github.com/vllm-project/production-stack)、[SGLang](https://github.com/sgl-project/sglang)
+参考：[RBG](https://github.com/sgl-project/rbg)、[llm-d Architecture](https://llm-d.ai/docs/0.7/architecture)、[KServe LLMInferenceService](https://kserve.github.io/website/docs/model-serving/generative-inference/llmisvc/llmisvc-configuration)、[Ray Serve LLM](https://docs.ray.io/en/latest/serve/llm/index.html)、[vLLM Production Stack](https://github.com/vllm-project/production-stack)、[SGLang](https://github.com/sgl-project/sglang)。RBG 与 AIBrix/Higress 的详细边界和 sr1 实测见 [RBG 多角色推理编排](../practices/rbg-existing-cluster.md)。
 
 ## 13. 双池容量规划
 

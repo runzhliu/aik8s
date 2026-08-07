@@ -883,3 +883,4 @@ mock 请求成功只证明以下链路：
 - [Envoy Gateway Compatibility Matrix](https://gateway.envoyproxy.io/news/releases/matrix/)
 - [AI Gateway 与智能路由](../inference/gateway-routing.md)
 - [多机与分离式 LLM 推理](../inference/distributed-serving.md)
+- [RBG 多角色推理编排与 sr1 实战](rbg-existing-cluster.md)

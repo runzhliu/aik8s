@@ -36,6 +36,7 @@ last_reviewed: 2026-08-05
 ## 端到端交付
 
 - [在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)
+- [RBG 多角色推理编排与 sr1 实战](rbg-existing-cluster.md)
 - [从 Ollama 到 Kubernetes 生产推理](ollama-to-production.md)
 - [70B 模型向百节点分发](model-distribution-100-nodes.md)
 - [离线环境部署 AI/LLM 平台](air-gapped-ai-platform.md)
