@@ -271,7 +271,146 @@ RoleBasedGroup/mock-pd          Ready=True
 - 重启退避是否会形成故障风暴；
 - 同一故障是否触发 RBG、Runtime 和上层 Gateway 的重复恢复。
 
-## 10. 从 Mock 走向真实推理
+## 10. 企业 TrainingJob 跑 vLLM 与 RBG 是什么关系 { #trainingjob-vllm-vs-rbg }
+
+很多企业已经用 VolcanoJob、PyTorchJob 或自研 TrainingJob 启动多个 Pod，再用它们运行 vLLM 多机多卡。这不是错误用法：Job Controller 提供成组启动和失败重试，企业脚本负责建立 Ray Cluster、发现 Rank，最后只把 Head Pod 的 vLLM API 暴露为在线 Service。
+
+```text
+TrainingJob / VolcanoJob
+  ├─ Master Pod：Ray Head + vLLM API
+  ├─ Worker Pod 1：加入 Ray Cluster
+  ├─ Worker Pod 2：加入 Ray Cluster
+  └─ Worker Pod N
+```
+
+这套架构可以长期运行，尤其适合已有成熟训练平台、固定模型拓扑和少量内部服务的公司。它的代价是在线服务语义通常散落在平台代码和启动脚本中：Head-only Service、整组 Readiness、滚动发布、请求排空、完整副本扩缩以及 NCCL/Ray 故障恢复都需要自己实现。
+
+RBG 不是替换 vLLM 的执行层，而是把这组脚本约定提升为声明式的长期工作负载：
+
+```text
+RoleBasedGroup
+  └─ Role: backend
+       replicas: 2
+       leaderWorkerPattern:
+         size: 4
+
+最终含义：
+  ├─ 完整模型副本 A：1 Leader + 3 Worker
+  └─ 完整模型副本 B：1 Leader + 3 Worker
+```
+
+这里两个数字不能混淆：
+
+- `leaderWorkerPattern.size` 是**一份完整模型副本内部**的 Pod 数；
+- `role.replicas` 是完整模型副本数，扩容 1 次会新增一整组 Leader/Worker；
+- 上层 Gateway 只能选择完整副本的 Leader/API Endpoint，不能把不同组的 Worker 混在一起。
+
+### 10.1 RBG 能解决多少 vLLM 多机多卡问题
+
+| 问题 | RBG 是否解决 | 实际责任方 |
+| --- | --- | --- |
+| 创建一组 Leader/Worker Pod | 是 | `leaderWorkerPattern` |
+| 稳定编号、Leader 地址和组大小 | 是 | Headless Service 与 `RBG_LWP_*` 环境变量 |
+| 以完整模型副本扩缩 | 是 | Role Replica/ScalingAdapter |
+| Worker 故障后整组或局部恢复 | 可配置 | RBG RestartPolicy，仍须验证 Runtime 清理 |
+| 一次性获得所有 GPU | 需要组合 | Volcano 或 Scheduler Plugins 的 Gang Scheduling |
+| TP/PP/DP/EP 如何切分 | 否 | vLLM |
+| Ray Actor 和进程执行 | 否 | Ray/vLLM |
+| NCCL/RDMA/多网卡选择 | 否 | vLLM、Ray、NCCL、CNI 与节点网络 |
+| 权重下载和缓存 | 否 | 对象存储、P2P 分发、镜像或本地缓存 |
+| 模型感知请求路由 | 否 | AIBrix、llm-d、Ray Serve 或 Runtime Router |
+| P/D KV Cache 传输 | 否 | NIXL、Mooncake、LMCache 等 Connector |
+
+因此，RBG 能解决的是**多机多卡服务的 Kubernetes 编排面**，不能把尚未跑通的 vLLM 分布式通信自动变得可用或更快。
+
+### 10.2 RBG + Ray + vLLM
+
+最容易复用现有企业方案的是保留 Ray，只把 Job Controller 换成 RBG：
+
+```text
+Leader Template
+  1. ray start --head --port=6379
+  2. 等待预期 Worker Ready
+  3. vllm serve MODEL --distributed-executor-backend ray ...
+
+Worker Template
+  1. ray start --address=${RBG_LWP_LEADER_ADDRESS}:6379 --block
+```
+
+RBG 可通过 `leaderTemplatePatch` 与 `workerTemplatePatch` 给 Leader、Worker 设置不同入口脚本，并注入：
+
+```text
+RBG_LWP_LEADER_ADDRESS  Leader 的稳定 DNS
+RBG_LWP_GROUP_SIZE      一份 RoleInstance 的 Pod 总数
+RBG_LWP_WORKER_INDEX    当前 Pod 序号，Leader 为 0
+```
+
+例如两台机器、每台 8 卡，一个模型副本共使用 16 卡时，vLLM 官方给出的常见组合是：
+
+```bash
+vllm serve /models/example \
+  --tensor-parallel-size 8 \
+  --pipeline-parallel-size 2 \
+  --distributed-executor-backend ray
+```
+
+TP 通常留在单机高速互联域，PP 跨两个节点。也可以把 TP 设置为全组 GPU 数，但必须按模型、网络和硬件实测。所有节点需要一致的镜像、模型路径、Python/vLLM/Ray/CUDA/NCCL 版本；多网卡环境还要明确 `VLLM_HOST_IP`、NCCL 与 Gloo 使用的接口。
+
+参考：[vLLM Parallelism and Scaling](https://docs.vllm.ai/en/latest/serving/parallelism_scaling/)、[vLLM Multi-Node Serving](https://docs.vllm.ai/en/latest/examples/ray_serving/multi-node-serving/)
+
+### 10.3 RBG + vLLM 原生 MultiProcessing
+
+当前 vLLM 也提供多节点 MultiProcessing 模式。概念上映射为：
+
+```text
+RBG_LWP_GROUP_SIZE      → --nnodes
+RBG_LWP_WORKER_INDEX    → --node-rank
+RBG_LWP_LEADER_ADDRESS  → --master-addr
+```
+
+两节点示意：
+
+```bash
+# Leader
+vllm serve /models/example \
+  --tensor-parallel-size 8 \
+  --pipeline-parallel-size 2 \
+  --nnodes 2 --node-rank 0 \
+  --master-addr "$RBG_LWP_LEADER_ADDRESS"
+
+# Worker
+vllm serve /models/example \
+  --tensor-parallel-size 8 \
+  --pipeline-parallel-size 2 \
+  --nnodes 2 --node-rank 1 \
+  --master-addr "$RBG_LWP_LEADER_ADDRESS" \
+  --headless
+```
+
+生产入口脚本不能硬编码 `node-rank 1`，而要读取 `RBG_LWP_WORKER_INDEX`；还要等待 DNS、端口和所有 Rank 就绪。原生模式减少 Ray 组件，但企业必须重新验证启动屏障、日志聚合、故障恢复和可观测性，不能因为进程更少就认为运维一定更简单。
+
+### 10.4 官方 vLLM 支持到什么程度
+
+RBG v0.8 文档明确给出 vLLM `standalonePattern`，仓库还有 vLLM + Mooncake Transfer Engine 的 P/D 示例。因此“RBG 可以承载 vLLM”有官方依据。
+
+但当前开箱即用的 `leaderWorkerPattern` 多节点样例主要使用 SGLang 或 Dynamo SGLang Runtime；仓库还不是一套可直接复制到任意企业网络的 vLLM Ray 多节点模板。落地时仍需编写 Leader/Worker 入口脚本，确定 vLLM/Ray 版本、模型分发、端口、网卡、Gang 和恢复策略。
+
+参考：[RBG Ecosystem Integration](https://github.com/sgl-project/rbg/blob/v0.8.0-alpha.3/doc/features/ecosystem-integration.md)、[RBG vLLM + Mooncake Example](https://github.com/sgl-project/rbg/blob/v0.8.0-alpha.3/examples/inference/ecosystem/mooncake/mooncake-transfer-engine/vllm-pd-disagg-with-mooncake-te.yaml)
+
+### 10.5 要不要从 TrainingJob 迁移
+
+| 当前情况 | 建议 |
+| --- | --- |
+| 固定一个模型、一两个多机副本，现有 Job 已有 Gang、Service、整组恢复 | 保留现有方案，迁移收益有限 |
+| 已经标准使用 Ray 和 KubeRay | 优先评估 RayCluster/RayClusterFleet，不必只为换 CRD 引入 RBG |
+| 已全面采用 AIBrix Gateway 和角色级弹性 | 优先 StormService/RoleSet，避免两套工作负载控制器 |
+| 多团队各写一套 Master/Worker 脚本 | RBG 可统一拓扑、发现、更新和恢复接口 |
+| 开始引入 Router、Prefill、Decode、KV Store 多角色 | RBG 的价值明显增大 |
+| 需要 Runtime 中立并组合 SGLang、Dynamo、Mooncake、vLLM | RBG 比绑定单一平台的内部 CRD 更适合作为候选 |
+
+迁移时不要一次重写 vLLM 数据路径。先保持原来的镜像、Ray 和启动参数，只把 Pod 生成、DNS、状态和 Service 所有权迁到 RBG；用同一模型、输入长度和并发对照启动时间、TTFT、TPOT、Goodput、恢复时间，再决定是否扩大范围。
+
+## 11. 从 Mock 走向真实推理
 
 推荐按风险递增：
 
@@ -285,7 +424,7 @@ RBG 官方仓库已经提供 SGLang 聚合/P-D、多节点 Leader/Worker，以�
 
 参考：[RBG Inference Examples](https://github.com/sgl-project/rbg/tree/v0.8.0-alpha.3/examples/inference)、[Mooncake RBG Integration](https://kvcache-ai.github.io/Mooncake/deployment/kubernetes-deployment-guide/rbg-integration.html)
 
-## 11. 这次实验没有证明什么
+## 12. 这次实验没有证明什么
 
 - 没有 GPU，因此未证明模型加载、推理正确性和吞吐；
 - 没有真实 P/D Router 与 KV Connector，因此未证明 KV 传输；
@@ -296,7 +435,7 @@ RBG 官方仓库已经提供 SGLang 聚合/P-D、多节点 Leader/Worker，以�
 - Controller 只有一个副本，未验证控制面高可用；
 - 没有让 Higress 接管该样例入口，现有 Higress/AIBrix 链路未修改。
 
-## 12. 生产验收清单
+## 13. 生产验收清单
 
 - [x] RBG 版本固定，Chart、Controller 镜像和 Kubernetes 版本已记录；
 - [x] Controller、CRD 和 Webhook 安装完成；
