@@ -1,0 +1,23 @@
+spec:
+  provider:
+    kubernetes:
+      # A single-node k3s lab usually has no cloud load-balancer. ClusterIP
+      # gives Gateway an address and avoids a permanently pending klipper-lb.
+      envoyService:
+        type: ClusterIP
+      envoyDeployment:
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              template:
+                spec:
+                  containers:
+                    - name: envoy
+                      resources:
+                        requests:
+                          cpu: 100m
+                          memory: 256Mi
+                        limits:
+                          cpu: "1"
+                          memory: 1Gi

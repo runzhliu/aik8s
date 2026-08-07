@@ -17,7 +17,9 @@ Higress 不只是一个把域名转发到 Service 的 Ingress Controller。它�
 - `IngressClass=higress-sr1` 与已有 `nginx` 隔离；
 - 回显请求经过 Higress Gateway 后返回 `higress-sr1-ok`；
 - Console 返回 HTTP 200；
-- 实验只验证了普通 Ingress 数据面，尚未给真实模型配置 API Key、AI Proxy 或公网入口。
+- Higress → AIBrix → 两副本 CPU mock vLLM 返回 HTTP 200；
+- 客户端伪造的 `routing-strategy: random` 被入口覆写为平台策略 `least-request`，AIBrix 的 Pod/IP 诊断头没有暴露给客户端；
+- 实验尚未验证真实 GPU 模型、Higress AI Proxy 插件、TLS 或公网入口。
 
 ## 1. 先区分 Higress、AIBrix 和推理引擎
 
@@ -223,6 +225,37 @@ higress-sr1-ok
 ```
 
 这个结果同时证明了 Gateway Listener、Ingress 转换、xDS 下发、Service 发现和后端网络，并不仅是 Pod 状态为 Running。
+
+### 7.3 单节点 k3s 串联复验
+
+在 k3s v1.36.2+k3s1 单节点上，使用同一套 `higress-sr1` 隔离配置复验了完整链路：
+
+```text
+curl /v1/chat/completions
+  → Higress ClusterIP Gateway
+  → aibrix-gateway-upstream 稳定别名 Service
+  → AIBrix Envoy Gateway + ext_proc
+  → mock-llama2-7b Pod
+```
+
+应用清单并请求：
+
+```bash
+kubectl apply -f examples/higress-sr1/higress-to-aibrix.yaml
+kubectl -n higress-system port-forward svc/higress-gateway 18080:80
+
+curl -i http://127.0.0.1:18080/v1/chat/completions \
+  -H 'Host: aibrix.higress.lab' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <TEST_API_KEY>' \
+  -H 'routing-strategy: random' \
+  --data '{
+    "model": "llama2-7b",
+    "messages": [{"role": "user", "content": "gateway validation"}]
+  }'
+```
+
+请求返回 HTTP 200。AIBrix Gateway Plugin 日志记录 `routing_strategy="least-request"` 和被选中的 mock Pod，证明 Higress 覆写生效；客户端响应中没有 `target-pod`、`target-pod-ip` 或 `routing-strategy`。删除一个 mock Pod 后立即重试仍返回 200，流量落到存活副本，Deployment 随后补齐第二个 Pod。这个测试证明的是入口策略、服务发现和基础自愈，不代表真实模型重载、KV 重建和长连接排空已经通过。
 
 ## 8. Console 访问与账户
 

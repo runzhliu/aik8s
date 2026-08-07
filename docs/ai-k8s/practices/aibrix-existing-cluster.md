@@ -156,6 +156,30 @@ kubectl -n aibrix-system rollout status deployment --timeout=300s
 
 如果把三份清单同时执行 `--dry-run=server`，后面的对象可能报 Namespace 或 CRD 不存在。原因是 dry-run 不会真正持久化前一份清单，不代表 API 不兼容。可靠做法是先实际安装依赖和 CRD，确认 `Established=True`，再预检或安装 Core。
 
+### 4.1 单节点 k3s 的资源与 Service 覆盖
+
+在另一套单节点 k3s v1.36.2+k3s1 环境复验时，节点有 28 核、约 31 GiB 可分配内存，但没有 `nvidia.com/gpu`。官方清单中 Gateway Plugin 和 Envoy 数据面各请求 2 CPU / 8 GiB；叠加已有 KubeVirt、存储和业务 Pod 后，节点内存请求接近 100%，Higress Gateway 无法调度。CPU 控制面实验可以临时降低请求，但生产容量不能照搬这个配置：
+
+```bash
+kubectl -n aibrix-system patch deployment aibrix-gateway-plugins \
+  --type=strategic \
+  --patch-file examples/aibrix-sr1/k3s-lab-gateway-plugin-strategic-patch.yaml
+
+kubectl -n aibrix-system patch envoyproxy aibrix-custom-proxy-config \
+  --type=merge \
+  --patch-file examples/aibrix-sr1/k3s-lab-envoyproxy-merge-patch.yaml
+
+kubectl -n aibrix-system rollout status deployment/aibrix-gateway-plugins
+kubectl -n envoy-gateway-system rollout status \
+  deployment/envoy-aibrix-system-aibrix-eg-903790dc
+kubectl -n aibrix-system wait --for=condition=Programmed \
+  gateway/aibrix-eg --timeout=120s
+```
+
+第二份补丁还把 Envoy Service 从 `LoadBalancer` 改成 `ClusterIP`。单节点 k3s 没有 MetalLB 或云负载均衡器时，默认 Service 会一直等待外部地址，K3s ServiceLB 还可能因 80 端口已被占用而无法 Ready；ClusterIP 足以支持同集群 Higress 串联和 `port-forward` 测试，并让 Gateway 获得地址、进入 `Programmed=True`。需要从集群外访问时，应另行配置 MetalLB/内网 VIP、NodePort 或受控入口，不能把 ClusterIP 当成公网方案。
+
+该 k3s 集群已有较新的 Gateway API CRD，`BackendTLSPolicy` 和 `TLSRoute` 的 `status.storedVersions` 包含 `v1`。不要为了套用 AIBrix dependency 清单而强行降级这两个 CRD；保留现有可存储版本，确认 Envoy Gateway、Gateway、HTTPRoute 和 AIBrix 扩展策略均能正常调和。CRD 的 served/storage 版本属于集群级兼容面，处理前应先备份并检查现有对象。
+
 ## 5. 安装后应该看到什么
 
 AIBrix v0.7.0 默认控制面包括：
@@ -792,6 +816,24 @@ Higress 把这个地址注册为静态、DNS 或注册中心 Upstream。网络�
 
 后续已在同一集群使用独立 `higress-system` Namespace、`higress-sr1` IngressClass 和 ClusterIP Service 安装 Higress v2.2.3，并通过稳定别名 Service 跑通 Higress → AIBrix → CPU mock vLLM。请求返回 HTTP 200，AIBrix `least-request` 选择了具体模型 Pod，Plugin 日志记录输入/输出 Token；Higress 日志同时记录了目标 Upstream。首次响应暴露 AIBrix 内部 Pod/IP 头，补充 Route 级响应头删除后复测通过。继续用伪造 Header 复测时，Higress 成功清除身份/配置控制头，并把客户端的 `random` 覆盖为平台 `least-request`；合法 `traceparent` 也让 AIBrix 日志和响应使用同一 Trace ID。未修改已有 nginx、AIBrix Gateway 或业务路由。完整清单、证据和选型边界见 [Higress AI Gateway 实战](../inference/higress-ai-gateway.md)。
 
+### 10.3 单节点 k3s 复验矩阵
+
+在 28 核、约 31 GiB 内存且没有 GPU 的 k3s 节点上，完成了以下复验。所有临时扩容都已恢复到基线副本数：
+
+| 测试 | 实际结果 | 能证明什么 |
+| --- | --- | --- |
+| GatewayClass、Gateway、HTTPRoute | `Accepted=True`、`Programmed=True`、`ResolvedRefs=True` | Envoy Gateway 与 AIBrix 路由对象已调和 |
+| `least-request`、`random`、`prefix-cache` | 均为 HTTP 200，并在响应头/日志记录不同目标 Pod | 模型发现与三条路由代码路径可用；不代表真实 KV 命中 |
+| 不存在的模型 | HTTP 400，`model_not_found` | 错误语义能够在网关层收敛 |
+| StormService `pd` | HTTP 200，同时记录 Prefill 与 Decode Pod | P/D 角色配对和 mock 控制流可用 |
+| StormService 1→2→1 | 两个 RoleSet、四个角色 Pod Ready，扩容期间请求成功，随后恢复 1 组 | 成组生命周期与缩扩容调和可用 |
+| 删除一个 mock Pod | 删除后立即请求仍为 200，Deployment 补齐新副本 | Endpoint 摘除和基础自愈可用 |
+| KVCache / Vineyard | etcd Ready，Vineyard RPC 监听 9600 | CR、元数据和 TCP 缓存进程可用 |
+| RDMA 回退 | 日志记录 RDMA 初始化失败并回退 TCP | 无 RDMA 节点上的预期降级；未证明高速 KV 传输 |
+| Higress → AIBrix | HTTP 200，客户端 `random` 被覆写为 `least-request`，内部头被清理 | 两层网关串联和边界 Header 策略生效 |
+
+本轮节点实测约使用 9% CPU、57% 内存；这只是控制面和 CPU mock 的瞬时观测，不应用于估算真实模型容量。
+
 ## 11. 换成真实 GPU vLLM 前还缺什么
 
 mock 请求成功只证明以下链路：
@@ -869,7 +911,8 @@ mock 请求成功只证明以下链路：
 - [x] 自定义 vLLM 指标 HPA 把 mock Deployment 从 2 扩到 3，并已恢复；
 - [x] 同集群 Higress → AIBrix → mock vLLM 返回 HTTP 200，并完成内部诊断响应头清洗；
 - [x] Higress 清除伪造身份/配置头并强制平台路由策略，AIBrix 通过 `traceparent` 采用统一 Trace ID；
-- [ ] 为 Gateway 配置生产可用的内部 VIP 或同集群 ClusterIP 入口；
+- [x] 单节点 k3s 为 Gateway 配置同集群 ClusterIP，`Programmed=True`；
+- [ ] 为跨集群或生产流量配置内网 VIP/LoadBalancer；
 - [ ] Kubernetes 发布 GPU 资源并跑通真实 vLLM；
 - [ ] 修复 Kubelet Serving Certificate 过期并移除 `--kubelet-insecure-tls`；
 - [ ] 修复节点 Kubelet 10250 拒绝连接导致的 Metrics `<unknown>`；

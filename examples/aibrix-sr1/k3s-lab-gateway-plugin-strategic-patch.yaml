@@ -1,0 +1,15 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: gateway-plugin
+          # The upstream manifest reserves 2 CPU / 8 GiB. Keep that profile
+          # for production; this smaller request is only for CPU control-plane
+          # validation on a memory-constrained, single-node lab.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
