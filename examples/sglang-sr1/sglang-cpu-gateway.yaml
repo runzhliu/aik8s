@@ -1,0 +1,205 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sglang-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sglang-demo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sglang-router
+  namespace: sglang-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sglang-worker-discovery
+  namespace: sglang-demo
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sglang-worker-discovery
+  namespace: sglang-demo
+subjects:
+  - kind: ServiceAccount
+    name: sglang-router
+    namespace: sglang-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: sglang-worker-discovery
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sglang-cpu-mock
+  namespace: sglang-demo
+  labels:
+    app.kubernetes.io/name: sglang-cpu-mock
+    app.kubernetes.io/part-of: sglang-cpu-gateway-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sglang-cpu-mock
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sglang-cpu-mock
+        app.kubernetes.io/part-of: sglang-cpu-gateway-lab
+        sglang.ai/worker: "true"
+        sglang.ai/role: regular
+    spec:
+      containers:
+        - name: openai-mock
+          # CPU Mock 只模拟 OpenAI-Compatible API，不加载模型，也不证明 Runtime 性能。
+          image: aibrix/vllm-mock:v0.7.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - python3
+            - app.py
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sglang-cpu-mock
+  namespace: sglang-demo
+spec:
+  selector:
+    app.kubernetes.io/name: sglang-cpu-mock
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sglang-router
+  namespace: sglang-system
+  labels:
+    app.kubernetes.io/name: sglang-router
+    app.kubernetes.io/part-of: sglang-cpu-gateway-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sglang-router
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sglang-router
+        app.kubernetes.io/part-of: sglang-cpu-gateway-lab
+    spec:
+      serviceAccountName: sglang-router
+      containers:
+        - name: router
+          image: lmsysorg/sglang-router:v0.2.4
+          imagePullPolicy: IfNotPresent
+          command:
+            - python
+            - -m
+            - sglang_router.launch_router
+          args:
+            - --host
+            - 0.0.0.0
+            - --port
+            - "30000"
+            - --policy
+            - round_robin
+            - --service-discovery
+            - --selector
+            - sglang.ai/worker=true
+            - --service-discovery-namespace
+            - sglang-demo
+            - --service-discovery-port
+            - "8000"
+            - --prometheus-host
+            - 0.0.0.0
+            - --prometheus-port
+            - "29000"
+            - --health-check-interval-secs
+            - "5"
+            - --health-failure-threshold
+            - "1"
+            - --health-success-threshold
+            - "1"
+            - --worker-startup-timeout-secs
+            - "180"
+            - --worker-startup-check-interval
+            - "2"
+          ports:
+            - name: http
+              containerPort: 30000
+            - name: metrics
+              containerPort: 29000
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sglang-router
+  namespace: sglang-system
+  labels:
+    app.kubernetes.io/name: sglang-router
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "29000"
+    prometheus.io/path: /metrics
+spec:
+  selector:
+    app.kubernetes.io/name: sglang-router
+  ports:
+    - name: http
+      port: 30000
+      targetPort: http
+    - name: metrics
+      port: 29000
+      targetPort: metrics

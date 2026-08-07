@@ -118,7 +118,7 @@ SGLang 的核心特点包括 RadixAttention/Prefix Cache、结构化生成、并
 - SGLang 与 llm-d/Dynamo 等控制面的兼容版本；
 - 请求取消、滚动发布和缓存清理。
 
-参考：[SGLang Documentation](https://docs.sglang.io/)
+参考：[SGLang Documentation](https://docs.sglang.io/)。没有 GPU 时，可先按 [SGLang Model Gateway CPU 实战](../practices/sglang-model-gateway-cpu-lab.md) 验证动态发现、路由、故障摘除和指标，但不能把 Mock 结果当作 Runtime 性能结论。
 
 ## 6. TensorRT-LLM
 

@@ -408,7 +408,7 @@ Dynamo 提供 Frontend、Router、Planner、Worker 和分离式推理能力，�
 - 需要独立于 Gateway 的多角色生命周期 API：评估 **RBG**；若已经采用 AIBrix 全栈，先比较 StormService，避免两个控制器同时拥有一批 Pod；
 - 需要自研企业推理平台：可组合 **Gateway API + llm-d Router/EPP + KServe/LWS + vLLM/SGLang**，但必须明确每个资源只有一个生命周期和扩缩控制器。
 
-参考：[RBG](https://github.com/sgl-project/rbg)、[llm-d Architecture](https://llm-d.ai/docs/0.7/architecture)、[KServe LLMInferenceService](https://kserve.github.io/website/docs/model-serving/generative-inference/llmisvc/llmisvc-configuration)、[Ray Serve LLM](https://docs.ray.io/en/latest/serve/llm/index.html)、[vLLM Production Stack](https://github.com/vllm-project/production-stack)、[SGLang](https://github.com/sgl-project/sglang)。RBG 与 AIBrix/Higress 的详细边界和 sr1 实测见 [RBG 多角色推理编排](../practices/rbg-existing-cluster.md)。
+参考：[RBG](https://github.com/sgl-project/rbg)、[llm-d Architecture](https://llm-d.ai/docs/0.7/architecture)、[KServe LLMInferenceService](https://kserve.github.io/website/docs/model-serving/generative-inference/llmisvc/llmisvc-configuration)、[Ray Serve LLM](https://docs.ray.io/en/latest/serve/llm/index.html)、[vLLM Production Stack](https://github.com/vllm-project/production-stack)、[SGLang](https://github.com/sgl-project/sglang)。RBG 与 AIBrix/Higress 的详细边界和 sr1 实测见 [RBG 多角色推理编排](../practices/rbg-existing-cluster.md)；SGLang Router 的 CPU 控制链实测见 [SGLang Model Gateway CPU 实战](../practices/sglang-model-gateway-cpu-lab.md)。
 
 ## 13. 双池容量规划
 
