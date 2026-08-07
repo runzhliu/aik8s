@@ -36,6 +36,7 @@ last_reviewed: 2026-08-05
 ## 端到端交付
 
 - [在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)
+- [AIBrix 真实 GPU 实测：Ray 多机推理与 NIXL P/D 分离](aibrix-gpu-multinode-pd-production.md)
 - [RBG 多角色推理编排与 sr1 实战](rbg-existing-cluster.md)
 - [SGLang Model Gateway CPU 实战：动态发现、路由与故障摘除](sglang-model-gateway-cpu-lab.md)
 - [从 Ollama 到 Kubernetes 生产推理](ollama-to-production.md)

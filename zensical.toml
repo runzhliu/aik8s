@@ -75,6 +75,7 @@ nav = [
       {"推理引擎同机实测" = "ai-k8s/practices/inference-engine-benchmark.md"},
       {"模型显存与成本计算器" = "ai-k8s/practices/model-memory-calculator.md"},
       {"既有集群落地 AIBrix" = "ai-k8s/practices/aibrix-existing-cluster.md"},
+      {"AIBrix GPU 多机与 P/D 实测" = "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md"},
       {"RBG 多角色推理编排" = "ai-k8s/practices/rbg-existing-cluster.md"},
       {"SGLang Model Gateway CPU 实战" = "ai-k8s/practices/sglang-model-gateway-cpu-lab.md"},
       {"Ollama 到生产推理" = "ai-k8s/practices/ollama-to-production.md"},
