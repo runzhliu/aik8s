@@ -64,7 +64,7 @@ double free or corruption (!prev)
 | 通用计算 GPU 节点 | RTX Ada、570 驱动分支 | 99 | 0 | 0 |
 | 高性能 GPU 节点 | H20/H20-3e、580 驱动分支 | 108 | 106 | 11,648 |
 
-容器内版本为 `nvitop 1.5.0`、`nvitop-exporter 1.5.0` 和 `nvidia-ml-py 12.575.51`，而 H20 样本节点使用 580.126 驱动。`nvitop` 上游在 1.5.3 才加入 CUDA 13/NVML 580 支持，在 1.6.2 才把 `nvidia-ml-py 13.580.126` 加入支持列表；1.7.1 又修复了后台线程中的 NVML 查询与 `nvmlShutdown()` 竞争导致的间歇性 `SIGSEGV`。因此本案的主因是旧采集栈与 H20/580 驱动组合不匹配，NVML 查询路径触发原生内存错误。
+容器内版本为 `nvitop 1.5.0`、`nvitop-exporter 1.5.0` 和 `nvidia-ml-py 12.575.51`，而 H20 样本节点使用 580.126 驱动。`nvitop` 上游在 1.5.3 才加入 CUDA 13/NVML 580 支持，在 1.6.2 才把 `nvidia-ml-py 13.580.126` 加入支持列表；1.7.1 又修复了后台线程中的 NVML 查询与 `nvmlShutdown()` 竞争导致的间歇性 `SIGSEGV`。这组证据形成了“旧采集栈不兼容”的首要假设，但后续升级验证表明它不是完整根因。
 
 ### 5.3 访问不通是另一个问题
 
@@ -85,3 +85,17 @@ double free or corruption (!prev)
 5. 若新版本仍出现堆损坏，保留故障节点并采集 core dump、驱动日志和最小 NVML 复现，再向上游提交包含 GPU 型号、驱动、Python 绑定版本和栈回溯的缺陷报告。
 
 上游依据：[nvitop v1.5.3](https://github.com/XuehaiPan/nvitop/releases/tag/v1.5.3)、[nvitop v1.6.2](https://github.com/XuehaiPan/nvitop/releases/tag/v1.6.2)、[nvitop v1.7.1](https://github.com/XuehaiPan/nvitop/releases/tag/v1.7.1)、[SIGSEGV 修复说明](https://github.com/XuehaiPan/nvitop/issues/222)
+
+### 5.5 候选镜像构建与反证记录
+
+现场以原 `linux/amd64` 镜像为基础增加一个 Python 依赖升级层，保留 CUDA、系统和 Python 运行环境，并将默认入口纠正为 `python -m nvitop_exporter`。本地验证结果为：目标平台正确、`pip check` 无依赖冲突、exporter CLI 可以启动。
+
+首次推送使用了构建器默认的 OCI image index，并附带 provenance attestation。旧版同步 Jobservice 将它误报为“源仓库不存在”。使用 `--provenance=false` 重新输出单一 Docker schema v2 manifest 后，同一 tag 成功完成生产镜像同步。这个问题与应用层 NVML 崩溃无关，但会阻断修复镜像交付。
+
+可复用构建文件位于仓库的 `examples/nvitop-exporter-fix/` 目录。
+
+镜像随后升级到 `nvitop 1.7.1`、`nvitop-exporter 1.7.1` 和 `nvidia-ml-py 13.580.126` 并完成全量 rollout。207 个 Pod 全部使用新镜像后，几分钟内至少 24 个 H20/HCC 节点再次以 139 退出；RTX Ada 节点仍为零重启。故障 Pod 的日志仍为 `free(): invalid next size`，且 `/proc/1/maps` 证明进程加载的是宿主机 580.126 的 `libnvidia-ml.so`，不是容器内残留旧库。
+
+这次验证排除了“仅升级 Python 包即可修复”和“误加载旧 NVML 动态库”两种解释。剩余故障域主要是 H20/580 驱动的 NVML 原生实现，或 exporter 在持续、多设备指标采集时触发的调用模式。取得 core dump 和原生栈回溯前，不应把其中任一项写成最终根因。
+
+临时处置应优先在 H20 节点停用该 exporter，并继续使用稳定的 DCGM Exporter；若仍要定位，应在隔离节点逐项调用 NVML 指标接口，找出触发堆损坏的最小查询集合，再携带 GPU 型号、驱动版本、绑定版本和栈回溯向上游报告。
