@@ -1,0 +1,9 @@
+ARG BASE_IMAGE=nvitop-exporter:r2
+FROM ${BASE_IMAGE}
+
+ENV NVITOP_DISABLE_NVLINK_THROUGHPUT=1
+
+COPY nvitop_nvlink_guard.py nvitop_nvlink_guard.pth /venv/lib/python3.8/site-packages/
+
+RUN /venv/bin/python -c \
+      'from nvitop import Device; assert Device.nvlink_throughput.__module__ == "nvitop_nvlink_guard"'

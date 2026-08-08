@@ -100,6 +100,10 @@ double free or corruption (!prev)
 
 在单个 H20 节点挂载 `/apps/logs`、开启无限 core 后，旧候选镜像约 33 秒复现崩溃并留下约 50 MiB core。带 CPython 符号的 GDB 分析将 Python 调用栈定位到 1.5.0 的 `nvitop.api.device.query_nvlink_throughput_counters()`，上层依次为 NVLink 汇总吞吐量属性和 exporter 的设备指标采集。主线程最终在 ctypes/NVML 调用后的释放路径触发 `double free or corruption (!prev)`。该结论说明触发器位于旧 NVLink 查询路径，但还不能单独证明内存破坏发生在 Python 绑定还是驱动实现。
 
-第二版镜像显式设置 `WORKDIR /`，确保运行时从 site-packages 加载 nvitop 1.7.1。本地同时校验当前目录、`nvitop.__version__` 和 `nvitop.__file__`，避免再次被 `pip show` 欺骗。镜像同步后，单 H20 canary 识别 8 张 GPU，连续 60 次 `/metrics` 调用全部成功；运行超过 5 分钟仍为 Ready、重启数 0、无 core dump。旧候选在同一类节点约 33 秒即可复现，因此短时结果支持该修复方向，但不能替代至少 24 小时的 1～2 节点灰度。
+第二版镜像显式设置 `WORKDIR /`，确保运行时从 site-packages 加载 nvitop 1.7.1。本地同时校验当前目录、`nvitop.__version__` 和 `nvitop.__file__`，避免再次被 `pip show` 欺骗。单 H20 canary 识别 8 张 GPU，连续 60 次 `/metrics` 调用全部成功，运行超过 5 分钟仍无重启；但全量 207 个实例更新后，H20-3e 节点仍复现 `double free or corruption (!prev)`。故障 Pod 的运行时模块路径确认是真实 1.7.1。短时内正式实例累计达到 111 次重启，35 个 Pod 的最后退出码为 139，说明旧源码遮蔽不是唯一原因，单节点短时 canary 也不足以覆盖该故障。
 
-正式 DaemonSet 在完成长时灰度前不应全量更新。若第二版仍复现，应保留 core、继续缩小 NVLink 最小调用集合并向上游提交；若业务优先保证稳定，可暂时在 H20 节点停用该 exporter，继续使用已验证稳定的 DCGM Exporter。
+第三版镜像保留真实 1.7.1，只通过 Python `.pth` 启动钩子让 `Device.nvlink_throughput()` 返回空列表，从而绕开 core 已指向的 NVML NVLink field-value 查询。该变更会让 NVLink 总量、均值和逐链路吞吐量指标缺失或为 NaN，但不改变 GPU、显存、功耗、温度、PCIe 和进程指标。开关默认启用，并可通过环境变量显式恢复，便于上游或驱动修复后重新验证。
+
+H20-3e canary 在 5 分钟内完成 1,180 次主动 `/metrics` 请求，其中 1,000 次并发请求，重启数 0、无 core。正式 DaemonSet 随后更新：207/207 实例全部 Ready；从 rollout 完成后的零基线连续观察 5 分钟，全量重启数仍为 0，没有退出 139 或 `CrashLoopBackOff`。在一个此前真实发生 139 的 H20-3e 节点抽查，guard 已生效，正式指标端点正常返回。
+
+这是一项有明确指标损失的稳定性规避，不应写成 NVML 根因已经修复。生产侧仍应连续观察至少 24 小时，并调整依赖 NVLink 吞吐量的仪表盘和告警。若必须恢复该指标，应在隔离节点验证新的驱动、NVML Python 绑定或上游实现；若业务优先保证完整硬件遥测，也可继续使用已验证稳定的 DCGM Exporter。
