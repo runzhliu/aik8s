@@ -1,6 +1,6 @@
 ---
 title: AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU
-description: 在生产 Kubernetes 集群使用 NVIDIA L20、AIBrix v0.7.0、RayClusterFleet、StormService 和 vLLM，验证两机模型并行、NIXL P/D 分离、八节点 Qwen3-235B FP8 与四节点 DeepSeek 70B 推理
+description: 在生产 Kubernetes 集群使用 NVIDIA L20、AIBrix v0.7.0、RayClusterFleet、StormService 和 vLLM，验证两机模型并行、NIXL P/D 分离、八节点 Qwen3-235B FP8，以及 DeepSeek 70B 的四节点单卡与两节点双卡拓扑
 status: lab
 last_reviewed: 2026-08-08
 ---
@@ -13,7 +13,7 @@ last_reviewed: 2026-08-08
 2. `StormService` 能否让 Prefill、Decode 分别运行在不同 GPU 节点，并通过 NIXL 交接 KV Cache；
 3. 当每台节点都只剩一张空闲 GPU 时，能否把八张碎片 L20 组成一个 235B MoE 推理实例。
 
-最终结果：两机两卡的 Qwen2.5-32B BF16 Ray Pipeline Parallel 推理成功；两机两卡的 Qwen2.5-Coder-32B GPTQ Int4 P/D 服务成功完成 AIBrix Gateway → Prefill → NIXL KV Transfer → Decode → 响应的完整链路；Qwen3-235B-A22B FP8 成功运行在八台节点、每台一张 L20 的碎片拓扑上；DeepSeek-R1-Distill-Llama-70B BF16 也成功运行在四台单卡节点上。两个大模型都通过 OpenAI-Compatible API 完成真实生成。
+最终结果：两机两卡的 Qwen2.5-32B BF16 Ray Pipeline Parallel 推理成功；两机两卡的 Qwen2.5-Coder-32B GPTQ Int4 P/D 服务成功完成 AIBrix Gateway → Prefill → NIXL KV Transfer → Decode → 响应的完整链路；Qwen3-235B-A22B FP8 成功运行在八台节点、每台一张 L20 的碎片拓扑上；DeepSeek-R1-Distill-Llama-70B BF16 先在四台单卡节点上跑通，再使用相同四张卡改成两节点、每节点两卡的 TP=2、PP=2 拓扑。后者把单流 Decode 从约 5.13 token/s 提高到 9.92 token/s。
 
 本次以**功能、拓扑和数据路径验证**为主，并为 235B 实例记录了一组热请求 TTFT、TPOT 和吞吐样本。样本来自非独占生产实验窗口，不是正式容量结论；生产选型仍需使用真实流量分布进行并发、长上下文、故障和 Goodput 基准测试。
 
@@ -50,6 +50,7 @@ python3 -c 'import vllm, ray; print(vllm.__version__, ray.__version__)'
 | Qwen2.5-Coder-32B-Instruct | GPTQ Int4 | StormService P/D | 两节点，每节点 1 卡 | NIXL KV 传输和生成成功 |
 | Qwen3-235B-A22B-Instruct | FP8 | RayClusterFleet | 八节点，每节点 1 卡 | PP=8，加载与 OpenAI API 生成成功 |
 | DeepSeek-R1-Distill-Llama-70B | BF16 | RayClusterFleet | 四节点，每节点 1 卡 | PP=4，加载与 OpenAI API 生成成功 |
+| DeepSeek-R1-Distill-Llama-70B | BF16 | RayClusterFleet | 两节点，每节点 2 卡 | TP=2、PP=2；同模型同参数 A/B 中 Decode 提升约 93% |
 
 两个 32B 实验验证的能力并不相同：
 
@@ -552,7 +553,40 @@ Qwen3 虽然总权重更大、PP Stage 更多，但激活参数量更小且使�
 
 P/D 分离主要提升混合流量下的吞吐、资源隔离和 Goodput，不会自动让单请求 Decode 更快。若 Decode Group 仍是四节点 PP=4、10Gb TCP，它的单流生成速度仍受相同数据路径限制。
 
-最小风险的下一轮对照实验是：保留模型、四节点和 4K 上下文，只把 `max_num_seqs=4` 并去掉 `--enforce-eager`。先比较 Ready 时间、空载 TTFT、4 路并发 TTFT、Decode、GPU 利用率和取消行为，再决定是否引入量化、RDMA或 P/D；不要同时改变所有变量。
+拓扑 A/B 完成后，最小风险的下一轮对照实验是保留两节点双卡和 4K 上下文，只把 `max_num_seqs=4` 并去掉 `--enforce-eager`。先比较 Ready 时间、空载 TTFT、4 路并发 TTFT、Decode、GPU 利用率和取消行为，再决定是否引入量化、RDMA 或 P/D；不要同时改变所有变量。
+
+### 9.6 两节点双卡的拓扑 A/B 实测
+
+集群中没有一台空闲四卡节点，但找到了两台各已使用 6/8 卡、仍各有两卡可用的同型号 L20 节点。没有迁移或抢占既有业务，而是创建一套独立 RayClusterFleet，使用节点范围约束和 Pod Anti-Affinity，把一个双卡 Head 与一个双卡 Worker 固定分散到两台节点：
+
+```text
+节点 A：Rank 0 = PP 0 / TP 0，Rank 1 = PP 0 / TP 1
+                         │
+                         │  仅 PP 边界跨节点
+                         ↓
+节点 B：Rank 2 = PP 1 / TP 0，Rank 3 = PP 1 / TP 1
+```
+
+节点内两个 TP Rank 通过 GPU P2P/NCCL 协作，跨节点只保留一个 PP 边界。启动日志验证了四个 Rank 的 PP/TP 分组，Ray Placement Group 获得 4/4 GPU；80 层模型被切成两个 PP Stage，每个 Stage 再做两卡 TP。
+
+为了让差异只来自拓扑，两组测试保持模型权重、L20 总卡数、vLLM 版本、BF16、4K 上下文、`max_num_seqs=1`、`--enforce-eager`、提示词和 64 Token 输出上限一致。两套实例同时空载后并行发请求，并逐条解析 SSE，以第一条非空 Token 而不是 HTTP 响应头计算 TTFT：
+
+| 拓扑 | 空载 TTFT | 64 Token E2E | 稳态 Decode |
+| --- | ---: | ---: | ---: |
+| 四节点 × 单卡，TP=1、PP=4 | 约 0.250 秒 | 约 12.52 秒 | 约 5.13 token/s |
+| 两节点 × 双卡，TP=2、PP=2 | 约 0.140 秒 | 约 6.49 秒 | 约 9.92 token/s |
+| 变化 | 降低约 44% | 降低约 48% | **提高约 93%** |
+
+两节点双卡每个 Rank 加载约 32.89 GiB 模型显存，可用 KV Cache 约 5.64 GiB，最小 Stage 的 KV 容量约 73K Token。权重加载约 44–49 秒，比此前四节点单卡的约 29 秒慢；这是共享文件系统读取、节点缓存和同时加载行为的差异，不能据此判断计算拓扑退化。
+
+测试中还捕获到一个外部长请求插入造成的样本：TTFT 上升到约 13.8 秒，但请求开始执行后的 Decode 仍约 9.92 token/s。该样本从空载 A/B 中剔除，却保留为生产证据：
+
+- TTFT 必须同时关联 `num_requests_running`、`num_requests_waiting` 和队列时间；
+- `curl time_starttransfer` 在 SSE 场景通常只量到响应头，不能当作首 Token；
+- 固定输出长度下，Decode 应从第一条有效 Token 到结束计算；
+- 拓扑改善了单流速度，但 `max_num_seqs=1` 的队头阻塞仍需单独治理。
+
+这次 A/B 说明，碎片调度不应只问“能否凑够四张卡”。在没有高速 RDMA 的环境里，应优先让 TP 留在节点内，并把跨节点 PP Stage 数压到最低。若未来能找到单机四卡，再继续测试 TP=4、PP=1；若只能使用单卡碎片，则要接受 PP Hop 对 Decode 的明显影响。
 
 ## 10. 大模型的多节点 P/D 分离蓝图
 
@@ -631,6 +665,7 @@ kubectl -n <EXPERIMENT_NAMESPACE> delete stormservice <EXPERIMENT_STORM_SERVICE>
 - 该碎片拓扑可以完成 OpenAI-Compatible API 生成，热请求样本约 4.9 秒 TTFT、8 token/s Decode；
 - 四台各剩一张 L20 的节点可以通过 PP=4 运行 DeepSeek-R1-Distill-Llama-70B BF16；
 - DeepSeek 70B 每个 PP Rank 使用约 33.864 GiB 模型显存，权重约 29 秒加载完成，生成约 5.1 token/s；
+- 相同四张 L20 改为两节点双卡、TP=2/PP=2 后，空载 Decode 提高到约 9.92 token/s，证明减少跨节点 PP Hop 是当前网络条件下最有效的单流优化；
 - `max_num_seqs=1` 遇到 R1 长思考请求会出现明显队头阻塞，排队请求 TTFT 可扩大到几十秒；
 - AIBrix Gateway 可以发现并路由到多机 Ray Engine；
 - StormService 可以把 Prefill、Decode 放到不同节点；
