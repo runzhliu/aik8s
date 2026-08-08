@@ -37,6 +37,7 @@ last_reviewed: 2026-08-05
 
 - [在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)
 - [AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU](aibrix-gpu-multinode-pd-production.md)
+- [在 Kubernetes 部署 ComfyUI：离线镜像、CephFS 模型与跨集群 Ingress](comfyui-minimax-h3-gpu.md)
 - [RBG 多角色推理编排与 sr1 实战](rbg-existing-cluster.md)
 - [SGLang Model Gateway CPU 实战：动态发现、路由与故障摘除](sglang-model-gateway-cpu-lab.md)
 - [从 Ollama 到 Kubernetes 生产推理](ollama-to-production.md)

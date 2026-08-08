@@ -1,6 +1,6 @@
 ---
 title: AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU
-description: 在生产 Kubernetes 集群使用 NVIDIA L20、AIBrix v0.7.0、RayClusterFleet、StormService 和 vLLM，验证两机模型并行、NIXL P/D 分离及八节点 Qwen3-235B FP8 推理
+description: 在生产 Kubernetes 集群使用 NVIDIA L20、AIBrix v0.7.0、RayClusterFleet、StormService 和 vLLM，验证两机模型并行、NIXL P/D 分离、八节点 Qwen3-235B FP8 与四节点 DeepSeek 70B 推理
 status: lab
 last_reviewed: 2026-08-08
 ---
@@ -13,7 +13,7 @@ last_reviewed: 2026-08-08
 2. `StormService` 能否让 Prefill、Decode 分别运行在不同 GPU 节点，并通过 NIXL 交接 KV Cache；
 3. 当每台节点都只剩一张空闲 GPU 时，能否把八张碎片 L20 组成一个 235B MoE 推理实例。
 
-最终结果：两机两卡的 Qwen2.5-32B BF16 Ray Pipeline Parallel 推理成功；两机两卡的 Qwen2.5-Coder-32B GPTQ Int4 P/D 服务成功完成 AIBrix Gateway → Prefill → NIXL KV Transfer → Decode → 响应的完整链路；Qwen3-235B-A22B FP8 也成功运行在八台节点、每台一张 L20 的碎片拓扑上，并通过 OpenAI-Compatible API 完成真实生成。
+最终结果：两机两卡的 Qwen2.5-32B BF16 Ray Pipeline Parallel 推理成功；两机两卡的 Qwen2.5-Coder-32B GPTQ Int4 P/D 服务成功完成 AIBrix Gateway → Prefill → NIXL KV Transfer → Decode → 响应的完整链路；Qwen3-235B-A22B FP8 成功运行在八台节点、每台一张 L20 的碎片拓扑上；DeepSeek-R1-Distill-Llama-70B BF16 也成功运行在四台单卡节点上。两个大模型都通过 OpenAI-Compatible API 完成真实生成。
 
 本次以**功能、拓扑和数据路径验证**为主，并为 235B 实例记录了一组热请求 TTFT、TPOT 和吞吐样本。样本来自非独占生产实验窗口，不是正式容量结论；生产选型仍需使用真实流量分布进行并发、长上下文、故障和 Goodput 基准测试。
 
@@ -49,6 +49,7 @@ python3 -c 'import vllm, ray; print(vllm.__version__, ray.__version__)'
 | Qwen2.5-32B-Instruct | BF16 | RayClusterFleet | 两节点，每节点 1 卡 | PP=2，多机推理成功 |
 | Qwen2.5-Coder-32B-Instruct | GPTQ Int4 | StormService P/D | 两节点，每节点 1 卡 | NIXL KV 传输和生成成功 |
 | Qwen3-235B-A22B-Instruct | FP8 | RayClusterFleet | 八节点，每节点 1 卡 | PP=8，加载与 OpenAI API 生成成功 |
+| DeepSeek-R1-Distill-Llama-70B | BF16 | RayClusterFleet | 四节点，每节点 1 卡 | PP=4，加载与 OpenAI API 生成成功 |
 
 两个 32B 实验验证的能力并不相同：
 
@@ -458,18 +459,156 @@ Using default W8A8 Block FP8 / Fused MoE config; performance might be sub-optima
 - **稳态生成尚可**：单请求约 8 token/s；
 - **不能直接作为生产容量值**：仍需压测并发、长上下文、取消、超时和故障恢复。
 
-## 9. 尚未执行的模型容量规划
+## 9. 四个碎片节点运行 DeepSeek-R1-Distill-Llama-70B
 
-以下只完成模型配置、权重大小和运行时能力检查，没有创建工作负载：
+### 9.1 先识别真正的权重集合
+
+模型目录整体占用约 395 GiB，第一次看到这个数字时不能直接得出“四卡放不下”的结论。继续拆分后发现目录包含三份约 132 GiB 的数据：
+
+- 根目录的 17 个 Safetensors Shard，约 132 GiB；
+- 一个版本子目录中的另一份权重，约 132 GiB；
+- Git LFS 仓库对象，约 132 GiB。
+
+根目录 `model.safetensors.index.json` 只索引根目录的 17 个 Shard，vLLM 实际加载约 132 GiB，而不是把整个 395 GiB 目录送入 GPU。容量评估应以 Index 引用的文件为准，不能只看 `du -sh <MODEL_DIR>`。
+
+模型配置是 80 层 `LlamaForCausalLM`、BF16 Dense 权重。部署前在同版本 vLLM 容器中确认 `LlamaForCausalLM` 已注册且支持 Pipeline Parallel。
+
+### 9.2 四节点 RayClusterFleet
+
+沿用 Qwen3 实验的单卡节点标签、Anti-Affinity、只读 CephFS 和运行时镜像，改为一个 Head 加三个 Worker：
+
+```bash
+vllm serve /models/DeepSeek-R1-Distill-Llama-70B \
+  --served-model-name deepseek-r1-70b-ray-4n \
+  --tensor-parallel-size 1 \
+  --pipeline-parallel-size 4 \
+  --distributed-executor-backend ray \
+  --dtype bfloat16 \
+  --gpu-memory-utilization 0.88 \
+  --max-model-len 4096 \
+  --max-num-seqs 1 \
+  --enforce-eager \
+  --trust-remote-code
+```
+
+四个 Pod 一次调度到四台不同 L20 节点。Ray 返回四个 Active Node，Placement Group 原子占用 4/4 GPU；80 层被均匀切成四个 20 层 PP Stage。
+
+| 阶段或资源 | 实测 |
+| --- | ---: |
+| 根目录权重 | 约 132 GiB，17 个 Shard |
+| 权重加载 | 约 28.8–29.1 秒 |
+| 每个 PP Rank 模型显存 | 约 33.864 GiB |
+| 每卡剩余 KV Cache | 约 4.63 GiB |
+| Engine Profile、KV Cache 创建和 Warmup | 约 1.89 秒 |
+| 容器启动到 API Ready | 约 83 秒 |
+| 最小 PP Stage KV 容量 | 约 60K Token |
+
+运行时镜像此前已被节点缓存，因此这次没有 10.9 GB 首次拉取时间。与 Qwen3 MoE FP8 不同，DeepSeek Distill 70B 是 Dense BF16，没有出现 FP8 或 Fused-MoE Kernel 回退告警。
+
+### 9.3 API 验证与真实队头阻塞
+
+OpenAI-Compatible API 成功返回 `<think>` 推理内容，证明四个 PP Rank 已共同完成生成。DeepSeek-R1 默认可能先生成较长思考过程，过小的 `max_tokens` 会让响应在最终答案前以 `finish_reason=length` 截断；客户端需要正确展示 Reasoning，并为思考 Token 预留预算。
+
+测试窗口中 Open WebUI 自动发现新模型并产生了最长约 2K–3.8K Token 的交互请求。由于本次保守设置 `max_num_seqs=1`，日志出现 `Running=1、Waiting=1–3`。三个 64 Token 测试请求得到：
+
+| 请求 | 排队后 TTFT | E2E | 开始生成后的 Decode |
+| --- | ---: | ---: | ---: |
+| 1 | 97.390 秒 | 109.642 秒 | 5.142 token/s |
+| 2 | 55.577 秒 | 67.829 秒 | 5.142 token/s |
+| 3 | 65.226 秒 | 77.477 秒 | 5.142 token/s |
+
+这些 TTFT 主要是排队时间，**不能当作空载模型 TTFT**；但它们真实揭示了生产风险：R1 长思考请求遇到单并发 Engine 时会造成严重 Head-of-Line Blocking。日志窗口中的 Decode 稳定约 5.1 token/s，Prefill 峰值约 172 token/s。
+
+下一轮性能实验至少应把 `max_num_seqs` 提高到 4，再同时限制单请求最大输出、设置网关超时和取消传播。只增加 KV Cache 理论并发而不处理长请求，仍可能让短请求被排在长思考之后。
+
+### 9.4 为什么 235B MoE 反而生成更快
+
+两组碎片卡实测不能只按模型总参数比较：
+
+| 模型 | 总参数与精度 | 每 Token 计算特征 | PP | 实测 Decode |
+| --- | --- | --- | ---: | ---: |
+| Qwen3-235B-A22B FP8 | 235B，总激活约 22B | MoE，每 Token 只激活部分 Expert；FP8 | 8 | 约 8.1 token/s |
+| DeepSeek-R1-Distill-Llama-70B BF16 | 70B | Dense，每 Token 经过完整 70B；BF16 | 4 | 约 5.1 token/s |
+
+Qwen3 虽然总权重更大、PP Stage 更多，但激活参数量更小且使用 FP8；DeepSeek Distill 70B 每个 Token 都要计算完整 Dense 70B，因此后者 Decode 更慢并不矛盾。这个比较仍受网络、Kernel、Prompt 和并发流量影响，只能作为本轮环境中的实测解释。
+
+### 9.5 为什么慢，以及优化优先级
+
+本轮拓扑优先解决“碎片卡能否组成一个大模型”，不是单请求性能最优解。DeepSeek 每生成一个 Token，都要顺序经过四个 PP Stage；四个 Stage 位于四台节点，使用 10Gb TCP，且实验显式设置 `NCCL_IB_DISABLE=1`，没有使用 RoCE/InfiniBand。Dense 70B 每个 Token 又会经过完整模型，约 5.1 token/s 是多项约束叠加后的结果。
+
+优化必须区分两个目标：
+
+| 目标 | 优先动作 | 预期影响 |
+| --- | --- | --- |
+| 降低并发 TTFT | `max_num_seqs` 从 1 调到 4，再逐步压测到 8 | 减少长思考请求造成的队头阻塞，不保证单请求 Decode 成倍提升 |
+| 降低并发 TTFT | 网关限制最大输出、设置取消传播，并拆分长短请求队列 | 防止一个 3K Token 请求阻塞所有短请求 |
+| 改善交互体验 | UI 流式展示 `<think>` / Reasoning | 用户能看到模型已经开始工作，但不改变算力速度 |
+| 提高单请求 Decode | 去掉 `--enforce-eager`，A/B 测试 CUDA Graph | 减少 Kernel Launch 开销，收益必须实测 |
+| 提高单请求 Decode | 把 4 卡压缩为两节点两卡或单节点四卡 | 减少跨节点 PP Hop，通常是最直接的拓扑优化 |
+| 提高单请求 Decode | 使用 25/100Gb 网络、RoCE/IB 和 NCCL RDMA | 只能跨节点时降低激活传输延迟 |
+| 提高单请求 Decode | 使用 FP8、INT8 或 INT4 的 70B 权重 | 降低显存与计算开销，并可能把 PP=4 缩到 PP=2 |
+| 提高单请求 Decode | 升级 vLLM/CUDA Kernel，测试 Ray Compiled DAG 通信重叠 | 获取更新模型实现和通信优化，需回归稳定性 |
+| 提高单请求 Decode | Speculative Decoding | 用 Draft Model 一次接受多个 Token，增加显存和系统复杂度 |
+
+P/D 分离主要提升混合流量下的吞吐、资源隔离和 Goodput，不会自动让单请求 Decode 更快。若 Decode Group 仍是四节点 PP=4、10Gb TCP，它的单流生成速度仍受相同数据路径限制。
+
+最小风险的下一轮对照实验是：保留模型、四节点和 4K 上下文，只把 `max_num_seqs=4` 并去掉 `--enforce-eager`。先比较 Ready 时间、空载 TTFT、4 路并发 TTFT、Decode、GPU 利用率和取消行为，再决定是否引入量化、RDMA或 P/D；不要同时改变所有变量。
+
+## 10. 大模型的多节点 P/D 分离蓝图
+
+P/D 分离不能把现有 PP Rank 一半标成 Prefill、另一半标成 Decode。Prefill 与 Decode 都必须是能独立运行完整模型的 Engine，只是分别优化 Prompt 计算和逐 Token 生成：
+
+```text
+                         ┌─ Prefill RayCluster
+AIBrix Gateway / Router ─┤    PP Rank 0 ... PP Rank N-1
+                         │          │
+                         │          └── NIXL KV Transfer
+                         │                         │
+                         └─ Decode RayCluster      ↓
+                              PP Rank 0 ... PP Rank N-1
+                                      └── Streaming Response
+```
+
+最小 GPU 账单会直接翻倍：
+
+| 模型 | 单个 Engine | 1 Prefill + 1 Decode | 1 Prefill + 2 Decode |
+| --- | ---: | ---: | ---: |
+| DeepSeek-R1-Distill-Llama-70B | 4×L20，PP=4 | 8×L20 | 12×L20 |
+| Qwen3-235B-A22B FP8 | 8×L20，PP=8 | 16×L20 | 24×L20 |
+
+落地时需要两套独立的 RayCluster 或 RayClusterFleet，并分别提供只选择 Head Pod 的 Service。两个 Engine 都启用 NIXL Connector；AIBrix P/D Router 先选择 Prefill Group，再把携带 KV Transfer 元数据的请求交给 Decode Group。
+
+两个 Engine 的共同 vLLM 参数至少包括：
+
+```bash
+--tensor-parallel-size 1 \
+--pipeline-parallel-size <4_OR_8> \
+--distributed-executor-backend ray \
+--kv-transfer-config '{"kv_connector":"NixlConnector","kv_role":"kv_both"}'
+```
+
+并为所有 Rank 统一配置 NIXL/UCX、可达的 Side Channel 地址和数据网卡。`kv_both` 表示 Engine 具备发送与接收能力，具体请求由 AIBrix 注入的 `kv_transfer_params` 决定 Producer/Consumer 角色；它不代表 Prefill、Decode 没有分工。
+
+现有单 Pod `StormService` P/D 示例不能原样复制：它的每个 Role 本身只是一个 Pod，而这里每个 Role 都是一个多 Pod RayCluster。可行的工程路线是：
+
+1. 分别创建 Prefill RayClusterFleet 与 Decode RayClusterFleet；
+2. 给两个 Head Service 标记相同模型名和不同 P/D Role；
+3. 为两个 vLLM Engine 配置 NIXL、UCX、Side Channel 和稳定的 Rank 拓扑；
+4. 让 AIBrix P/D Router 发现两个 Group，并验证同一请求的 Producer/Consumer 参数；
+5. 检查每个 PP Rank 的本地 Layer KV 是否被对应 Decode Rank 正确接收；
+6. 再增加 Decode Group 数量并验证负载均衡、请求排空和故障恢复。
+
+当前环境已经分别验证了“多节点 Ray PP”和“单 Pod StormService + NIXL P/D”，但**尚未验证二者组合后的多节点 P/D**。尤其不能只看到两套 RayCluster Ready 就声称成功；必须从 Prefill、Decode 两组日志中找到同一 Request ID、互补 KV Transfer 参数和最终响应证据。
+
+P/D 的企业价值主要在高并发和 Prompt/Output 比例差异明显时体现。低 QPS 场景会因为双份权重、双倍冷启动和更多 GPU 常驻而更贵；对当前 `max_num_seqs=1` 的队头阻塞，先提高 Engine 并发、限制长输出和完善取消传播，可能比立即复制一整套 P/D 集群更划算。
+
+## 11. 尚未执行的模型容量规划
 
 | 候选 | 权重大小 | 碎片卡拓扑 | 当前判断 |
 | --- | ---: | --- | --- |
-| DeepSeek-R1-Distill-Llama-70B BF16 | 约 131 GiB | 4 节点，每节点 1 张 L20，TP=1、PP=4 | 标准 Llama 架构，vLLM 0.10 可支持；每卡约 33 GiB 静态权重，具备尝试条件，**未部署** |
-| Qwen2.5-72B-Instruct BF16 | 约 135 GiB | 4 节点，每节点 1 张 L20，TP=1、PP=4 | 容量与 70B 接近，**未部署** |
+| Qwen2.5-72B-Instruct BF16 | 约 135 GiB | 4 节点，每节点 1 张 L20，TP=1、PP=4 | 容量与已跑通的 70B 接近，**未部署** |
 | Qwen2.5-72B-Instruct GPTQ Int8 | 约 72 GiB | 2–4 节点，每节点 1 张 L20 | 容量更宽松，适合做下一轮性能基线，**未部署** |
 | Qwen3.5-397B-A17B GPTQ Int4 | 约 220 GiB | 8 节点，每节点 1 张 L20，优先 PP=8 | 容量可能成立，但当前 vLLM 0.10 未注册 Qwen3.5 MoE；需更新运行时并补齐 Ray，**未部署** |
-
-DeepSeek 70B 若继续验证，应沿用本章的 RayClusterFleet，只把 Worker 数改为 3、PP 改为 4、模型路径和服务名改成对应值。不要把“容量估算可行”写成“已经跑通”，验收仍需覆盖权重加载、API 请求、每卡显存、TTFT/TPOT 和节点故障。
 
 如果 GPU 不足，应只缩容或删除本次实验创建的工作负载，先按精确资源名确认，再执行：
 
@@ -481,7 +620,7 @@ kubectl -n <EXPERIMENT_NAMESPACE> delete stormservice <EXPERIMENT_STORM_SERVICE>
 
 不要用宽泛 Label 或整个 Namespace 删除生产中原有服务。
 
-## 10. 本轮结论与边界
+## 12. 本轮结论与边界
 
 已经证明：
 
@@ -490,6 +629,9 @@ kubectl -n <EXPERIMENT_NAMESPACE> delete stormservice <EXPERIMENT_STORM_SERVICE>
 - 八台各剩一张 L20 的节点可以通过 Ray Placement Group 和 PP=8 运行 Qwen3-235B FP8；
 - Qwen3-235B FP8 每个 PP Rank 实际占用约 30.20 GiB 模型显存，并保留约 8.48 GiB KV Cache；
 - 该碎片拓扑可以完成 OpenAI-Compatible API 生成，热请求样本约 4.9 秒 TTFT、8 token/s Decode；
+- 四台各剩一张 L20 的节点可以通过 PP=4 运行 DeepSeek-R1-Distill-Llama-70B BF16；
+- DeepSeek 70B 每个 PP Rank 使用约 33.864 GiB 模型显存，权重约 29 秒加载完成，生成约 5.1 token/s；
+- `max_num_seqs=1` 遇到 R1 长思考请求会出现明显队头阻塞，排队请求 TTFT 可扩大到几十秒；
 - AIBrix Gateway 可以发现并路由到多机 Ray Engine；
 - StormService 可以把 Prefill、Decode 放到不同节点；
 - AIBrix P/D Router 能为同一请求生成互补的 KV Transfer 参数；
@@ -500,11 +642,12 @@ kubectl -n <EXPERIMENT_NAMESPACE> delete stormservice <EXPERIMENT_STORM_SERVICE>
 
 - Qwen3-235B 的单次热请求样本可以代表正式并发容量或 Goodput；
 - L20 上的默认 FP8/Fused-MoE Kernel 已达到最优性能；
-- DeepSeek-R1-Distill-Llama-70B、Qwen3.5-397B 已经在当前拓扑运行；
+- Qwen3.5-397B 已经在当前拓扑运行；
+- 多节点 Ray PP 与 NIXL P/D 组合后的分布式 Prefill/Decode 数据路径可靠；
 - P/D 比共置模式吞吐更高或成本更低；
 - 当前 TCP/UCX 参数是最优网络配置；
 - Role 级自动扩缩在真实模型冷启动和请求排空下安全；
 - Ray 或 P/D 在节点故障、网络抖动、取消和超时场景下能无损恢复；
 - 当前镜像组合适合长期生产运行；开发构建仍需锁定 digest 并完成安全扫描。
 
-控制面安装、CPU mock、自动扩缩和 Higress 串联见：[在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)。使用相同镜像、模型和 GPU 拓扑改由 RBG 编排后的实测，以及 RBG 与 RayClusterFleet/StormService 的逐项比较见：[RBG 多角色推理编排：从 CPU 控制面到生产 GPU 实测](rbg-existing-cluster.md#rbg-vs-aibrix-production)。多机模型并行与 P/D 的概念边界见：[分布式与 P/D 分离推理](../inference/distributed-serving.md)。
+控制面安装、CPU mock、自动扩缩和 Higress 串联见：[在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)。使用相同镜像、模型和 GPU 拓扑改由 RBG 编排后的实测，以及 RBG 与 RayClusterFleet/StormService 的逐项比较见：[RBG 多角色推理编排：从 CPU 控制面到生产 GPU 实测](rbg-existing-cluster.md#rbg-vs-aibrix-production)。多机模型并行与 P/D 的概念边界见：[分布式与 P/D 分离推理](../inference/distributed-serving.md)。GPU 页面、离线镜像和跨集群入口见：[在 Kubernetes 部署 ComfyUI](comfyui-minimax-h3-gpu.md)。
