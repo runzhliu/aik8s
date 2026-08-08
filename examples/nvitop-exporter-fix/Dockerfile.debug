@@ -1,0 +1,9 @@
+ARG BASE_IMAGE=nvitop-exporter:candidate
+FROM ${BASE_IMAGE}
+
+RUN apt-get update \
+    && apt-get install --quiet --yes --no-install-recommends \
+      gdb \
+      libc6-dbg \
+      python3.8-dbg \
+    && rm -rf /var/lib/apt/lists/*

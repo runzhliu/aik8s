@@ -64,7 +64,7 @@ double free or corruption (!prev)
 | 通用计算 GPU 节点 | RTX Ada、570 驱动分支 | 99 | 0 | 0 |
 | 高性能 GPU 节点 | H20/H20-3e、580 驱动分支 | 108 | 106 | 11,648 |
 
-容器内版本为 `nvitop 1.5.0`、`nvitop-exporter 1.5.0` 和 `nvidia-ml-py 12.575.51`，而 H20 样本节点使用 580.126 驱动。`nvitop` 上游在 1.5.3 才加入 CUDA 13/NVML 580 支持，在 1.6.2 才把 `nvidia-ml-py 13.580.126` 加入支持列表；1.7.1 又修复了后台线程中的 NVML 查询与 `nvmlShutdown()` 竞争导致的间歇性 `SIGSEGV`。这组证据形成了“旧采集栈不兼容”的首要假设，但后续升级验证表明它不是完整根因。
+容器内版本为 `nvitop 1.5.0`、`nvitop-exporter 1.5.0` 和 `nvidia-ml-py 12.575.51`，而 H20 样本节点使用 580.126 驱动。`nvitop` 上游在 1.5.3 才加入 CUDA 13/NVML 580 支持，在 1.6.2 才把 `nvidia-ml-py 13.580.126` 加入支持列表；1.7.1 又修复了后台线程中的 NVML 查询与 `nvmlShutdown()` 竞争导致的间歇性 `SIGSEGV`。这组证据形成了“旧采集栈不兼容”的首要假设；后续 core dump 和纠正后的升级验证进一步缩小了故障范围。
 
 ### 5.3 访问不通是另一个问题
 
@@ -94,8 +94,12 @@ double free or corruption (!prev)
 
 可复用构建文件位于仓库的 `examples/nvitop-exporter-fix/` 目录。
 
-镜像随后升级到 `nvitop 1.7.1`、`nvitop-exporter 1.7.1` 和 `nvidia-ml-py 13.580.126` 并完成全量 rollout。207 个 Pod 全部使用新镜像后，几分钟内至少 24 个 H20/HCC 节点再次以 139 退出；RTX Ada 节点仍为零重启。故障 Pod 的日志仍为 `free(): invalid next size`，且 `/proc/1/maps` 证明进程加载的是宿主机 580.126 的 `libnvidia-ml.so`，不是容器内残留旧库。
+第一次候选镜像安装了 `nvitop 1.7.1`、`nvitop-exporter 1.7.1` 和 `nvidia-ml-py 13.580.126` 并完成全量 rollout。207 个 Pod 全部更新后，几分钟内至少 24 个 H20/HCC 节点再次以 139 退出；RTX Ada 节点仍为零重启。故障 Pod 的 `/proc/1/maps` 证明进程加载的是宿主机 580.126 `libnvidia-ml.so`，不是容器内残留旧库。
 
-这次验证排除了“仅升级 Python 包即可修复”和“误加载旧 NVML 动态库”两种解释。剩余故障域主要是 H20/580 驱动的 NVML 原生实现，或 exporter 在持续、多设备指标采集时触发的调用模式。取得 core dump 和原生栈回溯前，不应把其中任一项写成最终根因。
+但进一步核验发现，这次 rollout 并没有真正运行 nvitop 1.7.1。原基础镜像的工作目录是 `/nvitop`，并保留了 1.5.0 源码；Python 的模块搜索顺序让它优先导入当前目录，而不是 site-packages 中的新包。仅检查 `pip show` 因此产生了误判，实际进程是“nvitop API 1.5.0 + exporter 1.7.1 + nvidia-ml-py 13.580.126”的混合栈。
 
-临时处置应优先在 H20 节点停用该 exporter，并继续使用稳定的 DCGM Exporter；若仍要定位，应在隔离节点逐项调用 NVML 指标接口，找出触发堆损坏的最小查询集合，再携带 GPU 型号、驱动版本、绑定版本和栈回溯向上游报告。
+在单个 H20 节点挂载 `/apps/logs`、开启无限 core 后，旧候选镜像约 33 秒复现崩溃并留下约 50 MiB core。带 CPython 符号的 GDB 分析将 Python 调用栈定位到 1.5.0 的 `nvitop.api.device.query_nvlink_throughput_counters()`，上层依次为 NVLink 汇总吞吐量属性和 exporter 的设备指标采集。主线程最终在 ctypes/NVML 调用后的释放路径触发 `double free or corruption (!prev)`。该结论说明触发器位于旧 NVLink 查询路径，但还不能单独证明内存破坏发生在 Python 绑定还是驱动实现。
+
+第二版镜像显式设置 `WORKDIR /`，确保运行时从 site-packages 加载 nvitop 1.7.1。本地同时校验当前目录、`nvitop.__version__` 和 `nvitop.__file__`，避免再次被 `pip show` 欺骗。镜像同步后，单 H20 canary 识别 8 张 GPU，连续 60 次 `/metrics` 调用全部成功；运行超过 5 分钟仍为 Ready、重启数 0、无 core dump。旧候选在同一类节点约 33 秒即可复现，因此短时结果支持该修复方向，但不能替代至少 24 小时的 1～2 节点灰度。
+
+正式 DaemonSet 在完成长时灰度前不应全量更新。若第二版仍复现，应保留 core、继续缩小 NVLink 最小调用集合并向上游提交；若业务优先保证稳定，可暂时在 H20 节点停用该 exporter，继续使用已验证稳定的 DCGM Exporter。

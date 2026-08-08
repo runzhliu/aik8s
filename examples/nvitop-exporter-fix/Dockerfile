@@ -4,6 +4,11 @@ FROM ${BASE_IMAGE}
 ARG NVITOP_VERSION=1.7.1
 ARG NVIDIA_ML_PY_VERSION=13.580.126
 
+# The base image keeps the original source tree in /nvitop and sets it as the
+# working directory. Python would otherwise import that stale source tree
+# before the upgraded package in site-packages.
+WORKDIR /
+
 RUN /venv/bin/python -m pip install \
       --no-cache-dir \
       --upgrade \
