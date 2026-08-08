@@ -1,19 +1,20 @@
 ---
 title: AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU
-description: 在生产 Kubernetes 集群使用 NVIDIA L20、AIBrix v0.7.0、RayClusterFleet、StormService 和 vLLM，验证两机模型并行、NIXL P/D 分离、八节点 Qwen3-235B FP8，以及 DeepSeek 70B 的四节点单卡与两节点双卡拓扑
+description: 在生产 Kubernetes 集群使用 NVIDIA L20、AIBrix v0.7.0、RayClusterFleet、StormService 和 vLLM，验证两机模型并行、NIXL P/D 分离、八节点 Qwen3-235B FP8，以及 DeepSeek 70B 的四节点单卡、两节点双卡和单节点四卡拓扑
 status: lab
 last_reviewed: 2026-08-08
 ---
 
 # AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU
 
-前一轮实验使用 CPU mock 验证了 AIBrix v0.7.0 的控制面、模型发现、路由、StormService 和自动扩缩容。本轮继续在一套生产 Kubernetes 集群中使用真实 NVIDIA L20 和本地模型权重，回答三个更关键的问题：
+前一轮实验使用 CPU mock 验证了 AIBrix v0.7.0 的控制面、模型发现、路由、StormService 和自动扩缩容。本轮继续在一套生产 Kubernetes 集群中使用真实 NVIDIA L20 和本地模型权重，回答四个更关键的问题：
 
 1. `RayClusterFleet` 能否让一个 vLLM Engine 跨两台机器共同执行同一个模型；
 2. `StormService` 能否让 Prefill、Decode 分别运行在不同 GPU 节点，并通过 NIXL 交接 KV Cache；
 3. 当每台节点都只剩一张空闲 GPU 时，能否把八张碎片 L20 组成一个 235B MoE 推理实例。
+4. 相同四张 L20 分别采用四节点单卡、两节点双卡和单节点四卡时，单流推理性能相差多少。
 
-最终结果：两机两卡的 Qwen2.5-32B BF16 Ray Pipeline Parallel 推理成功；两机两卡的 Qwen2.5-Coder-32B GPTQ Int4 P/D 服务成功完成 AIBrix Gateway → Prefill → NIXL KV Transfer → Decode → 响应的完整链路；Qwen3-235B-A22B FP8 成功运行在八台节点、每台一张 L20 的碎片拓扑上；DeepSeek-R1-Distill-Llama-70B BF16 先在四台单卡节点上跑通，再使用相同四张卡改成两节点、每节点两卡的 TP=2、PP=2 拓扑。后者把单流 Decode 从约 5.13 token/s 提高到 9.92 token/s。
+最终结果：两机两卡的 Qwen2.5-32B BF16 Ray Pipeline Parallel 推理成功；两机两卡的 Qwen2.5-Coder-32B GPTQ Int4 P/D 服务成功完成 AIBrix Gateway → Prefill → NIXL KV Transfer → Decode → 响应的完整链路；Qwen3-235B-A22B FP8 成功运行在八台节点、每台一张 L20 的碎片拓扑上；DeepSeek-R1-Distill-Llama-70B BF16 依次完成四节点单卡 TP=1/PP=4、两节点双卡 TP=2/PP=2 和单节点四卡 TP=4/PP=1 实测，单流 Decode 分别约为 5.13、9.92 和 18.33 token/s。
 
 本次以**功能、拓扑和数据路径验证**为主，并为 235B 实例记录了一组热请求 TTFT、TPOT 和吞吐样本。样本来自非独占生产实验窗口，不是正式容量结论；生产选型仍需使用真实流量分布进行并发、长上下文、故障和 Goodput 基准测试。
 
@@ -51,6 +52,7 @@ python3 -c 'import vllm, ray; print(vllm.__version__, ray.__version__)'
 | Qwen3-235B-A22B-Instruct | FP8 | RayClusterFleet | 八节点，每节点 1 卡 | PP=8，加载与 OpenAI API 生成成功 |
 | DeepSeek-R1-Distill-Llama-70B | BF16 | RayClusterFleet | 四节点，每节点 1 卡 | PP=4，加载与 OpenAI API 生成成功 |
 | DeepSeek-R1-Distill-Llama-70B | BF16 | RayClusterFleet | 两节点，每节点 2 卡 | TP=2、PP=2；同模型同参数 A/B 中 Decode 提升约 93% |
+| DeepSeek-R1-Distill-Llama-70B | BF16 | RayClusterFleet | 单节点 4 卡 | TP=4、PP=1；热态 Decode 约 18.33 token/s |
 
 两个 32B 实验验证的能力并不相同：
 
@@ -553,11 +555,11 @@ Qwen3 虽然总权重更大、PP Stage 更多，但激活参数量更小且使�
 
 P/D 分离主要提升混合流量下的吞吐、资源隔离和 Goodput，不会自动让单请求 Decode 更快。若 Decode Group 仍是四节点 PP=4、10Gb TCP，它的单流生成速度仍受相同数据路径限制。
 
-拓扑 A/B 完成后，最小风险的下一轮对照实验是保留两节点双卡和 4K 上下文，只把 `max_num_seqs=4` 并去掉 `--enforce-eager`。先比较 Ready 时间、空载 TTFT、4 路并发 TTFT、Decode、GPU 利用率和取消行为，再决定是否引入量化、RDMA 或 P/D；不要同时改变所有变量。
+拓扑 A/B 完成后，最小风险的下一轮对照实验是保留性能最好的单节点四卡和 4K 上下文，只把 `max_num_seqs=4` 并去掉 `--enforce-eager`。先比较 Ready 时间、空载 TTFT、4 路并发 TTFT、Decode、GPU 利用率和取消行为，再决定是否引入量化、RDMA 或 P/D；不要同时改变所有变量。
 
-### 9.6 两节点双卡的拓扑 A/B 实测
+### 9.6 三种四卡拓扑的 A/B 实测
 
-集群中没有一台空闲四卡节点，但找到了两台各已使用 6/8 卡、仍各有两卡可用的同型号 L20 节点。没有迁移或抢占既有业务，而是创建一套独立 RayClusterFleet，使用节点范围约束和 Pod Anti-Affinity，把一个双卡 Head 与一个双卡 Worker 固定分散到两台节点：
+常规服务池中没有一台空闲四卡节点，但找到了两台各已使用 6/8 卡、仍各有两卡可用的同型号 L20 节点。没有迁移或抢占既有业务，而是创建一套独立 RayClusterFleet，使用节点范围约束和 Pod Anti-Affinity，把一个双卡 Head 与一个双卡 Worker 固定分散到两台节点：
 
 ```text
 节点 A：Rank 0 = PP 0 / TP 0，Rank 1 = PP 0 / TP 1
@@ -569,15 +571,34 @@ P/D 分离主要提升混合流量下的吞吐、资源隔离和 Goodput，不�
 
 节点内两个 TP Rank 通过 GPU P2P/NCCL 协作，跨节点只保留一个 PP 边界。启动日志验证了四个 Rank 的 PP/TP 分组，Ray Placement Group 获得 4/4 GPU；80 层模型被切成两个 PP Stage，每个 Stage 再做两卡 TP。
 
-为了让差异只来自拓扑，两组测试保持模型权重、L20 总卡数、vLLM 版本、BF16、4K 上下文、`max_num_seqs=1`、`--enforce-eager`、提示词和 64 Token 输出上限一致。两套实例同时空载后并行发请求，并逐条解析 SSE，以第一条非空 Token 而不是 HTTP 响应头计算 TTFT：
+随后先把四节点单卡和两节点双卡 Fleet 缩容到 0。在隔离池中找到一台 `Ready=True`、无资源压力、8 卡均未分配，但带有 `offline-node` NoSchedule/NoExecute 污点的 L20 节点。实验没有移除节点污点，只在新建的测试 Fleet 中显式增加 Toleration，并用 Hostname 把单个四卡 Head 限定到该节点。这样即使节点不适合运行模型，故障也只会留在测试实例内。
 
-| 拓扑 | 空载 TTFT | 64 Token E2E | 稳态 Decode |
+单节点启动日志确认四个 Rank 全部是 PP Rank 0，TP Rank 分别为 0–3：
+
+```text
+单节点：Rank 0 = PP 0 / TP 0
+        Rank 1 = PP 0 / TP 1
+        Rank 2 = PP 0 / TP 2
+        Rank 3 = PP 0 / TP 3
+```
+
+为了让差异只来自拓扑，三组测试保持模型权重、L20 总卡数、vLLM 版本、BF16、4K 上下文、`max_num_seqs=1`、`--enforce-eager`、提示词和 64 Token 输出上限一致。实例空载后发请求，并逐条解析 SSE，以第一条非空 Token 而不是 HTTP 响应头计算 TTFT：
+
+| 拓扑 | 热态空载 TTFT | 64 Token E2E | 稳态 Decode |
 | --- | ---: | ---: | ---: |
 | 四节点 × 单卡，TP=1、PP=4 | 约 0.250 秒 | 约 12.52 秒 | 约 5.13 token/s |
 | 两节点 × 双卡，TP=2、PP=2 | 约 0.140 秒 | 约 6.49 秒 | 约 9.92 token/s |
-| 变化 | 降低约 44% | 降低约 48% | **提高约 93%** |
+| 单节点 × 四卡，TP=4、PP=1 | 约 0.124 秒 | 约 3.56 秒 | 约 18.33 token/s |
+
+以四节点单卡为基线，两节点双卡的 Decode 提高约 93%；单节点四卡提高约 257%，也就是约 3.57 倍。单节点四卡与两节点双卡相比，TTFT 再降低约 11%，E2E 降低约 45%，Decode 提高约 85%。单节点的第一轮 TTFT 是 1.148 秒，后两轮稳定为 0.124 秒，因此第一轮被标记为首次请求 Warmup，不混入热态 TTFT。
 
 两节点双卡每个 Rank 加载约 32.89 GiB 模型显存，可用 KV Cache 约 5.64 GiB，最小 Stage 的 KV 容量约 73K Token。权重加载约 44–49 秒，比此前四节点单卡的约 29 秒慢；这是共享文件系统读取、节点缓存和同时加载行为的差异，不能据此判断计算拓扑退化。
+
+单节点四卡每个 Rank 加载约 32.89 GiB 模型显存，可用 KV Cache 约 5.67 GiB，KV 容量约 74.3K–75.3K Token；权重加载约 90 秒，Engine Profile、KV Cache 创建和 Warmup 约 7.2 秒。该节点首次拉取约 10.9 GB 运行镜像，镜像拉取不计入上述推理指标。
+
+日志还出现一条重要警告：这台机器是四张 PCIe-only GPU，vLLM 不支持在超过两张此类 GPU 上使用 Custom AllReduce，因此自动回退到 NCCL AllReduce。即使存在这个回退，消除跨节点 PP 后的收益仍远大于本机四卡 AllReduce 成本；但如果节点具备 NVLink/NVSwitch，TP=4 还有进一步提升空间。
+
+三轮单节点测试结束后，服务端指标恰好记录 3 个完成请求和 192 个生成 Token，`running=0`、`waiting=0`、`abort=0`，说明结果没有被外部流量污染。
 
 测试中还捕获到一个外部长请求插入造成的样本：TTFT 上升到约 13.8 秒，但请求开始执行后的 Decode 仍约 9.92 token/s。该样本从空载 A/B 中剔除，却保留为生产证据：
 
@@ -586,7 +607,7 @@ P/D 分离主要提升混合流量下的吞吐、资源隔离和 Goodput，不�
 - 固定输出长度下，Decode 应从第一条有效 Token 到结束计算；
 - 拓扑改善了单流速度，但 `max_num_seqs=1` 的队头阻塞仍需单独治理。
 
-这次 A/B 说明，碎片调度不应只问“能否凑够四张卡”。在没有高速 RDMA 的环境里，应优先让 TP 留在节点内，并把跨节点 PP Stage 数压到最低。若未来能找到单机四卡，再继续测试 TP=4、PP=1；若只能使用单卡碎片，则要接受 PP Hop 对 Decode 的明显影响。
+这次 A/B 说明，碎片调度不应只问“能否凑够四张卡”。在没有高速 RDMA 的环境里，应优先选择单节点四卡；其次让 TP 留在节点内并把跨节点 PP Stage 数压到最低；若只能使用单卡碎片，则要接受 PP Hop 对 Decode 的明显影响。离线池节点可用于短期受控实验，但在重新进入生产服务池前，仍需由节点维护方确认离线原因、健康基线和回收策略。
 
 ## 10. 大模型的多节点 P/D 分离蓝图
 
@@ -666,6 +687,8 @@ kubectl -n <EXPERIMENT_NAMESPACE> delete stormservice <EXPERIMENT_STORM_SERVICE>
 - 四台各剩一张 L20 的节点可以通过 PP=4 运行 DeepSeek-R1-Distill-Llama-70B BF16；
 - DeepSeek 70B 每个 PP Rank 使用约 33.864 GiB 模型显存，权重约 29 秒加载完成，生成约 5.1 token/s；
 - 相同四张 L20 改为两节点双卡、TP=2/PP=2 后，空载 Decode 提高到约 9.92 token/s，证明减少跨节点 PP Hop 是当前网络条件下最有效的单流优化；
+- 改为单节点四卡、TP=4/PP=1 后，热态 Decode 进一步提高到约 18.33 token/s，是四节点单卡的约 3.57 倍；
+- 四张 PCIe-only L20 会让 vLLM Custom AllReduce 回退到 NCCL，但本轮消除跨节点 PP 的收益仍显著大于回退成本；
 - `max_num_seqs=1` 遇到 R1 长思考请求会出现明显队头阻塞，排队请求 TTFT 可扩大到几十秒；
 - AIBrix Gateway 可以发现并路由到多机 Ray Engine；
 - StormService 可以把 Prefill、Decode 放到不同节点；
