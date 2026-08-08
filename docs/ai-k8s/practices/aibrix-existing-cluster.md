@@ -29,7 +29,7 @@ last_reviewed: 2026-08-06
 
 本文把公司内部 Registry、域名和地址写成 `<...>` 占位符。不要把实验 API Key、内网地址或浮动标签直接复制到生产。
 
-本篇主要记录 CPU mock 和控制面验证。真实 NVIDIA GPU、Ray 两机模型并行以及 NIXL P/D KV Cache 传输的后续实测，见：[AIBrix 真实 GPU 实测：Ray 多机推理与 NIXL P/D 分离](aibrix-gpu-multinode-pd-production.md)。
+本篇主要记录 CPU mock 和控制面验证。真实 NVIDIA GPU、Ray 两机模型并行、NIXL P/D KV Cache 传输及八节点碎片 GPU 运行 235B FP8 模型的后续实测，见：[AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU](aibrix-gpu-multinode-pd-production.md)。
 
 ## 1. 先盘点集群，不要直接运行 Quickstart
 

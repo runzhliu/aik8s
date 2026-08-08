@@ -585,6 +585,6 @@ RBG 与 AIBrix 都只是把这些 Runtime 放到 Kubernetes。选择哪种 CRD �
 - [RBG Installation](https://github.com/sgl-project/rbg/blob/v0.8.0-alpha.3/doc/install.md)
 - [RBG Deploy Inference Service](https://github.com/sgl-project/rbg/blob/v0.8.0-alpha.3/doc/best-practice/zh/01-deploy-inference-service.md)
 - [AIBrix 既有集群实战](aibrix-existing-cluster.md)
-- [AIBrix 真实 GPU：Ray 多机与 NIXL P/D](aibrix-gpu-multinode-pd-production.md)
+- [AIBrix 真实 GPU：两机、P/D 与八节点碎片卡](aibrix-gpu-multinode-pd-production.md)
 - [Higress AI Gateway 实战](../inference/higress-ai-gateway.md)
 - [多机与分离式 LLM 推理](../inference/distributed-serving.md)

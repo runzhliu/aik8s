@@ -1,20 +1,21 @@
 ---
-title: AIBrix 真实 GPU 实测：Ray 多机推理与 NIXL P/D 分离
-description: 在生产 Kubernetes 集群使用 NVIDIA L20、AIBrix v0.7.0、RayClusterFleet、StormService 和 vLLM 验证多机模型并行、P/D 路由及 NIXL KV Cache 传输
+title: AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU
+description: 在生产 Kubernetes 集群使用 NVIDIA L20、AIBrix v0.7.0、RayClusterFleet、StormService 和 vLLM，验证两机模型并行、NIXL P/D 分离及八节点 Qwen3-235B FP8 推理
 status: lab
 last_reviewed: 2026-08-08
 ---
 
-# AIBrix 真实 GPU 实测：Ray 多机推理与 NIXL P/D 分离
+# AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU
 
-前一轮实验使用 CPU mock 验证了 AIBrix v0.7.0 的控制面、模型发现、路由、StormService 和自动扩缩容。本轮继续在一套生产 Kubernetes 集群中使用真实 NVIDIA L20 和本地模型权重，回答两个更关键的问题：
+前一轮实验使用 CPU mock 验证了 AIBrix v0.7.0 的控制面、模型发现、路由、StormService 和自动扩缩容。本轮继续在一套生产 Kubernetes 集群中使用真实 NVIDIA L20 和本地模型权重，回答三个更关键的问题：
 
 1. `RayClusterFleet` 能否让一个 vLLM Engine 跨两台机器共同执行同一个模型；
-2. `StormService` 能否让 Prefill、Decode 分别运行在不同 GPU 节点，并通过 NIXL 交接 KV Cache。
+2. `StormService` 能否让 Prefill、Decode 分别运行在不同 GPU 节点，并通过 NIXL 交接 KV Cache；
+3. 当每台节点都只剩一张空闲 GPU 时，能否把八张碎片 L20 组成一个 235B MoE 推理实例。
 
-最终结果：两机两卡的 Qwen2.5-32B BF16 Ray Pipeline Parallel 推理成功；两机两卡的 Qwen2.5-Coder-32B GPTQ Int4 P/D 服务也成功完成 AIBrix Gateway → Prefill → NIXL KV Transfer → Decode → 响应的完整链路。
+最终结果：两机两卡的 Qwen2.5-32B BF16 Ray Pipeline Parallel 推理成功；两机两卡的 Qwen2.5-Coder-32B GPTQ Int4 P/D 服务成功完成 AIBrix Gateway → Prefill → NIXL KV Transfer → Decode → 响应的完整链路；Qwen3-235B-A22B FP8 也成功运行在八台节点、每台一张 L20 的碎片拓扑上，并通过 OpenAI-Compatible API 完成真实生成。
 
-本次只完成**功能、拓扑和数据路径验证**，没有形成吞吐、TTFT、TPOT 或 Goodput 性能结论。生产选型仍需使用真实流量分布进行基准测试。
+本次以**功能、拓扑和数据路径验证**为主，并为 235B 实例记录了一组热请求 TTFT、TPOT 和吞吐样本。样本来自非独占生产实验窗口，不是正式容量结论；生产选型仍需使用真实流量分布进行并发、长上下文、故障和 Goodput 基准测试。
 
 !!! warning "公开文档已经脱敏"
     本文不会记录公司内部集群名、节点地址、Ceph monitor、模型卷真实路径、Registry、Ingress 域名、Pod IP 或 Secret。所有环境相关值统一写成 `<...>` 占位符，不能直接复制后执行。
@@ -25,8 +26,8 @@ last_reviewed: 2026-08-08
 | --- | --- |
 | AIBrix | v0.7.0 |
 | GPU | NVIDIA L20，单卡约 46 GiB 显存 |
-| Ray 多机镜像 | vLLM 0.8.3 开发构建，Ray 2.43.0 |
-| P/D 镜像 | vLLM 0.10.1 开发构建，Ray 2.48.0 |
+| 两机 Ray 镜像 | vLLM 0.8.3 开发构建，Ray 2.43.0 |
+| P/D 与八节点 Ray 镜像 | vLLM 0.10.1 开发构建，Ray 2.48.0 |
 | KV Connector | NIXL Connector |
 | P/D 传输后端 | NIXL + UCX |
 | 模型存储 | CephFS，只读挂载 |
@@ -47,6 +48,7 @@ python3 -c 'import vllm, ray; print(vllm.__version__, ray.__version__)'
 | Qwen2.5-3B-Instruct | BF16 | StormService P/D | Prefill 1 卡 + Decode 1 卡 | P/D 控制流成功，作为 NIXL 基线 |
 | Qwen2.5-32B-Instruct | BF16 | RayClusterFleet | 两节点，每节点 1 卡 | PP=2，多机推理成功 |
 | Qwen2.5-Coder-32B-Instruct | GPTQ Int4 | StormService P/D | 两节点，每节点 1 卡 | NIXL KV 传输和生成成功 |
+| Qwen3-235B-A22B-Instruct | FP8 | RayClusterFleet | 八节点，每节点 1 卡 | PP=8，加载与 OpenAI API 生成成功 |
 
 两个 32B 实验验证的能力并不相同：
 
@@ -279,25 +281,195 @@ curl http://127.0.0.1:28999/v1/chat/completions \
 
 所有测试工具集中放在同一 Namespace，清理时不会跨 Namespace 扫描或按模糊名称删除资源。
 
-## 8. 下一档模型：四卡 72B
+## 8. 八个碎片节点运行 Qwen3-235B FP8
 
-模型目录还包含更大 Qwen 权重。仅按权重大小和 L20 显存估算：
+### 8.1 为什么选择 PP=8
 
-| 候选 | 权重大小 | 建议拓扑 | 判断 |
+这次最现实的约束不是集群没有八张 GPU，而是**每台节点都只剩一张 L20**。Qwen3-235B-A22B-Instruct FP8 权重约 220 GiB，八卡平均静态权重约 27.5 GiB；考虑未量化模块、运行时和 KV Cache 后，容量仍落在单卡约 46 GiB 的范围内。
+
+可选并行方式并不等价：
+
+| 方式 | 跨节点通信特征 | 碎片 L20 + 10Gb 网络判断 |
+| --- | --- | --- |
+| TP=8 | 几乎每层都有 Collective | 对带宽和尾延迟敏感，不作为第一轮 |
+| EP=8 | MoE Token 在 Expert 间进行 All-to-All | 235B MoE 可用，但 10Gb 网络代价很高 |
+| PP=8 | 相邻流水段传递激活 | 单请求有流水线延迟，但最适合先验证“能否运行” |
+
+因此本次使用 `TP=1、PP=8`。这不是追求最高性能的拓扑，而是把八台机器上的单卡碎片转化为一个可用的大模型实例。
+
+```text
+AIBrix RayClusterFleet
+  └── KubeRay 创建 RayCluster
+       ├── Head / PP Rank 0 / vLLM API / 1×L20
+       ├── Worker / PP Rank 1 / 1×L20
+       ├── Worker / PP Rank 2 / 1×L20
+       ├── ...
+       └── Worker / PP Rank 7 / 1×L20
+
+94 个 Transformer Layer：11, 12, 12, 12, 12, 12, 12, 11
+```
+
+这里四层组件的职责要分清：
+
+- **AIBrix RayClusterFleet**：声明副本、滚动策略、标签和模型入口，不执行模型并行；
+- **KubeRay**：创建 Head、Worker、Service，并让八个 Ray Node 组成集群；
+- **Ray**：提供跨节点资源池和 Placement Group，原子预留八张 GPU；
+- **vLLM**：识别模型架构、划分 PP Rank、加载权重、管理 KV Cache 并暴露 OpenAI-Compatible API。
+
+### 8.2 先验证镜像，不要只相信 Tag
+
+已验证的镜像标签写着 vLLM 0.10.0，但容器内实际版本是 vLLM 0.10.1 开发构建、Ray 2.48.0。部署前直接在已有 Pod 中检查：
+
+```bash
+/usr/bin/python3 -c '
+import ray, vllm
+from vllm.model_executor.models.registry import ModelRegistry
+
+arch = "Qwen3MoeForCausalLM"
+print("vllm:", vllm.__version__)
+print("ray:", ray.__version__)
+print("registered:", arch in ModelRegistry.get_supported_archs())
+print("pp_supported:", ModelRegistry.is_pp_supported_model([arch]))
+'
+```
+
+本次输出确认 Qwen3 MoE 已注册、支持 Pipeline Parallel，且镜像已经包含 Ray。相同镜像没有注册 `Qwen3_5MoeForConditionalGeneration`，所以不能因为名字只差 `.5` 就直接用于 Qwen3.5-397B；后者需要更新 vLLM，并再次确认 Ray 是否仍在镜像中。
+
+### 8.3 调度：每个 Pod 只拿一张卡，并强制分散
+
+RayClusterFleet 使用七个 Worker，加上 Head 正好八个 Ray Node。节点标签在不同企业环境中会不同，下面使用通用占位值：
+
+```yaml
+spec:
+  template:
+    spec:
+      rayVersion: 2.48.0
+      headGroupSpec:
+        template:
+          spec:
+            affinity: &fragmented_l20_affinity
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: <GPU_WORKLOAD_LABEL>
+                          operator: In
+                          values: [<LLM_SERVING_VALUE>]
+                        - key: <GPU_MODEL_LABEL>
+                          operator: In
+                          values: [<L20_VALUE>]
+              podAntiAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  - labelSelector:
+                      matchLabels:
+                        model.aibrix.ai/name: qwen3-235b-fp8-ray-8n
+                    topologyKey: kubernetes.io/hostname
+            containers:
+              - name: ray-head
+                resources: &one_l20
+                  requests:
+                    cpu: "8"
+                    memory: 64Gi
+                    nvidia.com/gpu: "1"
+                  limits:
+                    cpu: "16"
+                    memory: 96Gi
+                    nvidia.com/gpu: "1"
+      workerGroupSpecs:
+        - groupName: worker-group
+          replicas: 7
+          minReplicas: 7
+          maxReplicas: 7
+          template:
+            spec:
+              affinity: *fragmented_l20_affinity
+              containers:
+                - name: ray-worker
+                  resources: *one_l20
+```
+
+强制 Pod Anti-Affinity 不是装饰。没有它时，调度器可能把多个单卡 Pod 放到同一台仍有多张空闲卡的节点，最终拓扑与“每台一张碎片卡”的验证目标不同。
+
+vLLM Head 的核心参数如下：
+
+```bash
+vllm serve /models/Qwen3-235B-A22B-Instruct-2507-FP8 \
+  --served-model-name qwen3-235b-fp8-ray-8n \
+  --tensor-parallel-size 1 \
+  --pipeline-parallel-size 8 \
+  --distributed-executor-backend ray \
+  --quantization fp8 \
+  --dtype auto \
+  --gpu-memory-utilization 0.88 \
+  --max-model-len 4096 \
+  --max-num-seqs 1 \
+  --enforce-eager \
+  --trust-remote-code
+```
+
+第一轮把上下文压到 4K、并发压到 1，并关闭 CUDA Graph，目的是减少显存和编译变量。功能跑通后再分别扩大上下文、并发和图优化，不要一次改动所有参数。
+
+### 8.4 从调度到 API Ready 的实测过程
+
+八个 Pod 一次性调度到八台不同节点，没有出现 Pending。Ray 返回八个 Active Node，Placement Group 原子预留 8/8 GPU，随后 vLLM 把 94 层划分为 `[11,12,12,12,12,12,12,11]`。
+
+| 阶段 | 实测 |
+| --- | ---: |
+| 首次拉取运行时镜像 | 约 147 秒，镜像约 10.9 GB |
+| 24 个 Safetensors Shard 加载 | 约 163–166 秒 |
+| Engine Profile、KV Cache 创建和 Warmup | 约 5.6 秒 |
+| 容器启动到 API Ready | 约 3 分 45 秒 |
+| Pod 创建到 API Ready，包含首次拉镜像 | 约 6 分 14 秒 |
+| 每个 PP Rank 的模型显存 | 约 30.20 GiB |
+| 每卡剩余 KV Cache | 约 8.48 GiB |
+
+加载进度约 7 秒一个 Shard。不能简单用“单 Shard 文件大小 ÷ 7 秒”当作 CephFS 吞吐，因为每个 PP Worker 会遍历 Shard、只读取属于自己 Rank 的张量，同时还包含反序列化、CPU 到 GPU 拷贝和 FP8 初始化。对运维更有意义的指标是：八个 Worker 并发读取时，整个 235B 模型约三分钟完成权重加载，且没有出现 CephFS 超时或 Pod 重启。
+
+### 8.5 API 与性能样本
+
+OpenAI-Compatible Chat Completions 返回了正确中文结果，证明不是“Pod Ready 但 Engine 不可用”。一次 64 Token 的受控热请求得到：
+
+| 指标 | 实测值 |
+| --- | ---: |
+| TTFT | 4.859 秒 |
+| 端到端延迟 | 12.647 秒 |
+| 稳态 Decode | 8.089 token/s |
+| TPOT | 约 124 ms/token |
+| 包含 TTFT 的平均输出速度 | 约 5.1 token/s |
+| 日志窗口中的 Prefill | 约 40–74 token/s |
+
+该时间窗口仍存在少量交互式请求，不是独占压测。首次请求还触发了 Ray Compiled DAG Communicator 初始化，日志窗口一度只有 0.1–1.5 token/s；通信组热身后，Decode 稳定在约 7.6–8.1 token/s。
+
+vLLM 报告最小 PP Stage 的 GPU KV Cache 容量约 370K Token，并给出 4K 请求约 90 倍的理论并发容量，但本次显式设置了 `max_num_seqs=1`，**实际并发仍然只有 1**。容量日志不能代替并发压测结果。
+
+### 8.6 能跑不等于已经优化
+
+L20 上出现两类重要但不阻断启动的告警：
+
+```text
+CutlassBlockScaledGroupedGemm not supported on the current platform
+Using default W8A8 Block FP8 / Fused MoE config; performance might be sub-optimal
+```
+
+这意味着 vLLM 使用了正确性回退路径和默认 Kernel 配置，没有找到针对 L20 与当前 MoE Shape 调优的配置。结合 PP=8 的七段跨节点传输，本次结果应解释为：
+
+- **容量和功能成立**：碎片卡可以组成一个 235B FP8 实例；
+- **交互可用但 TTFT 偏高**：热请求约 4.9 秒首 Token；
+- **稳态生成尚可**：单请求约 8 token/s；
+- **不能直接作为生产容量值**：仍需压测并发、长上下文、取消、超时和故障恢复。
+
+## 9. 尚未执行的模型容量规划
+
+以下只完成模型配置、权重大小和运行时能力检查，没有创建工作负载：
+
+| 候选 | 权重大小 | 碎片卡拓扑 | 当前判断 |
 | --- | ---: | --- | --- |
-| Qwen2.5-72B-Instruct BF16 | 约 135 GiB | 两节点，每节点 2 卡，TP=2、PP=2 | 能尝试，但每卡权重约 34 GiB，KV 和运行时余量偏紧 |
-| Qwen2.5-72B-Instruct GPTQ Int8 | 约 72 GiB | 两节点，每节点 2 卡，TP=2、PP=2 | 推荐作为四卡第一轮，容量更稳 |
-| Qwen3-235B-A22B FP8 | 约 220 GiB | 至少 8 张 L20 | 四卡总显存不足，不应强行部署 |
-| Qwen3-235B-A22B BF16 | 约 438 GiB | 需要更多 GPU | 不适合作为下一步冒烟测试 |
+| DeepSeek-R1-Distill-Llama-70B BF16 | 约 131 GiB | 4 节点，每节点 1 张 L20，TP=1、PP=4 | 标准 Llama 架构，vLLM 0.10 可支持；每卡约 33 GiB 静态权重，具备尝试条件，**未部署** |
+| Qwen2.5-72B-Instruct BF16 | 约 135 GiB | 4 节点，每节点 1 张 L20，TP=1、PP=4 | 容量与 70B 接近，**未部署** |
+| Qwen2.5-72B-Instruct GPTQ Int8 | 约 72 GiB | 2–4 节点，每节点 1 张 L20 | 容量更宽松，适合做下一轮性能基线，**未部署** |
+| Qwen3.5-397B-A17B GPTQ Int4 | 约 220 GiB | 8 节点，每节点 1 张 L20，优先 PP=8 | 容量可能成立，但当前 vLLM 0.10 未注册 Qwen3.5 MoE；需更新运行时并补齐 Ray，**未部署** |
 
-下一轮建议先运行 72B Int8 四卡，验证：
-
-1. 每个节点能否连续分配 2 张 GPU；
-2. Ray Placement Group 是否形成预期的 TP/PP Rank 分布；
-3. 跨节点 TP Collective 的网络性能和错误率；
-4. 4K、8K、16K 上下文下的显存余量；
-5. 冷启动时间、单请求 TTFT/TPOT 和并发 Goodput；
-6. Worker 或节点重启后的恢复语义。
+DeepSeek 70B 若继续验证，应沿用本章的 RayClusterFleet，只把 Worker 数改为 3、PP 改为 4、模型路径和服务名改成对应值。不要把“容量估算可行”写成“已经跑通”，验收仍需覆盖权重加载、API 请求、每卡显存、TTFT/TPOT 和节点故障。
 
 如果 GPU 不足，应只缩容或删除本次实验创建的工作负载，先按精确资源名确认，再执行：
 
@@ -309,12 +481,15 @@ kubectl -n <EXPERIMENT_NAMESPACE> delete stormservice <EXPERIMENT_STORM_SERVICE>
 
 不要用宽泛 Label 或整个 Namespace 删除生产中原有服务。
 
-## 9. 本轮结论与边界
+## 10. 本轮结论与边界
 
 已经证明：
 
 - AIBrix v0.7.0 可以管理真实 GPU RayClusterFleet 和 StormService；
 - vLLM 可以在两台 L20 上以 PP=2 运行 32B BF16 模型；
+- 八台各剩一张 L20 的节点可以通过 Ray Placement Group 和 PP=8 运行 Qwen3-235B FP8；
+- Qwen3-235B FP8 每个 PP Rank 实际占用约 30.20 GiB 模型显存，并保留约 8.48 GiB KV Cache；
+- 该碎片拓扑可以完成 OpenAI-Compatible API 生成，热请求样本约 4.9 秒 TTFT、8 token/s Decode；
 - AIBrix Gateway 可以发现并路由到多机 Ray Engine；
 - StormService 可以把 Prefill、Decode 放到不同节点；
 - AIBrix P/D Router 能为同一请求生成互补的 KV Transfer 参数；
@@ -323,6 +498,9 @@ kubectl -n <EXPERIMENT_NAMESPACE> delete stormservice <EXPERIMENT_STORM_SERVICE>
 
 尚未证明：
 
+- Qwen3-235B 的单次热请求样本可以代表正式并发容量或 Goodput；
+- L20 上的默认 FP8/Fused-MoE Kernel 已达到最优性能；
+- DeepSeek-R1-Distill-Llama-70B、Qwen3.5-397B 已经在当前拓扑运行；
 - P/D 比共置模式吞吐更高或成本更低；
 - 当前 TCP/UCX 参数是最优网络配置；
 - Role 级自动扩缩在真实模型冷启动和请求排空下安全；
