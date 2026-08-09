@@ -1,8 +1,8 @@
 controller:
   replicaCount: 1
   nodeSelector:
-    kubernetes.io/hostname: 10.189.110.112
+    kubernetes.io/hostname: master
 
 crdUpgrade:
   nodeSelector:
-    kubernetes.io/hostname: 10.189.110.112
+    kubernetes.io/hostname: master
