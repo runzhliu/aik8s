@@ -1,3 +1,10 @@
+---
+title: 2026 年 AI Agent 现状、实现原理与趋势
+description: 主流编程、浏览器与企业 Agent 的产品格局、实现原理、开发框架、风险和演进趋势
+status: evolving
+last_reviewed: 2026-08-10
+---
+
 # 2026 年 AI Agent 现状、实现原理与趋势
 
 > 调研日期：2026-08-10
