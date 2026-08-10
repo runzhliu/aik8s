@@ -276,6 +276,8 @@ PD 的主要价值是分别控制 TTFT 与 ITL，并减少长 Prompt Prefill 对
 - E2EL：完整请求耗时；
 - Output tok/s：整个实例的输出总吞吐，不是单请求速度。
 
+表格中的 `C` 表示压测客户端允许的最大并发请求数（Concurrency），即同一时刻尚未完成的请求上限，而不是总用户数。`C=1` 表示完全串行，主要观察低负载下的单请求延迟；`C=8` 表示最多同时保持 8 个请求，一个请求结束后客户端立即补入下一个，直到完成整轮请求。提高 `C` 通常能让 continuous batching 更充分地利用 GPU、提升实例总吞吐，但排队与资源共享也可能增加单请求 TTFT、TPOT 和 E2EL。
+
 ### 8.1 稳态结果
 
 | 场景 | 请求成功 | req/s | 输出 tok/s | p50/p95/p99 TTFT | p95 TPOT | p95 ITL | p95 E2EL |
@@ -650,6 +652,10 @@ sha256:3c5c53248febaa72823a4b7e51aafa1cd2b65d860392e3930414da4d3864f541
 
 该上游镜像包含 vLLM 和 NIXL，但不包含 Ray。验证阶段在启动脚本中安装 `ray[default]==2.47.1`，再执行 KubeRay 注入的 Ray 启动命令；生产镜像应预装锁定版本，避免重启依赖 PyPI 可用性。
 
+NIXL（NVIDIA Inference Xfer Library）是推理数据传输软件库，不是 H20 芯片内置的独立硬件模块。在 P/D 分离中，它负责把 Prefill 产生的 KV Cache 传给 Decode，避免 Decode 重新计算整个 Prompt。H20 可以运行 NIXL；镜像是否包含 NIXL、vLLM Connector 是否启用，以及节点之间是否具备可用的 UCX/RDMA 网络，才决定数据路径能否建立及其性能。
+
+需要区分 GPU 能力与节点网络能力：H20 支持 CUDA 并不等于所在服务器一定配置了 RDMA。跨节点有 RoCE/InfiniBand、网卡驱动和正确 UCX 配置时，NIXL 可以使用高速网络；没有 RDMA 时仍可能使用其他 UCX/TCP 路径，但延迟和吞吐需要单独验证。同节点还可以使用 CUDA IPC 等本地路径。因此“NIXL Agent 初始化成功”只表示组件启动，必须进一步看到 compatibility check、成功的 KV Transfer 和 Decode 外部 KV 命中，才能证明实际 P/D 数据路径成立。
+
 最初让 vLLM 使用 `--distributed-executor-backend=ray`。两个 Engine 都能完成权重加载、NCCL 初始化、NIXL Agent 初始化、warm-up 和 CUDA Graph capture，健康检查也返回 200，但确定性中文请求会生成随机中英文、代码和符号。同样错误能在以下路径复现：
 
 1. 直连 Prefill Head；
@@ -667,7 +673,22 @@ AIBrix P/D Router：选择 Prefill 与 Decode Engine
 NIXL/UCX：在两个 Engine 之间传输 KV
 ```
 
+这里的 `mp` 和 `ray` 是 vLLM 管理 TP Worker 的两种 distributed executor backend，不是两种 P/D 协议，也不替代 AIBrix 或 NIXL：
+
+| 对比项 | `mp` | `ray` |
+| --- | --- | --- |
+| Worker 形式 | Pod 内的 Python 多进程 | Ray Worker Actor |
+| 常见作用域 | 单节点多 GPU | 单节点或跨节点 |
+| TP=8 的实现 | 本地启动 8 个 TP Rank | 创建 8 个 Ray Actor 执行 TP |
+| 跨节点 TP/PP | 通常不使用 | 支持，由 Ray 调度 Actor |
+| 额外依赖 | 本地进程管理与 NCCL | Ray、Actor 调度、GPU 映射与 NCCL |
+| 适用起点 | 一个 Engine 能放入一台完整八卡节点 | 一个 Engine 必须横跨多台节点，或已有必须依赖 Ray 的执行拓扑 |
+
+本次即使把 vLLM backend 改为 `mp`，仍然保留 RayClusterFleet/KubeRay 管理两组 Pod 的生命周期：每个 Head Pod 内由 `mp` 管理 8 个 TP Rank，AIBrix 在 Pod 之间选择 Prefill/Decode，NIXL 在两个 Engine 之间传输 KV。换句话说，“外层使用 RayClusterFleet”不要求“vLLM 内层必须使用 Ray executor”。
+
 切换到 `--distributed-executor-backend=mp` 并干净重建后，资源稳定为两份 Fleet、两份 RayCluster、两个 8-GPU Head Pod。经 AIBrix Gateway 的确定性中文请求准确返回预期文本，之前的错误 token 消失。
+
+这次结果不能外推为“Ray executor 普遍不正确”。目前只证明当前 DeepSeek V4、vLLM 版本、镜像与 Ray executor 的组合没有通过正确性门槛，而同配置的本地 `mp` 路径可以正确生成。若以后单个 Engine 必须跨节点使用更多 GPU，应重新验证 Ray executor；当前每侧都能完整放入一台 8 卡 H20 时，`mp` 的执行链更短、变量更少。
 
 ### 11.4 RayClusterFleet P/D 压测
 
