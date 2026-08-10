@@ -1,141 +1,121 @@
 ---
-title: DeepSeek-V4-Flash-0731 的 H20 可部署性评估
-description: 基于生产集群只读快照、CephFS 现有挂载方式和上游支持证据，评估 DeepSeek-V4-Flash-0731 在单节点八卡 H20 上的部署条件、风险与验证路径
+title: DeepSeek-V4-Flash-0731 的 H20 部署与压测
+description: 记录 DeepSeek-V4-Flash-0731 在单机八卡 H20 上的资源条件、vLLM 启动流程、性能基线、PD 分离判断与 OpenWebUI 对接方法
 status: exploratory
 last_reviewed: 2026-08-10
 ---
 
-# DeepSeek-V4-Flash-0731 的 H20 可部署性评估
+# DeepSeek-V4-Flash-0731 的 H20 部署与压测
 
-本文记录一次**只读、探索性**评估：没有创建 Pod、修改调度配置、拉取镜像或加载模型。结论表示当前环境具备开展验证的条件，不表示模型已经在该生产集群通过功能、性能或稳定性验收。
-
-!!! warning "公开文档已经脱敏"
-    本文不会记录内部集群名、节点地址、Ceph monitor、模型卷真实路径、Registry、Namespace 或 Secret。资源数字保留用于说明判断依据，环境相关值统一使用 `<...>` 占位符。
+本文整理一次脱敏后的探索性验证。所有集群名称、Namespace、节点地址、Pod 名称、镜像仓库、对象存储地址、模型路径、网关、账号和凭据均已删除或替换为占位符。文中的性能数字用于说明量级和测试方法，不是生产容量承诺。
 
 ## 1. 结论
 
-**H20 可以作为 DeepSeek-V4-Flash-0731 的候选部署硬件，当前 H20 集群也存在满足首次验证需要的连续单节点八卡资源。推荐从单节点 `8 × H20 96 GB`、TP=8、Expert Parallel、32K 上下文、关闭 DSpark 的目标模型基线开始。**
-
-判断置信度为“中等偏高”，理由如下：
-
-- DeepSeek-V4-Flash-0731 是 304B 参数、约 13B 激活参数的 MoE 模型，融合检查点约 167 GB；八张 96 GB H20 的总显存容量明显高于权重体积，并能给 KV Cache、通信缓冲区和算子工作区留下空间。
-- H20 属于 Hopper/SM90。vLLM 的 DeepSeek V4 路线中包含 H20 的 FP8 block-scaled GEMM 工作，上游问题也记录过 H20 上的 DeepSeek-V4-Flash-DSpark 目标模型成功加载和推理。
-- 目标集群快照中有 16 台 Ready、未封锁、GPU 请求为 0 的八卡 H20/H20-3e 节点，不需要把模型拆到多机，也就不依赖跨节点 RDMA。
-- 但是 vLLM 和 SGLang 的 0731 官方验证矩阵主要列出 H200、B200、GB300 等硬件，没有把 H20 列为正式验证平台。H20 上游成功记录针对的是结构相同的 Preview/DSpark 检查点，不能直接替代 0731 的集群实测。
-
-因此，本次结论不是“直接生产发布”，而是：**可以进入受控 PoC；通过目标模型、长上下文、工具调用、DSpark 和稳定性门槛后，才能决定是否生产化。**
-
-## 2. 模型带来的硬性条件
-
-| 项目 | DeepSeek-V4-Flash-0731 条件 | 对部署的影响 |
-| --- | --- | --- |
-| 架构 | DeepSeek V4 MoE，304B 总参数、约 13B 激活参数 | 引擎必须原生支持 `deepseek_v4`，不能沿用只支持 DeepSeek V3/R1 的旧镜像 |
-| 权重 | FP4 MoE experts + FP8 其余权重；融合 DSpark 检查点约 167 GB | 需要支持对应 FP4/FP8 kernel；磁盘体积不能直接等同于实际显存占用 |
-| 上下文 | 配置上限 1,048,576 tokens | 首次验证不应直接开 1M；KV Cache、启动时间和延迟需要逐级测量 |
-| 推理模式 | `low`、`high`、`max` 三档 reasoning effort | `high`/`max` 官方建议允许最多 384K 输出，完整能力验证至少需要 `max-model-len >= 393216` |
-| Chat 编码 | 检查点不包含 Jinja chat template，提供独立 `encoding/` 实现 | OpenAI API 必须使用 DeepSeek V4 tokenizer、reasoning 和 tool-call parser，并测试异常输出解析 |
-| 推测解码 | 检查点内含 DSpark draft module | NVIDIA 上需要 vLLM 0.25.0 或更新版本；先关闭 DSpark 建基线，再单独开启验证 |
-
-已有的 vLLM 0.10.x 镜像太旧，不满足 DeepSeek V4 0731 和 DSpark 要求。首次实验应制作或确认一个专用的 vLLM 0.26.x 镜像，并在容器内核对 vLLM、PyTorch、CUDA、FlashInfer、DeepGEMM 和 DeepSeek V4 model implementation 的实际版本，不能只相信镜像标签。
-
-## 3. 两个生产 GPU 池的只读快照
-
-快照时间为 2026-08-10。GPU 空余量按活跃 Pod 的 `requests.nvidia.com/gpu` 计算，是调度视角的瞬时值，不代表 GPU 利用率，也不等于未来预留能力。
-
-### 3.1 L20 集群：不适合作为首选
-
-| 指标 | 只读快照 |
-| --- | ---: |
-| GPU 节点 / 总可分配 GPU | 77 / 616 |
-| 活跃 Pod GPU requests | 565 |
-| 名义空闲 GPU | 51 |
-| Ready、未封锁且完整空闲的八卡节点 | 0 |
-| 主要 GPU | NVIDIA L20，单卡约 48 GB |
-
-51 张空闲 GPU 分散在多台节点：大部分节点只空闲 1 张或 2 张。另有一台保留 4 张空闲 GPU 的节点带离线污点，不能作为正常容量。即使总空闲卡数看起来足够，也无法组成推荐的单节点八卡拓扑。
-
-更重要的是，L20 是 Ada/SM89。SGLang 对 SM89 的 DeepSeek V4 FP8 支持仍属于实验性上游工作，不能作为生产首选。因此不建议为了利用碎片卡而先走 L20 多机 TP/PP 路径。
-
-### 3.2 H20 集群：具备单节点验证条件
-
-| 指标 | 只读快照 |
-| --- | ---: |
-| GPU 节点 / 总可分配 GPU | 210 / 1,673 |
-| 活跃 Pod GPU requests | 1,431 |
-| 名义空闲 GPU | 242 |
-| GPU requests 为 0 的八卡节点 | 27 |
-| 其中 Ready、未封锁的完整八卡节点 | 24 |
-| 其中 H20/H20-3e 完整八卡节点 | 16 |
-
-这 16 台 H20 候选节点包括：
-
-- 13 台标准 H20，DCGM 观测每卡约 94–95 GiB 空闲显存；
-- 3 台 H20-3e，DCGM 观测每卡约 140 GiB 空闲显存。
-
-候选节点不是一个无条件共享池。它们分别带有训练、LLM 训练或 LLM Serving 的 `quarantine-room` 污点，Pod 必须匹配准确的 toleration 和节点池约束。快照中最符合语义的 LLM Serving H20 96 GB 候选节点还剩约 338 CPU、1,287 GiB 内存和完整 8 GPU；该节点没有 RDMA 扩展资源，但单节点 TP=8 不要求跨机 RDMA。
-
-观察窗口内另有一个请求 8 GPU 的 Volcano Gang 处于 Pending。它面向 H20 96 GB 训练池，不等于当前 Serving 节点不可用，但说明完整八卡容量会变化；开始任何实验前都必须重新检查 Pod requests、Queue/PodGroup 和池归属。
-
-## 4. 推荐的首次验证拓扑
+DeepSeek-V4-Flash-0731 可以在单节点 `8 × NVIDIA H20 96 GB` 上使用 vLLM 启动。已经验证的拓扑是：
 
 ```text
 OpenAI-compatible client
           │
           ▼
-  vLLM API / Engine
+     vLLM API Server
           │
-  单个 Kubernetes Pod
-          │
-  单台 H20 节点，8 GPU
-  TP=8 + Expert Parallel
-          │
-  CephFS 只读模型目录
+          ▼
+  单 Pod、单节点、TP=8
+  8 × H20 96 GB
 ```
 
-推荐顺序：
+这是普通的 Prefill/Decode 共置部署，不是 PD 分离。模型权重、KV Cache 和 CUDA Graph 可以放入 8 张卡，但显存水位约 93 GiB/卡，余量不大。验证期间所有压测请求均成功；完成目标并发形状的运行时预热后，128-token 输入、64-token 输出、并发 8 的总输出吞吐约为 934 tok/s。
 
-1. 优先使用 LLM Serving 池中的完整 `8 × H20 96 GB` 节点；H20-3e 可以提供更多上下文余量，但当前位于训练池，不应只为显存更大就跨池抢占。
-2. 使用单 Pod、单节点、TP=8，避免多机网络、RDMA、Ray 和 Gang 调度同时进入问题空间。
-3. 先运行 target-only，不启用 DSpark，不做 P/D 分离，也不直接追求 1M context。
-4. 基线通过后再分别增加 DSpark、上下文长度和并发，每次只改变一个变量。
+部署可行不等于已经生产就绪。正式上线前仍需完成：真实请求回放、长时间阶梯压测、工具调用和 reasoning 正确性、DSpark A/B、故障恢复、鉴权、稳定入口和监控告警。
 
-上游问题中曾在 H20 上用 TP=2 跑通结构相同的目标模型，但这只能证明 H20 kernel 路径存在，不能证明 TP=2 是生产最优。TP=8 能减少每卡权重和工作区压力，并利用现成完整八卡节点，因此是更保守的首次选择。
+## 2. 资源与软件条件
 
-## 5. 建议资源边界
+### 2.1 硬件起点
 
-以下数字是 PoC 起点，不是容量承诺：
+建议从以下边界开始验证：
 
 ```yaml
 resources:
   requests:
     cpu: "64"
     memory: 320Gi
-    ephemeral-storage: 100Gi
     nvidia.com/gpu: "8"
   limits:
     cpu: "128"
     memory: 512Gi
-    ephemeral-storage: 200Gi
     nvidia.com/gpu: "8"
 ```
 
-同时提供至少 64–128 GiB 的 `/dev/shm`。Hugging Face、Torch、Triton 和编译缓存应写入容器临时盘，不能写回只读模型目录：
+同时提供至少 64–128 GiB 的 `/dev/shm`。实际 CPU 和内存应根据 tokenizer、并发下载、缓存策略和节点限制调整。模型目录约 155 GiB，实验 Pod 如果使用 `emptyDir`，还要确认节点临时盘容量；删除 Pod 后模型和缓存也会丢失。
 
-```yaml
-env:
-  - name: HF_HOME
-    value: /tmp/huggingface
-  - name: TRANSFORMERS_CACHE
-    value: /tmp/huggingface/transformers
-  - name: XDG_CACHE_HOME
-    value: /tmp/.cache
+单节点 TP=8 不依赖跨节点 RDMA。若改为多节点 TP/PP，才需要单独验证 RDMA、NCCL 拓扑、故障域和 Gang 调度。
+
+### 2.2 已验证的软件组合
+
+本次记录的软件量级如下：
+
+```text
+vLLM: 0.26.0 开发版本
+PyTorch: 2.11
+CUDA runtime: 12.9
+GPU: 8 × NVIDIA H20 96 GB
 ```
 
-这些 requests 在当前候选节点 CPU/内存余量内。真正的 GPU 显存水位需要以 vLLM 启动日志和 DCGM 为准，不能用 `167 GB / 8` 简单推导，因为 dense 层、expert 放置、KV Cache、CUDA Graph 和 kernel workspace 的分布并不相同。
+DeepSeek V4 需要引擎原生支持 `deepseek_v4` tokenizer、reasoning parser 和 tool-call parser。DSpark 还要求相应的 draft model 实现与修复。不要只根据镜像标签判断兼容性，应在容器内核对 vLLM、PyTorch、CUDA、FlashInfer、DeepGEMM 和模型实现的实际版本。
 
-## 6. CephFS 前置条件
+## 3. 模型准备
 
-现有 Namespace 已证明直接 CephFS 只读挂载模式可用，可复用它的结构，但不能假设同一 Secret 和 Ceph 网络在 H20 集群天然存在。
+### 3.1 模型体积
+
+一次完整检查得到：
+
+```text
+总大小：约 155.43 GiB
+文件数：55
+Safetensors 分片：48
+```
+
+部署前应至少检查 `config.json`、tokenizer、generation config、权重索引和全部 Safetensors 分片是否完整。模型目录不要与可写的 Hugging Face、Torch、Triton 编译缓存混用。
+
+### 3.2 S3-compatible 对象存储下载
+
+凭据应从 Secret、工作负载身份或受控凭据系统注入，不要写进命令历史、YAML、镜像或 Git：
+
+```bash
+export AWS_ACCESS_KEY_ID='<READ_ONLY_ACCESS_KEY>'
+export AWS_SECRET_ACCESS_KEY='<READ_ONLY_SECRET_KEY>'
+export AWS_DEFAULT_REGION='<REGION>'
+export AWS_EC2_METADATA_DISABLED=true
+
+mkdir -p /workspace/model/DeepSeek-V4-Flash-0731
+
+aws \
+  --endpoint-url='https://<BUCKET>.<S3_ENDPOINT>' \
+  s3 sync \
+  's3://<BUCKET>/<MODEL_PREFIX>/' \
+  /workspace/model/DeepSeek-V4-Flash-0731
+```
+
+有些对象存储禁止 path-style 请求。如果出现 `PathStyleDomainForbidden`，应把 endpoint 改成包含 Bucket 的 virtual-hosted 地址，即：
+
+```text
+https://<BUCKET>.<S3_ENDPOINT>
+```
+
+不要通过 `--no-verify-ssl` 长期绕过证书校验。凭据只授予目标 Bucket/Prefix 的只读权限，并在误入终端输出、聊天记录或日志后立即轮换。
+
+一次 155.43 GiB 下载的观测窗口约为 364 秒，平均约 437 MiB/s（3.67 Gbit/s）。相近环境的另一次记录约为 326 秒，二者相差约 12%，属于短期存储、网络和节点负载波动的合理范围。
+
+优化优先级：
+
+1. 优先避免重复下载：使用只读 CephFS/PVC，或由 CPU-only downloader 先准备持久卷。
+2. 再测试 AWS CLI `max_concurrent_requests`，例如 10、20、32，观察吞吐与限流。
+3. 下载与 GPU 分配解耦，减少昂贵 GPU 在模型同步阶段的空闲时间。
+4. 保留校验结果，避免模型不完整时进入耗时的 GPU 初始化阶段。
+
+### 3.3 CephFS 只读挂载
+
+下面只展示通用结构，所有环境值必须由部署方提供：
 
 ```yaml
 volumeMounts:
@@ -157,80 +137,261 @@ volumes:
       user: <CEPH_USER>
 ```
 
-在编写正式工作负载之前仍需只读确认：
+正式使用前需确认：目标集群可以访问 monitors、Secret 已授权、目录对容器 UID/GID 可读、多 Rank 并发读取吞吐可接受，并且 volume 与 volumeMount 都保持只读。
 
-1. H20 集群的目标 Namespace 已有正确的 Ceph Secret；
-2. 节点网络能够访问全部 Ceph monitors；
-3. `/models/DeepSeek-V4-Flash-0731` 目录存在，文件总量和 `config.json` 与上游检查点一致；
-4. 容器 UID/GID 对目录有读取权限；
-5. 多个 Rank 并行读取 167 GB 权重时，CephFS 吞吐不会导致启动探针误判；
-6. 模型卷和 `volumeMount` 两层都保持 `readOnly: true`。
+## 4. 手工探索 Pod
 
-## 7. vLLM 探索参数
+裸 Pod 适合兼容性探索，但不适合作为长期服务。下面模板没有健康探针，避免模型尚未手工启动时被误判；也不包含任何真实节点标签、污点、镜像或存储信息：
 
-下面命令只用于记录建议参数，不应在生产集群直接执行。它先建立一个 32K、低并发、无推测解码的 target-only 基线：
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: deepseek-v4-flash-manual
+spec:
+  restartPolicy: Never
+  containers:
+    - name: workspace
+      image: <VLLM_IMAGE>
+      command: ["bash", "-lc", "sleep infinity"]
+      stdin: true
+      tty: true
+      resources:
+        limits:
+          nvidia.com/gpu: "8"
+      volumeMounts:
+        - name: model
+          mountPath: /workspace/model
+        - name: shm
+          mountPath: /dev/shm
+  volumes:
+    - name: model
+      emptyDir: {}
+    - name: shm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 128Gi
+```
+
+如果镜像确实需要 privileged 权限，应说明具体原因并缩短 Pod 生命周期；不能因为是探索环境就默认开启。探索结束后应及时回收 Pod。
+
+## 5. vLLM 启动
+
+已验证的命令结构如下：
 
 ```bash
-vllm serve /models/DeepSeek-V4-Flash-0731 \
-  --served-model-name deepseek-v4-flash-0731 \
+vllm serve /workspace/model/DeepSeek-V4-Flash-0731 \
+  --served-model-name DeepSeek-V4-Flash \
+  --host 0.0.0.0 \
+  --port 8000 \
   --trust-remote-code \
+  --tensor-parallel-size 8 \
   --kv-cache-dtype fp8 \
   --block-size 256 \
-  --enable-expert-parallel \
-  --tensor-parallel-size 8 \
+  --gpu-memory-utilization 0.88 \
+  --max-model-len 204800 \
   --tokenizer-mode deepseek_v4 \
   --tool-call-parser deepseek_v4 \
   --enable-auto-tool-choice \
   --reasoning-parser deepseek_v4 \
-  --gpu-memory-utilization 0.90 \
-  --max-model-len 32768 \
-  --max-num-seqs 4
+  --enable-prefix-caching \
+  --speculative-config \
+    '{"method":"dspark","num_speculative_tokens":5,"draft_sample_method":"greedy"}'
 ```
 
-这个命令参考 vLLM 的 0731 TP=8 recipe，但 32K 和并发 4 是本评估为了降低首次风险设置的保守值。不要在基线阶段增加 `deep_gemm_mega_moe`、CUDA Graph 调优或 P/D 分离；先确认默认 kernel 组合在 H20 上正确运行，再通过 A/B benchmark 决定是否启用。
+首次兼容性验证建议先去掉 `--speculative-config`，建立 target-only 基线，再开启 DSpark 做相同输入的 A/B。还应显式设置符合真实需求的 `--max-num-seqs`，避免为完全用不到的高并发 shape 捕获大量 CUDA Graph。
 
-target-only 验证通过后，才增加 0731 模型卡给出的 DSpark 参数：
+## 6. 为什么加载权重后还不能立刻接请求
+
+加载权重只完成参数从存储到 GPU 的搬运。vLLM 在开放 API 前还会初始化 TP 通信、统计峰值显存、分配 KV Cache、预热 DeepGEMM/TileLang/FlashInfer kernel、初始化 DSpark，并捕获多种 batch shape 的 CUDA Graph。
+
+一次冷启动记录如下：
+
+| 阶段 | 耗时 | 说明 |
+| --- | ---: | --- |
+| Safetensors/模型加载 | 最慢 Rank 26.9 秒 | 权重读取和分发很快 |
+| DeepGEMM kernel warmup | 159 秒 | 冷启动主要成本之一 |
+| CUDA Graph capture | 229 秒 | 最大单项成本，每卡约占 3.17 GiB |
+| Engine profile/KV/warmup 总计 | 605.23 秒 | 包含显存 profiling 和缓存创建 |
+| `vllm serve` 到 API Ready | 约 723 秒 | 约 12 分 03 秒 |
+
+引擎最终为每张卡分配约 58.36 GiB KV Cache，总理论容量约 176 万 Token。这个容量是引擎根据当前配置计算的池大小，不代表单请求就适合直接使用最大上下文。
+
+可测试的冷启动优化：
+
+- 探索配置使用 `--enforce-eager` 跳过 CUDA Graph，代价通常是稳态性能下降。
+- 降低并显式设置 `--max-num-seqs`，减少需要捕获的 shape。
+- A/B 测试 `fast_moe_cold_start`，但必须做正确性回归。
+- 将编译缓存放在可复用卷中，验证第二次启动是否能够复用。
+- target-only 与 DSpark 分别建立启动时间和吞吐基线。
+
+## 7. 当前拓扑不是 PD 分离
+
+当前请求路径是：
+
+```text
+Client
+  → 一个 vLLM API/Engine
+  → TP=8 执行 Prefill
+  → KV Cache 留在同一 Engine
+  → 同一组 TP=8 GPU 执行 Decode
+  → Response
+```
+
+`TP=8` 表示一次模型计算跨 8 张卡；DSpark 是推测解码。这两者都不等于 PD 分离。
+
+真正的 PD 分离需要独立的 Prefill 和 Decode 实例、KV Cache 传输 connector，以及按阶段路由请求的 Router：
+
+```text
+Client → Router → Prefill 实例
+                    │
+                    └── KV Cache transfer ──→ Decode 实例 → Response
+```
+
+PD 的主要价值是分别控制 TTFT 与 ITL，并减少长 Prompt Prefill 对正在 Decode 的请求造成的尾延迟干扰。它不会天然提高吞吐；短 Prompt、低 QPS 或只有一套 8 GPU 预算时，Router 和 KV 传输反而可能增加延迟与成本。
+
+适合考虑 PD 的条件：
+
+- 流量持续较高，长 Prompt 明显抬高 p95/p99 ITL；
+- TTFT 与 ITL 都有严格且不同的 SLO；
+- Prefill/Decode 需要独立扩缩容；
+- 有足够 GPU 和高带宽低时延的 KV 传输网络；
+- 已经具备 Router、Connector、监控、重试和故障恢复能力。
+
+公平对比必须固定总 GPU 数。例如比较两个普通 TP=8 实例与一个 Prefill TP=8 加一个 Decode TP=8，而不是拿 8 GPU 普通实例直接对比 16 GPU 的 1P+1D。
+
+## 8. 探索性压测数据
+
+压测客户端和服务位于同一个 Pod，访问 loopback OpenAI-compatible API。使用 random dataset、固定 Token 长度、`temperature=0` 和 `--ignore-eos`，因此没有包含入口网关与跨节点网络开销。
+
+指标含义：
+
+- TTFT：请求到第一个 Token，主要受排队和 Prefill 影响；
+- TPOT：除第一个 Token 外，平均生成一个 Token 的时间；
+- ITL：流式输出相邻 Token 的间隔；
+- E2EL：完整请求耗时；
+- Output tok/s：整个实例的输出总吞吐，不是单请求速度。
+
+### 8.1 稳态结果
+
+| 场景 | 请求成功 | req/s | 输出 tok/s | p50/p95/p99 TTFT | p95 TPOT | p95 ITL | p95 E2EL |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128 in / 64 out，C=1 | 16/16 | 3.91 | 250.19 | 49 / 49 / 49 ms | 4.84 ms | 9.07 ms | 352.88 ms |
+| 128 in / 64 out，C=4 | 32/32 | 9.65 | 617.77 | 60 / 96 / 128 ms | 8.02 ms | 37.13 ms | 591.94 ms |
+| 128 in / 64 out，C=8 | 64/64 | 14.59 | 933.70 | 71 / 233 / 233 ms | 11.53 ms | 43.63 ms | 810.29 ms |
+| 4096 in / 128 out，C=4 | 16/16 | 2.16 | 277.00 | 760 / 1391 / 1423 ms | 16.00 ms | 75.07 ms | 2944.96 ms |
+
+短请求从 C=1 增至 C=8，总输出吞吐约为 3.73 倍，同时 p95 TTFT 从约 49 ms 增至 233 ms。这是 continuous batching 用更多单请求延迟换取总吞吐的正常表现。4K 输入的 p95 TTFT 约 1.39 秒，说明 Prefill 已成为更明显的延迟组成。
+
+DSpark 接受率在这些测试中约为 34%–59%。接受率不能单独证明收益，仍需与关闭 DSpark 的同请求 A/B 比较吞吐、延迟、正确性和功耗。
+
+### 8.2 API Ready 后仍可能发生 JIT
+
+第一次测试并发 8 时，p95 TTFT 达到约 33.4 秒。服务日志明确记录推理期间触发 TileLang JIT，其中一个 kernel 编译约 9 秒。相同参数复跑后，p95 TTFT 恢复到约 233 ms，输出吞吐从约 92 tok/s 恢复到约 934 tok/s。
+
+这说明 `Application startup complete` 不代表所有真实输入长度和并发 shape 都已编译。上线前的业务 warmup 应至少覆盖：
+
+1. 目标并发档位；
+2. 常见输入长度；
+3. 最大输入长度附近；
+4. Chat、reasoning 和 tool call 等真实请求形态。
+
+压测工具的 warmup 请求数至少应覆盖目标并发，而不是只发送一个串行请求。
+
+### 8.3 GPU 采样
+
+每秒一次的 `nvidia-smi` 采样得到：
+
+| 场景 | 活跃样本中 8 卡平均利用率 | 峰值 | 活跃平均单卡功耗 | 最大单卡显存 |
+| --- | ---: | ---: | ---: | ---: |
+| 128/64，C=4 | 96.8% | 100% | 289.9 W | 93,127 MiB |
+| 128/64，C=8 | 74.2% | 100% | 267.8 W | 93,169 MiB |
+| 4096/128，C=4 | 97.4% | 100% | 308.7 W | 93,273 MiB |
+
+测试持续时间较短，GPU 数据只能用于判断负载形态，不能作为精确能耗结论。显存已经接近卡的可见容量，扩大 Graph、提高显存利用率或增加额外组件前必须重新验证 OOM 风险。
+
+### 8.4 压测命令
 
 ```bash
---speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"greedy"}'
+vllm bench serve \
+  --backend openai \
+  --base-url http://127.0.0.1:8000 \
+  --endpoint /v1/completions \
+  --model /workspace/model/DeepSeek-V4-Flash-0731 \
+  --served-model-name DeepSeek-V4-Flash \
+  --tokenizer /workspace/model/DeepSeek-V4-Flash-0731 \
+  --tokenizer-mode deepseek_v4 \
+  --dataset-name random \
+  --num-prompts 64 \
+  --num-warmups 8 \
+  --random-input-len 128 \
+  --random-output-len 64 \
+  --ignore-eos \
+  --temperature 0 \
+  --request-rate inf \
+  --max-concurrency 8 \
+  --percentile-metrics ttft,tpot,itl,e2el \
+  --metric-percentiles 50,95,99 \
+  --save-result
 ```
 
-H20 的上游记录曾暴露 DSpark model class 缺少 `draft_id_to_target_id` 的问题，修复已经合并。镜像仍需确认包含该修复；不能因为版本号看起来足够新就跳过 DSpark 单独验收。
+正式容量测试应改用脱敏后的真实请求分布，在独立压测节点上通过实际服务入口运行 10–30 分钟的固定 request-rate 阶梯，并同时记录失败率、队列、GPU、显存、功耗和 tokens/s/GPU。
 
-SGLang 也支持 0731，并在 H200、B200、GB300 等硬件上有 cookbook，但目前 H20 的直接证据少于 vLLM。因此首次 H20 PoC 优先 vLLM，SGLang 作为第二条对照路径，而不是同时引入两个引擎变量。
+## 9. 对接 OpenWebUI
 
-## 8. 验证门槛
+vLLM 提供 OpenAI-compatible API，可以被 OpenWebUI 使用。稳定链路应是：
 
-只有以下阶段依次通过，才能把“可探索”升级为“可部署”：
+```text
+OpenWebUI
+   │
+   ▼
+内部鉴权入口或跨集群网关
+   │
+   ▼
+Service
+   │
+   ▼
+vLLM Pod :8000
+```
 
-| 阶段 | 验证内容 | 通过条件 |
-| --- | --- | --- |
-| 0. 静态检查 | 模型文件、镜像包版本、CUDA/驱动、CephFS、污点和资源请求 | 不启动模型也能证明依赖闭环，没有使用旧 vLLM 镜像 |
-| 1. Target-only 启动 | TP=8、32K、并发 1–4 | 8 Rank 正常加载；`/v1/models`、健康检查和简单生成成功；无 OOM、kernel error 或重启 |
-| 2. 协议正确性 | non-think、`low/high/max`、多轮对话、tool calling、异常输出 | DeepSeek V4 编码和 parser 与仓库测试向量一致 |
-| 3. 上下文爬坡 | 16K → 32K → 128K → 384K | 每级记录显存、TTFT、TPOT、吞吐和错误；不直接从 32K 跳到 1M |
-| 4. DSpark A/B | 相同输入分别关闭/开启 DSpark | 输出质量和工具调用不回退；吞吐增益稳定；无 draft/target 映射错误 |
-| 5. 稳定性 | 冷启动、Ceph 并发读取、持续负载、Pod 重启 | 启动探针合理，持续运行无显存泄漏或重复 kernel crash |
-| 6. 生产化评审 | Queue/池容量、Service、AIBrix、监控、回滚 | 明确占用的完整八卡容量和回收机制后再提交部署变更 |
+不要把 Pod IP 作为长期配置。Pod IP 会随重建变化，跨集群 Pod CIDR 即使当前可路由，也不具备服务发现、健康摘除、鉴权或稳定性保证。至少应创建选择目标 Pod 的 Service；跨集群场景再通过受控网关、服务网格或其他稳定入口暴露。
 
-若 32K target-only 都无法通过，应先停在镜像/kernel 兼容性排查，不要用增加 GPU、切多机或开启 DSpark 来掩盖基础问题。
+先从 OpenWebUI 所在网络验证：
 
-## 9. 当前未闭环事项
+```bash
+curl -fsS 'http://<MODEL_ENDPOINT>/health'
+curl -fsS 'http://<MODEL_ENDPOINT>/v1/models'
+```
 
-本次评估后仍有四个生产前未知项：
+然后在 OpenWebUI 的管理员连接设置中添加 OpenAI-compatible connection：
 
-- H20 目标集群到现有 CephFS 的网络和 Secret 是否已经打通；
-- 目标模型目录的真实文件完整性和读取吞吐；
-- 计划使用的 vLLM 0.26.x 内部镜像是否完整包含 DeepSeek V4、DeepGEMM、FlashInfer 与 DSpark 修复；
-- 完整八卡 H20 Serving 节点能否在实验窗口被正式预留，而不是只在快照时空闲。
+```text
+Base URL: http://<MODEL_ENDPOINT>/v1
+API Key:  <API_KEY_OR_NON_EMPTY_PLACEHOLDER>
+Model:    DeepSeek-V4-Flash
+```
 
-这些未知项不否定 H20 的硬件可行性，但决定 PoC 能否一次启动成功。下一步如果继续，应先做静态镜像与模型目录核验，再由变更流程决定是否创建实验工作负载。
+如果 vLLM 没有配置 `--api-key`，OpenWebUI 版本仍要求填写非空 Key 时可以使用不具备权限含义的占位值；正式共享服务应在 vLLM 或前置网关增加真实鉴权。若通过环境变量初始化，可使用 OpenWebUI 的 `OPENAI_API_BASE_URLS`、`OPENAI_API_KEYS` 和对应 connection config，但持久化配置开启后，数据库中的管理员设置可能覆盖后续环境变量变化。
 
-## 10. 参考资料
+接入后依次验证模型列表、普通对话、流式输出、reasoning 内容、长文本和 tool call。UI 能列出模型只代表 `/v1/models` 可访问，不代表 chat template 与 parser 已经正确。
+
+## 10. 生产化检查表
+
+- 模型文件有完整性校验，并使用可复用只读存储；
+- 镜像版本和 DeepSeek V4 kernel 路径已静态核验；
+- target-only、DSpark、长上下文和工具调用分别验收；
+- 业务 warmup 覆盖真实并发和长度，推理日志无新 JIT；
+- Service、鉴权入口、超时、限流、健康检查和优雅终止已配置；
+- 压测覆盖 p50/p95/p99 TTFT、ITL、E2EL、失败率和 GPU 指标；
+- 若评估 PD，固定总 GPU 数并计算 tokens/s/GPU 与尾延迟收益；
+- GPU 资源有明确的申请、告警、回收和回滚流程。
+
+## 11. 参考资料
 
 - [DeepSeek-V4-Flash-0731 模型卡](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731)
 - [vLLM DeepSeek-V4-Flash Recipe](https://recipes.vllm.ai/deepseek-ai/DeepSeek-V4-Flash)
 - [SGLang DeepSeek V4 Cookbook](https://docs.sglang.io/cookbook/autoregressive/DeepSeek/DeepSeek-V4)
-- [vLLM DeepSeek V4 Roadmap](https://github.com/vllm-project/vllm/issues/40902)
-- [H20 上的 DeepSeek-V4-Flash-DSpark 问题记录](https://github.com/vllm-project/vllm/issues/47418)
-- [DSpark `draft_id_to_target_id` 修复](https://github.com/vllm-project/vllm/pull/47429)
+- [vLLM Disaggregated Prefilling](https://docs.vllm.ai/en/v0.8.0/features/disagg_prefill.html)
+- [vLLM Parallelism and Scaling](https://docs.vllm.ai/en/v0.17.1/serving/parallelism_scaling/)
+- [vLLM Compilation Configuration](https://docs.vllm.ai/en/v0.20.0/api/vllm/config/compilation/)
+- [AWS CLI S3 Configuration](https://docs.aws.amazon.com/cli/latest/topic/s3-config.html)

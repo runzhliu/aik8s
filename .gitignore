@@ -4,3 +4,5 @@
 site/
 __pycache__/
 *.py[cod]
+# Private local notes
+vip/

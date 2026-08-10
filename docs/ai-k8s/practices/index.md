@@ -35,7 +35,7 @@ last_reviewed: 2026-08-10
 
 ## 端到端交付
 
-- [DeepSeek-V4-Flash-0731 的 H20 可部署性评估](deepseek-v4-flash-h20-evaluation.md)
+- [DeepSeek-V4-Flash-0731 的 H20 部署与压测](deepseek-v4-flash-h20-evaluation.md)
 - [在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)
 - [AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU](aibrix-gpu-multinode-pd-production.md)
 - [在 Kubernetes 部署 ComfyUI：离线镜像、CephFS 模型与跨集群 Ingress](comfyui-minimax-h3-gpu.md)
