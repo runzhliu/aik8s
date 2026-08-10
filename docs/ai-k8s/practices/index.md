@@ -2,7 +2,7 @@
 title: 实战、排障与选型
 description: 用可复现的实验、性能数字、事故证据和决策树回答 AI/LLM on Kubernetes 的高频问题
 status: evolving
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-10
 ---
 
 # 实战、排障与选型
@@ -35,6 +35,7 @@ last_reviewed: 2026-08-05
 
 ## 端到端交付
 
+- [DeepSeek-V4-Flash-0731 的 H20 可部署性评估](deepseek-v4-flash-h20-evaluation.md)
 - [在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)
 - [AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU](aibrix-gpu-multinode-pd-production.md)
 - [在 Kubernetes 部署 ComfyUI：离线镜像、CephFS 模型与跨集群 Ingress](comfyui-minimax-h3-gpu.md)
