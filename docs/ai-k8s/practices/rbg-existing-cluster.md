@@ -128,6 +128,68 @@ Client
 
 但 AIBrix v0.7.0 没有在本次实验中证明能够原生创建或管理 RBG。实际接入至少需要稳定 Endpoint、AIBrix 模型/端口标签、Ready 语义和自定义集成测试。只有固定一个 Runtime Router 或一个完整模型副本时，Higress 直接转发通常更简单；不要为了组件齐全强行叠加第二层推理网关。
 
+### 3.4 使用 RBG 后，SGLang 是否还需要 Router
+
+如果 SGLang 采用 Prefill/Decode 分离，答案是：**仍然需要一个理解 P/D 协议的 Router，但不一定必须是 SGLang Router**。RBG 负责 Router、Prefill、Decode Pod 的生命周期、启动依赖、稳定发现、更新和扩缩，不接收用户推理请求，也不负责为一次请求选择 P/D 实例。RBG 为 Prefill Role 创建的 Headless Service 只是服务发现入口，不能代替请求配对和数据面协调。
+
+推荐的数据链路是：
+
+```text
+Client
+  → Higress / API Gateway（可选：TLS、认证、租户限流）
+  → SGLang Model Gateway（原 SGLang Router）
+       ├─ 选择一个 Prefill Engine
+       └─ 选择一个 Decode Engine
+              ↑
+       Prefill ── Mooncake/NIXL 等 KV Transfer ──→ Decode
+
+RBG Controller
+  ├─ 管理 Router Role
+  ├─ 管理 Prefill Role
+  └─ 管理 Decode Role
+```
+
+在 P/D 模式下，不应把普通 OpenAI-Compatible 流量直接发送到 Prefill Service。Prefill 只负责处理 Prompt 和生成初始 KV，完整响应还需要 Decode 继续生成；如果没有 Router，就必须由调用方自己完成 P/D 选择、请求拆分、KV/bootstrap 元数据传递、失败处理和流式响应协调，这实际上是在重新实现一个 P/D Router。Kubernetes Service 的四层负载均衡也不了解 Prefix Cache、实例排队长度、P/D 角色配比或一次请求的配对状态。
+
+是否部署 SGLang Router 应按运行模式判断：
+
+| SGLang 运行模式 | 是否需要 SGLang Router | 判断 |
+| --- | --- | --- |
+| P/D 分离，尚无其他 P/D 路由层 | 需要 | 使用 SGLang Model Gateway 选择并协调 Prefill/Decode |
+| P/D 分离，已有兼容的 AIBrix、Dynamo 或自研 P/D Router | 不一定 | 只保留一个 P/D 路由权威；替代组件必须真正支持当前 SGLang P/D 协议和 KV 传输参数 |
+| 聚合模式，只有一个 SGLang Engine | 不需要 | Higress 或普通 Service 可以直接转发到完整 Engine |
+| 聚合模式，有多个同构 Engine | 可选但通常建议 | Kubernetes Service 能做基础分发；Router 才能提供 Cache/负载感知、实例摘除和更完整的推理指标 |
+| 固定 1P1D 功能实验 | 可以临时省略 | 仅适合用脚本显式协调两端，不能据此推导生产入口不需要 Router |
+
+#### Cache-aware 不等于跳过 Prefill
+
+“请求已经有 95% KV Cache，可以直接跳到 Decode”描述的是一种有条件的优化方向，通常称为 **Conditional Disaggregation** 或 **Prefill Bypass**，但不能只根据命中比例决定。它实际省略的是**远端 Prefill 节点**，未命中的 Prompt Token 仍然需要由某个 Engine 计算 KV。
+
+例如一个 100K Token 的 Prompt 在选中的 Decode Engine 上命中 95K，仍有 5K Token 未命中：
+
+```text
+普通 P/D：Prefill Engine 计算剩余 5K → 传输新增 KV → Decode
+条件式 P/D：Decode Engine 本地计算剩余 5K → Decode
+```
+
+第二条路径只有在 Decode Engine 也具备本地执行少量 Prefill 的能力时才成立。即使命中率达到 95%，5K Token 的 Prefill 仍可能足以抵消一次远端调用和 KV 传输的开销；反过来，一个 1K Prompt 只剩 5 个 Token 未命中，则更可能适合留在 Decode 本地。因此生产决策应该比较**未命中 Token 的绝对数量与计算成本**和**远端 Prefill、KV 传输及协调开销**，而不是设置一个孤立的命中率阈值。
+
+截至 2026-08-09 的 SGLang `main`，SGLang Model Gateway 的 `cache_aware` 策略属于**选节点策略**：它根据请求历史维护近似 Radix Tree，把请求送到更可能持有相同 Prefix 的 Prefill/Decode Worker，但没有据此省略 Prefill 阶段。当前 HTTP P/D 路径仍会选择一对 Prefill/Decode 并同时发送两个请求；Prefill 失败后，Router 会取消等待 KV 的 Decode 请求。因此，SGLang 的 Cache-aware Routing 不能等同于 Conditional Disaggregation。
+
+新版 SGLang Runtime 提供 `--disaggregation-decode-enable-radix-cache`。启用后，Decode 可以复用自己已有的 Prefix KV，并通过 `decode_prefix_len` 告诉 Prefill 只传输未命中的后缀 KV；完整命中时甚至可以没有普通 KV Page 需要传输，但 Prefill 请求和必要的元数据/辅助状态协调仍然存在。这项能力优化的是**重复计算和 KV 传输量**，不是 Router 层直接跳过 Prefill。
+
+llm-d Router 的 `prefix-based-pd-decider` 是 Conditional Disaggregation 的直接例子。它先选择 Decode，再根据该节点上的未命中后缀长度决定是否选择远端 Prefill：未命中 Token 达到 `nonCachedTokens` 阈值时走远端 P/D；低于阈值时不设置 Prefill Endpoint，由 Decode 节点本地完成剩余 Prefill 和 Decode。这里的核心参数是未命中 Token 的绝对数量，而不是“95%”这样的单一比例。
+
+还要限定“SGLang Router 支持 vLLM”的范围。SGLang Model Gateway 可以为普通聚合式 vLLM 后端提供协议适配或路由，但这不等于支持 vLLM P/D 数据路径。上述版本的 gRPC Dual/PD 路径明确拒绝 vLLM Worker；HTTP P/D 路径使用的也是 SGLang Bootstrap 和请求字段。选型时必须分别验证“普通 OpenAI-Compatible/vLLM 路由”和“vLLM P/D 配对、KV Connector、Conditional Disaggregation”，不能从前者推导后者已经可用。
+
+参考：[SGLang HTTP P/D Router](https://github.com/sgl-project/sglang/blob/449f0da78fda43b0e0d51254b8654671bd26e504/sgl-model-gateway/src/routers/http/pd_router.rs#L697-L732)、[SGLang Cache-aware Policy](https://github.com/sgl-project/sglang/blob/449f0da78fda43b0e0d51254b8654671bd26e504/sgl-model-gateway/src/policies/cache_aware.rs#L19-L30)、[SGLang Decode Radix Cache](https://github.com/sgl-project/sglang/blob/449f0da78fda43b0e0d51254b8654671bd26e504/docs/docs/advanced_features/server_arguments.mdx#L3009-L3012)、[SGLang vLLM P/D Check](https://github.com/sgl-project/sglang/blob/449f0da78fda43b0e0d51254b8654671bd26e504/sgl-model-gateway/src/routers/grpc/common/stages/client_acquisition.rs#L42-L52)、[llm-d Disaggregation and PD Decider](https://github.com/llm-d/llm-d-router/blob/main/docs/disaggregation.md#prefix-based-pd-decider)
+
+因此，RBG 与 SGLang 的常见组合不是“RBG 直接对接 P 节点”，而是在同一个 `RoleBasedGroup` 中声明 `router`、`prefill`、`decode` 三个 Role，对外只暴露 Router Service，Prefill/Decode Service 保持集群内可见。RBG 官方的 SGLang P/D 示例也采用这一结构：Router Role 使用 `sglang_router.launch_router --pd-disaggregation`，并配置 Prefill 和 Decode Endpoint。
+
+如果企业入口已经使用 Higress，可以保留 `Higress → SGLang Model Gateway → P/D` 两层结构：前者负责通用 API 治理，后者负责推理数据面。如果 AIBrix Gateway 或其他组件已经完成 SGLang P/D 配对，则不要再串联第二个 SGLang P/D Router，避免两层同时重试、重复选择 Endpoint 或对请求归属产生不同判断。
+
+参考：[RBG SGLang P/D Example](https://github.com/sgl-project/rbg/blob/main/examples/inference/pd-disagg-standalone.yaml)、[SGLang P/D Disaggregation](https://docs.sglang.ai/backend/pd_disaggregation.html)、[SGLang Model Gateway](https://github.com/sgl-project/sglang/blob/main/docs/advanced_features/sgl_model_gateway.md)
+
 ## 4. sr1 安装前检查
 
 本次环境：
