@@ -57,6 +57,7 @@ nav = [
       {"RAG 基础设施" = "ai-k8s/rag-agent/rag-infrastructure.md"},
       {"2026 Agent 现状与趋势" = "ai-k8s/rag-agent/agent-landscape-2026.md"},
       {"Agent Sandbox 选型与分析" = "ai-k8s/rag-agent/agent-sandbox-selection.md"},
+      {"OpenClaw 企业 Agent 平台分析" = "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md"},
       {"AI Agent 与沙箱" = "ai-k8s/agentic-workloads.md"},
       {"边缘 AI 与云边协同" = "ai-k8s/edge-ai.md"},
     ]},

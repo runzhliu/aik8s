@@ -11,7 +11,7 @@ Agent 工作负载与普通 Deployment 不同：它可能长时间保持状态�
 
 Kubernetes 可以提供身份、配额、网络、存储和生命周期底座，但不能自动证明 Agent 的行为安全。
 
-如果正在比较 Kubernetes Agent Sandbox、gVisor、Kata、Firecracker 或托管执行平台，先阅读 [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)。本章继续讨论选型之后的工具授权、Prompt Injection、网络、预算、审计和发布边界。
+如果正在比较 Kubernetes Agent Sandbox、gVisor、Kata、Firecracker 或托管执行平台，先阅读 [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)。如果计划使用 OpenClaw 作为内部 Agent 平台底座，参见 [OpenClaw 企业平台优缺点与二次开发边界](rag-agent/openclaw-enterprise-agent-platform.md)。本章继续讨论选型之后的工具授权、Prompt Injection、网络、预算、审计和发布边界。
 
 ## 1. Agent 为什么不是普通微服务
 
