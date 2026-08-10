@@ -587,7 +587,105 @@ Model:    DeepSeek-V4-Flash
 
 接入后依次验证模型列表、普通对话、流式输出、reasoning 内容、长文本和 tool call。UI 能列出模型只代表 `/v1/models` 可访问，不代表 chat template 与 parser 已经正确。
 
-## 11. 生产化检查表
+本次 RayClusterFleet P/D 实验还把 `deepseek-v4-flash-ray-pd` 显式加入 OpenWebUI 的 OpenAI-compatible connection。OpenWebUI Deployment 为 Ready 后，通过 AIBrix Gateway 发送确定性中文请求，输入“你好，只回答：你好”准确返回“你好”。这同时证明模型已经可从 UI 选择，并且 Ray executor 阶段出现的错误 token 不是 OpenWebUI 渲染问题。
+
+## 11. AIBrix 与 RayClusterFleet P/D 实测
+
+### 11.1 StormService TP=8 对照
+
+在已经安装 AIBrix v0.7.0 的环境中，先用一个 `StormService` 管理单节点 TP=8 Engine，验证 AIBrix 能接管原手工 Pod 的生命周期。initContainer 通过 AWS CLI 从 S3-compatible 对象存储同步 48 个权重分片到 `emptyDir`；使用腾讯云 COS 时必须启用 virtual-hosted-style：
+
+```bash
+aws configure set default.s3.addressing_style virtual
+```
+
+否则 `ListObjectsV2` 会返回 `PathStyleDomainForbidden`。凭据应通过 Secret 注入，不能写入清单。`emptyDir` 适合一次性实验，但 Pod 重建会重新下载约 156 GiB 模型，而且下载期间 GPU 已被整个 Pod 占用；长期部署应改用节点缓存或 PVC。
+
+AIBrix v0.7.0 没有为本次 StormService 自动创建 HTTPRoute，因此额外创建了 Service、ReferenceGrant 和唯一 HTTPRoute。经 Gateway 的实测结果如下：
+
+| 负载 | 路径 | 成功 | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL | p95 E2E |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128/64，C=1 | 原手工 Pod TP=8 直连 | 16/16 | 250.19 | 49 ms | 4.84 ms | 9.07 ms | 353 ms |
+| 128/64，C=1 | AIBrix → StormService TP=8 | 16/16 | 257.46 | 55.90 ms | 3.92 ms | 11.03 ms | 302.16 ms |
+| 128/64，C=8 | 原手工 Pod TP=8 直连 | 64/64 | 933.70 | 233 ms | 11.53 ms | 43.63 ms | 810 ms |
+| 128/64，C=8 | AIBrix → StormService TP=8 | 64/64 | 866.61 | 264.86 ms | 11.63 ms | 51.05 ms | 856.39 ms |
+
+C=8 吞吐单轮低约 7.2%，但不能全部归因于 Gateway；严格的 Gateway 开销需要在同一个 Ready Pod、同一客户端和同一请求集下交替做多轮 A/B。
+
+### 11.2 双 Fleet 拓扑与准备文件
+
+一个 `RayClusterFleet` 副本表示一个完整 RayCluster，没有 Prefill/Decode Role 抽象。因此 P/D 拆成两个 Fleet，而不是在一份 Fleet 中声明两个角色：
+
+```text
+AIBrix Gateway，routingStrategy=pd
+  ├─ Prefill RayClusterFleet，1 个 8-GPU Head Pod，TP=8
+  └─ Decode RayClusterFleet，1 个 8-GPU Head Pod，TP=8
+
+Prefill Head -- NIXL/UCX --> Decode Head
+```
+
+两个 Head 使用相同模型标签、`roleset-name`、模型参数、TP、KV dtype、Attention backend 和 `kv_role=kv_both`，`role-name` 分别为 `prefill` 与 `decode`。Worker 不应带 AIBrix 模型发现标签。第一阶段不创建 Worker，两套 Engine 分别占用一个完整 H20 节点，总计 16 张 H20。
+
+AIBrix v0.7.0 根据 Fleet 顶层模型标签管理 HTTPRoute。两份 Fleet若共用相同顶层模型标签，删除任意一份都可能误删共享 Route。因此实验清单只在 Head Pod 模板写模型/P/D 标签，Service、ReferenceGrant 和唯一 HTTPRoute 独立管理。
+
+准备文件按以下职责拆分；内部环境值使用占位符，真实 Secret 不进入版本库：
+
+| 文件 | 内容 |
+| --- | --- |
+| `01-runtime-config.yaml` | 模型下载校验、Ray 启动与 vLLM 公共参数 |
+| `02-prefill-rayclusterfleet.yaml` | Prefill Fleet、8×H20、initContainer、NIXL 参数 |
+| `03-decode-rayclusterfleet.yaml` | Decode Fleet、8×H20、initContainer、NIXL 参数 |
+| `04-head-service.yaml` | 只选择两个 Ready Head/API Pod |
+| `05-aibrix-pd-route.yaml` | 唯一 HTTPRoute、ReferenceGrant 和长请求超时 |
+
+应用顺序为 Secret → Runtime Config → Prefill Fleet → Decode Fleet → Service/Route → Smoke Test → Benchmark。删除时反向执行。更新前后都必须核对 RayCluster 和 8-GPU Pod 数量；现场曾观察到主容器短暂 NotReady 后 Fleet Controller 创建替代 RayCluster，即使配置了 `maxSurge: 0` 也一度超出目标 GPU 数量。
+
+### 11.3 镜像与执行器兼容性
+
+上游 `vllm/vllm-openai:v0.26.0-cu129` 固定为 `linux/amd64` 后，先推送到 staging，再使用 `gmanctl image sync-gd5c` 串行同步到生产和云上环境。单平台 manifest digest 为：
+
+```text
+sha256:3c5c53248febaa72823a4b7e51aafa1cd2b65d860392e3930414da4d3864f541
+```
+
+该上游镜像包含 vLLM 和 NIXL，但不包含 Ray。验证阶段在启动脚本中安装 `ray[default]==2.47.1`，再执行 KubeRay 注入的 Ray 启动命令；生产镜像应预装锁定版本，避免重启依赖 PyPI 可用性。
+
+最初让 vLLM 使用 `--distributed-executor-backend=ray`。两个 Engine 都能完成权重加载、NCCL 初始化、NIXL Agent 初始化、warm-up 和 CUDA Graph capture，健康检查也返回 200，但确定性中文请求会生成随机中英文、代码和符号。同样错误能在以下路径复现：
+
+1. 直连 Prefill Head；
+2. 直连 Decode Head；
+3. AIBrix P/D 路径和接入该 Gateway 的 OpenWebUI。
+
+更换为已经通过普通 TP=8 验证的 vLLM 构建后仍能复现，因此问题收敛在当前 DeepSeek V4 与 vLLM Ray executor 的组合路径，不能归因于 OpenWebUI 或 AIBrix Router。现有证据不足以进一步断言是 Ray Compiled DAG、GPU 映射、采样回传还是特定 kernel 与 Ray Actor 的组合。
+
+由于单侧 Engine 完全位于一个 8-GPU Pod，不需要 Ray 执行 TP，最终采用以下分层规避：
+
+```text
+RayClusterFleet / KubeRay：管理两个单节点 Engine 的生命周期
+vLLM mp：管理每个 Engine 内部的 8 个本地 TP Rank
+AIBrix P/D Router：选择 Prefill 与 Decode Engine
+NIXL/UCX：在两个 Engine 之间传输 KV
+```
+
+切换到 `--distributed-executor-backend=mp` 并干净重建后，资源稳定为两份 Fleet、两份 RayCluster、两个 8-GPU Head Pod。经 AIBrix Gateway 的确定性中文请求准确返回预期文本，之前的错误 token 消失。
+
+### 11.4 RayClusterFleet P/D 压测
+
+客户端位于 Prefill Pod，通过 AIBrix Gateway 调用 Chat Completions；random dataset 为 128 输入、64 输出、`temperature=0`、`--ignore-eos`、无限请求速率。C=1 使用 16 个请求和 2 个 warm-up，C=8 使用 64 个请求和 8 个 warm-up。
+
+| 负载 | 路径 | 成功 | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL | p95 E2E |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128/64，C=1 | AIBrix → RayClusterFleet P/D，2×TP8 | 16/16 | 142.69 | 71.94 ms | 6.33 ms | 9.32 ms | 468.17 ms |
+| 128/64，C=8 | AIBrix → RayClusterFleet P/D，2×TP8 | 64/64 | 817.95 | 139.56 ms | 9.80 ms | 10.23 ms | 681.91 ms |
+
+与 StormService TP=8 单轮结果相比：
+
+- C=1 输出吞吐低约 44.6%，p95 TTFT 高约 28.7%，p95 E2E 高约 54.9%；
+- C=8 输出吞吐低约 5.6%，但 p95 TTFT 改善约 47.3%，p95 TPOT 改善约 15.7%，p95 E2E 改善约 20.4%。
+
+这组结果说明两套 TP=8 P/D 在并发 8 时能降低尾延迟，同时保持接近的总输出吞吐；但它使用 16 张 GPU，而 StormService 只使用 8 张 GPU，并且新测试走 Chat API，不能视为同资源严格 A/B。按 tokens/s/GPU 计算，C=8 分别约为 `51.1` 与 `108.3 tok/s/GPU`，P/D 资源效率低约 52.8%。要判断是否值得生产化，需要用更长 Prompt、更高并发和真实请求分布验证 TTFT SLO 收益是否足以覆盖双份权重和 GPU 成本。
+
+## 12. 生产化检查表
 
 - 模型文件有完整性校验，并使用可复用只读存储；
 - 镜像版本和 DeepSeek V4 kernel 路径已静态核验；
@@ -598,7 +696,7 @@ Model:    DeepSeek-V4-Flash
 - 若评估 PD，固定总 GPU 数并计算 tokens/s/GPU 与尾延迟收益；
 - GPU 资源有明确的申请、告警、回收和回滚流程。
 
-## 12. 参考资料
+## 13. 参考资料
 
 - [DeepSeek-V4-Flash-0731 模型卡](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731)
 - [vLLM DeepSeek-V4-Flash Recipe](https://recipes.vllm.ai/deepseek-ai/DeepSeek-V4-Flash)
