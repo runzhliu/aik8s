@@ -1,6 +1,6 @@
 ---
 title: DeepSeek-V4-Flash-0731 的 H20 部署与压测
-description: 记录 DeepSeek-V4-Flash-0731 在单机八卡 H20 上的资源条件、vLLM 启动流程、性能基线、PD 分离判断与 OpenWebUI 对接方法
+description: 记录 DeepSeek-V4-Flash-0731 在单机八卡 H20 上的资源条件、vLLM 启动流程、性能基线、同 Pod PD 分离实测与 OpenWebUI 对接方法
 status: exploratory
 last_reviewed: 2026-08-10
 ---
@@ -24,7 +24,9 @@ OpenAI-compatible client
   8 × H20 96 GB
 ```
 
-这是普通的 Prefill/Decode 共置部署，不是 PD 分离。模型权重、KV Cache 和 CUDA Graph 可以放入 8 张卡，但显存水位约 93 GiB/卡，余量不大。验证期间所有压测请求均成功；完成目标并发形状的运行时预热后，128-token 输入、64-token 输出、并发 8 的总输出吞吐约为 934 tok/s。
+原始基线是普通的 Prefill/Decode 共置部署，不是 PD 分离。模型权重、KV Cache 和 CUDA Graph 可以放入 8 张卡，但显存水位约 93 GiB/卡，余量不大。验证期间所有压测请求均成功；完成目标并发形状的运行时预热后，128-token 输入、64-token 输出、并发 8 的总输出吞吐约为 934 tok/s。
+
+随后在同一个手工 Pod 内把八张卡静态分为 `Prefill TP=4 + Decode TP=4`，使用 NIXL/UCX 和本地 Proxy 完成了真实 KV Cache 交接。该拓扑功能正确，但 eager、无 DSpark 的 4P+4D 只达到原 TP=8 输出吞吐的约 3.7%–12.1%，因此目前只适合 P/D 功能验证，不适合作为原部署的性能替代方案。
 
 部署可行不等于已经生产就绪。正式上线前仍需完成：真实请求回放、长时间阶梯压测、工具调用和 reasoning 正确性、DSpark A/B、故障恢复、鉴权、稳定入口和监控告警。
 
@@ -225,7 +227,7 @@ vllm serve /workspace/model/DeepSeek-V4-Flash-0731 \
 - 将编译缓存放在可复用卷中，验证第二次启动是否能够复用。
 - target-only 与 DSpark 分别建立启动时间和吞吐基线。
 
-## 7. 当前拓扑不是 PD 分离
+## 7. 原 TP=8 基线不是 PD 分离
 
 当前请求路径是：
 
@@ -259,6 +261,8 @@ PD 的主要价值是分别控制 TTFT 与 ITL，并减少长 Prompt Prefill 对
 - 已经具备 Router、Connector、监控、重试和故障恢复能力。
 
 公平对比必须固定总 GPU 数。例如比较两个普通 TP=8 实例与一个 Prefill TP=8 加一个 Decode TP=8，而不是拿 8 GPU 普通实例直接对比 16 GPU 的 1P+1D。
+
+第 9 节记录的后续实验仍固定总共 8 张 GPU，但改为同 Pod 4P+4D。它与本节的原 TP=8 基线是两套不同运行状态。
 
 ## 8. 探索性压测数据
 
@@ -337,7 +341,215 @@ vllm bench serve \
 
 正式容量测试应改用脱敏后的真实请求分布，在独立压测节点上通过实际服务入口运行 10–30 分钟的固定 request-rate 阶梯，并同时记录失败率、队列、GPU、显存、功耗和 tokens/s/GPU。
 
-## 9. 对接 OpenWebUI
+## 9. 同 Pod TP=4+TP=4 P/D 分离实测
+
+### 9.1 实验拓扑与边界
+
+本次没有创建第二个模型 Pod，也没有修改 Kubernetes manifest。停止原 TP=8 Engine 后，在同一个已经申请 8 张 H20 的手工 Pod 内启动两个完整模型 Engine：
+
+```text
+Client
+  → Proxy / 0.0.0.0:8000
+      → Prefill / 127.0.0.1:8100 / GPU 0-3 / TP=4
+      → NIXL + UCX / same Pod
+      → Decode  / 127.0.0.1:8200 / GPU 4-7 / TP=4
+  → Response
+```
+
+| 项目 | 实测值 |
+| --- | --- |
+| GPU | 单节点 `8 × H20 96 GB` |
+| vLLM | `0.26.0b2.dev1+g3b102b576` |
+| NIXL | `1.3.1` |
+| KV Connector | `NixlConnector`，`kv_producer` → `kv_consumer` |
+| KV dtype / block size | FP8 / 256 |
+| 上下文 / 并发上限 | 204,800 / 16 |
+| 冷启动配置 | `--enforce-eager`，关闭 DSpark |
+
+这是两份完整模型，而不是把一个 TP=8 Engine 的 Rank 标成两种角色。它能验证 TP=4 容量、Proxy 控制流和 P→D KV 数据路径，但不提供跨 Pod 网络、独立扩缩容或故障域隔离。
+
+### 9.2 手工命令
+
+公开命令使用占位符隐藏环境标识。进入手工 Pod：
+
+```bash
+gmanctl --cluster <CLUSTER> \
+  -n <NAMESPACE> \
+  exec -it <MANUAL_POD> -- bash
+```
+
+确认并停止原 TP=8 Engine，等待旧 Worker 释放显存：
+
+```bash
+pgrep -af '/usr/local/bin/vllm serve'
+
+BASELINE_PID="$(pgrep -f '^/usr/bin/python3 /usr/local/bin/vllm serve' | head -n 1)"
+test -n "$BASELINE_PID" && kill -TERM "$BASELINE_PID"
+
+while [ -n "$(nvidia-smi --query-compute-apps=pid --format=csv,noheader)" ]; do
+  sleep 5
+done
+```
+
+定义两侧相同的模型、Attention 和 KV 参数：
+
+```bash
+mkdir -p /workspace/logs/pd-tp4
+
+PD_COMMON_ARGS=(
+  /workspace/model/DeepSeek-V4-Flash-0731
+  --dtype auto
+  --served-model-name DeepSeek-V4-Flash
+  --kv-cache-dtype fp8
+  --block-size 256
+  --gpu-memory-utilization 0.88
+  --max-model-len 204800
+  --max-num-seqs 16
+  --tokenizer-mode deepseek_v4
+  --tool-call-parser deepseek_v4
+  --enable-auto-tool-choice
+  --reasoning-parser deepseek_v4
+  --reasoning-config '{"reasoning_parser":"deepseek_v4","reasoning_start_str":"<think>","reasoning_end_str":"</think>"}'
+  --default-chat-template-kwargs '{"thinking":true}'
+  --enable-prompt-tokens-details
+  --enable-prefix-caching
+  --trust-remote-code
+  --enforce-eager
+)
+```
+
+启动 Prefill：
+
+```bash
+nohup env \
+  CUDA_VISIBLE_DEVICES=0,1,2,3 \
+  VLLM_PORT=20000 \
+  VLLM_NIXL_SIDE_CHANNEL_HOST=127.0.0.1 \
+  VLLM_NIXL_SIDE_CHANNEL_PORT=5559 \
+  UCX_NET_DEVICES=all \
+  vllm serve "${PD_COMMON_ARGS[@]}" \
+    --host 127.0.0.1 \
+    --port 8100 \
+    --tensor-parallel-size 4 \
+    --kv-transfer-config \
+      '{"kv_connector":"NixlConnector","kv_role":"kv_producer","kv_buffer_device":"cuda"}' \
+  > /workspace/logs/pd-tp4/prefill.log 2>&1 &
+
+echo $! > /workspace/logs/pd-tp4/prefill.pid
+```
+
+启动 Decode：
+
+```bash
+nohup env \
+  CUDA_VISIBLE_DEVICES=4,5,6,7 \
+  VLLM_PORT=30000 \
+  VLLM_NIXL_SIDE_CHANNEL_HOST=127.0.0.1 \
+  VLLM_NIXL_SIDE_CHANNEL_PORT=5659 \
+  UCX_NET_DEVICES=all \
+  vllm serve "${PD_COMMON_ARGS[@]}" \
+    --host 127.0.0.1 \
+    --port 8200 \
+    --tensor-parallel-size 4 \
+    --kv-transfer-config \
+      '{"kv_connector":"NixlConnector","kv_role":"kv_consumer","kv_buffer_device":"cuda"}' \
+  > /workspace/logs/pd-tp4/decode.log 2>&1 &
+
+echo $! > /workspace/logs/pd-tp4/decode.pid
+```
+
+等待两侧 Ready，再让镜像自带的 Proxy 监听原服务端口 8000：
+
+```bash
+curl -fsS http://127.0.0.1:8100/health
+curl -fsS http://127.0.0.1:8200/health
+
+nohup python3 \
+  /vllm-workspace/examples/disaggregated/disaggregated_serving/disagg_proxy_multiturn.py \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --prefiller-host 127.0.0.1 \
+  --prefiller-port 8100 \
+  --decoder-host 127.0.0.1 \
+  --decoder-port 8200 \
+  > /workspace/logs/pd-tp4/proxy.log 2>&1 &
+
+echo $! > /workspace/logs/pd-tp4/proxy.pid
+curl -fsS http://127.0.0.1:8000/health
+```
+
+验证普通正文：
+
+```bash
+curl -sS http://127.0.0.1:8000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model":"DeepSeek-V4-Flash",
+    "messages":[{"role":"user","content":"只输出：PD_OK"}],
+    "max_tokens":32,
+    "temperature":0,
+    "stream":false,
+    "chat_template_kwargs":{"thinking":false}
+  }'
+```
+
+### 9.3 启动与 KV 传输证据
+
+两个 Engine 同时启动，均在约 3 分 55 秒后 Ready；Engine profile、KV Cache 和 warmup 分别约 170 秒。该时间不能直接与原 TP=8 的约 12 分钟比较，因为本次同时关闭了 DSpark 和 CUDA Graph。
+
+| 指标 | 实测值 |
+| --- | ---: |
+| 单卡模型权重 | 38.08 GiB |
+| 单卡 peak activation | 2.66 GiB |
+| 单卡 KV Cache | 42.86 GiB |
+| NIXL 注册的 packed KV Cache | 46,020,395,520 Bytes / Rank |
+| 稳态进程显存 | 约 88.8 GiB / 卡 |
+
+真实请求中，四个 Decode TP Rank 的 NIXL compatibility hash 全部通过，Transfer Plan 显示 `local_tp=4`、`remote_tp=4`、`tp_ratio=1`，Decode 的 External Prefix Cache hit rate 为 100%。首次请求记录 4 次成功传输，平均 7.574 ms、约 916 MB/s；后续短请求热态平均 0.321 ms、约 24,711 MB/s。`thinking=false` 请求以 HTTP 200 在约 0.461 秒返回 `PD_OK`。
+
+这些是同主机、同 Pod、短 Prompt、每个 TP Rank 的 NIXL 记录，只证明 KV 数据路径成立，不能外推跨节点吞吐。
+
+### 9.4 与原 TP=8 的性能对比
+
+使用第 8 节相同的 random workload、输入/输出长度、并发、`temperature=0`、`--ignore-eos` 和无限请求速率复测 4P+4D。全部请求成功：
+
+| 负载 | 配置 | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL | p95 E2E |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 128 in / 64 out，C=1 | 原 TP=8 | 250.19 | 49 ms | 4.84 ms | 9.07 ms | 353 ms |
+| 128 in / 64 out，C=1 | 4P+4D | 9.17 | 253 ms | 106.95 ms | 107.28 ms | 6,990 ms |
+| 128 in / 64 out，C=4 | 原 TP=8 | 617.77 | 96 ms | 8.02 ms | 37.13 ms | 592 ms |
+| 128 in / 64 out，C=4 | 4P+4D | 34.42 | 841 ms | 107.41 ms | 108.04 ms | 7,600 ms |
+| 128 in / 64 out，C=8 | 原 TP=8 | 933.70 | 233 ms | 11.53 ms | 43.63 ms | 810 ms |
+| 128 in / 64 out，C=8 | 4P+4D | 65.85 | 2,993 ms | 107.43 ms | 108.30 ms | 9,753 ms |
+| 4096 in / 128 out，C=4 | 原 TP=8 | 277.00 | 1,391 ms | 16.00 ms | 75.07 ms | 2,945 ms |
+| 4096 in / 128 out，C=4 | 4P+4D | 33.63 | 1,959 ms | 107.32 ms | 108.14 ms | 15,557 ms |
+
+4P+4D 的输出吞吐只达到原 TP=8 的 3.7%、5.6%、7.1% 和 12.1%，分别低约 27.3、17.9、14.2 和 8.2 倍。短请求 p95 TPOT 变慢约 9.3–22.1 倍；4K 请求 p95 TTFT 只变慢约 1.4 倍，但 p95 E2E 仍变为约 5.3 倍。
+
+直接访问当前 TP=4 Decode 的小样本为 9.23 tok/s、p95 TPOT 107.51 ms，经 P/D 为 9.17 tok/s、p95 TPOT 106.95 ms，几乎一致。因此主要损失不是 NIXL，而是固定 8 GPU 后从一个 TP=8 Engine 改成两个 TP=4 Engine，同时关闭了 DSpark 和 CUDA Graph。严格 A/B 应将 4P+4D 与两个参数完全相同的普通 TP=4 实例比较，并在两侧同时恢复相同的 CUDA Graph 与 DSpark 配置后复测。
+
+### 9.5 限制与回退
+
+- Proxy 会原样转发流式 SSE 中的 `delta.reasoning`，但非流式聚合只收集 `content`，会丢失 reasoning；正式接入前需要修复。
+- 当前只验证 `kv_producer` → `kv_consumer` 的 P→D 单向 KV，不应据此声称 D→P 多轮复用已通过。
+- 同 Pod 不能独立扩缩 P/D，也没有独立故障域；同机 UCX/NIXL 结果不覆盖跨节点 RDMA。
+- Pod IP:8000 与 loopback 健康，但从同一后端 Pod 访问自己的 ClusterIP:80 返回 connection refused；独立客户端的 Service/Ingress 链路尚未验证。
+
+停止时只终止 PID 文件对应的三个进程：
+
+```bash
+kill -TERM "$(cat /workspace/logs/pd-tp4/proxy.pid)"
+kill -TERM "$(cat /workspace/logs/pd-tp4/prefill.pid)"
+kill -TERM "$(cat /workspace/logs/pd-tp4/decode.pid)"
+
+while [ -n "$(nvidia-smi --query-compute-apps=pid --format=csv,noheader)" ]; do
+  sleep 5
+done
+```
+
+随后使用第 5 节的完整 TP=8 命令恢复原基线。P/D 两侧若增加 DSpark，speculation、模型、Attention backend 和 KV dtype 等兼容参数必须保持一致。
+
+## 10. 对接 OpenWebUI
 
 vLLM 提供 OpenAI-compatible API，可以被 OpenWebUI 使用。稳定链路应是：
 
@@ -375,7 +587,7 @@ Model:    DeepSeek-V4-Flash
 
 接入后依次验证模型列表、普通对话、流式输出、reasoning 内容、长文本和 tool call。UI 能列出模型只代表 `/v1/models` 可访问，不代表 chat template 与 parser 已经正确。
 
-## 10. 生产化检查表
+## 11. 生产化检查表
 
 - 模型文件有完整性校验，并使用可复用只读存储；
 - 镜像版本和 DeepSeek V4 kernel 路径已静态核验；
@@ -386,7 +598,7 @@ Model:    DeepSeek-V4-Flash
 - 若评估 PD，固定总 GPU 数并计算 tokens/s/GPU 与尾延迟收益；
 - GPU 资源有明确的申请、告警、回收和回滚流程。
 
-## 11. 参考资料
+## 12. 参考资料
 
 - [DeepSeek-V4-Flash-0731 模型卡](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731)
 - [vLLM DeepSeek-V4-Flash Recipe](https://recipes.vllm.ai/deepseek-ai/DeepSeek-V4-Flash)
