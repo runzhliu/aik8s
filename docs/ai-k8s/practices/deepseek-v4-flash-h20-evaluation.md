@@ -712,7 +712,187 @@ NIXL/UCX：在两个 Engine 之间传输 KV
 
 ![并发 8 下普通 TP=8 与 AIBrix P/D 的性能成本对比](../../assets/practices/deepseek-v4-flash-h20-evaluation/03-performance-tradeoff.png)
 
-## 12. 生产化检查表
+### 11.5 AIBrix 如何混合 P/D 与 Combined
+
+混合路由不是概念设计。AIBrix v0.7.0 的 Gateway Plugin 已经实现 P/D roleset、Prompt 长度分桶、Combined 回退和负载溢出：
+
+1. `Route` 调用 Pod selector；返回 `(prefillPod, decodePod)` 时先向 Prefill 发内部请求，再把客户端流量发向 Decode；返回 `(nil, combinedPod)` 时跳过 Prefill，直接把 Combined 设为目标；
+2. `collectAndBucketPods` 使用 `roleset-name` 和 `role-name=prefill|decode` 组织配对，只让 Prefill、Decode 都存在的完整 roleset 进入候选；
+3. 打开 `AIBRIX_PROMPT_LENGTH_BUCKETING=true` 后，`filterPrefillDecodePods` 读取 Prompt Token 数，并按 `routingConfig.promptLenBucketMinLength/MaxLength` 过滤；
+4. 没有完整且匹配的 P/D pair 时，只有覆盖该 Prompt 区间的 `combined: true` Pod 才能兜底；Combined 没覆盖该长度时会返回错误，不会盲目跨 bucket；
+5. 有匹配 P/D pair、但 P/D 请求率较高而 Combined 空闲时，`shouldPickCombined` 可以把溢出请求转给请求率分数最低的 Combined Pod。
+
+因此，要实现“短请求走 Combined、长请求走 P/D，同时 Combined 能给长请求兜底”，Combined 的区间需要覆盖短请求和希望兜底的长请求，P/D roleset 则只覆盖长请求。例如 Combined 使用默认的全长度区间，P/D 配置 `promptLenBucketMinLength: 2049`；短请求找不到 P/D bucket，只能走 Combined，长请求优先进入 P/D，P/D 过载或配对不完整时仍有 Combined 候选。
+
+v0.7.0 的实例打分边界也需要准确描述：
+
+- Prefill 默认 `prefix_cache`：`(100 - prefixMatchPercent) × 0.1 + runningRequests / maxRunningRequests`；也可使用 `least_request`；
+- Decode 默认 `load_balancing`：综合归一化的运行请求数、生成吞吐和 KV Cache 剩余空间；也可使用 `least_request`；
+- AIBrix 当前主干新增的 `conductor` 会估算排队、命中/未命中 Token 的 Prefill 时间，以及新增请求后的 TBT 与 GPU Cache 惩罚，但它不在 v0.7.0 tag 中。生产文档不能把主干能力写成 v0.7.0 默认行为。
+
+对应源码入口：
+
+- [v0.7.0 P/D Router 与 Combined 回退](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/pd_disaggregation.go)
+- [v0.7.0 Prefill scorer](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/pd/prefill_scorer.go)
+- [v0.7.0 Decode scorer](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/pd/decode_scorer.go)
+
+## 12. SGLang 与 RBG 单节点验证
+
+在 vLLM 与 AIBrix 的验证之外，又使用 SGLang 和 RoleBasedGroup（RBG）做了一次单节点聚合部署。目标不是立即替换已经工作的 vLLM 服务，而是先回答三个更基础的问题：开源 SGLang 镜像能否在 H20 上识别 0731 checkpoint、Hopper kernel 路径是否正确，以及 RBG 能否稳定管理一个完整的 TP=8 Engine。
+
+部署拓扑保持简单：一个 `RoleBasedGroup` 只有一个 `server` Role、一个 Pod 和 8 张 H20。RBG 管理 Pod 的生命周期与服务发现，Pod 内部由 SGLang 启动 8 个 TP Rank；第一阶段不引入 Router、跨节点 TP 或 P/D 分离，避免同时调试多个数据面。
+
+```text
+RoleBasedGroup
+  └─ server Role，replicas=1
+       └─ 1 Pod，8 × H20 96 GB
+            ├─ Init Container：准备 48 个模型分片
+            └─ SGLang：TP=8，Marlin，DSpark
+```
+
+实验使用固定的 `linux/amd64` SGLang v0.5.17 CUDA 13.0 镜像，并在推送到内部镜像仓库后再同步到测试集群。公开清单不包含对象存储地址、内部 Registry、Secret 名称和节点地址；这些值应通过 Secret、ConfigMap 和环境相关的 Overlay 注入。
+
+### 12.1 H20 启动参数
+
+H20 属于 Hopper SM90。0731 checkpoint 的 routed experts 会被识别为 FP4，SGLang 在该硬件上使用 MXFP4 Marlin MoE，而不是面向 Blackwell 的 FlashInfer MXFP4 路径。最小启动参数如下：
+
+```bash
+sglang serve \
+  --trust-remote-code \
+  --model-path /models/DeepSeek-V4-Flash-0731 \
+  --served-model-name deepseek-v4-flash-sglang \
+  --tp 8 \
+  --moe-runner-backend marlin \
+  --speculative-algorithm DSPARK \
+  --mem-fraction-static 0.82 \
+  --chunked-prefill-size 4096 \
+  --swa-full-tokens-ratio 0.1 \
+  --reasoning-parser deepseek-v4 \
+  --tool-call-parser deepseekv4 \
+  --host 0.0.0.0 \
+  --port 30000
+```
+
+启动日志确认了以下关键路径：
+
+- checkpoint 架构为 `DeepseekV4ForCausalLM`，48 个权重分片完整加载；
+- 8 个 TP Rank 和 NCCL 2.29.7 初始化成功；
+- MoE 实现为 `Mxfp4MarlinMoEMethod`；
+- checkpoint 内置的 DSpark Head 被识别为 `DeepseekV4ForCausalLMDSpark`，默认提出 5 个 draft token；
+- target 和 draft 都使用 DeepSeek V4 专用 attention backend。
+
+### 12.2 冷启动不是只有“下载模型”
+
+这次最明显的工程问题是首次 JIT。镜像能够拉取、权重能够加载，并不意味着 HTTP Server 会立即 Ready。SGLang 会为 H20 的 `sm_90a` 生成 CUDA 源码，再依次经过 `nvcc`、`cicc` 和 `ptxas` 生成 cubin；随后还要分别捕获 target verify 和 DSpark draft verify 的 CUDA Graph。
+
+```text
+SGLang / DeepGEMM 生成 kernel.cu
+  → nvcc / cicc 编译为 PTX
+  → ptxas 汇编为 sm_90a cubin
+  → 写入 SGLang JIT cache
+  → target verify CUDA Graph
+  → draft verify CUDA Graph
+  → HTTP Server Ready
+```
+
+本轮冷启动中，模型约 156 GiB，节点已缓存模型同步镜像；SGLang 主镜像约 14.29 GB，首次拉取耗时约 127 秒。NCCL 初始化约 19 秒，48 个 target 权重分片加载约 25 秒。SGLang 自报的 Engine 启动时间约 854 秒，其中 target verify 的 51 组 batch shape CUDA Graph capture 耗时约 394 秒，draft verify capture 又耗时约 123 秒。Pod 从创建到 Ready 约 23 分钟，包含模型准备、镜像拉取、权重加载、JIT、两轮 Graph capture 和内置 warm-up。大部分等待发生在模型下载之外，因此只缓存 checkpoint 仍然不够。
+
+| 冷启动阶段 | 本轮观测 |
+| --- | ---: |
+| 模型准备 | 约 156 GiB，约 6 分钟 |
+| SGLang 镜像首次拉取 | 14.29 GB，约 127 秒 |
+| NCCL 初始化 | 约 19 秒 |
+| target 48 个权重分片加载 | 约 25 秒 |
+| target verify CUDA Graph | 约 394 秒 |
+| DSpark draft verify CUDA Graph | 约 123 秒 |
+| SGLang Engine 启动 | 约 854 秒 |
+| Pod 创建到 Ready | 约 23 分钟 |
+
+生产化至少应同时处理三层缓存：
+
+1. 模型使用可复用的只读 PVC 或节点缓存，避免 Pod 重建后重复同步；
+2. 将 SGLang JIT cache 挂载到持久卷，且缓存键必须包含镜像、CUDA、驱动、GPU 架构和启动参数；
+3. 更稳定的做法是在同架构 H20 上完成预热，再把兼容的 kernel cache 烘焙进不可变镜像。
+
+若业务最大并发远低于 256，还可以同时下调 `max-running-requests` 和 CUDA Graph 最大 batch，减少首次捕获的 shape 数量。该优化会改变高并发能力，必须用真实峰值并发重新压测，不能只为了缩短启动时间直接套用。
+
+### 12.3 正确性门槛
+
+启动日志还有两类不能忽略的警告：本地 checkpoint 没有被 Hugging Face tokenizer 识别出 chat template；FP8 KV cache 没有提供 scaling factors 时会退回 1.0。它们未必都会导致错误输出，但说明验收不能停在 `/health=200`。
+
+最终至少要依次验证：
+
+1. `/v1/models` 返回预期的 served model name；
+2. 固定采样参数的短中文请求能准确返回预期文本；
+3. reasoning 与 tool call parser 的结构化字段正确；
+4. DSpark 与 target-only 使用相同请求集做正确性和性能 A/B；
+5. 记录 acceptance、TTFT、TPOT、ITL、吞吐和峰值显存，而不是只看接受率。
+
+本轮基础 Smoke Test 已通过：`/v1/models` 返回 `deepseek-v4-flash-sglang`，固定 `temperature=0`、关闭 thinking 后输入“只回答：你好”，服务准确返回“你好”，没有复现此前特定 vLLM Ray executor 组合中的随机中英文和符号输出。这只证明短请求与基础 Chat API 正确；FP8 KV scaling、长上下文、thinking、tool call 和 DSpark 收益仍需要分别验证。
+
+```bash
+curl http://<service>:30000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "deepseek-v4-flash-sglang",
+    "messages": [{"role": "user", "content": "只回答：你好"}],
+    "temperature": 0,
+    "max_tokens": 32,
+    "chat_template_kwargs": {"thinking": false}
+  }'
+```
+
+此外，初次 Reconcile 时曾短暂出现 `RoleInstanceSet not found`，随后 Controller 创建 RoleInstanceSet、RoleInstance 和 Pod 并恢复成功。当前版本的 RBG 仍应观察控制器事件和最终资源数量，不能把单条瞬时 Warning 直接判定为部署失败。
+
+### 12.4 生成式健康检查会污染压测
+
+第一次压测出现了一个容易误判成“模型吞吐很低”的问题：Pod 使用 HTTP `GET /health` 做 startup、readiness 和 liveness probe，但当前 SGLang 镜像启用了生成式健康检查。三个探针会周期性触发一个真实的一 Token 生成请求；DeepSeek V4 的 page size 为 256，因此服务日志中每 10 秒都会出现一次 256 Token 的 Prefill batch。它既占用调度队列，也会污染 TTFT、吞吐和请求数指标。
+
+确认方式不是只看 `/health=200`，而是同时观察空载时的 Engine 日志和 metrics：没有业务请求时仍周期性出现 Prefill，就说明探针进入了生成路径。无效压测数据应全部丢弃，不能通过增加 warm-up 掩盖。
+
+本轮采用两层修正：运行时设置 `SGLANG_ENABLE_HEALTH_ENDPOINT_GENERATION=0`，让 `/health` 只检查进程状态；部署清单改用 TCP probe，避免后续镜像默认值变化再次把健康检查变成业务流量。
+
+```yaml
+env:
+  - name: SGLANG_ENABLE_HEALTH_ENDPOINT_GENERATION
+    value: "0"
+
+startupProbe:
+  tcpSocket:
+    port: engine
+readinessProbe:
+  tcpSocket:
+    port: engine
+livenessProbe:
+  tcpSocket:
+    port: engine
+```
+
+TCP probe 只能证明端口可接受连接，不能替代端到端正确性检查。生产环境还应使用低频、独立的 synthetic request 验证模型名、确定性输出和流式链路，并且把这类请求从正式压测统计中排除。
+
+### 12.5 SGLang 稳态压测
+
+排除生成式健康检查后，客户端从 Engine Pod 内访问 loopback OpenAI-compatible Completions API。输入由 checkpoint 自带 tokenizer 构造并再次校验，实际 Token 数与目标值一致；固定 `temperature=0`、`ignore_eos=true`，每种场景使用三个随机种子各跑一轮。表中吞吐与延迟均为三轮中位数，吞吐范围用于反映波动。
+
+| 场景 | 每轮成功 | req/s | 输出 tok/s | 三轮输出 tok/s 范围 | p95 TTFT | p95 TPOT | p95 ITL | p95 E2EL |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128 in / 64 out，C=1 | 16/16 | 3.26 | 208.52 | 206.40–210.92 | 173.99 ms | 2.33 ms | 9.01 ms | 316.91 ms |
+| 128 in / 64 out，C=8 | 64/64 | 7.52 | 480.99 | 255.58–541.31 | 327.66 ms | 21.04 ms | 171.35 ms | 1500.71 ms |
+| 4096 in / 128 out，C=4 | 16/16 | 4.15 | 531.47 | 354.30–537.10 | 386.57 ms | 7.82 ms | 167.74 ms | 1176.29 ms |
+
+C=1 三轮很稳定；C=8 和 4K 场景各有一轮明显偏慢。慢轮没有新 JIT、请求失败或健康检查生成流量，Engine 日志中的 DSpark acceptance 也会随生成内容变化，因此这组结果首先说明当前组合存在工作负载相关波动，不能只摘取最好的一轮作为容量结论。正式选型还需要固定真实请求集，并补充关闭 DSpark 的 A/B。
+
+与第 8 节同机型 vLLM TP=8 基线相比，中位数表现分成两种形态：
+
+- 128/64、C=1 的输出吞吐低约 16.7%，p95 TTFT 从约 49 ms 增至 174 ms；
+- 128/64、C=8 的输出吞吐低约 48.5%，p95 TTFT 高约 40.6%，当前短请求高并发配置不占优；
+- 4096/128、C=4 的输出吞吐高约 91.9%，p95 TTFT 低约 72.2%，长 Prompt 场景显示出明显潜力。
+
+这不是严格的 vLLM/SGLang 框架排名：两者镜像、CUDA 版本、kernel、压测客户端和随机请求集并不完全相同。它只能说明值得继续按 Prompt 长度拆分验证，而不能据此把所有流量切换到 SGLang。
+
+流式客户端按 SSE 数据片段记录 ITL。DSpark 一次 verify 可能接受并返回多个 Token，因此一个片段可能包含多 Token；表中的 ITL 更准确地说是“客户端相邻流式片段间隔”，TPOT 才是按最终输出 Token 数折算的平均生成时间。跨引擎比较 ITL 时必须使用相同客户端与流式语义。
+
+## 13. 生产化检查表
 
 - 模型文件有完整性校验，并使用可复用只读存储；
 - 镜像版本和 DeepSeek V4 kernel 路径已静态核验；
@@ -723,7 +903,7 @@ NIXL/UCX：在两个 Engine 之间传输 KV
 - 若评估 PD，固定总 GPU 数并计算 tokens/s/GPU 与尾延迟收益；
 - GPU 资源有明确的申请、告警、回收和回滚流程。
 
-## 13. 参考资料
+## 14. 参考资料
 
 - [DeepSeek-V4-Flash-0731 模型卡](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731)
 - [vLLM DeepSeek-V4-Flash Recipe](https://recipes.vllm.ai/deepseek-ai/DeepSeek-V4-Flash)

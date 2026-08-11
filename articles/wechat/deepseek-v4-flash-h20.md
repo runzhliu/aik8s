@@ -149,7 +149,7 @@ AIBrix 官方在单节点 P/D 文章中给出过更积极的结果：在 L20 上
 
 如果只需要启动一个 Prefill 和一个 Decode，Kubernetes YAML 就能做到。AIBrix 更重要的能力是决定：什么请求应该走哪条路径，以及某个角色不可用时怎样继续服务。
 
-当前 AIBrix 的 P/D 设计允许同一个模型同时保留两类实例：
+AIBrix 从 v0.6.0 开始支持 P/D 与 Combined 混合路由，v0.7.0 中已经有完整实现。同一个模型可以同时保留两类实例：
 
 ```text
                          ┌─ P/D 实例：长 Prompt、Prefill-heavy
@@ -157,9 +157,11 @@ Request → AIBrix Router ─┤
                          └─ Combined 实例：短 Prompt、交互请求、溢出兜底
 ```
 
-路由可以使用 Prompt 长度分桶。短请求留在 Prefill/Decode 共置的 Engine，长请求再进入 P/D；如果找不到完整的 Prefill/Decode 配对，还可以回退到 Combined 实例。
+Gateway Plugin 打开 `AIBRIX_PROMPT_LENGTH_BUCKETING=true` 后，会读取请求的 Prompt 长度，并按各 Pod `routingConfig` 中的 `promptLenBucketMinLength` 和 `promptLenBucketMaxLength` 分桶。短请求可以只匹配 Prefill/Decode 共置的 Combined Engine，长请求匹配 P/D roleset；如果对应区间找不到同时 Ready 的 Prefill 和 Decode，且存在覆盖该长度的 `combined: true` 实例，路由会跳过独立 Prefill 调用，直接把请求发给 Combined。
 
-Pod 选择也不必只看请求数：Prefill 可以考虑前缀缓存、排队和未命中 Token 的计算量，Decode 可以考虑当前吞吐、batch 扩张和 GPU Cache 压力。
+这不是概念图，而是 v0.7.0 `pd_disaggregation.go` 中的实际分支：`collectAndBucketPods` 先按 `roleset-name`、`role-name` 和 Prompt 区间组织候选，`filterPrefillDecodePods` 决定走完整 P/D pair 还是 Combined；当 P/D 请求率较高而 Combined 空闲时，`shouldPickCombined` 也可以把溢出流量导向 Combined。
+
+实例内部的选择同样不是简单轮询。v0.7.0 默认的 Prefill `prefix_cache` 策略综合前缀命中率与正在执行的 Prefill 数；Decode `load_balancing` 策略综合运行请求数、生成吞吐和 KV Cache 剩余空间。当前 AIBrix 主干还新增了 `conductor` 策略，用排队时间、命中与未命中 Token 估算 TTFT，并估算新增请求后的 TBT 与 GPU Cache 惩罚；但它不属于本文部署所用的 v0.7.0 稳定版，因此这里只把它视为后续演进方向，而不是本轮已经启用的能力。
 
 这比“所有请求强制经过 P/D”更接近生产问题。短请求没必要承担额外路由和 KV 传输，长请求又能获得资源隔离；Combined 实例同时承担正常路径和容量保险丝。
 
