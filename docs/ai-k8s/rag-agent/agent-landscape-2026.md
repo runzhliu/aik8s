@@ -117,6 +117,7 @@ GitHub Star 只能表示开发者关注度，不能等价为活跃用户、企�
 
 | 项目 | 约 Star 数 | 类型 |
 |---|---:|---|
+| OpenClaw | 379k | 自托管个人 Agent/Gateway |
 | Claude Code | 139k | 编程 Agent/插件生态入口 |
 | Gemini CLI | 105k | 开源终端 Agent |
 | Browser Use | 96k | 浏览器 Agent 框架 |
@@ -128,6 +129,96 @@ GitHub Star 只能表示开发者关注度，不能等价为活跃用户、企�
 | Microsoft Agent Framework | 11k | 企业 Agent/工作流框架 |
 
 Star 数据来源于相应 GitHub 仓库页面，数值会持续变化，不宜用于精确排名。
+
+### 用 OpenClaw 二次封装内部 Agent 平台：优缺点
+
+OpenClaw 的官方定位是自托管个人 AI 助手。它用一个长期运行的 **Gateway** 统一承载消息渠道、会话、Hooks、节点和 Agent Runtime，再通过工具、Skills、Plugins、MCP、浏览器和多 Agent 路由扩展能力。[Gateway 架构](https://docs.openclaw.ai/architecture)显示，一个 Gateway 可以连接 Slack、Teams、Telegram、WhatsApp、WebChat 等渠道，控制面客户端和设备节点通过 WebSocket 接入。
+
+这恰好覆盖了企业内部 Agent 平台早期最耗时间的一批通用能力，所以有公司选择在 OpenClaw 外面增加门户、SSO、知识库和业务工具，快速形成内部平台。这个思路有现实价值，但前提是把 OpenClaw 当作 **Agent Harness、渠道适配器和执行单元**，而不是直接当作企业级身份、权限和多租户安全内核。
+
+#### 主要优点
+
+| 优点 | 实际价值 |
+|---|---|
+| **上线快** | 会话、记忆、多渠道消息、定时任务、浏览器、文件和 Shell 工具等基础能力已经存在，团队能先验证业务价值，而不是从 Agent Loop 和聊天接入开始造轮子 |
+| **自托管和可控性较强** | 代码、工作区和 Gateway 可以运行在企业自己的主机、容器或 Kubernetes 环境中，模型提供商也可以按策略配置 |
+| **扩展面丰富** | Tools 负责可调用动作，Skills 封装工作方法，Plugins 可增加工具、模型 Provider、渠道、Hooks、HTTP 路由和后台服务；适合把内部系统逐步接入 |
+| **渠道入口成熟** | 员工可以直接从 Slack、Teams 或 WebChat 发起任务，降低独立 Agent 门户的使用门槛 |
+| **适合快速试错** | 新场景可以先写 Skill 或小型 Tool Plugin 验证，再决定是否沉淀为独立服务和确定性工作流 |
+| **社区和生态热度高** | 大量现成 Skills、Plugins 和实践能缩短探索周期，也更容易招聘到熟悉其工作方式的开发者 |
+
+[OpenClaw Tools 文档](https://docs.openclaw.ai/tools)把扩展面清楚地区分为 Tools、Skills 与 Plugins；工具还可以经过全局、Agent、渠道、Provider 和 Sandbox 多层 allow/deny 策略过滤。这使它作为内部 Agent 原型底座比从零实现更有吸引力。
+
+#### 主要缺点与风险
+
+| 缺点 | 对内部平台的影响 |
+|---|---|
+| **默认信任模型与企业多租户不匹配** | 官方明确说明一个 Gateway 对应一个可信 Operator 边界，它不是让互不信任用户共享的安全边界；Session ID 用于路由，不是租户授权 |
+| **多租户成本会迅速上升** | 不同信任域需要独立 Gateway、状态、凭据、工作区和运行环境；官方 Fleet/Cell 方案仍标为实验性，实例编排、升级、容量和故障恢复要由平台团队补齐 |
+| **Gateway 是高价值攻击面** | Gateway 长期持有渠道会话、工作区、工具入口和路由状态，而 Sandbox 只隔离部分工具执行，Gateway 本身并不在 Sandbox 内 |
+| **Sandbox 不是完整安全边界** | Sandbox 默认需要显式配置；`elevated` 可绕过 Sandbox。工具策略按工具名控制，如果允许 `exec`，单独禁用 `write/edit` 并不能阻止 Shell 修改文件 |
+| **企业身份和授权需要重做** | 平台还需要 SSO/OIDC、RBAC/ABAC、用户身份向下游传递、代表用户授权、审批、临时凭据和职责分离，不能只使用 Gateway Token 或共享服务账号 |
+| **Skills/Plugins 带来供应链风险** | Skill 是进入模型上下文的指令，Plugin 和依赖则可能执行代码；社区生态越丰富，越需要来源允许列表、版本锁定、代码扫描、签名和发布审批 |
+| **平台级可观测性与评测仍需建设** | 企业需要按用户、Agent、模型、工具和业务流程追踪成功率、延迟、成本、越权拒绝、人工审批和失败轨迹，不能只依赖聊天记录和运行日志 |
+| **深度 Fork 会形成升级债务** | OpenClaw 迭代快，若直接修改核心 Gateway、Session 或 Tool Runtime，安全补丁和上游版本合并会越来越困难 |
+| **通用 Agent 不等于可靠业务流程** | 开放式模型决策适合探索和异常处理，但支付、发布、删除、生产变更等动作仍应由确定性服务、事务和审批系统控制 |
+
+最关键的限制来自 OpenClaw 自己的安全说明：[Multi-tenant hosting](https://docs.openclaw.ai/gateway/multi-tenant-hosting)要求不同信任边界使用独立完整实例；[Security](https://docs.openclaw.ai/security)也明确表示共享 Gateway 不是 hostile multi-tenant security boundary。换句话说，“多 Agent 路由”解决的是消息分配和工作区隔离，不等于真正的多租户授权。
+
+此外，OpenClaw 的 [Policy 插件](https://docs.openclaw.ai/cli/policy)主要用于检查配置合规和漂移，官方明确说明它不会在每次请求中强制执行工具调用，也不会重写运行时行为。因此，企业不能把一份 `policy.jsonc` 当作完整的实时授权层。
+
+#### 推荐的企业封装方式
+
+```text
+员工 / Slack / Teams / 内部门户
+              │
+        SSO + API Gateway
+              │
+   内部 Agent Control Plane
+   ├── Agent 目录、租户与配额
+   ├── 模型路由、任务状态与 Evals
+   ├── 审批、审计与成本归属
+   └── Gateway/Cell 生命周期管理
+              │
+   每个信任域独立 OpenClaw Cell
+   ├── 固定版本的 Gateway
+   ├── 审批后的 Skills/Plugins
+   └── 独立工作区与短期会话状态
+              │
+     Container / gVisor / Kata / VM
+              │
+       Policy + Tool Gateway
+   ├── 用户身份与短期凭据交换
+   ├── 参数校验、限速和人工确认
+   ├── 网络出口、数据脱敏和审计
+   └── 企业 API、Git、浏览器、数据库
+```
+
+落地时建议遵循这些原则：
+
+1. **一信任域一实例**：至少按团队或安全域拆分 Gateway；互不信任租户使用独立容器、OS 用户或 VM，不把 Agent 路由误当租户隔离。
+2. **OpenClaw 只做 Harness**：身份、权限、密钥、审批、计费和审计放到独立控制面与 Tool Gateway；Agent 只能提出动作，外部策略层决定是否执行。
+3. **默认只读和最小工具集**：先开放搜索、知识库和只读 API，再逐项开放写操作；不要给通用 Agent 一个无限制的 `exec` 和共享生产凭据。
+4. **显式启用强隔离**：根据风险选择容器、gVisor、Kata 或 VM；Gateway 与执行 Sandbox 分离，默认拒绝出站网络和宿主目录挂载。参考 [Sandbox](https://docs.openclaw.ai/gateway/sandboxing) 与 [Sandbox、Tool Policy、Elevated 的区别](https://docs.openclaw.ai/gateway/sandbox-vs-tool-policy-vs-elevated)。
+5. **扩展优先、Fork 最后**：优先用 Skills、Tool Plugins、MCP 和外部服务扩展；只有上游扩展点确实无法满足时才维护小型 Patch，并固定版本、维护升级测试矩阵。
+6. **建立内部制品供应链**：禁用员工随意安装社区 Skill/Plugin，使用内部允许列表、固定版本、代码审查、依赖扫描、签名和灰度发布。[Skills 文档](https://docs.openclaw.ai/skills)也要求把第三方 Skill 视为不可信代码。
+7. **用真实任务评测**：每次升级 OpenClaw、模型、Skill 或工具都运行同一批黄金任务，比较完成率、越权率、Token、延迟、费用和人工接管率。
+8. **高风险动作不走开放式 Shell**：把生产发布、退款、删除、付款等能力封装为窄接口，由服务端做 Schema、权限、幂等、事务和审批校验。
+
+#### 什么情况下值得选
+
+| 场景 | 判断 |
+|---|---|
+| 可信小团队的内部效率助手 | **适合**：能够快速形成 Slack/Teams + Skills + 内部工具闭环 |
+| 开发、运维、研究等可审核任务 | **适合但要隔离**：产出先进入 Diff、工单或草稿，由人确认后执行 |
+| 验证 Agent 产品需求和交互方式 | **很适合**：可快速验证使用频率、任务类型和真实 ROI |
+| 全公司统一的多租户 Agent 平台 | **可以作为执行单元，不宜直接作为平台内核** |
+| 强监管、强审计或处理高度敏感数据 | **需要大量外围工程**：通常应先评估企业 Agent 平台或自建受控工作流 Runtime |
+| 自动付款、生产变更、删除数据等高风险自治 | **不适合直接放权**：必须有确定性策略、事务、审批和回滚 |
+
+新加坡 IMDA 的 [OpenClaw 负责任部署案例](https://www.imda.gov.sg/-/media/imda/files/about/emerging-tech-and-research/artificial-intelligence/openclaw-case-study.pdf)同样建议采用 Zero Trust，不要把开源原版直接用于关键任务，也不要创建拥有无限权限的“全能 Agent”。
+
+**综合判断：OpenClaw 是很好的内部 Agent 平台加速器，但不是现成的企业安全内核。** 最合理的做法是复用它的渠道、会话、工具生态和 Agent 运行能力，把多租户、身份、授权、密钥、策略、审计、评测与高可用留在企业自有控制面。对于可信团队和低风险场景，这能显著缩短上线时间；对于全公司、强监管和高风险动作场景，补齐外围能力的成本可能逐渐接近重新建设一个受控 Agent Runtime。
 
 ## 4. 主流实现模式
 
