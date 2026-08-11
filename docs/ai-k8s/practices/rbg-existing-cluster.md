@@ -572,9 +572,9 @@ Decode:  do_remote_prefill=true,
 
 ### 13.4 DeepSeek V4 Flash 的 SGLang 双机实测
 
-在上述 vLLM 路径之外，仓库还准备了一组 DeepSeek V4 Flash 0731 的 SGLang P/D 清单，用一个 RBG 表达一个 Prefill Role 和一个 Decode Role，每个 Role 都是单机 8 卡 TP=8。两个 Pod 通过反亲和分布到不同 H20 节点，SGLang 使用 NIXL 传输 KV，AIBrix Gateway 根据 `role-name`、`roleset-name` 和模型标签选择两端，并注入 SGLang 的 bootstrap 参数。
+在上述 vLLM 路径之外，仓库还准备了一组 DeepSeek V4 Flash 0731 的 SGLang P/D 清单，用一个 RBG 表达一个 Prefill Role 和一个 Decode Role，每个 Role 都是单机 8 卡 TP=8。常规部署通过反亲和把两个 Pod 分布到不同 H20 节点；RDMA 专项测试为了复用两台已经 cordon 的隔离节点，改用 `spec.nodeName` 分别直绑节点，全程没有执行 `uncordon`。SGLang 使用 NIXL 传输 KV，AIBrix Gateway 根据 `role-name`、`roleset-name` 和模型标签选择两端，并注入 SGLang 的 bootstrap 参数。
 
-实际实验使用两台 8×H20 96 GB 节点。两个 Engine 都完成 DeepSeek V4 Flash 权重加载、Marlin 准备、NIXL 1.3.2 与 UCX 初始化，RBG 最终为 Ready；两个 Pod 通过反亲和落在不同节点。首次冷启动中，较慢节点拉取大镜像约 2 分钟，约 157 GiB 模型同步和单侧约 295 秒的 Marlin 权重准备/JIT 构成主要等待时间。
+实际实验使用两台 8×H20 96 GB 节点。两个 Engine 都完成 DeepSeek V4 Flash 权重加载、Marlin 准备、NIXL 1.3.2 与 UCX 初始化，RBG 最终为 Ready；初始 TCP 基线通过反亲和分散 Pod，后续 RDMA 阶段改为分别直绑隔离节点。首次冷启动中，较慢节点拉取大镜像约 2 分钟，约 157 GiB 模型同步和单侧约 295 秒的 Marlin 权重准备/JIT 构成主要等待时间。
 
 这次没有在 RBG 中再部署一个 SGLang Router Role，因为集群已有 AIBrix Gateway，并由它负责请求级 P/D 配对和 bootstrap 参数注入。RBG 只管理 Prefill/Decode 生命周期。若不使用 AIBrix，才应按 RBG 官方样例增加 `router` Role，对外只暴露 SGLang Router；不要把两个 Router 串联，否则会产生两层角色选择、超时和重试状态。
 
@@ -588,7 +588,125 @@ Decode:  do_remote_prefill=true,
 
 当前 Decode 的单 Token 间隔稳定，但 Prefill、KV 传输和请求协调成本偏高。4K 场景 p95 TTFT 与此前 vLLM Combined TP=8 的约 1.39 秒接近，输出吞吐低约 21.8%，而 P/D 使用了两倍 GPU。由于 Runtime 和优化参数仍不同，这只能用于确定下一步，不是严格框架排名。
 
-资源最多容纳两台节点，因此严格 A/B 不再增加第三套服务，而采用串行切换：先保存 P/D 数据，停止双角色 RBG，再用其中一台部署同 SGLang 镜像、相同模型和参数的 Combined TP=8；客户端、Gateway、随机种子、请求集和 warm-up 均保持不变，并同时比较 tokens/s/GPU。RDMA 也作为后续单变量：当前节点宿主机有 RDMA 设备，但普通 Pod 内看不到 `/dev/infiniband`，Node Capacity 也没有 RDMA extended resource，本轮 NIXL 明确走 UCX TCP。必须先完成设备注入、GID、网卡和 `ucx_info` Preflight，再做 TCP/RDMA A/B，不能只改环境变量就宣称已经启用 RDMA。
+资源最多容纳两台节点，因此严格 A/B 不再增加第三套服务，而采用串行切换：先保存 P/D 数据，停止双角色 RBG，再用其中一台部署同 SGLang 镜像、相同模型和参数的 Combined TP=8；客户端、Gateway、随机种子、请求集和 warm-up 均保持不变，并同时比较 tokens/s/GPU。RDMA 也必须作为单变量验证，不能只改一个 UCX 环境变量就宣称已经启用 RDMA。下一节记录了从设备注入到数据面计数器的完整证据链。
+
+### 13.5 在 cordon 节点启用 RDMA：从“设备可见”到“真实流量”
+
+这次测试节点已经被 cordon，目的是隔离实验流量。`nodeSelector`、亲和性和 toleration 仍然要经过调度器，不能让新 Pod 落到 cordon 节点；设置 `spec.nodeName` 后，Pod 不再经过调度器选址，因此可以在**不执行 `uncordon`** 的前提下由对应节点的 kubelet 接管。这个做法只适合已知节点的短期实验：它绕过调度器的 cordon、资源余量和拓扑检查，提交前必须先人工确认 GPU、RDMA、CPU 和内存都足够。
+
+`nodeName` 也不等于可以删除 toleration。一次 HostPath 空间预检虽然成功直绑节点，却因没有容忍隔离节点的 `NoExecute` taint，被 Taint Manager 立即标记删除；补齐与正式 Engine 相同的 toleration 后才稳定执行。因此需要区分两个阶段：cordon/`NoSchedule` 主要阻止调度器选址，`NoExecute` 仍可在 Pod 已绑定后将其驱逐。
+
+仅申请 RDMA Extended Resource 还不够。第一次 Preflight 能看到 `/dev/infiniband/uverbs*` 字符设备，却没有 RDMA 网络接口；而且脚本把设备名写死成 `uverbs0`，实际分配到了另一个 `uverbs`，造成了一次假失败。修正后的检查会枚举全部设备，并同时要求 Pod 具备：
+
+```yaml
+metadata:
+  annotations:
+    tke.cloud.tencent.com/networks: "tke-route-eni,tke-rdma-macvlan"
+spec:
+  nodeName: <CORDONED_RDMA_NODE>
+  containers:
+    - resources:
+        requests:
+          tke.cloud.tencent.com/tke-shared-rdma: "4"
+        limits:
+          tke.cloud.tencent.com/tke-shared-rdma: "4"
+      securityContext:
+        capabilities:
+          add: ["IPC_LOCK"]
+```
+
+其中 CNI 注解负责创建 RDMA Macvlan 网络，Extended Resource 负责分配设备，`IPC_LOCK` 允许通信库锁定内存。正式 Pod 启动后，两侧各看到 4 个 RDMA 设备、4 个 RDMA 地址以及有效 GID；SGLang 日志显示 NIXL 1.3.2、UCX backend、P/D warm-up 全部完成。经 AIBrix Gateway 发起长 Prompt 请求得到预期响应，同时 Prefill 侧端口发送计数增加约 742 MiB，Decode 侧接收计数增加约 716 MiB，证明 KV 数据确实经过 RDMA，而不是仅仅“Pod 里有设备”。
+
+为了把网络与 Runtime 分开，随后直接在两个 Engine Pod 之间运行 `ib_write_bw`：
+
+```bash
+# Decode 侧
+ib_write_bw -d mlx5_bond_0 -x 3 -F --report_gbits -s 65536 -n 5000
+
+# Prefill 侧，连接 Decode 的 RDMA 地址
+ib_write_bw -d mlx5_bond_0 -x 3 -F --report_gbits -s 65536 -n 5000 <DECODE_RDMA_IP>
+```
+
+RoCE v2 GID index 3 的平均带宽为 **195.25 Gb/s**，峰值 **195.45 Gb/s**；所有端口的 `xmit_wait`、discard、receive error、remote physical error、symbol error 和 link recovery 都为 0。到这里可以排除 GPU 节点、RDMA 设备注入和底层 RoCE Fabric 带宽不足。
+
+随后使用完全相同的设备和参数，只把 GID index 改为 2。连接虽然建立，但客户端在首批 128 个 Work Request 上立即出现 completion error（syndrome `0x81`），没有产生有效吞吐；服务端也因地址交换失败结束。这个单变量对比说明当前网络必须显式使用已经验证的 RoCE v2 GID index 3，不能依赖 UCX 自动选择，因此正式清单补充了：
+
+```yaml
+env:
+  - name: UCX_IB_GID_INDEX
+    value: "3"
+```
+
+但启用 RDMA 后的首轮应用压测反而严重退化：
+
+| 场景 | 请求成功 | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 128/16，C=1，探索性小样本 | 2/2 | 1.31 | 4687.83 ms | 542.36 ms | 956.27 ms |
+| 128/16，C=8，探索性小样本 | 8/8 | 1.78 | 61486 ms | 521.54 ms | 1042.65 ms |
+| 128/16，C=1，固定 GID index 3 | 2/2 | 1.35 | 4540.22 ms | 541.88 ms | 971.10 ms |
+
+这组小样本只用于定位异常，不能作为 RDMA 的最终性能结论。压测期间 GPU SM 多次空闲，Decode 日志在真正进入生成后仍能达到约 89 token/s，而长时间消耗在 `transfer-req` 对应的 KV 传输与协调阶段；并发请求还表现出明显串行等待。结合 195 Gb/s 的裸 RDMA 结果，问题范围已经从“硬件或网络是否正常”缩小到 **NIXL/UCX 的设备、GID、multi-rail 选择，内存注册和请求协调**。
+
+固定 GID index 3 后，功能请求正常，但 C=1 的小样本性能与修改前几乎相同。index 2/3 的裸链路差异证明 GID 3 是当前 RoCE 网络的必要配置，却不是应用层慢的根因；不能把“纠正了一项错误配置”写成“性能问题已经修复”。
+
+下一轮严格 A/B 按以下顺序进行，避免一次修改多个 Runtime 变量：
+
+1. 保持 GID index 3，对比 `UCX_NET_DEVICES=all` 与显式单 rail，检查是否是 multi-rail 选择或注册成本；
+2. 若单 rail 仍异常，再增加 NIXL/UCX 级 trace，拆分内存注册、元数据交换、KV Page 搬运与完成通知耗时；
+3. 最后才比较 RDMA P/D、TCP P/D 与同镜像 Combined TP=8，并同时记录每 GPU 吞吐和资源成本。
+
+这个过程带来的关键经验是：**设备可见、NIXL 显示 UCX Ready、请求成功和 RDMA 高带宽，是四个不同层次的结论。** 只有应用请求期间的端口计数器能够证明数据路径，只有同请求集 A/B 才能证明性能收益。
+
+### 13.6 用 HostPath 缓存大模型，避免每次重建都回源
+
+RDMA 参数 A/B 需要多次重建 Engine。原清单把约 157 GiB 模型放在 `emptyDir`，Pod 删除后缓存也随之消失，每轮都要重新从对象存储同步两份模型，既慢又产生无意义的网络流量。两台隔离节点的本地 ext4 根盘各有约 935 GiB 可用空间，因此专项测试将模型卷改为节点级 HostPath：
+
+```yaml
+volumes:
+  - name: model
+    hostPath:
+      path: /tmp/aik8s-model-cache/deepseek-v4-flash-0731
+      type: DirectoryOrCreate
+```
+
+Init Container 不只判断目录是否存在，而是检查 `config.json`、权重索引、48 个 Safetensors 分片和完成标记。校验全部通过才直接退出；否则删除完成标记，继续增量同步，验证成功后再重新创建标记。这样下载中断不会把半成品误判成可用缓存，后续同节点重建又能在数秒内通过 Init。
+
+切换卷模板时还遇到一个 RBG 生命周期细节：上层 `RoleInstanceSet` 已更新为 HostPath，但正在启动的旧 `RoleInstance` 仍保留 emptyDir 模板。此时只删除 Pod 会由旧 `RoleInstance` 按旧模板复建。实验中删除两个尚未 Ready 的 `RoleInstance`，由 `RoleInstanceSet` 按最新 revision 重新创建，才真正切换到 HostPath。
+
+HostPath 在这里仅作为**可丢失的节点缓存**，不是持久化存储：Pod 必须回到同一节点才能命中，节点重装、磁盘故障或 `/tmp` 清理都会使缓存消失。生产环境应使用专用本地缓存盘和节点预热机制，并保留对象存储作为权威来源；如果模型需要跨节点共享或统一治理，仍应评估并行文件系统、镜像化分发或 P2P 模型分发。
+
+### 13.7 冷启动期间究竟编译了什么
+
+模型同步完成不等于 Engine 很快 Ready。本次 H20 启动日志在权重加载后显示 `DeepSeek V4 MHC prenorm prewarm: 16 n_splits buckets`，进程树中同时出现多组 `nvcc`。直接检查容器文件系统，可以把现场生成的产物分为三类：
+
+| 产物 | 实测路径 | 内容 |
+| --- | --- | --- |
+| MHC/DeepGEMM Kernel | `/root/.cache/sglang/deep_gemm/cache/kernel.sm90_tf32_hc_prenorm_gemm.<hash>/kernel.cubin` | 针对 H20 `sm90` 和不同 `n_splits` bucket 生成的 CUDA Binary；本轮最终生成 16 个 CUBIN，目录约 688 KiB |
+| SGL Kernel 通信扩展 | `/root/.cache/tvm-ffi/sgl_kernel_jit_communicator_<hash>__arch_9.0a__tvmffi_0.1.11/` | `main.cpp`、`cuda.cu` 经 Ninja/NVCC 编译出的 `sgl_kernel_jit_communicator_*.so` |
+| CUDA IPC 与 Triton 辅助扩展 | `/root/.cache/tvm-ffi/sgl_kernel_jit_cuda_ipc_<hash>__arch_9.0a__tvmffi_0.1.11/*.so`、`/root/.cache/sglang/triton/<hash>/cuda_utils.cpython-312-x86_64-linux-gnu.so` | CUDA IPC、Triton Driver 等运行时扩展 |
+
+FlashInfer 的缓存根目录在 `/root/.cache/sglang/.cache/flashinfer/<version>/<arch>/`。而 `/tmp/tmp*/tvm_kernels.cu`、`tmpxft_*`、LLVM bitcode 和预处理文件只是 NVCC 的中间产物，不应放入镜像。可以用下面的命令查看最终文件：
+
+```bash
+find /root/.cache/sglang /root/.cache/tvm-ffi \
+  -type f \( -name '*.cubin' -o -name '*.so' -o -name 'build.ninja' \) \
+  -ls
+```
+
+这些最终 `.cubin` 和 `.so` 很小，却可能花数分钟现场生成，因此预编译有价值。但它们不是通用二进制，至少绑定以下版本指纹：
+
+本轮日志中 MHC prewarm 从 `19:36:47` 开始，16 个 CUBIN 生成完并进入 `Load weight end` 约为 `19:40:55`，这段约 **248 秒**；整个 `Load weight` 阶段约 **611 秒**。因此预编译预期能省掉其中约 4 分钟 JIT，而不能把 611 秒全部消除。
+
+- GPU 架构，本次目录和文件名明确包含 `sm90`/`arch_9.0a`；
+- SGLang、SGL Kernel、DeepGEMM 和具体 Kernel 源码；
+- CUDA Toolkit/Driver、Torch、Triton、TVM-FFI 和 FlashInfer；
+- Python ABI，本次辅助扩展为 CPython 3.12、x86_64。
+
+推荐在同型号 H20 上用固定 Runtime 镜像和参数执行一次完整 warm-up，导出 `/root/.cache/sglang` 与 `/root/.cache/tvm-ffi`，再以完整版本指纹制作派生镜像。升级任一关键依赖后重新生成，不要跨 CUDA、Python 或 GPU 架构复用旧缓存。
+
+还有一个容易忽略的挂载问题：本次 Pod 把 `/root/.cache` 挂成 `emptyDir`，如果直接把文件写入镜像的同一路径，运行时会被 Volume 完全遮住。可将预编译产物放在镜像的 `/opt/sglang-prebuilt-cache`，再由 Init Container 复制到可写的 `/root/.cache`；或者去掉该覆盖挂载。预编译只能省掉 JIT，权重读取与显存装载、部分 Marlin 权重重排、NIXL 初始化、warm-up 和 CUDA Graph capture 仍需在每个进程启动时执行。
+
+参考：[腾讯云 TKE RDMA 网络使用说明](https://cloud.tencent.com/document/product/457/116720)、[OpenUCX 配置说明](https://openucx.readthedocs.io/en/master/faq.html)
 
 公开清单仍使用不可访问的占位镜像和假 Secret，不包含内部 registry、对象存储、namespace、节点或凭据。
 
