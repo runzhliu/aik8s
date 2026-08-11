@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: deepseek-v4-flash-sglang-pd-prefill
+  labels:
+    app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+    app.kubernetes.io/component: prefill
+spec:
+  selector:
+    app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+    app.kubernetes.io/component: prefill
+  ports:
+    - name: http
+      port: 30000
+      targetPort: http
+    - name: bootstrap
+      port: 8998
+      targetPort: bootstrap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deepseek-v4-flash-sglang-pd-decode
+  labels:
+    app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+    app.kubernetes.io/component: decode
+spec:
+  selector:
+    app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+    app.kubernetes.io/component: decode
+  ports:
+    - name: http
+      port: 30000
+      targetPort: http
+    - name: bootstrap
+      port: 8998
+      targetPort: bootstrap

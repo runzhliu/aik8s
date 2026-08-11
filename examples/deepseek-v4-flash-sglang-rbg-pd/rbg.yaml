@@ -1,0 +1,350 @@
+apiVersion: workloads.x-k8s.io/v1alpha2
+kind: RoleBasedGroup
+metadata:
+  name: deepseek-v4-flash-sglang-pd
+  labels:
+    app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+    app.kubernetes.io/managed-by: rbgs
+spec:
+  roles:
+    - name: prefill
+      replicas: 1
+      standalonePattern:
+        template:
+          metadata:
+            labels:
+              app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+              app.kubernetes.io/component: prefill
+              model.aibrix.ai/name: deepseek-v4-flash-sglang-pd
+              model.aibrix.ai/port: "30000"
+              model.aibrix.ai/metric-port: "8000"
+              model.aibrix.ai/engine: sglang
+              role-name: prefill
+              roleset-name: deepseek-v4-flash-sglang-pd-0
+            annotations:
+              model.aibrix.ai/sglang-bootstrap-port: "8998"
+              model.aibrix.ai/config: |
+                {
+                  "defaultProfile": "default",
+                  "profiles": {
+                    "default": {
+                      "routingStrategy": "pd",
+                      "routingConfig": {
+                        "prefillScorePolicy": "prefix_cache",
+                        "decodeScorePolicy": "load_balancing"
+                      }
+                    }
+                  }
+                }
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "30000"
+              prometheus.io/path: /metrics
+          spec:
+            terminationGracePeriodSeconds: 180
+            nodeSelector:
+              label-group: gpu-training-H20-96G
+              feature.node.kubernetes.io/custom-rdma.available: "true"
+            tolerations:
+              - key: quarantine-room
+                operator: Equal
+                value: gpu-training-H20-96G
+            affinity:
+              podAntiAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  - labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+                    topologyKey: kubernetes.io/hostname
+            initContainers:
+              - name: verify-runtime
+                image: example.invalid/ai/sglang:replace-me
+                imagePullPolicy: IfNotPresent
+                command:
+                  - /bin/bash
+                  - /runtime/verify-runtime.sh
+                resources:
+                  requests:
+                    cpu: "1"
+                    memory: 2Gi
+                  limits:
+                    cpu: "4"
+                    memory: 8Gi
+                volumeMounts:
+                  - name: runtime
+                    mountPath: /runtime
+              - name: download-model
+                image: example.invalid/ai/model-sync:replace-me
+                imagePullPolicy: IfNotPresent
+                command:
+                  - /bin/bash
+                  - /runtime/download-model.sh
+                envFrom:
+                  - secretRef:
+                      name: deepseek-v4-flash-model-source
+                env:
+                  - name: AWS_EC2_METADATA_DISABLED
+                    value: "true"
+                resources:
+                  requests:
+                    cpu: "4"
+                    memory: 8Gi
+                    ephemeral-storage: 180Gi
+                  limits:
+                    cpu: "16"
+                    memory: 32Gi
+                    ephemeral-storage: 220Gi
+                volumeMounts:
+                  - name: model
+                    mountPath: /workspace/model
+                  - name: runtime
+                    mountPath: /runtime
+            containers:
+              - name: prefill
+                image: example.invalid/ai/sglang:replace-me
+                imagePullPolicy: IfNotPresent
+                command:
+                  - /bin/bash
+                  - /runtime/start-prefill.sh
+                env:
+                  - name: GLOO_SOCKET_IFNAME
+                    value: eth0
+                  - name: NCCL_SOCKET_IFNAME
+                    value: eth0
+                  - name: NCCL_IB_DISABLE
+                    value: "1"
+                  - name: NCCL_DEBUG
+                    value: WARN
+                  - name: UCX_TLS
+                    value: tcp,cuda_copy,cuda_ipc
+                  - name: NIXL_LOG_LEVEL
+                    value: INFO
+                  - name: SGLANG_JIT_DEEPGEMM_PRECOMPILE
+                    value: "0"
+                ports:
+                  - name: http
+                    containerPort: 30000
+                  - name: bootstrap
+                    containerPort: 8998
+                startupProbe:
+                  tcpSocket:
+                    port: http
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 240
+                readinessProbe:
+                  tcpSocket:
+                    port: http
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+                livenessProbe:
+                  tcpSocket:
+                    port: http
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 6
+                securityContext:
+                  capabilities:
+                    add:
+                      - IPC_LOCK
+                resources:
+                  requests:
+                    cpu: "80"
+                    memory: 700Gi
+                    ephemeral-storage: 180Gi
+                    nvidia.com/gpu: "8"
+                  limits:
+                    cpu: "160"
+                    memory: 1200Gi
+                    ephemeral-storage: 220Gi
+                    nvidia.com/gpu: "8"
+                volumeMounts:
+                  - name: model
+                    mountPath: /workspace/model
+                  - name: runtime
+                    mountPath: /runtime
+                  - name: dshm
+                    mountPath: /dev/shm
+            volumes:
+              - name: model
+                emptyDir: {}
+              - name: runtime
+                configMap:
+                  name: deepseek-v4-flash-sglang-pd-runtime
+                  defaultMode: 493
+              - name: dshm
+                emptyDir:
+                  medium: Memory
+                  sizeLimit: 64Gi
+
+    - name: decode
+      replicas: 1
+      standalonePattern:
+        template:
+          metadata:
+            labels:
+              app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+              app.kubernetes.io/component: decode
+              model.aibrix.ai/name: deepseek-v4-flash-sglang-pd
+              model.aibrix.ai/port: "30000"
+              model.aibrix.ai/metric-port: "8000"
+              model.aibrix.ai/engine: sglang
+              role-name: decode
+              roleset-name: deepseek-v4-flash-sglang-pd-0
+            annotations:
+              model.aibrix.ai/sglang-bootstrap-port: "8998"
+              model.aibrix.ai/config: |
+                {
+                  "defaultProfile": "default",
+                  "profiles": {
+                    "default": {
+                      "routingStrategy": "pd",
+                      "routingConfig": {
+                        "prefillScorePolicy": "prefix_cache",
+                        "decodeScorePolicy": "load_balancing"
+                      }
+                    }
+                  }
+                }
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "30000"
+              prometheus.io/path: /metrics
+          spec:
+            terminationGracePeriodSeconds: 180
+            nodeSelector:
+              label-group: gpu-training-H20-96G
+              feature.node.kubernetes.io/custom-rdma.available: "true"
+            tolerations:
+              - key: quarantine-room
+                operator: Equal
+                value: gpu-training-H20-96G
+            affinity:
+              podAntiAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  - labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: deepseek-v4-flash-sglang-pd
+                    topologyKey: kubernetes.io/hostname
+            initContainers:
+              - name: verify-runtime
+                image: example.invalid/ai/sglang:replace-me
+                imagePullPolicy: IfNotPresent
+                command:
+                  - /bin/bash
+                  - /runtime/verify-runtime.sh
+                resources:
+                  requests:
+                    cpu: "1"
+                    memory: 2Gi
+                  limits:
+                    cpu: "4"
+                    memory: 8Gi
+                volumeMounts:
+                  - name: runtime
+                    mountPath: /runtime
+              - name: download-model
+                image: example.invalid/ai/model-sync:replace-me
+                imagePullPolicy: IfNotPresent
+                command:
+                  - /bin/bash
+                  - /runtime/download-model.sh
+                envFrom:
+                  - secretRef:
+                      name: deepseek-v4-flash-model-source
+                env:
+                  - name: AWS_EC2_METADATA_DISABLED
+                    value: "true"
+                resources:
+                  requests:
+                    cpu: "4"
+                    memory: 8Gi
+                    ephemeral-storage: 180Gi
+                  limits:
+                    cpu: "16"
+                    memory: 32Gi
+                    ephemeral-storage: 220Gi
+                volumeMounts:
+                  - name: model
+                    mountPath: /workspace/model
+                  - name: runtime
+                    mountPath: /runtime
+            containers:
+              - name: decode
+                image: example.invalid/ai/sglang:replace-me
+                imagePullPolicy: IfNotPresent
+                command:
+                  - /bin/bash
+                  - /runtime/start-decode.sh
+                env:
+                  - name: GLOO_SOCKET_IFNAME
+                    value: eth0
+                  - name: NCCL_SOCKET_IFNAME
+                    value: eth0
+                  - name: NCCL_IB_DISABLE
+                    value: "1"
+                  - name: NCCL_DEBUG
+                    value: WARN
+                  - name: UCX_TLS
+                    value: tcp,cuda_copy,cuda_ipc
+                  - name: NIXL_LOG_LEVEL
+                    value: INFO
+                  - name: SGLANG_JIT_DEEPGEMM_PRECOMPILE
+                    value: "0"
+                ports:
+                  - name: http
+                    containerPort: 30000
+                  - name: bootstrap
+                    containerPort: 8998
+                startupProbe:
+                  tcpSocket:
+                    port: http
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 240
+                readinessProbe:
+                  tcpSocket:
+                    port: http
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+                livenessProbe:
+                  tcpSocket:
+                    port: http
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 6
+                securityContext:
+                  capabilities:
+                    add:
+                      - IPC_LOCK
+                resources:
+                  requests:
+                    cpu: "80"
+                    memory: 700Gi
+                    ephemeral-storage: 180Gi
+                    nvidia.com/gpu: "8"
+                  limits:
+                    cpu: "160"
+                    memory: 1200Gi
+                    ephemeral-storage: 220Gi
+                    nvidia.com/gpu: "8"
+                volumeMounts:
+                  - name: model
+                    mountPath: /workspace/model
+                  - name: runtime
+                    mountPath: /runtime
+                  - name: dshm
+                    mountPath: /dev/shm
+            volumes:
+              - name: model
+                emptyDir: {}
+              - name: runtime
+                configMap:
+                  name: deepseek-v4-flash-sglang-pd-runtime
+                  defaultMode: 493
+              - name: dshm
+                emptyDir:
+                  medium: Memory
+                  sizeLimit: 64Gi

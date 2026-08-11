@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deepseek-v4-flash-sglang-pd-runtime
+data:
+  download-model.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    : "${MODEL_SOURCE_URI:?MODEL_SOURCE_URI is required}"
+    : "${S3_ENDPOINT_URL:?S3_ENDPOINT_URL is required}"
+
+    model_dir=/workspace/model/DeepSeek-V4-Flash-0731
+    mkdir -p "${model_dir}"
+
+    # S3-compatible stores that reject path-style requests require virtual-hosted style.
+    aws configure set default.s3.addressing_style virtual
+    aws s3 \
+      --endpoint-url="${S3_ENDPOINT_URL}" \
+      sync \
+      "${MODEL_SOURCE_URI}" \
+      "${model_dir}" \
+      --only-show-errors
+
+    test -s "${model_dir}/config.json"
+    test -s "${model_dir}/model.safetensors.index.json"
+    shard_count="$(find "${model_dir}" -maxdepth 1 -name 'model-*.safetensors' | wc -l | tr -d ' ')"
+    test "${shard_count}" = "48"
+
+  verify-runtime.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    python -c 'import importlib.util; assert importlib.util.find_spec("nixl"), "Python package nixl is missing"'
+    test -d /sgl-workspace/sglang/python/sglang || python -c 'import importlib.util; assert importlib.util.find_spec("sglang"), "Python package sglang is missing"'
+
+  start-prefill.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    ulimit -n 65536
+    mkdir -p /workspace/model/sglang-jit-cache-prefill /root/.cache
+    rm -rf /root/.cache/sglang
+    ln -s /workspace/model/sglang-jit-cache-prefill /root/.cache/sglang
+    export SGLANG_ENABLE_HEALTH_ENDPOINT_GENERATION=0
+
+    exec sglang serve \
+      --trust-remote-code \
+      --model-path /workspace/model/DeepSeek-V4-Flash-0731 \
+      --served-model-name deepseek-v4-flash-sglang-pd \
+      --tp 8 \
+      --moe-runner-backend marlin \
+      --mem-fraction-static 0.82 \
+      --chunked-prefill-size 4096 \
+      --swa-full-tokens-ratio 0.1 \
+      --page-size 256 \
+      --reasoning-parser deepseek-v4 \
+      --tool-call-parser deepseekv4 \
+      --enable-metrics \
+      --disaggregation-mode prefill \
+      --disaggregation-transfer-backend nixl \
+      --host 0.0.0.0 \
+      --port 30000
+
+  start-decode.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    ulimit -n 65536
+    mkdir -p /workspace/model/sglang-jit-cache-decode /root/.cache
+    rm -rf /root/.cache/sglang
+    ln -s /workspace/model/sglang-jit-cache-decode /root/.cache/sglang
+    export SGLANG_ENABLE_HEALTH_ENDPOINT_GENERATION=0
+
+    exec sglang serve \
+      --trust-remote-code \
+      --model-path /workspace/model/DeepSeek-V4-Flash-0731 \
+      --served-model-name deepseek-v4-flash-sglang-pd \
+      --tp 8 \
+      --moe-runner-backend marlin \
+      --mem-fraction-static 0.82 \
+      --chunked-prefill-size 4096 \
+      --swa-full-tokens-ratio 0.1 \
+      --page-size 256 \
+      --reasoning-parser deepseek-v4 \
+      --tool-call-parser deepseekv4 \
+      --enable-metrics \
+      --disaggregation-mode decode \
+      --disaggregation-transfer-backend nixl \
+      --host 0.0.0.0 \
+      --port 30000

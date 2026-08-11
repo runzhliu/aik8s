@@ -570,6 +570,30 @@ Decode:  do_remote_prefill=true,
 
 最终经 Gateway 返回 `RBG_PD_OK`。这证明 RBG 管理的 Pod 可以接入当前 AIBrix P/D 数据路径，但不要把它描述为“RBG 自己实现了 P/D”：请求拆分、P/D 配对和 KV Transfer 参数仍由 AIBrix Gateway 产生，真正搬运 KV 的是 vLLM NIXL/UCX。
 
+### 13.4 DeepSeek V4 Flash 的 SGLang 双机实测
+
+在上述 vLLM 路径之外，仓库还准备了一组 DeepSeek V4 Flash 0731 的 SGLang P/D 清单，用一个 RBG 表达一个 Prefill Role 和一个 Decode Role，每个 Role 都是单机 8 卡 TP=8。两个 Pod 通过反亲和分布到不同 H20 节点，SGLang 使用 NIXL 传输 KV，AIBrix Gateway 根据 `role-name`、`roleset-name` 和模型标签选择两端，并注入 SGLang 的 bootstrap 参数。
+
+实际实验使用两台 8×H20 96 GB 节点。两个 Engine 都完成 DeepSeek V4 Flash 权重加载、Marlin 准备、NIXL 1.3.2 与 UCX 初始化，RBG 最终为 Ready；两个 Pod 通过反亲和落在不同节点。首次冷启动中，较慢节点拉取大镜像约 2 分钟，约 157 GiB 模型同步和单侧约 295 秒的 Marlin 权重准备/JIT 构成主要等待时间。
+
+这次没有在 RBG 中再部署一个 SGLang Router Role，因为集群已有 AIBrix Gateway，并由它负责请求级 P/D 配对和 bootstrap 参数注入。RBG 只管理 Prefill/Decode 生命周期。若不使用 AIBrix，才应按 RBG 官方样例增加 `router` Role，对外只暴露 SGLang Router；不要把两个 Router 串联，否则会产生两层角色选择、超时和重试状态。
+
+服务刚进入 Ready 后立即发出的第一条请求遇到 upstream timeout；待 SGLang 的 disaggregation warm-up 明确完成后，确定性请求在 0.25 秒内返回 `PD_OK`。稳态短测结果如下，全部请求成功：
+
+| 场景 | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL | p95 E2E |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 128/64，C=1 | 93.32 | 231.42 ms | 7.24 ms | 7.46 ms | 686.99 ms |
+| 128/64，C=8 | 438.42 | 874.42 ms | 8.26 ms | 8.59 ms | 1400.97 ms |
+| 4096/128，C=4 | 216.50 | 1431.91 ms | 7.94 ms | 8.44 ms | 2437.57 ms |
+
+当前 Decode 的单 Token 间隔稳定，但 Prefill、KV 传输和请求协调成本偏高。4K 场景 p95 TTFT 与此前 vLLM Combined TP=8 的约 1.39 秒接近，输出吞吐低约 21.8%，而 P/D 使用了两倍 GPU。由于 Runtime 和优化参数仍不同，这只能用于确定下一步，不是严格框架排名。
+
+资源最多容纳两台节点，因此严格 A/B 不再增加第三套服务，而采用串行切换：先保存 P/D 数据，停止双角色 RBG，再用其中一台部署同 SGLang 镜像、相同模型和参数的 Combined TP=8；客户端、Gateway、随机种子、请求集和 warm-up 均保持不变，并同时比较 tokens/s/GPU。RDMA 也作为后续单变量：当前节点宿主机有 RDMA 设备，但普通 Pod 内看不到 `/dev/infiniband`，Node Capacity 也没有 RDMA extended resource，本轮 NIXL 明确走 UCX TCP。必须先完成设备注入、GID、网卡和 `ucx_info` Preflight，再做 TCP/RDMA A/B，不能只改环境变量就宣称已经启用 RDMA。
+
+公开清单仍使用不可访问的占位镜像和假 Secret，不包含内部 registry、对象存储、namespace、节点或凭据。
+
+完整材料见：[DeepSeek V4 Flash：RBG + SGLang 双机 P/D 分离](https://github.com/runzhliu/aik8s/tree/main/examples/deepseek-v4-flash-sglang-rbg-pd)。
+
 ## 14. 同镜像、同模型下对比 RBG 与 AIBrix { #rbg-vs-aibrix-production }
 
 这次最有价值的对比不是“谁的 YAML 更短”，而是谁拥有哪一层状态。Ray 与 P/D 都沿用相同 Runtime 后，得到下面的职责差异。
