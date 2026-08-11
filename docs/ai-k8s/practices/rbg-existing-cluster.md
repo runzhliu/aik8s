@@ -684,6 +684,12 @@ TCP 对照保留相同的两个 Engine、模型、TP=8 和请求集，只把 `UC
 
 当前最强的根因候选是 **DeepSeek V4 P/D 的执行拓扑与社区验证路径不一致**。本次组合是每侧纯 TP=8、Marlin FP4 Experts、未启用 DP Attention 和 DeepEP；SGLang 上游为 DeepSeek V4 增加的 P/D CI 则使用每侧 TP=4、DP=4、`--enable-dp-attention` 和 `--moe-a2a-backend deepep`。这还不能证明某一行 Kernel 存在缺陷，但已经把下一轮测试收敛为执行拓扑 A/B，而不是继续更换 RDMA 参数。参考：[SGLang DeepSeek V4 P/D CI PR #24973](https://github.com/sgl-project/sglang/pull/24973)、[SGLang P/D Disaggregation 文档](https://github.com/sgl-project/sglang/blob/main/docs/advanced_features/pd_disaggregation.md)。
 
+随后对镜像做了源码级核验。镜像内 `sglang` 版本为 `0.0.0.dev1+g52afe87a0`，对应上游提交 `52afe87a08c6aa049c52f9507b4f0ca26cecb562`。SGLang 曾在 [PR #31901](https://github.com/sgl-project/sglang/pull/31901) 修复 DeepSeek V4 的 HiSparse P/D page-index 错配：旧路径把 Host KV Page ID 同时用于 Host 与 Device 目标，可能直接造成错误输出。当前镜像比该修复的合并提交多 271 个提交，因此不能再把本轮问题归因于“镜像缺少 #31901”。
+
+但“包含已知修复”也不等于当前组合已经经过社区验证。0731 官方配方中，H200 的已验证低延迟路径使用 TP=4；没有 H20、每侧纯 TP=8、Marlin FP4 Experts 的 P/D 实测单元。上游仍有开放的 [issue #33397](https://github.com/sgl-project/sglang/issues/33397)，报告 0731 在 DSV4、FP8 KV 和批处理下出现随并发加重的输出损坏，复现拓扑还扩展到了非 P/D、无 DP Attention 等不同组合。这个 issue 与本轮“P/D Decode 每 Token 极慢”不是同一个已证明根因，却说明 0731 的 DSA/KV 路径仍在快速修复期。
+
+因此当前结论是：**没有证据证明 SGLang 镜像版本过旧或权重损坏；有证据证明 H20 + 0731 FP4 + Marlin + 纯 TP=8 P/D 缺少上游验证，并存在相邻的准确率风险。** 下一步应优先复现社区的 TP=4/DP=4 + DP Attention + DeepEP 拓扑，或者先用官方已验证硬件/配方建立控制组；在此之前不把更换同系列镜像当成根因修复。
+
 #### 13.5.2 8 GPU 为什么只有 4 个 RDMA NIC
 
 实验节点的 Kubernetes RDMA Extended Resource 容量和可分配量都是 4，Pod 内能看到 `mlx5_bond_0` 到 `mlx5_bond_3` 四个设备，每个端口均报告 200 Gb/s。`nvidia-smi topo -m` 显示 NIC0/NIC1 位于 NUMA 0，覆盖前四张 GPU；NIC2/NIC3 位于 NUMA 1，覆盖后四张 GPU，其中各 NUMA 都有两张 GPU 到对应 NIC 为 `PIX`，其余同 NUMA GPU 为 `NODE`。8 张 GPU 之间则为 NVLink 互联。

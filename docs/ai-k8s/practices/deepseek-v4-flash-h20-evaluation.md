@@ -660,6 +660,15 @@ NIXL（NVIDIA Inference Xfer Library）是推理数据传输软件库，不是 H
 
 需要区分 GPU 能力与节点网络能力：H20 支持 CUDA 并不等于所在服务器一定配置了 RDMA。跨节点有 RoCE/InfiniBand、网卡驱动和正确 UCX 配置时，NIXL 可以使用高速网络；没有 RDMA 时仍可能使用其他 UCX/TCP 路径，但延迟和吞吐需要单独验证。同节点还可以使用 CUDA IPC 等本地路径。因此“NIXL Agent 初始化成功”只表示组件启动，必须进一步看到 compatibility check、成功的 KV Transfer 和 Decode 外部 KV 命中，才能证明实际 P/D 数据路径成立。
 
+AIBrix v0.7.0 还有两个容易造成“看起来经过了两个 Pod，实际却不是 P/D”的兼容性细节：
+
+1. 模型配置必须使用 profiles schema，例如 `{"profiles":{"default":{"routingStrategy":"pd"}}}`；旧的顶层 `{"routingStrategy":"pd"}` 不会稳定地让无强制 Header 的普通请求进入 P/D 路径；
+2. GPU vLLM 启动的是 `NixlConnector`，但 Gateway Plugin 的 `model.aibrix.ai/kv-connector-type` 应选择 `shfs`。v0.7.0 源码中的 `SHFSAgent` 才是 GPU 路径，它向 Prefill 注入 `kv_transfer_params`；名为 `NIXLAgent` 的实现面向 Neuron，使用当前 GPU vLLM 不读取的 `disagg_prefill_resp`。
+
+另一个根因来自 NIXL side channel。其默认监听地址是 loopback，Decode 收到 Prefill Pod IP 后无法连接，8 个 TP Rank 会出现 `handshake_setup_failed` 和 ZMQ 超时。两个 Engine 都应显式设置 `VLLM_NIXL_SIDE_CHANNEL_HOST=0.0.0.0`。同时将 `kv_load_failure_policy` 设为 `recompute` 可以在传输失败时清空远端命中并本地重算，避免使用无效 KV 继续生成错误 Token；但发生 recompute 的请求不能计入 P/D 成功率，也不能混入性能数据。
+
+这次排查也证明，HTTP 200、两个 Pod 都收到请求、External KV hit 100% 都不是充分证据。有效判定必须同时满足：AIBrix 选出 P/D pair、SHFS 注入 `kv_transfer_params`、TP Rank compatibility check 通过、`Num successful transfers` 增长、没有 handshake/recompute，并且 RDMA 硬件端口计数同步增长。
+
 最初让 vLLM 使用 `--distributed-executor-backend=ray`。两个 Engine 都能完成权重加载、NCCL 初始化、NIXL Agent 初始化、warm-up 和 CUDA Graph capture，健康检查也返回 200，但确定性中文请求会生成随机中英文、代码和符号。同样错误能在以下路径复现：
 
 1. 直连 Prefill Head；
@@ -696,19 +705,27 @@ NIXL/UCX：在两个 Engine 之间传输 KV
 
 ### 11.4 RayClusterFleet P/D 压测
 
-客户端位于 Prefill Pod，通过 AIBrix Gateway 调用 Chat Completions；random dataset 为 128 输入、64 输出、`temperature=0`、`--ignore-eos`、无限请求速率。C=1 使用 16 个请求和 2 个 warm-up，C=8 使用 64 个请求和 8 个 warm-up。
+客户端位于 Prefill Pod，通过 AIBrix Gateway 调用 Completions API；random dataset 固定输入/输出 Token 数、`temperature=0`、`--ignore-eos` 和无限请求速率。C=1 使用 16 个请求和 2 个 warm-up，C=8 使用 64 个请求和 8 个 warm-up，4K 输入使用 16 个请求和 4 个 warm-up。所有请求都不加旁路或强制路由 Header。
 
-| 负载 | 路径 | 成功 | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL | p95 E2E |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 128/64，C=1 | AIBrix → RayClusterFleet P/D，2×TP8 | 16/16 | 142.69 | 71.94 ms | 6.33 ms | 9.32 ms | 468.17 ms |
-| 128/64，C=8 | AIBrix → RayClusterFleet P/D，2×TP8 | 64/64 | 817.95 | 139.56 ms | 9.80 ms | 10.23 ms | 681.91 ms |
+旧测试虽然看到 Prefill、Decode 两个 Pod 都处理了请求，但 Decode 实际重新计算了 Prompt。根因是 AIBrix connector 类型、配置 schema 和 NIXL side channel 监听地址不匹配，因此旧表全部作废。修正后，确定性请求准确返回预期文本，AIBrix 日志明确记录 P/D pair 与 SHFS 注入；vLLM 的 8 个 TP Rank compatibility check 全部通过，并持续报告成功 KV Transfer。
 
-与 StormService TP=8 单轮结果相比：
+节点每侧提供 4 个 200 Gb/s RDMA 设备。压测期间四条 rail 的 Prefill 发送与 Decode 接收硬件计数都同步增长，按 InfiniBand 计数器的 4-byte 单位换算，累计约 63 GB；干净 C=8 主测试记录到 512 次成功 TP-rank 传输，未出现 handshake 失败或 recompute。由此可以确认下表是 AIBrix 调度、NIXL 拉取和 RDMA 数据面共同工作的真实 P/D 结果。
 
-- C=1 输出吞吐低约 44.6%，p95 TTFT 高约 28.7%，p95 E2E 高约 54.9%；
-- C=8 输出吞吐低约 5.6%，但 p95 TTFT 改善约 47.3%，p95 TPOT 改善约 15.7%，p95 E2E 改善约 20.4%。
+| 负载 | 成功 | req/s | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL | p95 E2E |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128/64，C=1 | 16/16 | 2.11 | 135.28 | 79.98 ms | 6.32 ms | 8.99 ms | 475.09 ms |
+| 128/64，C=8 | 64/64 | 11.99 | 767.49 | 194.17 ms | 8.48 ms | 11.04 ms | 725.80 ms |
+| 4096/128，C=4 | 16/16 | 2.21 | 282.92 | 1084.04 ms | 7.41 ms | 10.22 ms | 2024.97 ms |
 
-这组结果说明两套 TP=8 P/D 在并发 8 时能降低尾延迟，同时保持接近的总输出吞吐；但它使用 16 张 GPU，而 StormService 只使用 8 张 GPU，并且新测试走 Chat API，不能视为同资源严格 A/B。按 tokens/s/GPU 计算，C=8 分别约为 `51.1` 与 `108.3 tok/s/GPU`，P/D 资源效率低约 52.8%。要判断是否值得生产化，需要用更长 Prompt、更高并发和真实请求分布验证 TTFT SLO 收益是否足以覆盖双份权重和 GPU 成本。
+与第 8 节单机 TP=8 Combined 稳态结果相比：
+
+- 128/64、C=1：P/D 输出吞吐低约 45.9%，p95 TTFT 高约 63.2%，说明低负载短请求不值得承担额外路由和 KV 传输；
+- 128/64、C=8：P/D 输出吞吐低约 17.8%，p95 TTFT 改善约 16.7%，p95 TPOT 改善约 26.5%，p95 ITL 改善约 74.7%；
+- 4096/128、C=4：P/D 输出吞吐高约 2.1%，p95 TTFT 改善约 22.1%，p95 TPOT 改善约 53.7%，p95 E2E 改善约 31.2%。
+
+这组结果显示 P/D 的价值主要出现在并发与长 Prompt，而不是低负载短请求。它同时使用 16 张 GPU，Combined 只使用 8 张；按输出 tokens/s/GPU 计算，P/D 在三组负载中分别低约 73.0%、58.9% 和 48.9%。因此这不是“相同资源下免费提速”，而是用第二份权重和一组 GPU 换取 Prefill/Decode 隔离、较好的长请求尾延迟与后续独立扩缩容能力。生产路由应把短请求留给 Combined，只让长 Prompt 或 Prefill-heavy 请求进入 P/D。
+
+压测过程中还出现过一次伪长尾：前一轮客户端在终端输出中断后实际仍在运行，第二轮启动后总并发达到 16，p95 TTFT 被污染到约 19 秒。确认 Pod 内没有遗留 benchmark 进程后复跑才得到上表数据。自动化压测应给每轮增加唯一 request-id 前缀，并在下一轮前同时核对客户端进程、Gateway outstanding requests 和服务端请求清零。
 
 ![并发 8 下普通 TP=8 与 AIBrix P/D 的性能成本对比](../../assets/practices/deepseek-v4-flash-h20-evaluation/03-performance-tradeoff.png)
 
@@ -735,6 +752,8 @@ v0.7.0 的实例打分边界也需要准确描述：
 - [v0.7.0 P/D Router 与 Combined 回退](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/pd_disaggregation.go)
 - [v0.7.0 Prefill scorer](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/pd/prefill_scorer.go)
 - [v0.7.0 Decode scorer](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/pd/decode_scorer.go)
+- [v0.7.0 GPU SHFS transfer agent](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/pd/transfer/shfs.go)
+- [v0.7.0 Neuron NIXL transfer agent](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/pd/transfer/nixl.go)
 
 ## 12. SGLang 与 RBG 单节点验证
 
