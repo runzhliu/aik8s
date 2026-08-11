@@ -649,13 +649,50 @@ env:
 
 固定 GID index 3 后，功能请求正常，但 C=1 的小样本性能与修改前几乎相同。index 2/3 的裸链路差异证明 GID 3 是当前 RoCE 网络的必要配置，却不是应用层慢的根因；不能把“纠正了一项错误配置”写成“性能问题已经修复”。
 
-下一轮严格 A/B 按以下顺序进行，避免一次修改多个 Runtime 变量：
+后续严格 A/B 按以下顺序进行，避免一次修改多个 Runtime 变量：
 
 1. 保持 GID index 3，对比 `UCX_NET_DEVICES=all` 与显式单 rail，检查是否是 multi-rail 选择或注册成本；
 2. 若单 rail 仍异常，再增加 NIXL/UCX 级 trace，拆分内存注册、元数据交换、KV Page 搬运与完成通知耗时；
-3. 最后才比较 RDMA P/D、TCP P/D 与同镜像 Combined TP=8，并同时记录每 GPU 吞吐和资源成本。
+3. 比较 RDMA P/D、TCP P/D 与同镜像 Combined TP=8，并同时记录每 GPU 吞吐和资源成本；
+4. 如果 TCP P/D 仍慢，再把执行拓扑切换到社区已经验证的 TP=4、DP=4、DP Attention + DeepEP，避免把尚未验证的纯 TP=8 + Marlin FP4 组合误认为网络问题。
 
 这个过程带来的关键经验是：**设备可见、NIXL 显示 UCX Ready、请求成功和 RDMA 高带宽，是四个不同层次的结论。** 只有应用请求期间的端口计数器能够证明数据路径，只有同请求集 A/B 才能证明性能收益。
+
+#### 13.5.1 同镜像 Combined 对照将范围收敛到 P/D 路径
+
+为了判断异常来自 DeepSeek V4 Runtime 本身，还是 P/D 特有的数据路径，随后停止双角色 RBG，在原 Decode 节点串行部署同一 SGLang 镜像、同一模型、同一 TP=8 和同一推理参数的 Combined Engine。Combined 不启用 `disaggregation-mode`，Prefill 和 Decode 都在同一个 8-GPU Pod 内完成；模型继续命中 HostPath，JIT Cache 则改为按 Runtime 版本隔离的 HostPath。
+
+首次启动总计约 11 分钟：权重加载、FP8 转换和 MHC 预热约 278 秒，Decode CUDA Graph 捕获约 356 秒。进程树能看到 `cicc`、NVCC 和 Ninja 持续工作，因此这段无日志刷新不是 Pod hang。相同 Runtime 的后续重建可以复用最终 `.so`、CUBIN 和其他 JIT 产物，但仍要执行权重读入、显存分配和 CUDA Graph 捕获。
+
+为避免外部数据集依赖，压测客户端使用本地 Tokenizer 生成固定长度 `random-ids`。首次遇到的新并发 shape 与长 Prompt shape 分别出现一次性停顿，相同参数立即复跑后恢复稳定，因此下表采用复跑数据：
+
+| 场景 | 路径 | 成功 | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL | p95 E2E |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128/16，C=1 | RDMA P/D，固定 GID 3 | 2/2 | 1.35 | 4540.22 ms | 541.88 ms | 971.10 ms | - |
+| 128/16，C=1 | TCP P/D | 2/2 | 1.66 | 1909.39 ms | 536.97 ms | 993.41 ms | 9803.95 ms |
+| 128/16，C=1 | Combined TP=8 | 2/2 | 58.09 | 164.50 ms | 7.12 ms | 13.29 ms | 271.29 ms |
+| 128/16，C=8 | RDMA P/D，multi-rail | 8/8 | 1.78 | 61486 ms | 521.54 ms | 1042.65 ms | - |
+| 128/16，C=8 | TCP P/D | 8/8 | 3.44 | 29212.21 ms | 655.13 ms | 1114.56 ms | 37078.84 ms |
+| 128/16，C=8 | Combined TP=8，复跑 | 8/8 | 283.04 | 323.50 ms | 8.49 ms | 16.60 ms | 441.44 ms |
+| 4096/128，C=4 | Combined TP=8，复跑 | 4/4 | 329.36 | 555.85 ms | 7.85 ms | 15.76 ms | 1544.05 ms |
+
+C=1 与 C=8 的 Combined 输出吞吐分别约为异常 RDMA P/D 的 43 倍和 159 倍，TPOT 则从约 0.52～0.54 秒恢复到 7～9 毫秒。由此可以排除同一镜像中的 DeepSeek V4 核心推理、模型权重、Marlin 和单机 TP=8 是主要根因；问题已经收敛到 P/D 特有的数据路径或 Decode mode。
+
+TCP 对照保留相同的两个 Engine、模型、TP=8 和请求集，只把 `UCX_TLS` 从 `rc` 改为 `tcp,cuda_copy,cuda_ipc`。TCP 虽然缩短了一部分 TTFT，但 TPOT 仍为约 0.54～0.66 秒，和 RDMA P/D 处于同一异常数量级；Decode Engine 自身暴露的 ITL 指标也集中在 0.4～1 秒，说明慢速发生在 Engine 内部，而不是 Router 向客户端流式返回的过程。至此可以排除 RDMA/RoCE、multi-rail 和 GDR 是主要根因。
+
+代码检查还排除了一个容易误判的参数：`disaggregation_decode_polling_interval=1` 表示 Scheduler Loop 间隔，不是每个 Token 等待 1 秒。Decode mode 在未启用 Radix Cache 时会强制使用 Chunk Cache，而 DeepSeek V4 的 Hybrid SWA 又不兼容 `disaggregation-decode-enable-radix-cache`，因此不能靠打开该开关规避。
+
+当前最强的根因候选是 **DeepSeek V4 P/D 的执行拓扑与社区验证路径不一致**。本次组合是每侧纯 TP=8、Marlin FP4 Experts、未启用 DP Attention 和 DeepEP；SGLang 上游为 DeepSeek V4 增加的 P/D CI 则使用每侧 TP=4、DP=4、`--enable-dp-attention` 和 `--moe-a2a-backend deepep`。这还不能证明某一行 Kernel 存在缺陷，但已经把下一轮测试收敛为执行拓扑 A/B，而不是继续更换 RDMA 参数。参考：[SGLang DeepSeek V4 P/D CI PR #24973](https://github.com/sgl-project/sglang/pull/24973)、[SGLang P/D Disaggregation 文档](https://github.com/sgl-project/sglang/blob/main/docs/advanced_features/pd_disaggregation.md)。
+
+#### 13.5.2 8 GPU 为什么只有 4 个 RDMA NIC
+
+实验节点的 Kubernetes RDMA Extended Resource 容量和可分配量都是 4，Pod 内能看到 `mlx5_bond_0` 到 `mlx5_bond_3` 四个设备，每个端口均报告 200 Gb/s。`nvidia-smi topo -m` 显示 NIC0/NIC1 位于 NUMA 0，覆盖前四张 GPU；NIC2/NIC3 位于 NUMA 1，覆盖后四张 GPU，其中各 NUMA 都有两张 GPU 到对应 NIC 为 `PIX`，其余同 NUMA GPU 为 `NODE`。8 张 GPU 之间则为 NVLink 互联。
+
+因此 8 GPU Pod 申请 4 份 RDMA 资源符合机器的真实拓扑，并不要求 GPU 与 HCA 1:1。申请 8 反而会超过节点容量。单 rail 的链路理论值为 200 Gb/s，本次裸测约 195 Gb/s；四 rail 的理论链路聚合值约为 800 Gb/s，所以单口和四口的链路上限并不相同，但应用不会自动获得四倍速度。只有 UCX/NIXL 把足够大的并发数据正确条带化，并且 GPU Memory Registration、PCIe/NUMA 和完成同步都不成为瓶颈，才能接近聚合上限。小请求、单条串行传输或计算受限场景中，单口和四口的实测甚至可能接近。
+
+后续 RDMA 测试应在 Pod 仍注入四个设备的条件下，先显式指定一个 `mlx5_bond_<N>:1` 测单 rail，再用 `UCX_NET_DEVICES=all` 测 multi-rail。这样才能区分“RDMA 相对 TCP 的收益”和“多 rail 相对单 rail 的收益”。
+
+另外，之前 DeepSeek V4 的 vLLM P/D 基线并未使用 RDMA：两个 8-GPU Engine 都显式设置 `UCX_TLS=tcp,cuda_copy,cuda_ipc`，没有 RDMA CNI 注解，也没有申请 RDMA Extended Resource。每个 Engine 内部是单节点 TP=8，跨节点的只有 NIXL/UCX KV Transfer，因此准确表述应为 **NIXL over TCP**。后续 vLLM RDMA A/B 也必须保留这条 TCP 基线，不能把“使用 NIXL”直接等同于“使用 RDMA”。
 
 ### 13.6 用 HostPath 缓存大模型，避免每次重建都回源
 
