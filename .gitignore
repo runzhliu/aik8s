@@ -1,6 +1,7 @@
 .DS_Store
 .deploy-secrets/
 .venv/
+.wechat-output/
 site/
 __pycache__/
 *.py[cod]

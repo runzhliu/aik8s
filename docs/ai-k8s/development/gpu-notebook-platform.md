@@ -2,7 +2,7 @@
 title: 大模型时代的 GPU Notebook 平台与存储选型
 description: 从 JupyterHub、Kubeflow 和托管 Workbench，到整卡、MIG、共享 GPU、用户 Home、对象存储与本地缓存的生产选型
 status: evolving
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-11
 ---
 
 # 大模型时代的 GPU Notebook 平台与存储选型
@@ -10,6 +10,8 @@ last_reviewed: 2026-08-04
 大模型时代的 Notebook 已经不只是浏览器里的 Python 编辑器。它往往同时承载 JupyterLab、VS Code、终端、Git、模型下载、数据探索、LoRA 微调和远程任务提交，背后还可能占用几十到数百 GiB 内存、一张或多张昂贵 GPU，以及数百 GiB 的临时缓存。
 
 因此，Notebook 平台的真正选型对象不是某个 Web UI，而是一套**交互式开发工作区**：身份、镜像、计算规格、GPU 隔离、持久目录、数据访问、缓存、空闲回收和任务移交必须一起设计。
+
+如果你更关心一套平台怎样从 JupyterHub/KubeSpawner 逐步演进到 code-server、组级八卡共享、每用户 Ceph RBD、Workspace Operator 与 KubeVirt 根盘，先读[大模型时代 GPU 开发平台踩坑记](../practices/gpu-notebook-platform-evolution.md)。该实战记录了每次调整背后的线上问题和可复现配置。
 
 ## 1. 先给结论
 

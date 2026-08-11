@@ -1,0 +1,6 @@
+Markdown==3.9
+Pygments==2.20.0
+Pillow==11.3.0
+beautifulsoup4==4.15.0
+requests==2.32.5
+urllib3==1.26.20
