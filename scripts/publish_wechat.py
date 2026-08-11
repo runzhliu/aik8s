@@ -76,6 +76,15 @@ class WeChatAPIError(RuntimeError):
     pass
 
 
+def redact_sensitive(value: object) -> str:
+    message = str(value)
+    return re.sub(
+        r"(?i)(access_token|secret)=([^&\s'\"\)]+)",
+        lambda match: f"{match.group(1)}=<redacted>",
+        message,
+    )
+
+
 def load_env_file(path: Path) -> None:
     if not path.exists():
         raise FileNotFoundError(f"missing env file: {path}")
@@ -204,11 +213,22 @@ def get_access_token(app_id: str, app_secret: str) -> str:
     return str(token)
 
 
-def upload_file(token: str, endpoint: str, path: Path, action: str) -> dict[str, Any]:
+def upload_file(
+    token: str,
+    endpoint: str,
+    path: Path,
+    action: str,
+    *,
+    params: dict[str, str] | None = None,
+) -> dict[str, Any]:
     mime_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    request_params = {"access_token": token}
+    if params:
+        request_params.update(params)
     with path.open("rb") as stream:
         response = requests.post(
-            endpoint.format(token=token),
+            endpoint,
+            params=request_params,
             files={"media": (path.name, stream, mime_type)},
             timeout=180,
         )
@@ -218,7 +238,7 @@ def upload_file(token: str, endpoint: str, path: Path, action: str) -> dict[str,
 def upload_article_image(token: str, path: Path) -> str:
     payload = upload_file(
         token,
-        f"{API_BASE}/media/uploadimg?access_token={{token}}",
+        f"{API_BASE}/media/uploadimg",
         path,
         "upload article image",
     )
@@ -231,9 +251,10 @@ def upload_article_image(token: str, path: Path) -> str:
 def upload_cover(token: str, path: Path) -> str:
     payload = upload_file(
         token,
-        f"{API_BASE}/material/add_material?access_token={{token}}&type=image",
+        f"{API_BASE}/material/add_material",
         path,
         "upload cover",
+        params={"type": "image"},
     )
     media_id = payload.get("media_id")
     if not media_id:
@@ -374,6 +395,7 @@ def parse_args() -> argparse.Namespace:
     draft.add_argument("--cover", type=Path)
     draft.add_argument("--source-url")
     draft.set_defaults(func=command_draft)
+
     return parser.parse_args()
 
 
@@ -382,7 +404,7 @@ def main() -> None:
     try:
         args.func(args)
     except (FileNotFoundError, ValueError, WeChatAPIError, requests.RequestException) as error:
-        print(f"error: {error}", file=sys.stderr)
+        print(f"error: {redact_sensitive(error)}", file=sys.stderr)
         raise SystemExit(1) from None
 
 

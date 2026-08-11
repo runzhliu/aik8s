@@ -26,6 +26,8 @@ OpenAI-compatible client
 
 原始基线是普通的 Prefill/Decode 共置部署，不是 PD 分离。模型权重、KV Cache 和 CUDA Graph 可以放入 8 张卡，但显存水位约 93 GiB/卡，余量不大。验证期间所有压测请求均成功；完成目标并发形状的运行时预热后，128-token 输入、64-token 输出、并发 8 的总输出吞吐约为 934 tok/s。
 
+![普通 TP=8 与 AIBrix 双 TP=8 P/D 的资源拓扑](../../assets/practices/deepseek-v4-flash-h20-evaluation/01-topology-comparison.png)
+
 随后在同一个手工 Pod 内把八张卡静态分为 `Prefill TP=4 + Decode TP=4`，使用 NIXL/UCX 和本地 Proxy 完成了真实 KV Cache 交接。该拓扑功能正确，但 eager、无 DSpark 的 4P+4D 只达到原 TP=8 输出吞吐的约 3.7%–12.1%，因此目前只适合 P/D 功能验证，不适合作为原部署的性能替代方案。
 
 部署可行不等于已经生产就绪。正式上线前仍需完成：真实请求回放、长时间阶梯压测、工具调用和 reasoning 正确性、DSpark A/B、故障恢复、鉴权、稳定入口和监控告警。
@@ -294,6 +296,8 @@ DSpark 接受率在这些测试中约为 34%–59%。接受率不能单独证明
 ### 8.2 API Ready 后仍可能发生 JIT
 
 第一次测试并发 8 时，p95 TTFT 达到约 33.4 秒。服务日志明确记录推理期间触发 TileLang JIT，其中一个 kernel 编译约 9 秒。相同参数复跑后，p95 TTFT 恢复到约 233 ms，输出吞吐从约 92 tok/s 恢复到约 934 tok/s。
+
+![首次压测与同形状预热后的结果差异](../../assets/practices/deepseek-v4-flash-h20-evaluation/02-warmup-pitfall.png)
 
 这说明 `Application startup complete` 不代表所有真实输入长度和并发 shape 都已编译。上线前的业务 warmup 应至少覆盖：
 
@@ -705,6 +709,8 @@ NIXL/UCX：在两个 Engine 之间传输 KV
 - C=8 输出吞吐低约 5.6%，但 p95 TTFT 改善约 47.3%，p95 TPOT 改善约 15.7%，p95 E2E 改善约 20.4%。
 
 这组结果说明两套 TP=8 P/D 在并发 8 时能降低尾延迟，同时保持接近的总输出吞吐；但它使用 16 张 GPU，而 StormService 只使用 8 张 GPU，并且新测试走 Chat API，不能视为同资源严格 A/B。按 tokens/s/GPU 计算，C=8 分别约为 `51.1` 与 `108.3 tok/s/GPU`，P/D 资源效率低约 52.8%。要判断是否值得生产化，需要用更长 Prompt、更高并发和真实请求分布验证 TTFT SLO 收益是否足以覆盖双份权重和 GPU 成本。
+
+![并发 8 下普通 TP=8 与 AIBrix P/D 的性能成本对比](../../assets/practices/deepseek-v4-flash-h20-evaluation/03-performance-tradeoff.png)
 
 ## 12. 生产化检查表
 

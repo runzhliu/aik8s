@@ -6,6 +6,14 @@
 
 线上站点：[https://aik8s.run/](https://aik8s.run/)
 
+## 关注微信公众号
+
+更多 AI/LLM on Kubernetes 实战、部署记录与性能分析会同步到微信公众号 **runzhliu**。使用微信扫描二维码，或在“微信搜一搜”中搜索 `runzhliu`：
+
+<p align="center">
+  <img src="docs/assets/wechat-official-account-promo.png" alt="扫描二维码或通过微信搜一搜关注公众号 runzhliu" width="900">
+</p>
+
 ## 技术栈
 
 - Markdown 保存文档内容；

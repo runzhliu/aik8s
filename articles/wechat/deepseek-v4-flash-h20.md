@@ -12,6 +12,8 @@
 
 这是我们在 H20 上完成基线、同机拆分和 AIBrix 双 Engine 实验后，得到的最重要结论。
 
+![并发 8 下普通 TP=8 与 AIBrix P/D 的性能成本对比](../../docs/assets/practices/deepseek-v4-flash-h20-evaluation/03-performance-tradeoff.png)
+
 ## 先把结论放在桌面上
 
 这次实验确认了三件事：
@@ -43,6 +45,8 @@ Client → vLLM API Server → TP=8 → 8 × H20 96 GB
 两轮相差超过 10 倍，模型、GPU 和参数都没变。变化的只是运行时是否完成了目标形状的编译与预热。
 
 这件事改变了我们后面的测试顺序：先用真实输入长度和并发完成预热，再谈性能。端口 Ready 只证明服务开始监听，不代表推理运行时已经进入稳态。
+
+![首次压测与同形状预热后的结果差异](../../docs/assets/practices/deepseek-v4-flash-h20-evaluation/02-warmup-pitfall.png)
 
 稳态下，单机 TP=8 的结果如下：
 
@@ -99,6 +103,8 @@ KV Cache 交接是成立的：NIXL compatibility check、Transfer Plan 和 Decod
 ```
 
 客户端通过同一个 AIBrix Gateway 发起请求。并发 8 的结果是：
+
+![普通 TP=8 与 AIBrix 双 TP=8 P/D 的资源拓扑](../../docs/assets/practices/deepseek-v4-flash-h20-evaluation/01-topology-comparison.png)
 
 | 部署方式 | GPU | 输出吞吐 | p95 TTFT | p95 TPOT | p95 E2E |
 | --- | ---: | ---: | ---: | ---: | ---: |
