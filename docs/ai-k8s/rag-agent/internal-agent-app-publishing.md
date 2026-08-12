@@ -45,7 +45,61 @@ last_reviewed: 2026-08-12
 | 标准 AI 应用 | 商务、法务、运营 | Prompt、知识库、表单、工作流、连接器和权限 | 共享应用运行时 |
 | 高级自定义应用 | 开发、数据和平台团队 | 代码、镜像、依赖和运行参数 | 独立 Serverless、Worker 或 Agent Cell |
 
-## 2. 业务用户看到的发布流程
+## 2. 公开案例：哪些组织用了什么
+
+公开案例已经显示出三条不同路线，但披露深度差异很大：有些只公开产品名称和应用数量，有些会公开身份、知识库、工作流和运行框架。下面只列出能找到组织名称和一手公开资料的案例，不用 GitHub Star、匿名访谈或产品演示代替企业采用证据。
+
+| 组织 | 业务和发布方式 | 公开的产品或框架 | 公开结果 | 能证明什么 |
+| --- | --- | --- | --- | --- |
+| BBVA | 员工自行创建 Custom GPT，并在银行内部共享 | ChatGPT Enterprise、Custom GPTs | 创建超过 20,000 个 GPT，约 4,000 个被经常使用 | 大规模“员工创建、内部复用”可直接建立在托管工作台上；底层部署架构未公开 |
+| Moderna | 各职能团队创建 GPT，包括合同摘要、制度问答和临床数据分析 | ChatGPT Enterprise、Custom GPTs；早期 `mChat` 使用 OpenAI API | 推出 ChatGPT Enterprise 两个月内创建 750 个 GPT | 法务和职能场景可以先走配置型应用，不必每个应用单独部署服务 |
+| Kakaku.com | 员工通过可视化平台创建并发布内部 AI 应用 | Dify Enterprise | 近 950 个内部应用，75% 员工注册使用 Dify；产品数据提取应用约 3 小时上线 | 开源生态的低代码 AI 应用平台也能承担内部自助创建；数据来自 Dify 客户案例 |
+| HEINEKEN | 员工通过 Teams 或 Web 使用 PowerBot；另有检查营销声明是否符合公司政策的法务应用 | Microsoft Copilot Studio、Power Platform、Azure OpenAI；Teams 和自定义 Web 入口 | 公开案例描述了法务、内部助手和对外客服应用 | Microsoft 体系可以把低代码 Agent、办公入口和可复用 Skill 组合起来 |
+| Coca-Cola Andina | HR 助手按员工档案返回个性化政策，通过 WhatsApp 服务员工，并可创建 HR 工单 | Copilot Studio、Entra ID、SharePoint、Power Automate、Power Apps、Direct Line API | 已有 300 多名活跃用户，并计划扩大范围 | 这是较完整的“身份—数据—工作流—渠道”参考，而不只是聊天机器人 |
+| Lyft | 运营、客户之声和产品人员用 Prompt 与配置定义客服 Agent，工程平台在运行时装配 | LangGraph、LangSmith、内部 JSON 配置服务、Prompt Hub | 从每个 Agent 需要数月工程投入，转向领域专家自助迭代 | 自建平台不等于让业务用户写 LangGraph；工程团队负责骨架，领域专家修改受控配置 |
+| Uber | 内部团队组合、部署和运行生产 Agent；现有微服务通过 MCP 提供工具，平台补 Agent 身份和调用归因 | 内部 Agent Platform、MCP、内部工作负载身份体系；公开文章未说明编排框架名称 | 公开重点是大规模工具调用中的身份、委托和审计 | 企业 Agent 平台的难点会从“调用模型”转向 Agent 身份、授权链和可追责性 |
+| Sanofi | 自研统一员工 AI 助手 Concierge，而不是购买一个现成聊天前端；跨地区运行并逐步增加 Agent 能力 | Amazon Bedrock，多区域 AWS 架构；公开计划引入 Bedrock AgentCore | 72,000 月活用户，内部员工持续发现和构建新用例 | 大型企业常保留自己的产品和控制面，用云厂商提供模型及 Agent 基础设施 |
+| Cox Automotive | 用标准 Agent 运行环境和可复用模式交付多个业务 Agent | Amazon Bedrock、Bedrock AgentCore Runtime、Strands Agents | 17 个主要 Agent 方案进入生产 | 托管 Agent Runtime 可以减少部署、监控、错误处理和安全模板的重复建设 |
+
+资料来源：[BBVA](https://openai.com/index/bbva-2025/)、[Moderna](https://openai.com/index/moderna/)、[Kakaku.com](https://dify.ai/zh/blog/kakaku-accelerates-ai-adoption-with-dify-fast-secure-and-scalable)、[HEINEKEN](https://www.microsoft.com/en/customers/story/25909-heineken-microsoft-copilot-studio)、[Coca-Cola Andina](https://www.microsoft.com/en/customers/story/26256-coca-cola-andina-microsoft-copilot-studio)、[Lyft](https://www.langchain.com/blog/lyft-built-a-self-serve-ai-agent-platform-for-customer-support-with-langgraph-and-langsmith)、[Uber](https://www.uber.com/in/en/blog/solving-the-agent-identity-crisis/)、[Sanofi](https://aws.amazon.com/solutions/case-studies/sanofi-bedrock-case-study/)、[Cox Automotive](https://aws.amazon.com/solutions/case-studies/cox-auto-case-study/)。
+
+### 2.1 怎样理解这些案例
+
+这些案例不能简单汇总成“某个框架最好”，因为它们解决的问题不同：
+
+```text
+配置一个知识和 Prompt 助手
+  → Custom GPTs / Microsoft 365 Agent Builder
+
+搭建部门工作流并接入办公系统
+  → Copilot Studio / Power Platform / Dify
+
+实现复杂、长状态、可评测的专业 Agent
+  → LangGraph 等编排框架 + 企业自建发布控制面
+
+统一承载大量生产 Agent
+  → Bedrock AgentCore 等托管 Runtime，或 Kubernetes 自建 Runtime
+```
+
+Custom GPT、Copilot Studio 和 Dify 本身就是面向创建者的应用工作台；LangGraph、Strands Agents 和 OpenClaw 更接近开发框架或 Agent Runtime。直接比较它们会混淆产品层次。业务用户可以在前者中直接发布，但使用后者时，企业通常还要自行建设表单、权限、审批、应用目录、评测和生命周期控制面。
+
+### 2.2 案例证据的限制
+
+- 上表多数来源是供应商发布的客户故事，适合确认“谁公开使用了什么”，但不等同于独立审计；
+- 应用数量不等于活跃应用数量，也不能证明每个应用都访问敏感数据或执行高风险操作；
+- 厂商案例往往不会公开成本、失败率、安全事件、租户模型和底层 Kubernetes 架构；
+- Uber 和 Lyft 属于平台或工程团队主导的自助化，不是让法务人员直接发布任意代码；
+- 截至本文复核日期，尚未找到披露程度相当、可验证的大型组织使用 OpenClaw 完成“业务用户自建并全公司发布应用”的公开案例。OpenClaw 可以作为渠道和运行时选项，但不能仅凭社区热度推导出该企业场景已经成熟。
+
+### 2.3 从公开案例得到的产品结论
+
+1. **先提供共享创建工作台。** BBVA、Moderna 和 Kakaku.com 的规模来自员工配置和复用应用，而不是为每个应用建立一套 Kubernetes 服务。
+2. **办公生态会决定最短路径。** 已深度使用 Microsoft 365、SharePoint、Entra ID 和 Teams 的组织，Copilot Studio 路线通常最短；希望自托管和多模型的团队更可能评估 Dify。
+3. **领域专家和平台工程师仍有明确分工。** Lyft 让运营人员维护 Prompt 和配置，但 LangGraph 骨架、状态、安全检查和观测仍由工程平台负责。
+4. **规模扩大后，身份比模型框架更难。** Coca-Cola Andina 的用户身份透传和 Uber 的 Agent 身份体系都说明，生产平台必须回答“以谁的身份、代表谁、可以调用什么”。
+5. **大型企业经常保留自己的控制面。** Sanofi 和 Uber 没有把企业入口、权限和治理全部交给某个 Agent SDK，而是把模型服务或编排框架放在自有平台之下。
+
+## 3. 业务用户看到的发布流程
 
 推荐把完整流程设计为：
 
@@ -60,7 +114,7 @@ last_reviewed: 2026-08-12
   → 持续评测、反馈与回收
 ```
 
-### 2.1 选择模板
+### 3.1 选择模板
 
 第一版平台不必提供无限自由度，可以先覆盖高频场景：
 
@@ -84,7 +138,7 @@ last_reviewed: 2026-08-12
 
 应用负责人不能是可选字段。平台后续需要依靠负责人处理权限复核、用户反馈、事故响应和下线交接。
 
-### 2.2 配置数据和能力
+### 3.2 配置数据和能力
 
 业务用户可以上传制度、模板和审查规则，或者选择平台已经登记的数据源和连接器。连接器应表达为业务能力，而不是原始密钥或任意 API 地址：
 
@@ -98,7 +152,7 @@ last_reviewed: 2026-08-12
 
 用户不应把个人 API Key 粘贴进 Prompt、配置文件或知识库。平台应为每个应用签发独立身份，并通过 Secret 服务或 Tool Gateway 获取短期凭据。
 
-### 2.3 小范围试运行
+### 3.3 小范围试运行
 
 应用首先进入草稿或测试环境，只允许创建者和受邀测试人员访问。测试页面至少应提供：
 
@@ -112,7 +166,7 @@ last_reviewed: 2026-08-12
 
 例如合同应用可以维护一组脱敏的标准合同。更换模型、提示词、知识库或工具权限后，平台重新运行测试，避免“调整一句 Prompt 导致旧场景失效”。
 
-### 2.4 选择访问范围
+### 3.4 选择访问范围
 
 发布界面不应只有公开和私有两个选项。建议支持：
 
@@ -126,7 +180,7 @@ last_reviewed: 2026-08-12
 
 访问范围应绑定公司的 IdP、通讯录和安全组，避免维护一份容易失效的手工名单。用户调岗或离职后，权限随组织关系自动变化。
 
-### 2.5 风险分级和审批
+### 3.5 风险分级和审批
 
 审批应基于风险，而不是所有应用一刀切：
 
@@ -139,7 +193,7 @@ last_reviewed: 2026-08-12
 
 平台应尽量自动完成数据源检查、权限差异、敏感信息扫描、依赖扫描、预算估算和回归测试，只让需要判断的事项进入人工审批。审批过重会使用户转向无法治理的个人脚本和外部工具。
 
-### 2.6 发布结果
+### 3.6 发布结果
 
 发布成功不应该只表示“Pod 已经运行”，而应返回一个员工能够理解和分享的应用页面：
 
@@ -166,7 +220,7 @@ last_reviewed: 2026-08-12
 - 版本保存、灰度、回滚和停用；
 - 内部应用市场或协作工具上架。
 
-## 3. 应用访问权不等于数据访问权
+## 4. 应用访问权不等于数据访问权
 
 这是内部 AI 应用最容易出问题的地方。一个员工可以打开合同助手，不代表他能通过助手读取所有合同。平台必须分别处理：
 
@@ -176,7 +230,7 @@ last_reviewed: 2026-08-12
         └── 打开以后，能查看或修改哪些业务数据？
 ```
 
-### 3.1 用户身份透传
+### 4.1 用户身份透传
 
 应用以当前登录用户身份访问业务系统：
 
@@ -187,11 +241,11 @@ last_reviewed: 2026-08-12
 
 这是内部搜索、数据查询和个人工作助手的首选模式。AI 应用不应成为绕过原系统行级、字段级和组织级权限的“万能查询账号”。
 
-### 3.2 应用身份
+### 4.2 应用身份
 
 应用也可以使用独立的服务身份访问明确的共享资源，例如只读法务公共条款库。该身份必须具备最小权限、资源范围、调用预算和有效期，不能继承创建者的个人凭据。
 
-### 3.3 Tool Gateway
+### 4.3 Tool Gateway
 
 高风险场景可以让所有业务操作经过 Tool Gateway：
 
@@ -204,7 +258,7 @@ last_reviewed: 2026-08-12
 
 模型可以提出动作，但最终授权必须由确定性的服务端策略决定。
 
-## 4. 统一发布面，底层使用多种运行时
+## 5. 统一发布面，底层使用多种运行时
 
 “一键发布”不等于底层只有一种运行方式。平台可以根据触发器、状态和执行时长自动选择：
 
@@ -220,7 +274,7 @@ Knative Serving 可以按请求并发自动扩缩，并在无流量时缩容到�
 
 长连接、持续本地状态和需要随时响应的 Agent 不应为了“Serverless”标签被强制缩容到零。OpenClaw 的 Gateway 就是拥有渠道连接、会话和控制面的常驻进程；互不信任的租户也不能只用同一个 Gateway 中的会话 ID 进行隔离。参考：[OpenClaw Gateway](https://docs.openclaw.ai/network)、[OpenClaw Multi-Tenant Hosting](https://docs.openclaw.ai/gateway/multi-tenant-hosting)。
 
-## 5. 推荐的平台架构
+## 6. 推荐的平台架构
 
 ```text
 业务用户 / 开发者
@@ -283,7 +337,7 @@ spec:
 
 业务用户不必直接编辑 YAML；它可以由表单或对话式工作台生成。声明的价值在于让平台能够审计、比较版本、执行策略并更换底层运行时。
 
-## 6. 内部应用中心不只是一个链接列表
+## 7. 内部应用中心不只是一个链接列表
 
 应用目录至少应展示：
 
@@ -299,7 +353,7 @@ spec:
 
 发布到互联网是另一种安全边界，不应复用“公司内部公开”的快捷流程。对外应用至少需要独立身份和数据源、匿名访问防滥用、输入输出安全检查、限流和费用上限、隐私说明，以及安全、法务和品牌审批。
 
-## 7. 生命周期治理
+## 8. 生命周期治理
 
 应用发布后仍会持续变化。平台需要处理：
 
@@ -314,7 +368,7 @@ spec:
 
 Kubernetes Namespace 可以承载部分隔离和配额，但本身不是完整租户边界，还需要 RBAC、NetworkPolicy、ResourceQuota，以及高风险代码执行所需的沙箱运行时。参考：[Kubernetes Multi-tenancy](https://kubernetes.io/docs/concepts/security/multi-tenancy/)。
 
-## 8. 第一版平台怎么做
+## 9. 第一版平台怎么做
 
 第一版建议控制范围，不开放任意代码执行，优先实现：
 
@@ -337,7 +391,7 @@ Kubernetes Namespace 可以承载部分隔离和配额，但本身不是完整�
 
 第二阶段再加入自定义代码、异步 Worker、持久工作流、常驻 Agent Cell、灰度发布和更强沙箱。这样能先验证真实业务需求，也避免在平台早期就承担任意代码、多租户执行和复杂运行时的全部风险。
 
-## 9. 上线检查清单
+## 10. 上线检查清单
 
 - [ ] 业务用户不需要理解镜像、Kubernetes 或 Serverless；
 - [ ] 标准配置型应用与自定义代码应用使用不同发布路径；
