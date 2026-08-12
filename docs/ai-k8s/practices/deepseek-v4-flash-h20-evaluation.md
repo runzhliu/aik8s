@@ -835,7 +835,7 @@ SGLang / DeepGEMM 生成 kernel.cu
 
 若业务最大并发远低于 256，还可以同时下调 `max-running-requests` 和 CUDA Graph 最大 batch，减少首次捕获的 shape 数量。该优化会改变高并发能力，必须用真实峰值并发重新压测，不能只为了缩短启动时间直接套用。
 
-从今年上半年 DeepSeek-V4-Pro 滚动重启接近半小时，到本轮模型缓存、权重加载、JIT Cache、CUDA Graph 和快照恢复的完整优化方法，单独整理在：[从半小时到分钟级：大模型冷启动全链路优化](llm-cold-start-optimization.md)。
+从今年上半年 DeepSeek-V4-Pro 滚动重启接近半小时，到本轮模型缓存、权重加载、JIT Cache、CUDA Graph 和快照恢复的完整优化方法，单独整理在：[从半小时到五分钟：大模型冷启动全链路优化](llm-cold-start-optimization.md)。
 
 ### 12.3 正确性门槛
 

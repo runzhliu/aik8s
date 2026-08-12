@@ -191,7 +191,7 @@ def storage_ab(output: Path) -> None:
 
 def optimization_ladder(output: Path) -> None:
     image, draw = canvas(720)
-    heading(draw, "从半小时到分钟级，再到秒级恢复", "不同目标对应不同技术起点，不能把热恢复包装成完整冷启动")
+    heading(draw, "从半小时到五分钟，再到秒级恢复", "不同目标对应不同技术起点，不能把热恢复包装成完整冷启动")
 
     levels = [
         ("10–30 分钟", "完整冷启动", "远端模型、镜像、编译缓存均未命中", RED, 0),

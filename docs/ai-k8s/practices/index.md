@@ -18,7 +18,7 @@ last_reviewed: 2026-08-12
 
 ## 性能、成本与容量
 
-- [从半小时到分钟级：大模型冷启动全链路优化](llm-cold-start-optimization.md)
+- [从半小时到五分钟：大模型冷启动全链路优化](llm-cold-start-optimization.md)
 - [vLLM、SGLang 与 TensorRT-LLM 同机实测](inference-engine-benchmark.md)
 - [模型显存与并发容量计算器](model-memory-calculator.md)
 - [Prefill/Decode 分离的性能拐点](pd-break-even.md)

@@ -77,6 +77,7 @@ nav = [
       {"GPU 利用率排障" = "ai-k8s/practices/low-gpu-utilization.md"},
       {"推理引擎同机实测" = "ai-k8s/practices/inference-engine-benchmark.md"},
       {"模型显存与成本计算器" = "ai-k8s/practices/model-memory-calculator.md"},
+      {"从半小时到五分钟：大模型冷启动全链路优化" = "ai-k8s/practices/llm-cold-start-optimization.md"},
       {"DeepSeek V4 Flash H20 部署与压测" = "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"},
       {"既有集群落地 AIBrix" = "ai-k8s/practices/aibrix-existing-cluster.md"},
       {"AIBrix GPU 多机、P/D 与碎片卡实测" = "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md"},
