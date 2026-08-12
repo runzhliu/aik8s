@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: deepseek-v4-flash-vllm-lmcache-preflight
+  namespace: deepseek-serving
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    label-group: gpu-training-H20-96G
+  tolerations:
+    - key: quarantine-room
+      operator: Equal
+      value: gpu-training-H20-96G
+  containers:
+    - name: preflight
+      image: example.invalid/ai/vllm-lmcache:replace-me
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/bash
+        - -lc
+        - |-
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util
+          from importlib.metadata import version
+
+          connector = importlib.util.find_spec(
+              "lmcache.integration.vllm.lmcache_mp_connector"
+          )
+          print("vllm", version("vllm"))
+          print("lmcache", version("lmcache"))
+          print("connector", connector)
+          assert connector is not None, "LMCacheMPConnector module is missing"
+          assert tuple(map(int, version("vllm").split("+")[0].split(".")[:2])) >= (0, 25)
+          PY
+          lmcache server --help >/dev/null
+          vllm serve --help=all >/dev/null
+          echo "DeepSeek V4 / LMCache image preflight: PASS"
+      resources:
+        requests:
+          cpu: "1"
+          memory: 2Gi
+        limits:
+          cpu: "4"
+          memory: 8Gi

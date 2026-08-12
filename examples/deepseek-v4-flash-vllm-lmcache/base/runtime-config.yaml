@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deepseek-v4-flash-vllm-lmcache-runtime
+data:
+  start.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    ulimit -n 65536
+    python3 - <<'PY'
+    from importlib.metadata import version
+    print("runtime versions:", "vllm", version("vllm"), "lmcache", version("lmcache"))
+    PY
+
+    model_path="${MODEL_PATH:-/models/DeepSeek-V4-Flash-0731}"
+    test -s "${model_path}/config.json"
+    test -s "${model_path}/model.safetensors.index.json"
+
+    lmcache_pid=""
+    vllm_pid=""
+    cleanup() {
+      if [[ -n "${vllm_pid}" ]]; then kill "${vllm_pid}" 2>/dev/null || true; fi
+      if [[ -n "${lmcache_pid}" ]]; then kill "${lmcache_pid}" 2>/dev/null || true; fi
+    }
+    trap cleanup EXIT INT TERM
+
+    connector_args=()
+    if [[ "${ENABLE_LMCACHE:-false}" == "true" ]]; then
+      lmcache server \
+        --port "${LMCACHE_PORT:-5555}" \
+        --http-port "${LMCACHE_HTTP_PORT:-8080}" \
+        --l1-size-gb "${LMCACHE_L1_SIZE_GB:-128}" \
+        --l1-init-size-gb "${LMCACHE_L1_INIT_SIZE_GB:-8}" \
+        --max-gpu-workers "${LMCACHE_MAX_GPU_WORKERS:-1}" \
+        --max-cpu-workers "${LMCACHE_MAX_CPU_WORKERS:-8}" \
+        --chunk-size "${LMCACHE_CHUNK_SIZE:-1024}" \
+        --l1-align-bytes 16384 \
+        --eviction-trigger-watermark 0.85 \
+        --eviction-ratio 0.10 \
+        --eviction-policy LRU \
+        --supported-transfer-mode lmcache_driven &
+      lmcache_pid=$!
+
+      for _ in $(seq 1 120); do
+        kill -0 "${lmcache_pid}" 2>/dev/null || {
+          echo "LMCache MP server exited before becoming healthy" >&2
+          exit 1
+        }
+        curl --fail --silent "http://127.0.0.1:${LMCACHE_HTTP_PORT:-8080}/healthcheck" >/dev/null && break
+        sleep 1
+      done
+      curl --fail --silent "http://127.0.0.1:${LMCACHE_HTTP_PORT:-8080}/healthcheck" >/dev/null
+
+      connector_config="$(printf '{"kv_connector":"LMCacheMPConnector","kv_role":"kv_both","kv_connector_extra_config":{"lmcache.mp.port":%s,"lmcache.mp.mq_timeout":300}}' "${LMCACHE_PORT:-5555}")"
+      connector_args=(--kv-transfer-config "${connector_config}")
+    fi
+
+    eager_args=()
+    if [[ "${ENFORCE_EAGER:-true}" == "true" ]]; then
+      eager_args=(--enforce-eager)
+    fi
+
+    vllm serve "${model_path}" \
+      --served-model-name deepseek-v4-flash-lmcache-ab \
+      --host 0.0.0.0 \
+      --port 8000 \
+      --trust-remote-code \
+      --dtype auto \
+      --tensor-parallel-size 8 \
+      --distributed-executor-backend mp \
+      --kv-cache-dtype "${KV_CACHE_DTYPE:-fp8}" \
+      --block-size 256 \
+      --gpu-memory-utilization "${GPU_MEMORY_UTILIZATION:-0.82}" \
+      --max-model-len "${MAX_MODEL_LEN:-131072}" \
+      --max-num-seqs "${MAX_NUM_SEQS:-32}" \
+      --max-num-batched-tokens "${MAX_NUM_BATCHED_TOKENS:-8192}" \
+      --tokenizer-mode deepseek_v4 \
+      --tool-call-parser deepseek_v4 \
+      --enable-auto-tool-choice \
+      --reasoning-parser deepseek_v4 \
+      --enable-prefix-caching \
+      --no-disable-hybrid-kv-cache-manager \
+      "${eager_args[@]}" \
+      "${connector_args[@]}" &
+    vllm_pid=$!
+    wait "${vllm_pid}"

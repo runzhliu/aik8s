@@ -121,7 +121,9 @@ SGLang [HiCache](https://github.com/sgl-project/sglang/blob/main/docs_new/docs/a
 
 [LMCache](https://github.com/LMCache/LMCache) 提供 KV Cache Connector、CPU/磁盘 Offload、远端缓存和 P/D 支持。其 vLLM P/D 示例通过 NIXL 使用 NVLink、RDMA 或 TCP；旧的 in-process 模式已标记弃用，新验证应使用 MP 模式。
 
-这条路线适合构建 vLLM 的 Kubernetes 原生对照组，但不能因为 llm-d 有 DeepSeek V3.1 或 DeepSeek-R1 案例，就直接推断 DeepSeek V4 的复合 KV 状态已经兼容。
+vLLM 官方 DeepSeek V4 Flash Recipe 已把 CPU Offload 和 Filesystem Offload 标为 verified，并把 `LMCacheMPConnector` 作为通用 KV Offload 选项提供给单节点 TP/TEP/DEP 策略。当前 Recipe 的 LMCache 模式是每节点一个伴随式 `lmcache server`，不是跨节点共享池；因此它足以进入 DeepSeek V4 的节点内兼容性测试，但不能直接证明“跨节点中央 KV Cache 已支持”。可执行的单节点 Baseline/LMCache A/B 材料见：[DeepSeek V4 Flash：vLLM + LMCache MP](https://github.com/runzhliu/aik8s/tree/main/examples/deepseek-v4-flash-vllm-lmcache)。
+
+测试还需要覆盖已知风险：DeepSeek V4 使用多组 Hybrid KV，社区已有 Prefix Cache 重放 0% 命中、高并发 Offload Worker 崩溃，以及 DSpark Draft KV 外部命中长期为零的报告。第一轮应关闭 DSpark 和 P/D，只验证 GPU Cache 淘汰后的 LMCache Load、确定性输出与并发稳定性；随后再把 P/D、远端 Backend 和 Draft Model 分别作为独立变量。
 
 ### 3.4 NVIDIA Dynamo KVBM
 

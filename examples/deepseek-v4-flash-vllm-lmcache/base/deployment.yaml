@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deepseek-v4-flash-vllm-lmcache-ab
+  labels:
+    app.kubernetes.io/name: deepseek-v4-flash-vllm-lmcache-ab
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: deepseek-v4-flash-vllm-lmcache-ab
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: deepseek-v4-flash-vllm-lmcache-ab
+        model.aibrix.ai/name: deepseek-v4-flash-lmcache-ab
+        model.aibrix.ai/port: "8000"
+        model.aibrix.ai/metric-port: "8000"
+        model.aibrix.ai/engine: vllm
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      terminationGracePeriodSeconds: 180
+      nodeSelector:
+        label-group: gpu-training-H20-96G
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20-96G
+      containers:
+        - name: engine
+          image: example.invalid/ai/vllm-lmcache:replace-me
+          imagePullPolicy: IfNotPresent
+          command: [/bin/bash, /runtime/start.sh]
+          env:
+            - name: ENABLE_LMCACHE
+              value: "false"
+            - name: MODEL_PATH
+              value: /models/DeepSeek-V4-Flash-0731
+            - name: ENFORCE_EAGER
+              value: "true"
+            - name: GPU_MEMORY_UTILIZATION
+              value: "0.82"
+            - name: KV_CACHE_DTYPE
+              value: fp8
+            - name: MAX_MODEL_LEN
+              value: "131072"
+            - name: MAX_NUM_SEQS
+              value: "32"
+            - name: MAX_NUM_BATCHED_TOKENS
+              value: "8192"
+            - name: LMCACHE_L1_SIZE_GB
+              value: "128"
+            - name: LMCACHE_L1_INIT_SIZE_GB
+              value: "8"
+            - name: PYTHONHASHSEED
+              value: "0"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 8000
+            - name: lmcache
+              containerPort: 5555
+            - name: lmcache-admin
+              containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 180
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "80"
+              memory: 700Gi
+              ephemeral-storage: 40Gi
+              nvidia.com/gpu: "8"
+            limits:
+              cpu: "160"
+              memory: 1200Gi
+              ephemeral-storage: 80Gi
+              nvidia.com/gpu: "8"
+          securityContext:
+            capabilities:
+              add: [IPC_LOCK]
+          volumeMounts:
+            - name: runtime
+              mountPath: /runtime
+            - name: model
+              mountPath: /models/DeepSeek-V4-Flash-0731
+              readOnly: true
+            - name: compile-cache
+              mountPath: /root/.cache
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: runtime
+          configMap:
+            name: deepseek-v4-flash-vllm-lmcache-runtime
+            defaultMode: 493
+        - name: model
+          hostPath:
+            path: /var/lib/aik8s/models/DeepSeek-V4-Flash-0731
+            type: Directory
+        - name: compile-cache
+          hostPath:
+            path: /var/lib/aik8s/cache/deepseek-v4-flash-vllm-lmcache
+            type: DirectoryOrCreate
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Gi
