@@ -504,6 +504,8 @@ python examples/disaggregated/disaggregated_serving/disagg_proxy_demo.py \
 
 验收时不只看 Pod `Running` 或请求能返回，至少还要证明：Prefill 真的只做 Prompt 阶段、Decode 真的接收了远端 KV，同一长前缀的第二次请求有可观测命中，以及关闭 Connector/缓存 Backend 后能观察到预期的性能回退或重算。
 
+P/D 直传、KV Offload、Prefix Cache 感知路由和跨引擎共享 KV 的边界，以及 Mooncake、AIBrix、LMCache/llm-d 与 Dynamo KVBM 的选型对比，见：[DeepSeek V4 Flash 的分布式 KV Cache](distributed-kv-cache-deepseek-v4.md)。
+
 参考：[vLLM Disaggregated Serving](https://docs.vllm.ai/en/stable/examples/disaggregated/disaggregated_serving/)、[vLLM NixlConnector Usage Guide](https://docs.vllm.ai/en/stable/features/nixl_connector_usage/)、[vLLM KV Offloading Usage Guide](https://docs.vllm.ai/en/latest/features/kv_offloading_usage/)、[AIBrix Prefill-Decode Disaggregation](https://aibrix.readthedocs.io/latest/features/pd-disaggregation.html)、[AIBrix KVCache Offloading Framework](https://aibrix.readthedocs.io/latest/designs/aibrix-kvcache-offloading-framework.html)
 
 ### 7.4 独立 KV Cache 集群不只有一个“管理 Pod”

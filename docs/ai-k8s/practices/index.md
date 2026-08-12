@@ -18,6 +18,7 @@ last_reviewed: 2026-08-12
 
 ## 性能、成本与容量
 
+- [DeepSeek V4 Flash 的分布式 KV Cache：从 P/D 直传到全局缓存池](distributed-kv-cache-deepseek-v4.md)
 - [从半小时到五分钟：大模型冷启动全链路优化](llm-cold-start-optimization.md)
 - [vLLM、SGLang 与 TensorRT-LLM 同机实测](inference-engine-benchmark.md)
 - [模型显存与并发容量计算器](model-memory-calculator.md)

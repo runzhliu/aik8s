@@ -725,6 +725,8 @@ NIXL/UCX：在两个 Engine 之间传输 KV
 
 这组结果显示 P/D 的价值主要出现在并发与长 Prompt，而不是低负载短请求。它同时使用 16 张 GPU，Combined 只使用 8 张；按输出 tokens/s/GPU 计算，P/D 在三组负载中分别低约 73.0%、58.9% 和 48.9%。因此这不是“相同资源下免费提速”，而是用第二份权重和一组 GPU 换取 Prefill/Decode 隔离、较好的长请求尾延迟与后续独立扩缩容能力。生产路由应把短请求留给 Combined，只让长 Prompt 或 Prefill-heavy 请求进入 P/D。
 
+P/D 直传只解决本次请求从 Prefill 到 Decode 的 KV 交接；如果还要支持多用户长会话、跨 Engine Prefix 复用以及 GPU、Host Memory、NVMe 的缓存分层，需要额外的全局索引、KV-aware Routing 和分布式 Backend。相关开源路线与 DeepSeek V4 的验证边界见：[DeepSeek V4 Flash 的分布式 KV Cache](distributed-kv-cache-deepseek-v4.md)。
+
 压测过程中还出现过一次伪长尾：前一轮客户端在终端输出中断后实际仍在运行，第二轮启动后总并发达到 16，p95 TTFT 被污染到约 19 秒。确认 Pod 内没有遗留 benchmark 进程后复跑才得到上表数据。自动化压测应给每轮增加唯一 request-id 前缀，并在下一轮前同时核对客户端进程、Gateway outstanding requests 和服务端请求清零。
 
 ![并发 8 下普通 TP=8 与 AIBrix P/D 的性能成本对比](../../assets/practices/deepseek-v4-flash-h20-evaluation/03-performance-tradeoff.png)
