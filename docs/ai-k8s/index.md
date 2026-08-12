@@ -50,7 +50,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 建设 Ray 大模型平台 | [Ray 训练与推理](ray-llm-platform.md) → [分布式训练](distributed-training.md) → [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [可靠性](reliability.md) |
 | 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [Serving 框架](inference/serving-frameworks.md) → [网关与路由](inference/gateway-routing.md) → [Higress 实战](inference/higress-ai-gateway.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
-| 建设 RAG 或 Agent 平台 | [Agent 现状与趋势](rag-agent/agent-landscape-2026.md) → [RAG 基础设施](rag-agent/rag-infrastructure.md) → [OpenClaw 企业平台分析](rag-agent/openclaw-enterprise-agent-platform.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [工具与执行治理](agentic-workloads.md) → [安全治理](security-governance.md) |
+| 建设 RAG 或 Agent 平台 | [Agent 现状与趋势](rag-agent/agent-landscape-2026.md) → [RAG 基础设施](rag-agent/rag-infrastructure.md) → [OpenClaw 企业平台分析](rag-agent/openclaw-enterprise-agent-platform.md) → [内部 AI 应用发布](rag-agent/internal-agent-app-publishing.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [工具与执行治理](agentic-workloads.md) → [安全治理](security-governance.md) |
 | 负责 SRE、成本或容量 | [可观测性](observability.md) → [性能基准](benchmarking.md) → [成本与容量](cost-capacity.md) → [落地路线图](adoption-roadmap.md) |
 
 ## 完整主题地图 { #topic-map }
@@ -108,6 +108,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [RAG 基础设施](rag-agent/rag-infrastructure.md)：采集、切分、Embedding、向量数据库、检索、重排和权限过滤。
 - [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)：威胁模型、Kubernetes Agent Sandbox、gVisor、Kata、微虚机和托管平台决策。
 - [OpenClaw 作为企业 Agent 平台底座](rag-agent/openclaw-enterprise-agent-platform.md)：可复用能力、企业控制面缺口、安全风险、二次开发边界和推荐架构。
+- [企业内部 AI 应用如何快速发布与共享](rag-agent/internal-agent-app-publishing.md)：面向商务、法务和运营等非研发用户的搭建、试运行、审批、权限、运行时和应用目录设计。
 - [AI Agent、沙箱与工具执行](agentic-workloads.md)：RuntimeClass、网络边界、凭据、工具权限和审计。
 - [边缘 AI 与云边协同](edge-ai.md)：K3s、弱网自治、设备管理、模型 OTA 和边缘可观测性。
 
