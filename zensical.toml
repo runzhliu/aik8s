@@ -56,6 +56,7 @@ nav = [
     {"RAG、Agent 与边缘" = [
       {"RAG 基础设施" = "ai-k8s/rag-agent/rag-infrastructure.md"},
       {"2026 Agent 现状与趋势" = "ai-k8s/rag-agent/agent-landscape-2026.md"},
+      {"从 WorkBuddy 看企业 Agent 技术栈" = "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md"},
       {"Agent Sandbox 选型与分析" = "ai-k8s/rag-agent/agent-sandbox-selection.md"},
       {"OpenClaw 企业 Agent 平台分析" = "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md"},
       {"企业内部 AI 应用发布与共享" = "ai-k8s/rag-agent/internal-agent-app-publishing.md"},
