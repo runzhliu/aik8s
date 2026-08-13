@@ -396,5 +396,6 @@ Prometheus 至少记录创建到 Ready、各阶段 Histogram、模型与编译�
 
 延伸阅读：
 
+- [大模型权重分发与加载加速：社区与商业方案选型](model-weight-delivery-acceleration.md)：对象存储、并行文件系统、P2P、节点缓存与 Loader 的横向选型；
 - [大模型与数据制品](../data/model-artifacts.md)：模型分发、节点缓存、OCI 制品与供应链；
 - [DeepSeek-V4-Flash-0731 的 H20 部署与压测](deepseek-v4-flash-h20-evaluation.md)：逐项启动日志、部署配置与吞吐基线。

@@ -2,7 +2,7 @@
 title: 实战、排障与选型
 description: 用可复现的实验、性能数字、事故证据和决策树回答 AI/LLM on Kubernetes 的高频问题
 status: evolving
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 ---
 
 # 实战、排障与选型
@@ -20,6 +20,7 @@ last_reviewed: 2026-08-12
 
 - [DeepSeek V4 Flash 的分布式 KV Cache：从 P/D 直传到全局缓存池](distributed-kv-cache-deepseek-v4.md)
 - [从半小时到五分钟：大模型冷启动全链路优化](llm-cold-start-optimization.md)
+- [大模型权重分发与加载加速：社区与商业方案选型](model-weight-delivery-acceleration.md)
 - [vLLM、SGLang 与 TensorRT-LLM 同机实测](inference-engine-benchmark.md)
 - [模型显存与并发容量计算器](model-memory-calculator.md)
 - [Prefill/Decode 分离的性能拐点](pd-break-even.md)

@@ -53,5 +53,4 @@ last_reviewed: 2026-08-04
 
 源站故障、一个 Peer 损坏、磁盘空间不足、下载中断和模型回滚都必须有确定结果。最终报告应给出从零扩容到 SLO 容量的完整时间，而不只是下载带宽。
 
-延伸阅读：[模型制品与分发](../data/model-artifacts.md)、[数据与缓存](../data-storage.md)
-
+延伸阅读：[大模型权重分发与加载加速：社区与商业方案选型](model-weight-delivery-acceleration.md)、[模型制品与分发](../data/model-artifacts.md)、[数据与缓存](../data-storage.md)
