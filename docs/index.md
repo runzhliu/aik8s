@@ -43,14 +43,6 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 
 </div>
 
-## 关注微信公众号
-
-更多 AI/LLM on Kubernetes 实战、部署记录与性能分析会同步到微信公众号 **runzhliu**。使用微信扫描二维码，或在“微信搜一搜”中搜索 `runzhliu`：
-
-<p align="center">
-  <img src="assets/wechat-official-account-promo.png" alt="扫描二维码或通过微信搜一搜关注公众号 runzhliu" width="900">
-</p>
-
 ## 文档覆盖范围
 
 <div class="grid cards" markdown>
@@ -160,3 +152,11 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - 保留已有页面地址，新增内容按主题目录组织，避免链接随导航调整而失效。
 
 建议先进入 [完整技术地图](ai-k8s/index.md)，再按当前角色选择一条阅读路径。
+
+## 关注微信公众号
+
+更多 AI/LLM on Kubernetes 实战、部署记录与性能分析会同步到微信公众号 **runzhliu**。使用微信扫描二维码，或在“微信搜一搜”中搜索 `runzhliu`：
+
+<p align="center">
+  <img src="assets/wechat-official-account-promo.png" alt="扫描二维码或通过微信搜一搜关注公众号 runzhliu" width="900">
+</p>
