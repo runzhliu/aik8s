@@ -1,6 +1,6 @@
 ---
 title: GLM-5.2 FP8 在 8×H20 141GB 上的 AIBrix + vLLM 实测
-description: 记录 GLM-5.2 FP8 单节点 TP=8 的兼容性检查、标准 vLLM 启动、AIBrix 路由、冷启动、OpenWebUI 接入和四组性能基线
+description: 记录 GLM-5.2 FP8 单节点 TP=8 的 vLLM 基线、AIBrix 路由、性能实测，以及 SGLang 从共享文件系统加载权重时的并发放大问题
 status: exploratory
 last_reviewed: 2026-08-13
 ---
@@ -12,6 +12,8 @@ last_reviewed: 2026-08-13
 结论是可以。模型已使用标准 `vllm serve`、单节点 TP=8 启动，经 AIBrix Gateway 完成确定性中文请求和四组基准测试，并被 OpenWebUI 现有的 AIBrix 连接自动发现。本文所有集群名称、Namespace、节点地址、存储地址、镜像仓库和凭据均已删除或替换为占位符。
 
 这只是功能正确且可复现的 vLLM 基线，不是最终性能结论。本轮没有启用 MTP/DSpark，使用的通用镜像也未发现可独立导入的 DeepGEMM 包，不能把结果直接与官方优化配置或此前其他模型的推测解码数据比较。
+
+随后我们又用相同 FP8 Checkpoint、相同节点和 TP=8 启动了隔离的 SGLang 实例。该实例因为共享文件系统读取压力在 Ready 前主动停止，没有进行正确性验证和压测，因此不能用于比较 vLLM 与 SGLang 的性能；但这次失败实验暴露了一个值得单独记录的冷启动问题。
 
 ## 1. 为什么单机八卡能够放下
 
@@ -153,7 +155,106 @@ vLLM /v1/models
 
 单请求场景的输出吞吐为 65.24 tok/s，但 p95 TPOT 12.13 ms 对应稳定 Decode 阶段约 82 tok/s；二者口径不同，前者把 TTFT 和整轮持续时间计算在内，不能混为同一个数字。
 
-## 7. 这组数据能说明什么
+## 7. 与现有 SGLang W4AFP8 参数的静态对比
+
+为了避免影响生产业务，这里没有向现有 SGLang GLM-5.2 服务发送探活、推理或压测请求，也没有修改其 Deployment。以下结论只来自脱敏后的镜像版本、资源规格和启动参数，不代表实测性能排名。
+
+当前两种配置的主要差异如下：
+
+| 维度 | 本文 vLLM 基线 | 现有 SGLang W4AFP8 配置 | 参数作用 |
+| --- | --- | --- | --- |
+| 权重量化 | 原生 FP8 | W4AFP8 | W4 降低权重显存与读取带宽，使模型可适配 96 GB H20；FP8 通常保留更高质量余量 |
+| KV Cache | `fp8` | `fp8_e4m3` | 都通过低精度 KV 扩大容量，仍需评测长上下文质量 |
+| 上下文上限 | 131,072 | 204,800 | 更高上限提供更长请求能力，但不等于每种并发都能跑满上限 |
+| 并发上限 | 16 | 32 | 更高上限有利于吞吐和连续批处理，也可能放大排队与尾延迟 |
+| 推测解码 | 未启用 | EAGLE，3 steps、最多 4 个 draft tokens | 接受率足够高时减少大模型 Decode 次数，是当前最明显的速度变量 |
+| Prefix / 分级缓存 | Prefix Cache | HiCache + 内存层 KV Cache | HiCache 主要扩大 KV 容量和复用范围，不保证热 KV 比 HBM 更快 |
+| 显存比例 | 0.90 | 0.85 | SGLang 保留更多运行余量，vLLM 把更多显存交给 KV/运行时 |
+| Shared Expert Fusion | 默认引擎实现 | 显式关闭 | 通常是兼容性或正确性规避，可能损失一部分 MoE 融合收益 |
+
+SGLang 配置中最值得借鉴的不是“FP4”单个参数，而是下面这组组合：
+
+```text
+W4AFP8 权重量化
+  + FP8 E4M3 KV Cache
+  + EAGLE 推测解码
+  + 更高的运行请求上限
+  + HiCache 分级 KV Cache
+```
+
+它的主要优势分别落在不同目标上：W4AFP8 降低显存成本和权重带宽，EAGLE 优化 Decode，`max-running-requests` 提高调度并发，HiCache 则用主机内存换取更大的 KV 容量。它们不能都被解释成“单请求更快”。例如并发从 16 提到 32 可能提高总吞吐，却让 p95 TTFT 变差；HiCache 的 `write_through` 会增强可恢复性和容量，但也会增加写入流量。
+
+### 7.1 FP8 是否比 FP4 更好
+
+不能只按位宽给出总排名：
+
+- 质量、复杂推理、工具调用和量化风险优先时，原生 FP8 更稳妥；
+- 单副本 GPU 成本、96 GB 卡适配和副本规模优先时，W4AFP8 更有优势；
+- 单请求 Decode 速度主要取决于有效 Kernel、推测解码接受率和内存带宽，FP4 不会自动更快；
+- 高并发吞吐还受 Scheduler、Batch、KV 容量和业务长度分布影响，不能从权重精度直接推出。
+
+因此，本文 vLLM FP8 与现有 SGLang W4AFP8 不是严格的引擎 A/B，而是两套不同的质量、成本与性能组合。将来若测试，应另建隔离实例和独立 Service/Route，不能使用生产服务，并分成两组实验：
+
+1. **引擎 A/B**：相同 FP8 Checkpoint、硬件、上下文、KV 精度、推测解码和压测流量，只改变 vLLM/SGLang；
+2. **方案 A/B**：vLLM FP8 对 SGLang W4AFP8，同时报告正确性、EAGLE 接受率、显存、吞吐、TTFT、TPOT 和单次请求成本。
+
+在没有隔离测试数据前，只能确认 SGLang 参数更偏向“96 GB 适配、长上下文、分级 KV 和推测解码”，不能宣称它比当前 vLLM FP8 更快。
+
+### 7.2 同 FP8 Checkpoint 的 SGLang 启动实验
+
+为了将权重量化与推理引擎两个变量分开，我们又创建了一个独立 SGLang 0.5.16 实例，仍使用本文的原生 FP8 Checkpoint、`8 × H20 141 GB`、TP=8、131K 上下文和 FP8 E4M3 KV Cache。这个实例没有复用或压测已有业务服务。
+
+模型能够被识别为 FP8，八个 TP Rank 也完成了 NCCL 初始化并各自占用约 93 GB 显存，但服务端口迟迟没有打开。GPU 利用率接近 0，Scheduler 进程持续消耗 CPU 并读取共享模型目录，说明瓶颈还在权重加载和反序列化阶段，而不是 Decode 或请求路由。
+
+本次镜像中的 `sglang/srt/model_loader/loader.py` 默认允许每个 Rank 使用 8 个加载线程。TP=8 时，这可能把一个 Pod 的模型冷读放大为约 64 路并发 I/O：
+
+```text
+8 个 TP Rank × 每 Rank 8 个加载线程
+                  │
+                  ▼
+      约 64 路共享文件系统读取
+                  │
+        ┌─────────┴─────────┐
+        ▼                   ▼
+  CFS 吞吐与元数据压力    Rank 完成时间分叉
+                            │
+                            ▼
+                   所有 Rank 同步等待
+```
+
+第一轮使用默认加载方式，运行约 24 分钟仍未 Ready。虽然日志已经显示：
+
+```text
+Loading safetensors checkpoint shards: 141/141
+```
+
+但这条进度只反映输出日志的 Rank，不能证明八个 Rank 都完成了权重加载。通过检查每个 Scheduler 进程的 `/proc/<pid>/io`，可以看到各 Rank 的物理读取量明显分叉；此时仅看 Pod 状态、GPU 显存或单个进度条都会产生误判。
+
+临时关闭加载器多线程后再次启动：
+
+```bash
+sglang serve --model-path /models/GLM-5.2-FP8/v1 \
+  --tp-size 8 \
+  --kv-cache-dtype fp8_e4m3 \
+  --context-length 131072 \
+  --model-loader-extra-config '{"enable_multithread_load":false}'
+```
+
+第二轮 Rank 之间的读取更均衡，负责输出进度的 Rank 在 54 秒内遍历完 141 个分片；但该节点已经保留了第一轮形成的页缓存，因此 54 秒不是冷启动成绩。约 10 分钟后其他 Rank 仍在读取，考虑到共享文件系统压力，我们将测试 Deployment 缩至 0，停止继续读取并释放八张 GPU。
+
+这次实验没有得到 SGLang Ready 时间、正确性结果或性能数据。它能确认的是：
+
+- `141/141` 不能作为多 Rank 服务就绪条件，应同时检查端口、Ready 状态和一次正确推理响应；
+- 大模型加载并发需要按 `Pod 数 × TP Rank × 每 Rank 线程数` 估算，不能只看 Pod 数；
+- 关闭多线程可以降低瞬时并发，但也可能牺牲单 Rank 吞吐，并非最终优化方案；
+- 启动探针应覆盖最慢 Rank、KV Cache 初始化、编译和 CUDA Graph，而不是只覆盖权重进度；
+- 严格冷启动测试必须区分共享存储冷读、Linux 页缓存命中和节点本地缓存命中。
+
+同一时间窗口内，另有已经 Ready 的推理副本发生过重启，因此共享文件系统压力存在时间相关性；但已加载到 GPU 的服务通常不会持续读取全部权重，现有证据不足以证明 CFS 是其直接根因。后续还需要结合文件系统客户端超时、节点内核日志、GPU Xid 和运行时真实退出码判断，不能把相关性写成因果关系。
+
+更稳妥的下一轮方案是先把模型按 Revision 预热到节点本地 NVMe，再从 NVMe 启动 SGLang；同时设置全局下载并发上限，记录每个 Rank 的加载完成时间、存储吞吐、`Pod created → first correct response` 和缓存状态。共享文件系统保留为权威源和回源路径，不再让多个 TP Rank 在业务启动时直接形成无界并发冷读。
+
+## 8. 这组数据能说明什么
 
 它证明了四件事：
 
@@ -166,7 +267,7 @@ vLLM /v1/models
 
 1. 当前 vLLM 基线与原生 MTP `num_speculative_tokens=5`；
 2. 当前通用镜像与带 DeepGEMM 的官方优化构建；
-3. vLLM 与 SGLang 使用相同模型 Revision、上下文、KV 精度、并发和推测解码策略；
+3. 模型先分发到节点本地 NVMe，再让 vLLM 与 SGLang 使用相同 Revision、上下文、KV 精度、并发和推测解码策略；
 4. 直连 vLLM 与经 AIBrix Gateway，量化网关本身的开销；
 5. 共享文件系统冷读、节点 NVMe 命中和持久编译缓存命中三种冷启动状态。
 
