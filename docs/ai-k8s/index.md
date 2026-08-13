@@ -2,7 +2,7 @@
 title: AI/LLM on Kubernetes 基础设施
 description: 从加速器、大数据和集群，到训练、推理、RAG、Agent 与生产运维的完整技术地图
 status: stable
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-14
 ---
 
 # AI/LLM on Kubernetes 基础设施
@@ -105,7 +105,8 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 ### RAG、Agent 与边缘
 
 - [2026 年 AI Agent 现状、实现原理与趋势](rag-agent/agent-landscape-2026.md)：主流编程、浏览器与企业 Agent 的产品格局、实现原理、框架、风险和演进方向。
-- [DeepSeek Harness 架构、运行机制与云原生容器化](rag-agent/deepseek-harness-runtime-containerization.md)：Cordis 插件树、Agent 轮次、会话持久化、安全边界，以及 Docker、Compose 和 StatefulSet 的工程实现。
+- [DeepSeek Harness GitHub 仓库深度解析](rag-agent/deepseek-harness-repository-analysis.md)：源码目录、Cordis 插件树、Profile 与 Bundle、Agent Loop、事件溯源会话和能力 seam。
+- [DeepSeek Harness Docker、Compose 与 Helm 部署实战](rag-agent/deepseek-harness-runtime-containerization.md)：多架构镜像、EROFS 修复、状态持久化、StatefulSet、Helm 与安全暴露边界。
 - [RAG 基础设施](rag-agent/rag-infrastructure.md)：采集、切分、Embedding、向量数据库、检索、重排和权限过滤。
 - [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)：威胁模型、Kubernetes Agent Sandbox、gVisor、Kata、微虚机和托管平台决策。
 - [OpenClaw 作为企业 Agent 平台底座](rag-agent/openclaw-enterprise-agent-platform.md)：可复用能力、企业控制面缺口、安全风险、二次开发边界和推荐架构。
