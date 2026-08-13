@@ -56,6 +56,7 @@ nav = [
     {"RAG、Agent 与边缘" = [
       {"RAG 基础设施" = "ai-k8s/rag-agent/rag-infrastructure.md"},
       {"2026 Agent 现状与趋势" = "ai-k8s/rag-agent/agent-landscape-2026.md"},
+      {"DeepSeek Harness 架构与容器化" = "ai-k8s/rag-agent/deepseek-harness-runtime-containerization.md"},
       {"从 WorkBuddy 看企业 Agent 技术栈" = "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md"},
       {"Agent Sandbox 选型与分析" = "ai-k8s/rag-agent/agent-sandbox-selection.md"},
       {"OpenClaw 企业 Agent 平台分析" = "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md"},
