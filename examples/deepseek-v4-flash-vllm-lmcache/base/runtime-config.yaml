@@ -69,7 +69,7 @@ data:
       --dtype auto \
       --tensor-parallel-size 8 \
       --distributed-executor-backend mp \
-      --kv-cache-dtype "${KV_CACHE_DTYPE:-fp8}" \
+      --kv-cache-dtype "${KV_CACHE_DTYPE:-fp8_ds_mla}" \
       --block-size 256 \
       --gpu-memory-utilization "${GPU_MEMORY_UTILIZATION:-0.82}" \
       --max-model-len "${MAX_MODEL_LEN:-131072}" \

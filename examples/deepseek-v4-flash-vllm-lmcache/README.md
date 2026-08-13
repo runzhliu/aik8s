@@ -6,6 +6,10 @@
 
 所有公开清单使用占位镜像、通用 HostPath 和通用节点标签，不包含任何真实仓库、节点、模型源、地址或凭据。
 
+> 当前状态（2026-08-13）：External KV 回载已经命中，但严格输出正确性失败，
+> 本材料暂时只能用于复现和排障，不能作为生产可用结论。测试实例已缩容，待
+> 换用 CUDA 12.9 匹配的 LMCache 组合后重新验证。
+
 ## 1. 实验拓扑
 
 Baseline 和 LMCache 两种模式串行使用同一份 Deployment，因此最多占用一台 8 卡节点：
@@ -44,26 +48,36 @@ Client → vLLM TP=8 → GPU Prefix Cache
 
 ## 3. 版本与镜像
 
-DeepSeek-V4-Flash-0731 的官方 Recipe 要求 vLLM 至少为 0.25.0。当前材料默认：
+DeepSeek-V4-Flash-0731 的官方 Recipe 要求 vLLM 至少为 0.25.0。本轮首先测试的组合是：
 
 ```text
-vLLM base: vllm/vllm-openai:v0.26.0-cu129
-LMCache:   0.5.2（该 vLLM 镜像已经内置）
+vLLM:   0.26.0
+LMCache: 0.5.2
+Torch:   2.11.0+cu129
+CUDA:    12.9
 ```
 
-优先直接同步并使用这一组已经配套的镜像，不需要再安装 LMCache。部署前通过 `preflight-pod.yaml` 核对实际版本、MP Connector 和 Server CLI。
+该组合的 Python 包可以导入，MP Server 也能启动，但 `lmcache.c_ops` 链接
+`libcudart.so.13`，与 CUDA 12.9 不匹配。LMCache 默认 PyPI wheel 不能因为
+“安装成功”就视为与 cu129 配套；CUDA 12.9 应使用官方专用 cu129 wheel 或
+cu129 镜像，并固定最终 Digest。部署前通过 `preflight-pod.yaml` 同时核对实际
+vLLM、LMCache、Torch、CUDA、MP Connector、Server CLI 和 `lmcache.c_ops`。
 
-只有已经通过 DeepSeek V4 正确性验证的其他 vLLM 镜像不包含 LMCache 时，才使用回退 Dockerfile 构建派生镜像：
+如果已经验证的 vLLM cu129 基础镜像没有 LMCache，或内置的是 CUDA ABI 不匹配
+的 LMCache，应使用 Dockerfile 在构建阶段生成新的不可变组合镜像：
 
 ```bash
 docker build \
   --build-arg BASE_IMAGE=REGISTRY/PROJECT/VLLM@sha256:PINNED \
-  --build-arg LMCACHE_VERSION=0.5.2 \
-  -t REGISTRY/PROJECT/vllm-dsv4-lmcache:0.5.2 \
+  --build-arg LMCACHE_VERSION=0.5.3 \
+  -t REGISTRY/PROJECT/vllm-dsv4-lmcache:0.5.3-cu129 \
   -f Dockerfile .
 ```
 
-不要在 Pod 启动时临时 `pip install`。LMCache MP 接口仍在演进，vLLM、LMCache、Python、Torch 与 CUDA 必须作为一个组合锁定并记录镜像 Digest。也不要在已内置 LMCache 的镜像上强制覆盖版本；这会改变官方已经配套的依赖组合。
+不要在 Pod 启动时临时 `pip install`。LMCache MP 接口仍在演进，vLLM、LMCache、
+Python、Torch 与 CUDA 必须作为一个组合锁定并记录镜像 Digest。如果基础镜像
+已经包含 LMCache，只有确认其 ABI 不匹配时才在镜像构建阶段替换，并重新执行
+完整 Preflight 和正确性测试；不能把这种替换视为原镜像的已验证组合。
 
 ## 4. 部署前替换项
 
@@ -100,7 +114,10 @@ gmanctl delete pod deepseek-v4-flash-vllm-lmcache-preflight
 DeepSeek V4 / LMCache image preflight: PASS
 ```
 
-还应记录实际的 vLLM、LMCache、Torch、CUDA 和 Driver 版本。Preflight 通过只表示组件存在，不证明 V4 Hybrid KV 能正确 Offload。
+还应记录实际的 vLLM、LMCache、Torch、CUDA 和 Driver 版本。Preflight 必须
+真实导入 `lmcache.c_ops`；只检查 Python Module Spec 会漏掉动态库链接错误。
+即使 Preflight 通过，也只表示组件和 CUDA ABI 基本匹配，不证明 V4 Hybrid KV
+能够正确 Offload。
 
 ## 6. 渲染和串行部署
 
@@ -138,7 +155,8 @@ gmanctl rollout status deployment/deepseek-v4-flash-vllm-lmcache-ab --timeout=30
 - 不增加 Filesystem、Redis、S3 或跨节点 Backend；
 - 保留 `--no-disable-hybrid-kv-cache-manager`；
 - 使用 `block-size=256`；
-- 先沿用已经验证的 `KV_CACHE_DTYPE=fp8`。
+- 显式使用 `KV_CACHE_DTYPE=fp8_ds_mla`，不要依赖注意力后端把通用
+  `fp8` 局部转换为 DeepSeek MLA 布局。
 
 DeepSeek V4 同时包含 C4/C128 压缩层、SWA/残余状态和 Indexer 相关状态。以下检查全部通过后才能进入性能测试：
 
@@ -152,7 +170,12 @@ DeepSeek V4 同时包含 C4/C128 压缩层、SWA/残余状态和 Indexer 相关�
 
 社区已出现 DeepSeek V4 Hybrid KV 在高并发 Offload 中 Worker 崩溃、Prefix 命中异常以及 DSpark Draft KV 外部命中为零的报告。因此 Smoke Test 不能替代至少 30～60 分钟的并发 Soak Test。
 
-`fp8_ds_mla` 可能更符合部分 DeepSeek Hybrid KV Offload 路径的布局假设，但不能在 A/B 中顺手切换。应把它作为 A1 通过后的独立 A2 变量：先确认当前 vLLM 构建支持该 dtype，再比较正确性、容量、命中和并发稳定性。
+DeepSeek V4 Flash 的稀疏 MLA 包含多组不同 Block 几何形状的 KV。LMCache
+官方配方要求显式使用 `fp8_ds_mla`，让每组缓存按各自的布局保存和恢复。
+仅传通用 `fp8` 时，vLLM 的注意力实现可能在局部把它规范化为
+`fp8_ds_mla`，但外部 KV Connector 仍可能依据通用 CacheConfig 解释内存；
+这会出现“指标显示 External Hit，恢复后的输出却损坏”的静默正确性问题。
+因此 `fp8` 只能作为故障复现实验，不能作为本模型的 LMCache 基准配置。
 
 ## 8. 怎样证明命中的是 LMCache
 
@@ -179,6 +202,24 @@ python3 benchmark-prefix-reuse.py \
 ```
 
 默认压力集只是起点。必须根据 `/metrics` 暴露的 GPU KV 容量和使用率调整，直到确认目标 Prefix 已经离开 GPU 层；否则 `target_after_pressure` 仍可能只是 GPU 命中。
+
+如果测试镜像显式设置了 `VLLM_SERVER_DEV_MODE=1`，还可以用确定性方法只清
+vLLM 本地 Prefix Cache、保留 LMCache：
+
+```bash
+python3 benchmark-prefix-reuse.py \
+  --endpoint http://deepseek-v4-flash-vllm-lmcache-ab:8000 \
+  --model deepseek-v4-flash-lmcache-ab \
+  --prefix-chars 32000 \
+  --max-tokens 8 \
+  --warm-replays 1 \
+  --eviction-prompts 0 \
+  --reset-local-prefix-cache
+```
+
+开发缓存接口只能在隔离测试环境临时开启，不能暴露在生产服务中。脚本使用
+Chat Completions、固定 Seed 和精确 `CACHE_OK` 响应，并比较各阶段完整输出
+SHA-256；External Hit 增长但 Hash 改变仍判定失败。
 
 同时保存指标：
 
@@ -215,6 +256,27 @@ LMCache 有效
 
 如果外部命中为零，先判断目标 Prefix 是否真的被 GPU 淘汰，再查 Hybrid KV Group、dtype、Block Size 和 Connector 版本；不要只靠一次响应时间猜测命中。
 
+### 9.1 2026-08-13 实测结果
+
+固定 5,142-token Prompt 的结果如下。时延只用于帮助定位，不作为性能结论，
+因为正确性门槛没有通过：
+
+| 阶段 | TTFT | E2E | 输出 | External Hit |
+| --- | ---: | ---: | --- | ---: |
+| Cold | 1,333.86 ms | 16,059.37 ms | `CACHE_OK` | 0 |
+| GPU Prefix Cache | 1,421.54 ms | 1,784.08 ms | `CACHE_OK` | 0 |
+| 仅清 GPU Cache 后回载 | 403.54 ms | 1,255.28 ms | 损坏 | 5,120 tokens |
+
+vLLM 指标同时记录到 `external_prefix_cache_hits_total=5120` 和
+`prompt_tokens_by_source_total{source="external_kv_transfer"}=5120`。这证明
+LMCache 外部回载发生了，却不能证明内容正确。通用 `fp8` 和显式
+`fp8_ds_mla` 都复现了损坏，因此不能把问题简单归因于 dtype 默认值。
+
+本轮还确认 LMCache 0.5.2 的 C Extension 与运行时 CUDA 不匹配：容器只有
+`libcudart.so.12`，扩展却请求 `libcudart.so.13`。正确的下一步是换用专用
+cu129 wheel/镜像，保证 `import lmcache.c_ops` 成功后重跑同一测试。此前没有
+继续吞吐、并发或 P/D 测试，Deployment 已缩容到 0，避免占用 8 张 GPU。
+
 ## 10. 第二阶段：P/D 与跨节点
 
 只有 A1 通过，才增加 P/D：
@@ -240,6 +302,8 @@ LMCache 官方 MP P/D 示例当前明确标注为 `1P1D` 且尚未针对性能�
 - [vLLM KV Offload taxonomy：LMCacheMPConnector](https://github.com/vllm-project/recipes/blob/main/taxonomy.yaml)
 - [LMCache MP Quickstart](https://docs.lmcache.ai/mp/quickstart.html)
 - [LMCache MP Deployment](https://docs.lmcache.ai/mp/deployment.html)
+- [LMCache Installation：CUDA 12.9 专用 wheel 与镜像](https://docs.lmcache.ai/getting_started/installation.html)
+- [LMCache DeepSeek V4 Flash Recipe](https://docs.lmcache.ai/recipes/deepseek_v4_flash.html)
 - [LMCache MP P/D 示例](https://github.com/LMCache/LMCache/tree/dev/examples/disagg_prefill_mp)
 - [DeepSeek V4 Prefix Cache Hybrid Group 已知问题](https://github.com/vllm-project/vllm/issues/42948)
 - [DeepSeek V4 高并发 KV Offload 崩溃报告](https://github.com/vllm-project/vllm/issues/45475)

@@ -46,7 +46,7 @@ spec:
             - name: GPU_MEMORY_UTILIZATION
               value: "0.82"
             - name: KV_CACHE_DTYPE
-              value: fp8
+              value: fp8_ds_mla
             - name: MAX_MODEL_LEN
               value: "131072"
             - name: MAX_NUM_SEQS

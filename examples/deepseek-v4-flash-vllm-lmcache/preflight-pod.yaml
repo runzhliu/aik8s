@@ -23,13 +23,18 @@ spec:
           python3 - <<'PY'
           import importlib.util
           from importlib.metadata import version
+          import torch
 
           connector = importlib.util.find_spec(
               "lmcache.integration.vllm.lmcache_mp_connector"
           )
           print("vllm", version("vllm"))
           print("lmcache", version("lmcache"))
+          print("torch", torch.__version__)
+          print("torch CUDA", torch.version.cuda)
           print("connector", connector)
+          import lmcache.c_ops
+          print("lmcache.c_ops", "PASS")
           assert connector is not None, "LMCacheMPConnector module is missing"
           assert tuple(map(int, version("vllm").split("+")[0].split(".")[:2])) >= (0, 25)
           PY

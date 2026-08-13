@@ -2,7 +2,7 @@
 title: DeepSeek V4 Flash 的分布式 KV Cache：从 P/D 直传到全局缓存池
 description: 区分 P/D KV 直传、KV Offload、Prefix 感知路由与跨引擎共享缓存，比较 Mooncake、AIBrix、LMCache/llm-d 和 Dynamo KVBM，并给出 DeepSeek V4 Flash 的渐进验证路线
 status: exploratory
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 ---
 
 # DeepSeek V4 Flash 的分布式 KV Cache：从 P/D 直传到全局缓存池
@@ -124,6 +124,31 @@ SGLang [HiCache](https://github.com/sgl-project/sglang/blob/main/docs_new/docs/a
 vLLM 官方 DeepSeek V4 Flash Recipe 已把 CPU Offload 和 Filesystem Offload 标为 verified，并把 `LMCacheMPConnector` 作为通用 KV Offload 选项提供给单节点 TP/TEP/DEP 策略。当前 Recipe 的 LMCache 模式是每节点一个伴随式 `lmcache server`，不是跨节点共享池；因此它足以进入 DeepSeek V4 的节点内兼容性测试，但不能直接证明“跨节点中央 KV Cache 已支持”。可执行的单节点 Baseline/LMCache A/B 材料见：[DeepSeek V4 Flash：vLLM + LMCache MP](https://github.com/runzhliu/aik8s/tree/main/examples/deepseek-v4-flash-vllm-lmcache)。
 
 测试还需要覆盖已知风险：DeepSeek V4 使用多组 Hybrid KV，社区已有 Prefix Cache 重放 0% 命中、高并发 Offload Worker 崩溃，以及 DSpark Draft KV 外部命中长期为零的报告。第一轮应关闭 DSpark 和 P/D，只验证 GPU Cache 淘汰后的 LMCache Load、确定性输出与并发稳定性；随后再把 P/D、远端 Backend 和 Draft Model 分别作为独立变量。
+
+#### 3.3.1 单节点 H20 实测：命中不等于正确
+
+我们先在单个 8 卡 H20 Engine 上验证 `LMCacheMPConnector + Host DRAM L1`，没有同时引入 P/D、远端 Backend 或 DSpark。固定 Chat Template、随机种子和 5,142-token Prompt，要求模型只返回 `CACHE_OK`。为了避免依赖请求压力猜测 GPU Block 的淘汰顺序，测试环境短暂开启 vLLM 开发接口，只重置本地 Prefix Cache，明确保留 External Cache，再回放同一请求。
+
+指标证明外部数据路径确实生效：
+
+```text
+external_prefix_cache_hits_total  +5,120 tokens
+prompt_tokens source=external_kv_transfer  +5,120 tokens
+LMCache L1 Lookup/Hit 与内存使用量同时增长
+```
+
+但严格输出校验没有通过：冷请求与 GPU 本地热命中都稳定返回 `CACHE_OK`，清除 GPU Prefix Cache 后，外部回载请求虽然显示 5,120-token External Hit，却生成了损坏的 Token。把 KV dtype 从通用 `fp8` 改成 LMCache DeepSeek V4 配方要求的显式 `fp8_ds_mla` 后，问题仍然复现。
+
+| 配置 | Cold / GPU Warm | External Hit | 回载后输出 | 结论 |
+| --- | --- | ---: | --- | --- |
+| 通用 `fp8` | `CACHE_OK` | 5,120 tokens | 损坏 | 失败 |
+| 显式 `fp8_ds_mla` | `CACHE_OK` | 5,120 tokens | 损坏 | 失败 |
+
+同时发现测试镜像存在基础兼容问题：vLLM 0.26.0 和 Torch 2.11.0 使用 CUDA 12.9，但其中的 LMCache 0.5.2 来自默认 CUDA 13 安装路径，`lmcache.c_ops` 会寻找 `libcudart.so.13`，只能降级到 Python/Torch fallback。LMCache 官方安装文档要求 CUDA 12.9 使用专门发布的 cu129 wheel 或 `latest-cu129` 镜像，而不是直接安装 PyPI 默认 wheel。
+
+因此本轮只证明了“Store、Lookup 和 External Transfer 计数能够工作”，没有证明 DeepSeek V4 Hybrid KV 可以正确恢复。正确性门槛失败后没有继续做吞吐和并发压测，测试 Deployment 已缩容到 0，保留模型 HostPath、清单和压测脚本。下一轮应先换成版本锁定的 cu129 组合，并要求 `import lmcache.c_ops` 通过，再重复同一确定性回载测试；通过后才能进入性能 A/B。
+
+这个案例也是中央 KV Cache 验收中最重要的反例：**External Hit 指标只能证明发生了搬运，不能证明搬回来的 KV 布局和内容正确。** 必须同时比较确定性输出或 Logits，任何乱码、Hash 变化或错误 Token 都应立即停止性能测试。
 
 ### 3.4 NVIDIA Dynamo KVBM
 

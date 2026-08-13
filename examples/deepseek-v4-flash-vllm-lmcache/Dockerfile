@@ -1,10 +1,14 @@
 ARG BASE_IMAGE=vllm/vllm-openai:v0.26.0-cu129
 FROM ${BASE_IMAGE}
 
-ARG LMCACHE_VERSION=0.5.2
+ARG LMCACHE_VERSION=0.5.3
+ARG CUDA_TAG=cu129
 
-# vLLM v0.26.0-cu129 already bundles LMCache 0.5.2. This Dockerfile is only a
-# fallback for a validated base image that does not contain LMCache. Do not use
-# it to downgrade or overwrite the version bundled by the official image.
+# CUDA 12.9 wheels are published in a dedicated LMCache release, not on the
+# default PyPI CUDA 13 path. Keep vLLM, Torch, CUDA and LMCache as one pinned
+# compatibility unit and publish the resulting image by digest.
 RUN uv pip install --system "lmcache==${LMCACHE_VERSION}" \
-    && python3 -c 'from importlib.metadata import version; print("vllm", version("vllm"), "lmcache", version("lmcache"))'
+      --extra-index-url "https://download.pytorch.org/whl/${CUDA_TAG}" \
+      --find-links "https://github.com/LMCache/LMCache/releases/expanded_assets/v${LMCACHE_VERSION}-cu129" \
+      --index-strategy unsafe-best-match \
+    && python3 -c 'import lmcache.c_ops; from importlib.metadata import version; print("vllm", version("vllm"), "lmcache", version("lmcache"))'
