@@ -19,6 +19,30 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 [浏览工程案例](cases/index.md){ .md-button }
 [RSS 订阅](https://aik8s.run/rss.xml){ .md-button }
 
+## 常用官方网站
+
+按技术层次整理的官方文档直达入口。项目能力、版本兼容性和安装方式变化较快，使用时以官方文档与目标版本的 Release Notes 为准。
+
+<div class="grid cards" markdown>
+
+-   **LLM 推理引擎**
+
+    [vLLM](https://docs.vllm.ai/) · [SGLang](https://docs.sglang.io/) · [TensorRT-LLM](https://nvidia.github.io/TensorRT-LLM/) · [Triton Inference Server](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/) · [llama.cpp](https://github.com/ggml-org/llama.cpp) · [Ollama](https://docs.ollama.com/)
+
+-   **推理服务与分布式编排**
+
+    [KServe](https://kserve.github.io/website/) · [Ray / KubeRay](https://docs.ray.io/en/latest/cluster/kubernetes/) · [AIBrix](https://aibrix.readthedocs.io/latest/) · [llm-d](https://llm-d.ai/) · [NVIDIA Dynamo](https://docs.nvidia.com/dynamo/latest/)
+
+-   **Kubernetes、GPU 与调度**
+
+    [Kubernetes](https://kubernetes.io/docs/) · [NVIDIA GPU Operator](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/) · [Kueue](https://kueue.sigs.k8s.io/) · [Volcano](https://volcano.sh/docs/) · [Kubeflow](https://www.kubeflow.org/docs/)
+
+-   **模型、训练与通信**
+
+    [PyTorch](https://docs.pytorch.org/docs/stable/index.html) · [Hugging Face](https://huggingface.co/docs) · [DeepSpeed](https://deepspeed.readthedocs.io/) · [NCCL](https://docs.nvidia.com/deeplearning/nccl/user-guide/)
+
+</div>
+
 ## 文档覆盖范围
 
 <div class="grid cards" markdown>
