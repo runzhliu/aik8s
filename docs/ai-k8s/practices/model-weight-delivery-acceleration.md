@@ -254,6 +254,7 @@ t9  第一条确定性请求正确返回
 
 延伸阅读：
 
+- [GLM-5.2 FP8 在 8×H20 141GB 上的 AIBrix + vLLM 实测](glm52-fp8-h20-aibrix-vllm.md)：141 个权重分片的加载时间、编译预热、Gateway 路由与吞吐实测；
 - [从半小时到五分钟：大模型冷启动全链路优化](llm-cold-start-optimization.md)：权重加载之后的 JIT、CUDA Graph 与恢复路径；
 - [70B 模型向百节点分发](model-distribution-100-nodes.md)：分批预热、P2P 和源站惊群实验；
 - [大模型与数据制品](../data/model-artifacts.md)：模型版本、Digest、OCI 与供应链治理。
