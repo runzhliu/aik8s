@@ -9,7 +9,7 @@ last_reviewed: 2026-08-14
 
 本文聚焦一个明确目标：把仍处于开发者预览阶段的 DeepSeek Harness，整理成可构建、可复现、可持久化并具备安全基线的容器项目。
 
-如果想先理解它为什么使用 Cordis、Agent turn/step 如何运行、会话为何采用事件溯源，以及 Filesystem、Shell、Sandbox 等能力如何被替换，请先阅读独立的源码分析：[DeepSeek Harness GitHub 仓库深度解析](deepseek-harness-repository-analysis.md)。
+如果想先理解它为什么使用 Cordis、Agent turn/step 如何运行、会话为何采用事件溯源，以及 Filesystem、Shell、Sandbox 等能力如何被替换，请先阅读独立的源码分析：[DeepSeek Harness GitHub 仓库深度解析](deepseek-harness-repository-analysis.md)。如果更关心 all-in-one Chromium、DSH Browser Plugin、Tailscale 入口，以及真实测试集群中的 StatefulSet、PVC、NetworkPolicy 和 Cilium 探针冲突，请继续阅读 [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](../practices/deepseek-harness-kubernetes.md)。
 
 配套实现已经整理在独立开源项目 [runzhliu/deepseek-harness-docker](https://github.com/runzhliu/deepseek-harness-docker)，镜像发布在 [Docker Hub：runzhliu/deepseek-harness](https://hub.docker.com/r/runzhliu/deepseek-harness)。项目包含：
 

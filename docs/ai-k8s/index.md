@@ -50,7 +50,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 建设 Ray 大模型平台 | [Ray 训练与推理](ray-llm-platform.md) → [分布式训练](distributed-training.md) → [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [可靠性](reliability.md) |
 | 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [Serving 框架](inference/serving-frameworks.md) → [网关与路由](inference/gateway-routing.md) → [Higress 实战](inference/higress-ai-gateway.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
-| 建设 RAG 或 Agent 平台 | [Agent 现状与趋势](rag-agent/agent-landscape-2026.md) → [RAG 基础设施](rag-agent/rag-infrastructure.md) → [OpenClaw 企业平台分析](rag-agent/openclaw-enterprise-agent-platform.md) → [内部 AI 应用发布](rag-agent/internal-agent-app-publishing.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [工具与执行治理](agentic-workloads.md) → [安全治理](security-governance.md) |
+| 建设 RAG 或 Agent 平台 | [Agent 现状与趋势](rag-agent/agent-landscape-2026.md) → [DeepSeek Harness 容器化](rag-agent/deepseek-harness-runtime-containerization.md) → [Kubernetes 实战](practices/deepseek-harness-kubernetes.md) → [OpenClaw 企业平台分析](rag-agent/openclaw-enterprise-agent-platform.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [工具与执行治理](agentic-workloads.md) → [安全治理](security-governance.md) |
 | 负责 SRE、成本或容量 | [可观测性](observability.md) → [性能基准](benchmarking.md) → [成本与容量](cost-capacity.md) → [落地路线图](adoption-roadmap.md) |
 
 ## 完整主题地图 { #topic-map }
@@ -107,6 +107,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [2026 年 AI Agent 现状、实现原理与趋势](rag-agent/agent-landscape-2026.md)：主流编程、浏览器与企业 Agent 的产品格局、实现原理、框架、风险和演进方向。
 - [DeepSeek Harness GitHub 仓库深度解析](rag-agent/deepseek-harness-repository-analysis.md)：源码目录、Cordis 插件树、Profile 与 Bundle、Agent Loop、事件溯源会话和能力 seam。
 - [DeepSeek Harness Docker、Compose 与 Helm 部署实战](rag-agent/deepseek-harness-runtime-containerization.md)：多架构镜像、EROFS 修复、状态持久化、StatefulSet、Helm 与安全暴露边界。
+- [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](practices/deepseek-harness-kubernetes.md)：all-in-one 浏览器桌面、自研 DSH Plugin、Tailscale 远程入口、状态卷、Cilium 探针冲突和安全边界。
 - [RAG 基础设施](rag-agent/rag-infrastructure.md)：采集、切分、Embedding、向量数据库、检索、重排和权限过滤。
 - [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)：威胁模型、Kubernetes Agent Sandbox、gVisor、Kata、微虚机和托管平台决策。
 - [OpenClaw 作为企业 Agent 平台底座](rag-agent/openclaw-enterprise-agent-platform.md)：可复用能力、企业控制面缺口、安全风险、二次开发边界和推荐架构。

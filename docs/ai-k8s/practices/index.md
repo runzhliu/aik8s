@@ -2,7 +2,7 @@
 title: 实战、排障与选型
 description: 用可复现的实验、性能数字、事故证据和决策树回答 AI/LLM on Kubernetes 的高频问题
 status: evolving
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 ---
 
 # 实战、排障与选型
@@ -39,6 +39,7 @@ last_reviewed: 2026-08-13
 
 ## 端到端交付
 
+- [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](deepseek-harness-kubernetes.md)
 - [GLM-5.2 FP8 在 8×H20 141GB 上的 AIBrix + vLLM 实测](glm52-fp8-h20-aibrix-vllm.md)
 - [DeepSeek-V4-Flash-0731 的 H20 部署与压测](deepseek-v4-flash-h20-evaluation.md)
 - [在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)
