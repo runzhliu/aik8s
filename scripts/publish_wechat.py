@@ -332,6 +332,41 @@ def create_draft(
     return str(media_id)
 
 
+def update_draft(
+    token: str,
+    *,
+    media_id: str,
+    title: str,
+    author: str,
+    digest: str,
+    content: str,
+    source_url: str,
+    thumb_media_id: str,
+) -> None:
+    payload = {
+        "media_id": media_id,
+        "index": 0,
+        "articles": {
+            "title": title,
+            "author": author,
+            "digest": digest,
+            "content": content,
+            "content_source_url": source_url,
+            "thumb_media_id": thumb_media_id,
+            "need_open_comment": 0,
+            "only_fans_can_comment": 0,
+        },
+    }
+    response = requests.post(
+        f"{API_BASE}/draft/update",
+        params={"access_token": token},
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        timeout=60,
+    )
+    check_response(response, "update draft")
+
+
 def command_render(args: argparse.Namespace) -> None:
     title, content, _ = render_markdown(args.article)
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -380,6 +415,41 @@ def command_draft(args: argparse.Namespace) -> None:
     print(f"draft created: media_id={media_id}")
 
 
+def command_update(args: argparse.Namespace) -> None:
+    load_env_file(args.env_file)
+    app_id = required_env("WECHAT_APP_ID")
+    app_secret = required_env("WECHAT_APP_SECRET")
+    author = os.environ.get("WECHAT_AUTHOR", "runzhliu").strip()
+    source_url = (
+        args.source_url.strip()
+        if args.source_url is not None
+        else os.environ.get("WECHAT_SOURCE_URL", "").strip()
+    )
+
+    title, content, digest = render_markdown(args.article)
+    token = get_access_token(app_id, app_secret)
+    content = upload_content_images(token, content, args.article.parent)
+
+    if args.cover is not None:
+        thumb_media_id = upload_cover(token, args.cover)
+    else:
+        thumb_media_id = os.environ.get("WECHAT_THUMB_MEDIA_ID", "").strip()
+        if not thumb_media_id:
+            raise ValueError("set WECHAT_THUMB_MEDIA_ID or pass --cover")
+
+    update_draft(
+        token,
+        media_id=args.media_id,
+        title=title,
+        author=author,
+        digest=digest,
+        content=content,
+        source_url=source_url,
+        thumb_media_id=thumb_media_id,
+    )
+    print(f"draft updated: media_id={args.media_id}")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -395,6 +465,14 @@ def parse_args() -> argparse.Namespace:
     draft.add_argument("--cover", type=Path)
     draft.add_argument("--source-url")
     draft.set_defaults(func=command_draft)
+
+    update = subparsers.add_parser("update", help="update a WeChat Official Account draft")
+    update.add_argument("article", type=Path)
+    update.add_argument("--media-id", required=True)
+    update.add_argument("--env-file", type=Path, default=Path(".deploy-secrets/wechat.env"))
+    update.add_argument("--cover", type=Path)
+    update.add_argument("--source-url")
+    update.set_defaults(func=command_update)
 
     return parser.parse_args()
 
