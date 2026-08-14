@@ -14,6 +14,7 @@ last_reviewed: 2026-08-14
 - [GPU 有空闲，Pod 为什么仍然 Pending](gpu-pending.md)
 - [GPU 利用率为什么很低](low-gpu-utilization.md)
 - [GPU 节点故障图鉴](gpu-failure-atlas.md)
+- [看似 NCCL 故障，实际是 Host Memory OOM](nccl-unhandled-cuda-error-host-memory-oom.md)
 - [AI 集群事故复盘方法](incident-review.md)
 
 ## 性能、成本与容量

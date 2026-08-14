@@ -102,6 +102,7 @@ nav = [
       {"KubeVirt + RBD Notebook" = "ai-k8s/practices/kubevirt-rbd-notebook.md"},
       {"Spot GPU 恢复实验" = "ai-k8s/practices/spot-checkpoint.md"},
       {"GPU 节点故障图鉴" = "ai-k8s/practices/gpu-failure-atlas.md"},
+      {"NCCL 报错与 Host Memory OOM 排障" = "ai-k8s/practices/nccl-unhandled-cuda-error-host-memory-oom.md"},
       {"AI 集群事故复盘" = "ai-k8s/practices/incident-review.md"},
       {"国内外 GPU 云选型" = "ai-k8s/practices/cloud-gpu-selection.md"},
       {"国产 GPU/NPU 实践" = "ai-k8s/practices/domestic-accelerators.md"},

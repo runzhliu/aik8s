@@ -40,7 +40,7 @@ last_reviewed: 2026-08-08
 
 故障签名、首次时间、影响卡/节点/作业、固件/驱动版本、复现条件、诊断命令、临时处置、恢复验证、维修结论和再次发生阈值。
 
-延伸阅读：[GPU 节点软件栈](../cluster/gpu-node-stack.md)、[可观测性](../observability.md)、[可靠性](../reliability.md)
+延伸阅读：[NCCL 报错背后的 Host Memory OOM 排障实录](nccl-unhandled-cuda-error-host-memory-oom.md)、[GPU 节点软件栈](../cluster/gpu-node-stack.md)、[可观测性](../observability.md)、[可靠性](../reliability.md)
 
 ## 5. 实战案例：GPU 指标 Exporter 在新驱动节点反复段错误
 
