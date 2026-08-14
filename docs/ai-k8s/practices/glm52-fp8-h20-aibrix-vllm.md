@@ -1,11 +1,11 @@
 ---
-title: GLM-5.2 FP8 在 8×H20 141GB 上的 AIBrix + vLLM 实测
-description: 记录 GLM-5.2 FP8 单节点 TP=8 的 vLLM 基线、AIBrix 路由、性能实测，以及 SGLang 从共享文件系统加载权重时的并发放大问题
+title: GLM-5.2 FP8 在 8×H20 141GB 上的 vLLM 与 SGLang 实测
+description: 记录 GLM-5.2 FP8 单节点 TP=8 的 vLLM 基线、AIBrix 路由、性能实测，以及 SGLang 从共享文件系统加载权重与首次 JIT 的完整启动过程
 status: exploratory
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 ---
 
-# GLM-5.2 FP8 在 8×H20 141GB 上的 AIBrix + vLLM 实测
+# GLM-5.2 FP8 在 8×H20 141GB 上的 vLLM 与 SGLang 实测
 
 这次实验回答一个具体问题：GLM-5.2 FP8 是否一定要用 SGLang，还是可以直接使用 AIBrix + vLLM，在一台 `8 × H20 141 GB` 节点上提供 OpenAI-compatible 服务？
 
@@ -13,7 +13,7 @@ last_reviewed: 2026-08-13
 
 这只是功能正确且可复现的 vLLM 基线，不是最终性能结论。本轮没有启用 MTP/DSpark，使用的通用镜像也未发现可独立导入的 DeepGEMM 包，不能把结果直接与官方优化配置或此前其他模型的推测解码数据比较。
 
-随后我们又用相同 FP8 Checkpoint、相同节点和 TP=8 启动了隔离的 SGLang 实例。该实例因为共享文件系统读取压力在 Ready 前主动停止，没有进行正确性验证和压测，因此不能用于比较 vLLM 与 SGLang 的性能；但这次失败实验暴露了一个值得单独记录的冷启动问题。
+随后我们又用相同 FP8 Checkpoint、相同节点和 TP=8 启动了隔离的 SGLang 0.5.16 实例。第三轮在限制模型加载并发、为启动探针保留 60 分钟窗口后成功 Ready，最小确定性请求得到正确结果。它证明 SGLang 能在这套硬件上运行该 FP8 Checkpoint，但尚未形成与 vLLM 参数严格对齐的性能 A/B。
 
 ## 1. 为什么单机八卡能够放下
 
@@ -198,13 +198,73 @@ W4AFP8 权重量化
 1. **引擎 A/B**：相同 FP8 Checkpoint、硬件、上下文、KV 精度、推测解码和压测流量，只改变 vLLM/SGLang；
 2. **方案 A/B**：vLLM FP8 对 SGLang W4AFP8，同时报告正确性、EAGLE 接受率、显存、吞吐、TTFT、TPOT 和单次请求成本。
 
-在没有隔离测试数据前，只能确认 SGLang 参数更偏向“96 GB 适配、长上下文、分级 KV 和推测解码”，不能宣称它比当前 vLLM FP8 更快。
+静态分析阶段只能确认 SGLang 参数更偏向“96 GB 适配、长上下文、分级 KV 和推测解码”，不能据此宣称它比当前 vLLM FP8 更快。后续隔离实例的实测结果见 7.2.4；由于客户端数据集和 Engine 参数仍有差异，该数据依然不是只改变推理引擎的严格 A/B。
 
 ### 7.2 同 FP8 Checkpoint 的 SGLang 启动实验
 
 为了将权重量化与推理引擎两个变量分开，我们又创建了一个独立 SGLang 0.5.16 实例，仍使用本文的原生 FP8 Checkpoint、`8 × H20 141 GB`、TP=8、131K 上下文和 FP8 E4M3 KV Cache。这个实例没有复用或压测已有业务服务。
 
-模型能够被识别为 FP8，八个 TP Rank 也完成了 NCCL 初始化并各自占用约 93 GB 显存，但服务端口迟迟没有打开。GPU 利用率接近 0，Scheduler 进程持续消耗 CPU 并读取共享模型目录，说明瓶颈还在权重加载和反序列化阶段，而不是 Decode 或请求路由。
+第三轮使用 SGLang 自带的前台入口启动，没有调用镜像里的二次封装 `start.sh`：
+
+```bash
+python3 -m sglang.launch_server \
+  --model-path /models/GLM-5.2-FP8/v1 \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --tp-size 8 \
+  --served-model-name glm-5.2-fp8-sglang-test \
+  --kv-cache-dtype fp8_e4m3 \
+  --reasoning-parser glm45 \
+  --tool-call-parser glm47 \
+  --context-length 131072 \
+  --mem-fraction-static 0.85 \
+  --model-loader-extra-config '{"enable_multithread_load":false}' \
+  --speculative-algorithm EAGLE \
+  --speculative-num-steps 3 \
+  --speculative-eagle-topk 1 \
+  --speculative-num-draft-tokens 4 \
+  --max-running-requests 32
+```
+
+镜像中的 `python -m sglang.launch_server` 仍然可用，但 0.5.16 已提示优先使用等价的 `sglang serve` 入口。模型被识别为 `GlmMoeDsaForCausalLM` 和 FP8 Checkpoint；八个 TP Rank 在约 18 秒内完成 NCCL 2.28.9 初始化，SGLang 为 DSA 自动选择 `flashmla_kv` 作为 Prefill/Decode Attention Backend。
+
+### 7.2.1 为什么 `141/141` 后仍等了二十多分钟
+
+该 Checkpoint 的 `model.safetensors.index.json` 记录总大小为 755,617,140,416 Bytes，约 703.7 GiB。日志中的：
+
+```text
+Loading safetensors checkpoint shards: 141/141
+```
+
+只反映负责输出进度的一个 Rank 遍历完 141 个分片，不能证明八个 Rank 都完成加载。该进度条本轮约 70 秒就到 100%，但通过 `/proc/<scheduler-pid>/io` 观察，其他 Scheduler 仍持续产生实际磁盘读取，端口也尚未监听。
+
+各进程的 `read_bytes` 最终合计约 704 GiB，与 Checkpoint 体积基本吻合。物理 I/O 主要记在部分 Rank 上，是 Linux 页缓存和并发读盘的记账结果，不代表只有这些 GPU 在装载模型。只有同时满足以下条件才能判定启动成功：
+
+```text
+全部 Rank 完成权重与 Kernel 初始化
+              ↓
+HTTP 端口开始监听
+              ↓
+Pod Ready=True
+              ↓
+/v1/models 正确 + 一次正确生成
+```
+
+本轮主要时间线如下：
+
+| 阶段 | 观测结果 |
+| --- | ---: |
+| Pod 创建至八个 Rank 开始加载 | 约 66 秒 |
+| 单个可见进度条遍历 141 个分片 | 约 70 秒 |
+| 全部权重实际读取与加载阶段 | 约 23 分钟 |
+| 首次 DeepGEMM JIT、Warm-up 和服务初始化 | 约 3 分钟 |
+| Pod 创建至 Ready | 27 分 20 秒 |
+| Ready 后单卡显存 | 127,688–128,168 MiB，约 124.7–125.2 GiB |
+| Ready 后剩余显存 | 约 15.5 GiB |
+
+本轮节点已经历过前两轮加载，Linux 页缓存状态不是严格冷缓存，因此 27 分 20 秒不能作为共享存储冷启动的通用成绩；但它能说明只盯一个 Safetensors 进度条会把就绪时间低估一个数量级。
+
+### 7.2.2 加载并发、JIT 和探针
 
 本次镜像中的 `sglang/srt/model_loader/loader.py` 默认允许每个 Rank 使用 8 个加载线程。TP=8 时，这可能把一个 Pod 的模型冷读放大为约 64 路并发 I/O：
 
@@ -222,37 +282,168 @@ W4AFP8 权重量化
                    所有 Rank 同步等待
 ```
 
-第一轮使用默认加载方式，运行约 24 分钟仍未 Ready。虽然日志已经显示：
+第一轮使用默认加载方式，运行约 24 分钟仍未 Ready；第二轮关闭多线程后，在约 10 分钟时为控制共享文件系统压力主动停止。第三轮继续使用单线程加载并完整等待，最终成功 Ready。关闭多线程降低了瞬时并发，但没有消除 755.6 GB 权重读取量，因此它是存储保护手段，不是冷启动加速结论。
+
+权重加载结束后，SGLang 首次进入 DeepGEMM JIT Pre-Compile。Runtime 明确提示：如果没有预先运行 `sglang.compile_deep_gemm`，该阶段通常可能耗时 10–20 分钟；本轮实际约数分钟完成。后续镜像应使用与正式启动相同的模型、TP 和 GPU 架构预编译，并把生成缓存按以下指纹管理：
 
 ```text
-Loading safetensors checkpoint shards: 141/141
+SGLang commit + SGL Kernel + CUDA/Driver
+  + GPU compute capability + TP
+  + 模型 Revision/量化方式 + Kernel 参数
 ```
 
-但这条进度只反映输出日志的 Rank，不能证明八个 Rank 都完成了权重加载。通过检查每个 Scheduler 进程的 `/proc/<pid>/io`，可以看到各 Rank 的物理读取量明显分叉；此时仅看 Pod 状态、GPU 显存或单个进度条都会产生误判。
+不能直接跨版本或跨卡型复用编译目录。本轮还发现镜像缺少 Triton 3.6 对 H20 FP8 MoE 的对应 JSON 配置，Runtime 回退到 Triton 3.5.1 配置并提示性能可能不是最优；正式压测前应先补齐或验证该配置，避免把回退 Kernel 的结果当成 SGLang 上限。
 
-临时关闭加载器多线程后再次启动：
+探针配置必须覆盖权重加载、所有 Rank 同步、JIT、KV Cache 和 CUDA Graph：
 
-```bash
-sglang serve --model-path /models/GLM-5.2-FP8/v1 \
-  --tp-size 8 \
-  --kv-cache-dtype fp8_e4m3 \
-  --context-length 131072 \
-  --model-loader-extra-config '{"enable_multithread_load":false}'
+| 探针 | 本轮设置 | 失败后的行为 |
+| --- | --- | --- |
+| Startup | TCP 8000，每 10 秒，`failureThreshold=360` | 约 60 分钟仍失败才重启容器 |
+| Liveness | TCP 8000，每 30 秒，连续失败 3 次 | 重启容器 |
+| Readiness | TCP 8000，每 10 秒，连续失败 3 次 | 只摘出流量，不重启 |
+
+Startup Probe 成功前，Liveness 和 Readiness 不会干扰长时间冷启动。本轮 Pod 全程 `RESTARTS=0`。若 Startup 窗口仍沿用普通 Web 服务的几分钟默认值，就会在 700 GB 级模型即将完成加载时反复杀进程，形成“永远启动不了”的重启循环。
+
+服务启动后还观察到集群采集组件访问 `/metrics` 返回 404。这是因为测试命令没有启用 SGLang Metrics，不影响 OpenAI-compatible 推理接口；正式接入监控时应增加 `--enable-metrics`，并确认抓取周期不会形成无意义的 404 日志风暴。
+
+### 7.2.3 正确性结果与结论边界
+
+Pod 在 0 次重启的情况下达到 `1/1 Running`，`/v1/models` 返回：
+
+```json
+{"id":"glm-5.2-fp8-sglang-test","owned_by":"sglang","max_model_len":131072}
 ```
 
-第二轮 Rank 之间的读取更均衡，负责输出进度的 Rank 在 54 秒内遍历完 141 个分片；但该节点已经保留了第一轮形成的页缓存，因此 54 秒不是冷启动成绩。约 10 分钟后其他 Rank 仍在读取，考虑到共享文件系统压力，我们将测试 Deployment 缩至 0，停止继续读取并释放八张 GPU。
+随后向隔离测试 Pod 的 Loopback 地址发送 `temperature=0`、关闭 Thinking 的最小请求，要求只返回 `FP8_OK`，实际得到精确的 `FP8_OK`。这证明标准 SGLang 0.5.16、TP=8、原生 FP8 权重和 EAGLE 参数组合至少通过了模型加载与基本生成验证。
 
-这次实验没有得到 SGLang Ready 时间、正确性结果或性能数据。它能确认的是：
+本轮没有向现有生产 SGLang GLM 服务发送任何探活或压测请求。隔离实例随后完成了与 vLLM 基线相同长度和并发档位的压测，但还不是参数严格对齐的引擎 A/B。启动实验能确认的是：
 
 - `141/141` 不能作为多 Rank 服务就绪条件，应同时检查端口、Ready 状态和一次正确推理响应；
 - 大模型加载并发需要按 `Pod 数 × TP Rank × 每 Rank 线程数` 估算，不能只看 Pod 数；
 - 关闭多线程可以降低瞬时并发，但也可能牺牲单 Rank 吞吐，并非最终优化方案；
 - 启动探针应覆盖最慢 Rank、KV Cache 初始化、编译和 CUDA Graph，而不是只覆盖权重进度；
+- 首次 DeepGEMM JIT 与 H20 MoE Kernel 配置会影响冷启动和最终性能，需要在镜像构建阶段单独治理；
 - 严格冷启动测试必须区分共享存储冷读、Linux 页缓存命中和节点本地缓存命中。
 
-同一时间窗口内，另有已经 Ready 的推理副本发生过重启，因此共享文件系统压力存在时间相关性；但已加载到 GPU 的服务通常不会持续读取全部权重，现有证据不足以证明 CFS 是其直接根因。后续还需要结合文件系统客户端超时、节点内核日志、GPU Xid 和运行时真实退出码判断，不能把相关性写成因果关系。
+同一时间窗口内，另有已经 Ready 的推理副本发生过重启，因此最初只能确认共享文件系统压力与故障在时间上重叠，不能把相关性写成因果关系。后续完成的宿主机和 Runtime 日志核验已经排除 CFS 是直接根因，完整证据见下一节。
 
-更稳妥的下一轮方案是先把模型按 Revision 预热到节点本地 NVMe，再从 NVMe 启动 SGLang；同时设置全局下载并发上限，记录每个 Rank 的加载完成时间、存储吞吐、`Pod created → first correct response` 和缓存状态。共享文件系统保留为权威源和回源路径，不再让多个 TP Rank 在业务启动时直接形成无界并发冷读。
+更稳妥的下一轮方案是先把模型按 Revision 预热到节点本地 NVMe，再从 NVMe 启动 SGLang；同时设置全局下载并发上限，持久化且预生成 DeepGEMM/Triton 缓存，记录每个 Rank 的加载完成时间、存储吞吐、`Pod created → first correct response` 和缓存状态。共享文件系统保留为权威源和回源路径，不再让多个 TP Rank 在业务启动时直接形成无界并发冷读。
+
+### 7.2.4 经 AIBrix Gateway 的隔离压测
+
+服务 Ready 后，先确认 AIBrix 侧路由状态：测试模型对应 HTTPRoute 的 `Accepted=True`、`ResolvedRefs=True`，AIBrix Gateway `/v1/models` 已列出 `glm-5.2-fp8-sglang-test`。随后经 Gateway 发送确定性请求，准确返回 `AIBRIX_OK`。因此，已经连接该 AIBrix `/v1` 地址的 OpenWebUI 会通过模型列表自动发现它，无需保存 Pod IP 或为每个模型修改 OpenWebUI Deployment。
+
+压测没有访问现有生产 SGLang GLM 服务。客户端运行在隔离模型 Pod 内，所有请求都发往 AIBrix Gateway。SGLang 的 `random` 数据集实现会尝试从 Hugging Face 下载 ShareGPT 语料，而测试网络无法访问外网；因此本轮改用完全离线的 `random-ids`，并固定 `random-range-ratio=1`，保证请求长度精确。正式命令的结构如下：
+
+```bash
+python3 -m sglang.benchmark.serving \
+  --backend sglang-oai \
+  --base-url http://<AIBRIX_GATEWAY> \
+  --model /models/GLM-5.2-FP8/v1 \
+  --served-model-name glm-5.2-fp8-sglang-test \
+  --tokenizer /models/GLM-5.2-FP8/v1 \
+  --dataset-name random-ids \
+  --num-prompts <REQUESTS> \
+  --random-input-len <INPUT_TOKENS> \
+  --random-output-len <OUTPUT_TOKENS> \
+  --random-range-ratio 1 \
+  --request-rate inf \
+  --max-concurrency <CONCURRENCY> \
+  --temperature 0 \
+  --warmup-requests <CONCURRENCY> \
+  --disable-tqdm
+```
+
+四组请求全部成功，压测后 Pod 仍为 Ready、0 次重启，并再次经 AIBrix 返回确定性文本 `BENCH_OK`：
+
+| 场景 | 请求成功 | req/s | 输出 tok/s | p50/p95/p99 TTFT | p95 TPOT | p95 ITL | p95 E2EL |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128 in / 64 out，C=1 | 16/16 | 1.47 | 94.24 | 248 / 260 / 262 ms | 10.10 ms | 17.60 ms | 895 ms |
+| 128 in / 64 out，C=4 | 32/32 | 2.24 | 143.44 | 274 / 766 / 775 ms | 31.41 ms | 263.38 ms | 2,481 ms |
+| 128 in / 64 out，C=8 | 64/64 | 3.24 | 207.56 | 273 / 529 / 614 ms | 49.29 ms | 265.57 ms | 3,424 ms |
+| 4096 in / 128 out，C=4 | 16/16 | 0.69 | 88.66 | 1,212 / 3,665 / 3,665 ms | 44.16 ms | 888.73 ms | 7,887 ms |
+
+与第 6 节的 vLLM 基线做方向性比较：
+
+| 场景 | SGLang 相对 vLLM 的变化 | 观察 |
+| --- | --- | --- |
+| 128/64，C=1 | 输出吞吐约 `+44%`，p95 TPOT 约 `-17%`，p95 E2E 约 `-10%` | 低并发 Decode 受益最明显 |
+| 128/64，C=4 | 输出吞吐约 `-8%`，p95 TPOT 约 `+37%`，p95 E2E 约 `+48%` | 当前参数下中等并发反而退化 |
+| 128/64，C=8 | 输出吞吐约 `-5%`，p95 TTFT 约 `-84%`，p95 E2E 约 `-24%` | 总吞吐接近，但尾部排队明显改善 |
+| 4096/128，C=4 | 输出吞吐约 `+8%`，p95 TTFT 约 `-17%`，p95 E2E 约 `+25%` | Prefill 更快，但完整请求尾延迟没有同步改善 |
+
+这里的 ITL 不能直接与 vLLM 表格做数值排名：EAGLE 一次可能接受并流式返回多个 Token，SGLang 客户端看到的是响应 Chunk 间隔，不完全等价于逐 Token Decode 间隔。更重要的是，这组对比同时改变了多个变量：
+
+- vLLM 使用 `random`，SGLang 使用离线 `random-ids`，长度相同但 Token 内容不相同；
+- SGLang 启用了 EAGLE，vLLM 基线没有 MTP/DSpark；
+- `mem-fraction-static`、最大运行请求数、Scheduler 和 Kernel 路径不同；
+- SGLang 当前还回退使用 Triton 3.5.1 的 H20 FP8 MoE 配置。
+
+因此不能从这四组数据得出“SGLang 全面快于 vLLM”。当前更准确的结论是：SGLang 在单请求和 C=8 尾延迟上显示出优势，但 C=4 与长输入仍有明显调参空间。下一轮严格 A/B 应复用同一批 Token ID，请求分别发往两个隔离后端，并先关闭双方推测解码；得到引擎基线后，再单独比较 EAGLE 与 MTP/DSpark 的增益和接受率。
+
+### 7.3 `Completed / exit 0` 背后的 SGLang 崩溃
+
+共享文件系统加载实验期间，另一组已经 Ready 的 Qwen3.5-397B SGLang TP=8 实例反复重启。Kubernetes 显示容器状态为 `Completed`、退出码为 `0`，应用标准输出末尾通常只有 `destroy_process_group() was not called before program exit`，一度让故障看起来像外部探针、节点 OOM 或存储压力触发的正常退出。
+
+这类问题不能停留在 `kubectl logs --previous`。我们通过节点上的运维 DaemonSet 进入宿主机 Mount Namespace，只读核验内核、kubelet 和容器运行时日志：
+
+```bash
+gmanctl -n <NODE_AGENT_NAMESPACE> exec <NODE_AGENT_POD> -- \
+  nsenter --mount=/proc/1/ns/mnt -- bash -lc '
+    journalctl -k --since "<START_TIME>" --until "<END_TIME>" --no-pager |
+    grep -Ei "oom|out of memory|killed process|NVRM: Xid|nfs: server|rpc.*timeout|I/O error|hung task"
+  '
+```
+
+排查覆盖所有故障实例所在节点，结果是：
+
+- 没有任何 OOM 记录命中 SGLang Pod UID；
+- 没有 NVIDIA Xid、CFS/NFS/RPC timeout、I/O error 或 hung task；
+- kubelet 与 containerd 只看到容器主进程结束，并记录退出码 `0`；多数退出前没有 Liveness Probe 失败或 `StopContainer` 事件；
+- 共享文件系统加载测试停止后，这组实例仍以相同模式继续崩溃。
+
+同一节点确实出现过一条 Memory Cgroup OOM，但 UID 最终映射到网络 DaemonSet 的 Pod，而不是 SGLang。该 cgroup 的内存上限约 200 MiB，主要消耗来自 kernel slab，最终被杀的是网络代理进程。内核栈中的 `GFP_NOFS` 表示内存分配时不允许递归进入文件系统回收路径，`xfs_vm_readpages` 表示本机 XFS Page Cache 读取；二者都不能作为 CFS 导致 OOM 的证据。**同一节点、相近时间发生，不等于属于同一个 Pod 或同一条故障链。**
+
+真正的异常保存在 HostPath 持久化的 SGLang 日志中。五个副本在不同时间都出现了相同调用栈：
+
+```text
+eagle_worker_v2.verify()
+  -> prepare_mamba_track_for_verify()
+  -> set_mamba_track_indices_from_reqs()
+  -> torch.tensor([req.mamba_next_track_idx ...])
+
+TypeError: 'NoneType' object cannot be interpreted as an integer
+```
+
+故障发生在 SGLang `0.5.15b1` 的 EAGLE speculative decode 与 Hybrid Mamba Radix Cache 路径。部分请求进入 Verify 阶段时，`req.mamba_next_track_idx` 仍然是 `None`，代码却直接用它构造 `int64` Tensor。一个 Scheduler 首先异常后，所有 TP Scheduler 退出，Tokenizer Manager 收到 `SIGQUIT`，随后 Runtime 主动调用 `kill_process_tree`。业务请求有时已经返回 HTTP 200，服务进程才在请求收尾阶段退出，因此客户端成功率也不能单独证明实例健康。
+
+```text
+请求完成并返回 200
+        |
+        v
+EAGLE Verify 读取未初始化的 Mamba Track Index
+        |
+        v
+8 个 TP Scheduler 抛出 TypeError
+        |
+        v
+父进程收到 SIGQUIT 并清理进程树
+        |
+        v
+外层 Shell/tee 返回 0 -> Kubernetes 显示 Completed
+```
+
+容器之所以显示 `Completed / exit 0`，还叠加了启动脚本的错误码掩盖：Engine 由后台 `nohup` 启动，外层使用 `start 2>&1 | tee -a ...` 收集日志但没有保留 Engine 的退出码。Engine 进程树结束后，`tee` 正常读到 EOF，Pipeline 最终返回 `0`。因此生产启动脚本应让 Runtime 成为前台主进程，或至少启用 `pipefail`、显式 `wait` 并传播子进程退出码。
+
+这不是仅在本环境出现的偶发现象。SGLang 社区已经记录相同的 Qwen3.5/Mamba、推测解码和 `NoneType` 调用栈，并在 [PR #27998](https://github.com/sgl-project/sglang/pull/27998) 中合入保护逻辑：当 Track Index 尚未初始化时使用第一个 Ping-Pong Slot。相关复现可参考 [Issue #28312](https://github.com/sgl-project/sglang/issues/28312) 和 [Issue #28484](https://github.com/sgl-project/sglang/issues/28484)。镜像标签看起来更新并不代表一定包含修复，仍应按源码 Commit 或镜像 Digest 核验目标代码是否已有 `None` Guard。
+
+处理顺序建议如下：
+
+1. 应急恢复时关闭 EAGLE/NEXTN 推测解码，移除 `--speculative-*` 参数，先验证普通 Decode 路径稳定性；
+2. 正式镜像合入 SGLang PR #27998 对应修复，并固定源码 Commit、SGLang/SGL Kernel/CUDA 版本和镜像 Digest；
+3. 在隔离实例回归短请求、长 Prompt、Prefix Cache 命中、结构化输出、工具调用和取消请求，观察 Scheduler、GPU Xid、cgroup OOM 与真实进程退出码；
+4. 修正启动脚本和告警规则，把 `Completed`、进程主动退出、Probe Kill、OOMKill 和节点故障区分开；
+5. 网络 DaemonSet 的小内存 cgroup slab OOM 作为独立问题治理，不与本次 SGLang Runtime 崩溃混为一谈。
 
 ## 8. 这组数据能说明什么
 
@@ -261,6 +452,7 @@ sglang serve --model-path /models/GLM-5.2-FP8/v1 \
 - GLM-5.2 FP8 可以使用标准 vLLM 在单台八卡 H20 141 GB 上完成 TP=8 加载；
 - AIBrix 不要求后端一定是 SGLang，可以发现并路由 vLLM Engine；
 - AIBrix Gateway 的 completions、chat 和 OpenWebUI 链路均功能正确；
+- SGLang 0.5.16 也能在同一张 FP8 Checkpoint 和单节点 TP=8 上完成加载与基本生成；
 - 在没有 MTP/DSpark 的基线下，增加并发能够提高总吞吐，但尾延迟很快恶化。
 
 它还不能证明 vLLM 比 SGLang 更快，也不能代表官方 GLM-5.2 H20 的最优性能。下一轮严格 A/B 应只改变一个变量：
