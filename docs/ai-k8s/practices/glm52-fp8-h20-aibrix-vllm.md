@@ -13,7 +13,7 @@ last_reviewed: 2026-08-14
 
 这只是功能正确且可复现的 vLLM 基线，不是最终性能结论。本轮没有启用 MTP/DSpark，使用的通用镜像也未发现可独立导入的 DeepGEMM 包，不能把结果直接与官方优化配置或此前其他模型的推测解码数据比较。
 
-随后我们又用相同 FP8 Checkpoint、相同节点和 TP=8 启动了隔离的 SGLang 0.5.16 实例。第三轮在限制模型加载并发、为启动探针保留 60 分钟窗口后成功 Ready，最小确定性请求得到正确结果。它证明 SGLang 能在这套硬件上运行该 FP8 Checkpoint，但尚未形成与 vLLM 参数严格对齐的性能 A/B。
+随后我们又用相同 FP8 Checkpoint、相同节点和 TP=8 启动了隔离的 SGLang 0.5.16b1 实例。第三轮在限制模型加载并发、为启动探针保留 60 分钟窗口后成功 Ready，最小确定性请求得到正确结果。它证明 SGLang 能在这套硬件上运行该 FP8 Checkpoint，但尚未形成与 vLLM 参数严格对齐的性能 A/B。
 
 ## 1. 为什么单机八卡能够放下
 
@@ -202,7 +202,7 @@ W4AFP8 权重量化
 
 ### 7.2 同 FP8 Checkpoint 的 SGLang 启动实验
 
-为了将权重量化与推理引擎两个变量分开，我们又创建了一个独立 SGLang 0.5.16 实例，仍使用本文的原生 FP8 Checkpoint、`8 × H20 141 GB`、TP=8、131K 上下文和 FP8 E4M3 KV Cache。这个实例没有复用或压测已有业务服务。
+为了将权重量化与推理引擎两个变量分开，我们又创建了一个独立 SGLang 0.5.16b1 实例，仍使用本文的原生 FP8 Checkpoint、`8 × H20 141 GB`、TP=8、131K 上下文和 FP8 E4M3 KV Cache。这个实例没有复用或压测已有业务服务。
 
 第三轮使用 SGLang 自带的前台入口启动，没有调用镜像里的二次封装 `start.sh`：
 
@@ -226,7 +226,7 @@ python3 -m sglang.launch_server \
   --max-running-requests 32
 ```
 
-镜像中的 `python -m sglang.launch_server` 仍然可用，但 0.5.16 已提示优先使用等价的 `sglang serve` 入口。模型被识别为 `GlmMoeDsaForCausalLM` 和 FP8 Checkpoint；八个 TP Rank 在约 18 秒内完成 NCCL 2.28.9 初始化，SGLang 为 DSA 自动选择 `flashmla_kv` 作为 Prefill/Decode Attention Backend。
+镜像中的 `python -m sglang.launch_server` 仍然可用，但 0.5.16b1 已提示优先使用等价的 `sglang serve` 入口。模型被识别为 `GlmMoeDsaForCausalLM` 和 FP8 Checkpoint；八个 TP Rank 在约 18 秒内完成 NCCL 2.28.9 初始化，SGLang 为 DSA 自动选择 `flashmla_kv` 作为 Prefill/Decode Attention Backend。
 
 ### 7.2.1 为什么 `141/141` 后仍等了二十多分钟
 
@@ -314,7 +314,7 @@ Pod 在 0 次重启的情况下达到 `1/1 Running`，`/v1/models` 返回：
 {"id":"glm-5.2-fp8-sglang-test","owned_by":"sglang","max_model_len":131072}
 ```
 
-随后向隔离测试 Pod 的 Loopback 地址发送 `temperature=0`、关闭 Thinking 的最小请求，要求只返回 `FP8_OK`，实际得到精确的 `FP8_OK`。这证明标准 SGLang 0.5.16、TP=8、原生 FP8 权重和 EAGLE 参数组合至少通过了模型加载与基本生成验证。
+随后向隔离测试 Pod 的 Loopback 地址发送 `temperature=0`、关闭 Thinking 的最小请求，要求只返回 `FP8_OK`，实际得到精确的 `FP8_OK`。这证明标准 SGLang 0.5.16b1、TP=8、原生 FP8 权重和 EAGLE 参数组合至少通过了模型加载与基本生成验证。
 
 本轮没有向现有生产 SGLang GLM 服务发送任何探活或压测请求。隔离实例随后完成了与 vLLM 基线相同长度和并发档位的压测，但还不是参数严格对齐的引擎 A/B。启动实验能确认的是：
 
@@ -380,6 +380,109 @@ python3 -m sglang.benchmark.serving \
 - SGLang 当前还回退使用 Triton 3.5.1 的 H20 FP8 MoE 配置。
 
 因此不能从这四组数据得出“SGLang 全面快于 vLLM”。当前更准确的结论是：SGLang 在单请求和 C=8 尾延迟上显示出优势，但 C=4 与长输入仍有明显调参空间。下一轮严格 A/B 应复用同一批 Token ID，请求分别发往两个隔离后端，并先关闭双方推测解码；得到引擎基线后，再单独比较 EAGLE 与 MTP/DSpark 的增益和接受率。
+
+### 7.2.5 长上下文、EAGLE 与请求收尾补充验证
+
+为了避免每验证一个功能就重新读取 700 GiB 权重，后续测试在同一次启动窗口内打开了：
+
+```text
+--enable-metrics
+--enable-metrics-for-all-schedulers
+--enable-cache-report
+```
+
+这次 Pod 在约 28 分钟达到 Ready，随后 `/health` 首次响应又等待约 4 秒。TCP Startup/Readiness Probe 只能证明端口已经打开，因此生产冷启动 SLO 仍应使用 `Pod created → first correct response`，不能把 `Ready=True` 单独当成业务可用时间。
+
+权重读取完成后，Runtime 生成的主要 JIT 产物位于：
+
+```text
+/root/.cache/deep_gemm/cache/
+/root/.cache/tvm-ffi/
+```
+
+前者包括 SM90 FP8 GEMM 和 Paged MQA Kernel，后者包括 DSA TopK、量化、RoPE 与自定义 AllReduce 等 SGL Kernel 产物。两者合计只有数 MiB，但本次 `/root/.cache` 使用 `emptyDir`，Pod 重建后仍会丢失；正式镜像应按 SGLang、SGL Kernel、CUDA、GPU 架构、TP 和模型量化方式建立兼容性指纹后预编译或持久化，不能无校验地跨版本复用。
+
+#### 功能正确性
+
+隔离实例依次通过以下 OpenAI-compatible 测试：
+
+- 关闭 Thinking 的确定性输出；
+- 开启 Thinking 后同时返回 `reasoning_content` 和正确最终答案；
+- JSON Schema 约束输出，可被标准 JSON Parser 解析；
+- GLM47 工具调用解析，函数名和参数均正确；
+- 客户端收到第一个流式 Chunk 后主动取消，服务仍能返回 `/health 200`。
+
+Thinking 用例还暴露了客户端参数问题：`max_tokens=128` 时，推理过程占满输出预算且最终 `content` 为空；提高到 512 后正常返回最终答案。因此 Thinking 模型不能继续沿用普通短回答的低输出上限。
+
+#### 长上下文针检索
+
+在 Prompt 中部埋入唯一密钥、末尾只询问该密钥，得到以下结果：
+
+| 服务端 Prompt Token | 完整请求用时 | 结果 |
+| ---: | ---: | --- |
+| 3,766 | 12.61 秒 | 精确命中 |
+| 30,049 | 12.56 秒 | 精确命中 |
+| 60,086 | 17.17 秒 | 精确命中 |
+| 117,345 | 32.46 秒 | 精确命中 |
+
+这证明 131K 不只是 `/v1/models` 中的声明值，至少 117K 实际输入可以完成 Prefill 和检索。但四组测试按顺序运行，文本存在公共前缀，也没有在每轮前清空 Radix Cache，因此这里只能作为容量与正确性验证，不能把用时当成严格冷 Prefill 性能。
+
+#### EAGLE 接受率随负载变化
+
+Metrics 已实际返回以下指标，而不是只打开了命令行参数：
+
+```text
+sglang:spec_verify_calls_total
+sglang:spec_accept_rate
+sglang:spec_accept_length
+```
+
+`spec_accept_rate` 是被接受 Draft Token 占提议 Draft Token 的比例；`spec_accept_length` 还包含每轮 Verify 的 Bonus Token。不同负载的观测如下：
+
+| 负载 | 接受率 | 平均接受长度 |
+| --- | ---: | ---: |
+| 中文解释、代码、数学等自然输出 | 约 73%–83% | 3.20–3.48 |
+| 单 Token 短请求 | 约 35% | 2.05 |
+| AIBrix 路径 C=8 混合请求，运行约 2 分钟 | 约 77% | 3.31 |
+
+这说明 EAGLE 已经有效减少部分 Target Model Decode，但收益明显依赖语料和输出长度。后续必须对生产请求分桶统计接受率，并与关闭 EAGLE 的同语料基线比较，不能用单次高接受率直接推导总体收益。
+
+#### 直连与 AIBrix 路径
+
+流式客户端出现异常后，先用非流式、相同 Seed 的 `128 in / 32 out / C=4` 请求完成了一轮方向性对照：
+
+| 路径 | 成功 | req/s | 输出 tok/s | 平均 E2E | p95 E2E |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 直连 SGLang | 16/16 | 0.72 | 23.00 | 4.34 秒 | 5.02 秒 |
+| AIBrix Gateway | 16/16 | 0.81 | 25.85 | 4.59 秒 | 5.72 秒 |
+
+非流式响应无法计算真实 TTFT、ITL 和 TPOT，因此这些字段不应参与比较。小样本中 Gateway 的总吞吐反而更高，但平均和 p95 E2E 更慢，说明运行抖动已经大到不能靠两次顺序执行量化纯路由开销。
+
+随后使用相同单 Token 请求交替执行 20 轮，降低顺序偏差：
+
+| 路径 | 中位 E2E | 平均 E2E | p95 E2E |
+| --- | ---: | ---: | ---: |
+| 直连 SGLang | 3.31 秒 | 3.35 秒 | 3.98 秒 |
+| AIBrix Gateway | 3.63 秒 | 3.56 秒 | 4.28 秒 |
+| Gateway - 直连 | +327 ms | +214 ms | +303 ms |
+
+这个增量高于普通 TCP 转发，但客户端运行在模型 Pod 内，路径是“模型 Pod → Gateway → 同一模型 Pod”的回环拓扑，同时包含 AIBrix 路由、跨节点网络和两次业务序列化。它只能说明当前实验路径存在可见成本，仍需从独立压测客户端做交错、扩大样本并结合 Router Trace 才能定位开销。
+
+#### 流式结束处理是当前阻断项
+
+本轮两次复现 Engine 已经完成请求、客户端却不能退出：
+
+```text
+SGLang 原生 /generate 或 OpenAI 流式请求
+                  ↓
+GPU 完成生成，Metrics 显示 running=0、queue=0
+                  ↓
+客户端仍停在 socket poll / event loop 等待结束
+```
+
+问题既出现在原生 `/generate`，也出现在 `sglang-oai` 的 `/v1/completions` 流式基准；改为非流式后能够完成。主动取消流式请求后服务仍健康，说明目前证据更接近结束帧、连接关闭或 Runtime 与客户端协议收尾问题，而不是 GPU 一直在计算。当前还不能断言根因一定是 EAGLE，必须补做关闭 EAGLE、抓取完整 SSE 帧、核验 `[DONE]`、客户端超时和 SGLang 对应版本 Issue 的对照实验。
+
+计划运行 5 分钟的 C=8 混合稳定性测试因节点需要立即释放，在约 2 分钟时主动停止；停止前 Pod 保持 Ready、0 次重启、队列为 0，但没有形成完整请求统计，因此不能写成“5 分钟稳定性通过”。测试 Deployment 随后缩容至 0，隔离 Pod 已删除，Service、Route 和部署材料保留供后续复测。
 
 ### 7.3 `Completed / exit 0` 背后的 SGLang 崩溃
 
@@ -452,7 +555,7 @@ EAGLE Verify 读取未初始化的 Mamba Track Index
 - GLM-5.2 FP8 可以使用标准 vLLM 在单台八卡 H20 141 GB 上完成 TP=8 加载；
 - AIBrix 不要求后端一定是 SGLang，可以发现并路由 vLLM Engine；
 - AIBrix Gateway 的 completions、chat 和 OpenWebUI 链路均功能正确；
-- SGLang 0.5.16 也能在同一张 FP8 Checkpoint 和单节点 TP=8 上完成加载与基本生成；
+- SGLang 0.5.16b1 也能在同一张 FP8 Checkpoint 和单节点 TP=8 上完成加载、结构化输出、工具调用和 117K 长上下文检索；
 - 在没有 MTP/DSpark 的基线下，增加并发能够提高总吞吐，但尾延迟很快恶化。
 
 它还不能证明 vLLM 比 SGLang 更快，也不能代表官方 GLM-5.2 H20 的最优性能。下一轮严格 A/B 应只改变一个变量：
