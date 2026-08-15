@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qwen3-8-27b-fp8-l20-preflight
+  namespace: qwen38-test
+  labels:
+    app.kubernetes.io/name: qwen3-8-27b-fp8-l20-preflight
+    app.kubernetes.io/part-of: qwen38-27b-l20-day0
+spec:
+  restartPolicy: Never
+  containers:
+    - name: preflight
+      image: vllm/vllm-openai@sha256:3c5c53248febaa72823a4b7e51aafa1cd2b65d860392e3930414da4d3864f541
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/bash", "-lc"]
+      args:
+        - |
+          set -euo pipefail
+          for attempt in $(seq 1 180); do
+            if test -s /models/Qwen3.8-27B-FP8/outside.safetensors && \
+               test ! -e /models/Qwen3.8-27B-FP8/outside.safetensors.tmp; then
+              break
+            fi
+            size=$(stat -c '%s' /models/Qwen3.8-27B-FP8/outside.safetensors.tmp 2>/dev/null || echo 0)
+            echo "waiting for model sync: attempt=${attempt}/180 outside.tmp=${size} bytes"
+            sleep 10
+          done
+          test -s /models/Qwen3.8-27B-FP8/outside.safetensors
+          test ! -e /models/Qwen3.8-27B-FP8/outside.safetensors.tmp
+          python3 - <<'PY'
+          import json
+          import torch
+          import transformers
+          import vllm
+
+          path = "/models/Qwen3.8-27B-FP8/config.json"
+          with open(path, encoding="utf-8") as handle:
+              config = json.load(handle)
+          assert config["architectures"] == ["Qwen3_5ForConditionalGeneration"]
+          assert config["quantization_config"]["quant_method"] == "fp8"
+          print("torch:", torch.__version__)
+          print("torch CUDA:", torch.version.cuda)
+          print("transformers:", transformers.__version__)
+          print("vLLM:", vllm.__version__)
+          print("model architecture:", config["architectures"][0])
+          print("quantization:", config["quantization_config"]["quant_method"])
+          PY
+          vllm serve --help=all | grep -E -- \
+            '--language-model-only|--speculative-config|--reasoning-parser|--tool-call-parser|--kv-cache-dtype'
+          echo 'Qwen3.8-27B FP8 image/model preflight: PASS'
+      env:
+        - name: HF_HUB_OFFLINE
+          value: "1"
+        - name: TRANSFORMERS_OFFLINE
+          value: "1"
+      resources:
+        requests:
+          cpu: "2"
+          memory: 4Gi
+        limits:
+          cpu: "4"
+          memory: 8Gi
+      volumeMounts:
+        - name: model-corpus
+          mountPath: /models
+          readOnly: true
+  volumes:
+    - name: model-corpus
+      persistentVolumeClaim:
+        claimName: qwen38-models

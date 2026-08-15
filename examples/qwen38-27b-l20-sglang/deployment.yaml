@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen3-8-27b-fp8-l20-sglang
+  namespace: qwen38-test
+  labels:
+    app.kubernetes.io/name: qwen3-8-27b-fp8-l20-sglang
+    app.kubernetes.io/part-of: qwen38-27b-l20-day0
+    model.aibrix.ai/name: qwen3-8-27b-fp8-l20-sglang
+    model.aibrix.ai/port: "30000"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qwen3-8-27b-fp8-l20-sglang
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qwen3-8-27b-fp8-l20-sglang
+        app.kubernetes.io/part-of: qwen38-27b-l20-day0
+        model.aibrix.ai/name: qwen3-8-27b-fp8-l20-sglang
+        model.aibrix.ai/port: "30000"
+        model.aibrix.ai/engine: sglang
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "30000"
+        prometheus.io/path: /metrics
+    spec:
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: sglang
+          image: lmsysorg/sglang@sha256:29f0f645122be1799a594c15907d81da326dbbe6ccd6395710a07a4292125a5f
+          imagePullPolicy: IfNotPresent
+          command: ["sglang", "serve"]
+          args:
+            - --model-path
+            - /models/Qwen3.8-27B-FP8
+            - --served-model-name
+            - qwen3-8-27b-fp8-l20-sglang
+            - --host
+            - 0.0.0.0
+            - --port
+            - "30000"
+            - --tp-size
+            - "1"
+            - --context-length
+            - "32768"
+            - --mem-fraction-static
+            - "0.88"
+            - --max-running-requests
+            - "8"
+            - --chunked-prefill-size
+            - "8192"
+            - --kv-cache-dtype
+            - fp8_e4m3
+            - --reasoning-parser
+            - qwen3
+            - --tool-call-parser
+            - qwen3_coder
+            - --enable-multimodal
+            - --enable-metrics
+            # The default 8192-token prefill CUDA graph OOMs on a 48 GB L20
+            # after the full multimodal model, GDN state and FP8 KV are loaded.
+            # Keep decode graphs enabled and disable only prefill graph capture.
+            - --cuda-graph-backend-prefill
+            - disabled
+          env:
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 30000
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 360
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "8"
+              memory: 64Gi
+              ephemeral-storage: 8Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "32"
+              memory: 128Gi
+              ephemeral-storage: 32Gi
+              nvidia.com/gpu: "1"
+          securityContext:
+            capabilities:
+              add: ["IPC_LOCK"]
+          volumeMounts:
+            - name: model-corpus
+              mountPath: /models
+              readOnly: true
+            - name: dshm
+              mountPath: /dev/shm
+            - name: cache
+              mountPath: /root/.cache
+      volumes:
+        - name: model-corpus
+          persistentVolumeClaim:
+            claimName: qwen38-models
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+        - name: cache
+          emptyDir:
+            sizeLimit: 16Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen3-8-27b-fp8-l20-sglang
+  namespace: qwen38-test
+  labels:
+    app.kubernetes.io/name: qwen3-8-27b-fp8-l20-sglang
+    app.kubernetes.io/part-of: qwen38-27b-l20-day0
+    model.aibrix.ai/name: qwen3-8-27b-fp8-l20-sglang
+    model.aibrix.ai/port: "30000"
+spec:
+  selector:
+    app.kubernetes.io/name: qwen3-8-27b-fp8-l20-sglang
+  ports:
+    - name: http
+      port: 30000
+      targetPort: http

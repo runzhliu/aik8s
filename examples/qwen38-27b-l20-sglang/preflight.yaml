@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qwen3-8-27b-fp8-l20-sglang-preflight
+  namespace: qwen38-test
+  labels:
+    app.kubernetes.io/name: qwen3-8-27b-fp8-l20-sglang-preflight
+    app.kubernetes.io/part-of: qwen38-27b-l20-day0
+spec:
+  restartPolicy: Never
+  containers:
+    - name: preflight
+      image: lmsysorg/sglang@sha256:29f0f645122be1799a594c15907d81da326dbbe6ccd6395710a07a4292125a5f
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/bash", "-lc"]
+      args:
+        - |
+          set -euo pipefail
+          test -s /models/Qwen3.8-27B-FP8/outside.safetensors
+          test ! -e /models/Qwen3.8-27B-FP8/outside.safetensors.tmp
+          python3 - <<'PY'
+          import json
+          import sglang
+          import torch
+          import transformers
+          from sglang.srt.models.qwen3_5 import Qwen3_5ForConditionalGeneration
+
+          with open('/models/Qwen3.8-27B-FP8/config.json', encoding='utf-8') as f:
+              config = json.load(f)
+          assert config['architectures'] == ['Qwen3_5ForConditionalGeneration']
+          assert config['quantization_config']['quant_method'] == 'fp8'
+          print('sglang:', sglang.__version__)
+          print('torch:', torch.__version__)
+          print('torch CUDA:', torch.version.cuda)
+          print('transformers:', transformers.__version__)
+          print('SGLang model implementation:', Qwen3_5ForConditionalGeneration.__name__)
+          print('checkpoint architecture:', config['architectures'][0])
+          print('quantization:', config['quantization_config']['quant_method'])
+          PY
+          sglang serve --help | grep -E -- \
+            '--context-length|--tp-size|--kv-cache-dtype|--mem-fraction-static|--reasoning-parser|--tool-call-parser|--enable-multimodal'
+          echo 'Qwen3.8-27B FP8 SGLang image/model preflight: PASS'
+      env:
+        - name: HF_HUB_OFFLINE
+          value: "1"
+        - name: TRANSFORMERS_OFFLINE
+          value: "1"
+      resources:
+        requests:
+          cpu: "2"
+          memory: 4Gi
+        limits:
+          cpu: "4"
+          memory: 8Gi
+      volumeMounts:
+        - name: model-corpus
+          mountPath: /models
+          readOnly: true
+  volumes:
+    - name: model-corpus
+      persistentVolumeClaim:
+        claimName: qwen38-models

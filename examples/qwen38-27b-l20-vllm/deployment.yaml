@@ -1,0 +1,148 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen3-8-27b-fp8-l20
+  namespace: qwen38-test
+  labels:
+    app.kubernetes.io/name: qwen3-8-27b-fp8-l20
+    app.kubernetes.io/part-of: qwen38-27b-l20-day0
+    model.aibrix.ai/name: qwen3-8-27b-fp8-l20
+    model.aibrix.ai/port: "8000"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qwen3-8-27b-fp8-l20
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qwen3-8-27b-fp8-l20
+        app.kubernetes.io/part-of: qwen38-27b-l20-day0
+        model.aibrix.ai/name: qwen3-8-27b-fp8-l20
+        model.aibrix.ai/port: "8000"
+        model.aibrix.ai/engine: vllm
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai@sha256:3c5c53248febaa72823a4b7e51aafa1cd2b65d860392e3930414da4d3864f541
+          imagePullPolicy: IfNotPresent
+          command: ["vllm", "serve"]
+          args:
+            - /models/Qwen3.8-27B-FP8
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+            - --served-model-name
+            - qwen3-8-27b-fp8-l20
+            - --tensor-parallel-size
+            - "1"
+            - --max-model-len
+            - "32768"
+            - --gpu-memory-utilization
+            - "0.90"
+            - --max-num-seqs
+            - "8"
+            - --max-num-batched-tokens
+            - "8192"
+            - --kv-cache-dtype
+            - fp8
+            - --language-model-only
+            - --reasoning-parser
+            - qwen3
+            - --enable-auto-tool-choice
+            - --tool-call-parser
+            - qwen3_coder
+            - --enable-prefix-caching
+            - --enable-chunked-prefill
+          env:
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: VLLM_LOGGING_LEVEL
+              value: INFO
+          ports:
+            - name: http
+              containerPort: 8000
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 360
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "8"
+              memory: 64Gi
+              ephemeral-storage: 8Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "32"
+              memory: 128Gi
+              ephemeral-storage: 32Gi
+              nvidia.com/gpu: "1"
+          securityContext:
+            capabilities:
+              add: ["IPC_LOCK"]
+          volumeMounts:
+            - name: model-corpus
+              mountPath: /models
+              readOnly: true
+            - name: dshm
+              mountPath: /dev/shm
+            - name: compile-cache
+              mountPath: /root/.cache
+      volumes:
+        - name: model-corpus
+          persistentVolumeClaim:
+            claimName: qwen38-models
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Gi
+        - name: compile-cache
+          emptyDir:
+            sizeLimit: 32Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen3-8-27b-fp8-l20
+  namespace: qwen38-test
+  labels:
+    app.kubernetes.io/name: qwen3-8-27b-fp8-l20
+    app.kubernetes.io/part-of: qwen38-27b-l20-day0
+    model.aibrix.ai/name: qwen3-8-27b-fp8-l20
+    model.aibrix.ai/port: "8000"
+spec:
+  selector:
+    app.kubernetes.io/name: qwen3-8-27b-fp8-l20
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
