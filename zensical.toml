@@ -83,7 +83,7 @@ nav = [
       {"DeepSeek V4 分布式 KV Cache" = "ai-k8s/practices/distributed-kv-cache-deepseek-v4.md"},
       {"从半小时到五分钟：大模型冷启动全链路优化" = "ai-k8s/practices/llm-cold-start-optimization.md"},
       {"大模型权重分发与加载加速" = "ai-k8s/practices/model-weight-delivery-acceleration.md"},
-      {"Qwen3.8-27B：vLLM × SGLang L20/H20 0-day" = "ai-k8s/practices/qwen38-27b-h20-day0.md"},
+      {"Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录" = "ai-k8s/practices/qwen38-27b-day0.md"},
       {"GLM-5.2 FP8 H20 AIBrix + vLLM 实测" = "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"},
       {"DeepSeek V4 Flash H20 部署与压测" = "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"},
       {"DeepSeek Harness + Chromium 实战" = "ai-k8s/practices/deepseek-harness-kubernetes.md"},
@@ -128,6 +128,7 @@ nav = [
 [project.theme]
 variant = "modern"
 language = "zh"
+custom_dir = "overrides"
 logo = "assets/brand/aik8s-logo.png"
 favicon = "assets/brand/favicon.png"
 features = [
