@@ -9,6 +9,14 @@ last_reviewed: 2026-08-17
 
 生成式音乐应用通常包含两类完全不同的模型：一类负责理解创作意图、写歌词和整理编曲描述，另一类负责把歌词与编曲条件真正渲染成音频。本文记录一套已经跑通的实现：在 GPU 集群中用 SGLang-Omni 部署 MiniMax-Music3，再接入一个 OpenAI 兼容的大语言模型作为“歌曲策划”，最后用 Gradio 提供接近 Suno 的简化创作界面。
 
+## 发布背景：从在线音乐产品到可部署模型
+
+MiniMax 对生成式音乐的投入并不是从 Music 3 才开始。其公开产品线可以追溯到 2024 年 8 月 31 日发布的 [Music-01](https://www.minimax.io/news/music-01)：当时已经能够同时生成人声与伴奏，但单次时长上限约为 60 秒。此后，[Music 1.5](https://www.minimax.io/news/minimax-music-15) 在 2025 年 9 月把歌曲时长扩展到 4 分钟，[Music 2.0](https://www.minimax.io/news/minimax-music-20) 在同年 10 月继续强化人声、配器和段落结构；到 2026 年初，[Music 2.5](https://www.minimax.io/news/minimax-music-25) 与 [Music 2.6](https://www.minimax.io/news/music-26) 又把段落级控制、乐器表现和翻唱等能力推向更完整的歌曲生产流程。
+
+2026 年 8 月 7 日，[MiniMaxAI/MiniMax-Music3](https://huggingface.co/MiniMaxAI/MiniMax-Music3) 模型仓库在 Hugging Face 上线，公开了可下载的模型资产。六天后的 8 月 13 日，SGLang-Omni 主线通过 [PR #1521](https://github.com/sgl-project/sglang-omni/pull/1521) 加入 Music 3 推理支持，并给出了官方的 [部署与调用示例](https://github.com/sgl-project/sglang-omni/blob/main/docs/cookbook/minimax_music3.md)。从模型公开到主流推理框架接入只相隔不到一周，说明社区对“可自行部署的文本生成音乐”有很强的工程需求。
+
+截至本文验证日 2026 年 8 月 17 日，该模型仓库在约十天内已记录 8,639 次下载和 864 个点赞。这个数字不能直接代表音质排名或市场份额，但足以说明开发者关注度很高。Music 3 更重要的影响在于：生成音乐不再只能停留在厂商网页产品中，团队可以把公开模型资产、可编程推理服务、大模型歌词策划和自己的 UI 串成一条私有工作流，并对提示词、Seed、时长与 A/B 版本进行可复现控制。
+
 这套方案已经在一张 45 GiB NVIDIA L20 上完成验证。20 秒歌曲方案的生成约耗时 27 秒；两段 10 秒音乐采用相邻 Seed 顺序生成，分别耗时 26.6 秒和 18.6 秒。这里的数字只是一次功能验证结果，不应当视为严格性能基准。
 
 ## 1. 最终架构
