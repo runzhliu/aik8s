@@ -30,6 +30,10 @@ flowchart LR
 
 外部 Qwen 先把它扩展成结构化歌词和英文制作说明，MiniMax-Music3 再完成整首音乐的演唱与伴奏生成。
 
+![MiniMax Music 3 Song Studio 快速创作界面](../../assets/practices/minimax-music3-sglang-omni/song-studio-quick-create.png)
+
+*图 1：实际运行的 Gradio 快速创作页。用户输入一句创意后，可以选择风格、语言、时长和 A/B 版本；歌词与编曲描述既可以自动生成，也可以在提交 Music3 前手动修改。*
+
 ## 2. 先理解 MiniMax-Music3 是什么
 
 MiniMax-Music3 不是“带背景音乐的 TTS”。它接收两项核心内容：
@@ -126,16 +130,16 @@ args:
 
 在一张 L20 上，AR 和 DIT/DAV 阶段可以共置。`--max-running-requests=1` 优先保证单卡显存稳定；`--mem-fraction-static=0.65` 为 Qwen KV Cache 与声学阶段共同留下足够空间。
 
-UI 脚本可以通过 ConfigMap 单独管理，修改界面时不必重建大体积运行时镜像。下面用占位符表示集群和命名空间；执行 `gmanctl` 时仍应始终显式指定目标集群：
+UI 脚本可以通过 ConfigMap 单独管理，修改界面时不必重建大体积运行时镜像。下面使用标准 `kubectl`，并用占位符表示 kubeconfig context、命名空间和资源清单：
 
 ```bash
-gmanctl --cluster <GPU_CLUSTER> -n <NAMESPACE> apply \
+kubectl --context <GPU_CONTEXT> --namespace <NAMESPACE> apply \
   -f <DEPLOYMENT_MANIFEST>
 
-gmanctl --cluster <GPU_CLUSTER> -n <NAMESPACE> rollout status \
+kubectl --context <GPU_CONTEXT> --namespace <NAMESPACE> rollout status \
   deployment/sglang-minimax-music3 --timeout=12m
 
-gmanctl --cluster <GPU_CLUSTER> -n <NAMESPACE> get pods \
+kubectl --context <GPU_CONTEXT> --namespace <NAMESPACE> get pods \
   -l app.kubernetes.io/name=sglang-minimax-music3 -o wide
 ```
 
@@ -146,7 +150,7 @@ Music3 首次启动会加载 Qwen 权重、DIT/DAV，并捕获 CUDA Graph。只�
 调试时可以先做端口转发：
 
 ```bash
-gmanctl --cluster <GPU_CLUSTER> -n <NAMESPACE> port-forward \
+kubectl --context <GPU_CONTEXT> --namespace <NAMESPACE> port-forward \
   service/<MUSIC3_SERVICE> 17860:7860 18000:8000 \
   --address 127.0.0.1
 ```
@@ -262,15 +266,15 @@ Music3 在歌词、caption、Seed 和时长完全相同时具有可复现性。�
 
 ```bash
 # GPU Pod 与两个容器
-gmanctl --cluster <GPU_CLUSTER> -n <NAMESPACE> get pods \
+kubectl --context <GPU_CONTEXT> --namespace <NAMESPACE> get pods \
   -l app.kubernetes.io/name=sglang-minimax-music3
 
 # API 日志中应出现 reference_audio: false 和服务启动完成
-gmanctl --cluster <GPU_CLUSTER> -n <NAMESPACE> logs \
+kubectl --context <GPU_CONTEXT> --namespace <NAMESPACE> logs \
   deployment/sglang-minimax-music3 -c api --tail=100
 
 # UI 日志
-gmanctl --cluster <GPU_CLUSTER> -n <NAMESPACE> logs \
+kubectl --context <GPU_CONTEXT> --namespace <NAMESPACE> logs \
   deployment/sglang-minimax-music3 -c ui --tail=100
 ```
 
