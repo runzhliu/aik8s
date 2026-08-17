@@ -14,8 +14,8 @@ served model: qwen3-8-27b-fp8-l20-sglang
 ```
 
 首轮加载完整多模态 Checkpoint，不启用 `--language-only`；MTP/EAGLE 关闭。
-这两个变量都存在 Qwen3.5 Hybrid GDN 相关的上游问题记录，应在基础正确性通过后
-独立 A/B。公开清单使用名为 `qwen38-models` 的只读 PVC，并假设 Checkpoint 位于
+基础正确性通过后已独立完成 MTP 1/2/3 A/B，结果见 `results/README.md`。公开清单
+使用名为 `qwen38-models` 的只读 PVC，并假设 Checkpoint 位于
 `/models/Qwen3.8-27B-FP8`。
 
 单卡 L20 首次启动在默认 8192-token prefill CUDA Graph 捕获阶段 OOM；清单仅将

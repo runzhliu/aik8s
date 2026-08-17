@@ -29,7 +29,7 @@ kubectl -n qwen38-test rollout status deployment/qwen3-8-27b-fp8-l20 --timeout=6
 ```
 
 第一轮固定为 FP8、TP=1、text-only、32K、FP8 KV、MTP Off。正确性与容量基线
-通过后，再分别测试 Vision、MTP 和更长上下文，不在首轮同时增加多个变量。
+通过后，已独立完成 MTP Off/1/2/3 A/B；Vision 和更长上下文继续作为单独变量。
 
 ## 服务冒烟
 
@@ -64,7 +64,7 @@ kubectl -n <OPENWEBUI_NAMESPACE> rollout status deployment/open-webui --timeout=
 1. 128/64，concurrency 1、4、8，各 64 请求；
 2. 4096/128，concurrency 1、4，各 32 请求；
 3. 32768/256，concurrency 1，正确性和 TTFT 边界；
-4. 上述基线通过后再做 MTP Off/1/2/3 对照。
+4. MTP Off/1/2/3 对照已完成，结果见 `results/README.md`。
 
 每轮保存完整命令、结果 JSON、Pod UID、节点、镜像 ID、GPU 显存、功耗、TTFT、
 TPOT、ITL、E2EL、输入/输出吞吐与失败率。

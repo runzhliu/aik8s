@@ -2,12 +2,12 @@
 title: Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录
 description: 记录 Qwen3.8-27B 官方 FP8 制品、vLLM 与 SGLang 镜像、单卡 L20 Kubernetes 实测、OpenWebUI 接入，以及后续 MTP 和长上下文 A/B
 status: draft
-last_reviewed: 2026-08-15
+last_reviewed: 2026-08-17
 ---
 
 # Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录
 
-> 本文创建于官方权重公开后的第二天，以 vLLM 和 SGLang 两条运行时路线共同验证 Qwen3.8-27B。两条路线都已经在测试集群的单张 NVIDIA L20 上完成 FP8 部署、正确性、AIBrix 接入和四组同口径短时性能基线；vLLM 还完成了 OpenWebUI 真实对话。MTP、Vision 与长上下文仍是下一阶段，本文会明确区分“已实测”和“待实测”。
+> 本文创建于官方权重公开后的第二天，以 vLLM 和 SGLang 两条运行时路线共同验证 Qwen3.8-27B。两条路线都已经在测试集群的单张 NVIDIA L20 上完成 FP8 部署、正确性、AIBrix 接入、四组同口径短时性能基线和 MTP 1/2/3 A/B；vLLM 还完成了 OpenWebUI 真实对话。Vision 与更长上下文仍是下一阶段，本文会明确区分“已实测”和“待实测”。
 
 我第一次真正开始大量做 vibe coding，是在 Claude Opus 4.5 发布之后。此前我也用模型写代码，但 Opus 4.5 处理复杂需求、跨文件修改和长时间自主执行的效果，第一次让我产生了非常强烈的“开发方式已经改变”的感觉。那种震惊不是来自一段漂亮的代码，而是来自模型能够持续理解意图、调用工具、发现问题并把任务收尾。
 
@@ -147,11 +147,11 @@ vllm serve --help=all | grep -E 'language-model-only|speculative-config|reasonin
 | P1 | 官方 FP8 | 1×L20 | 32K | 关闭 | 关闭 | **已完成**：文本、Thinking、Tool Call、AIBrix、OpenWebUI |
 | P2 | 官方 FP8 | 1×L20 | 32K | 关闭 | 关闭 | KV Auto/FP8、长稳和真实请求集 |
 | P3 | 官方 FP8 | 1×L20 | 32K | 开启 | 关闭 | 图片理解与 Vision 显存增量 |
-| P4 | 官方 FP8 | 1×L20 | 32K | 关闭 | 1/2/3 tokens | MTP 接受率与 Decode 收益 |
+| P4 | 官方 FP8 | 1×L20 | 32K | 按运行时基线 | 1/2/3 tokens | **已完成**：接受率、吞吐、TPOT 与并发容量 |
 | P5 | 官方 FP8 | 1×L20 | 64K/128K | 按需 | 按需 | 长上下文路径与资源成本 |
 | P6 | 官方 BF16 | 2×L20 | 32K | 关闭 | 关闭 | FP8 正确性、显存和性能对照 |
 
-后续仍以同一套 L20 环境为基线，逐项增加上下文、视觉和 MTP，避免把不同硬件与不同运行参数混进同一组结果。
+后续仍以同一套 L20 环境为基线；MTP A/B 已完成，接下来逐项增加上下文、视觉和质量请求集，避免把不同硬件与不同运行参数混进同一组结果。
 
 NVFP4 社区量化可以作为消费级或 Blackwell 路线补充，但不应把它与本轮 L20 FP8 基线混为一谈。GGUF/llama.cpp 适合 Mac 或 CPU 做提示词与 Agent 接口冒烟，也不能替代数据中心 GPU 上的 vLLM/SGLang 吞吐测试。
 
@@ -477,12 +477,29 @@ SGLang 的“成功 API Ready”来自第二个 Pod。第一个 Pod 在权重、
 
 ### 9.3 MTP
 
-| Draft Tokens | Mean Acceptance Length | 每位置接受率 | 输出 tok/s | p95 TPOT | GPU 功耗 | 结论 |
-| ---: | ---: | --- | ---: | ---: | ---: | --- |
-| 0 | 不适用 | 不适用 | 待实测 | 待实测 | 待实测 | Baseline |
-| 1 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 |
-| 2 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 |
-| 3 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 |
+2026 年 8 月 17 日在同一张 L20 上完成 MTP Off/1/2/3 A/B。请求形状固定为 128 输入、64 输出、`ignore-eos=true`、`temperature=0`、`request-rate=inf`；每行 64 个请求和 8 个 warmup。Off 使用 64 请求的 day0 JSON，MTP 使用临时副本串行复测，未修改原服务。临时副本只把 Kubernetes Host Memory Request 从 64 GiB 降到 60 GiB 以适配节点当时的剩余调度资源；128 GiB Limit、GPU、镜像和所有 Engine 参数不变。
+
+vLLM 使用 `--speculative-config '{"method":"mtp","num_speculative_tokens":N}'`：
+
+| Draft | 输出 tok/s C4 / C8 | 相对 Off C4 / C8 | p95 TTFT C4 / C8 | p95 TPOT C4 / C8 | 平均接受长度 C4 / C8 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| Off | 70.84 / 134.35 | 基线 | 268.06 / 431.89 | 53.18 / 55.62 | 不适用 |
+| 1 | 97.28 / 169.99 | +37.3% / +26.5% | 343.73 / 450.48 | 42.71 / 48.53 | 1.80 / 1.79 |
+| 2 | 110.92 / 199.37 | +56.6% / +48.4% | 354.83 / 505.94 | 39.34 / 42.37 | 2.37 / 2.42 |
+| 3 | 121.93 / 205.10 | +72.1% / +52.7% | 340.20 / 522.65 | 39.48 / 43.95 | 2.94 / 2.86 |
+
+vLLM 的每位置接受率在 C4 下分别为 79.53%；74.77% / 61.89%；77.36% / 63.00% / 53.50%，C8 下为 79.17%；77.14% / 64.38%；77.16% / 59.33% / 49.65%。三组都是 64/64 成功、0 重启、无 OOM。代价是 Profile 给出的 32K 理论最大并发从 Off 的 6.70× 降为 5.63×、5.06×、4.61×。MTP2 是当前更均衡的默认候选：C8 吞吐提升 48.4%，而 MTP3 相对 MTP2 只再提升 2.9%，p95 TPOT、TTFT 和 E2EL 反而略有回退。若请求长期稳定在 C4 且只追求最大吞吐，MTP3 仍比 MTP2 快约 9.9%。Ready 空闲态功耗采样约为 Off 76 W、MTP1/2/3 78 W，不能代替负载期功耗测试。
+
+SGLang 0.5.16 使用 EAGLE 路径，MTP 1/2/3 分别映射为 `num_steps=1/2/3`、`topk=1` 和 `num_draft_tokens=2/3/4`：
+
+| MTP 步数 | 内部并发上限 | 输出 tok/s C4 | 相对 Off | p95 TTFT | p95 TPOT | 平均接受长度 | 接受率 |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Off | 6 | 80.12 | 基线 | 216.67 | 47.35 | 不适用 | 不适用 |
+| 1 | 2 | 56.39 | -29.6% | 3,194.21 | 41.21 | 1.84 | 84.42% |
+| 2 | 2 | 66.07 | -17.5% | 2,739.52 | 33.93 | 2.29 | 64.29% |
+| 3 | 1 | 39.28 | -51.0% | 6,896.76 | 32.16 | 2.70 | 56.67% |
+
+SGLang 三组也都通过正确性冒烟并完成 64/64 请求，0 重启、无 OOM；但 Draft Head 本身加载约 5.19 GiB，内部并发从 6 降到 2/2/1。MTP1 的 C8 输出吞吐只有 57.19 tok/s，低于 Off 的 112.04 tok/s，p95 TTFT 从 3.63 s 增到 7.50 s，已经确认吞吐受内部并发限制，因此 MTP2/3 不再重复 C8。结论是：当前“单卡 L20 + 完整多模态 + 32K”配置不建议启用 SGLang MTP；更低的单请求 TPOT 没有转化为系统吞吐收益。
 
 ## 10. SGLang 的 0-day 交付与失败记录
 
@@ -502,7 +519,7 @@ SGLang 主线已经包含 `Qwen3_5ForConditionalGeneration` 的实现，而 Qwen
 
 修复后服务完成了与 vLLM 相同的核心验收：关闭 Thinking 时只返回 `SGLANG_QWEN38_OK`；开启 Thinking 时 reasoning 与最终 `323` 分栏正确；`qwen3_coder` Parser 生成结构化 `get_weather({"city":"北京"})`，工具结果回填后继续回答；AIBrix 自动生成 `qwen3-8-27b-fp8-l20-sglang-router`，网关真实请求返回 `AIBRIX_SGLANG_QWEN38_OK`。
 
-部署材料和四组原始结果位于 `examples/qwen38-27b-l20-sglang/`。压测结束后 Pod 为 `Ready=true`、`restartCount=0`。公开材料不包含节点、Pod UID、内部 Registry 或生产镜像 Digest；镜像交付路径仅保留“固定 amd64 平台 → staging → 内部同步”的可复现过程。
+部署材料、day0 基线和 MTP 原始结果位于 `examples/qwen38-27b-l20-sglang/`。压测结束后 Pod 为 `Ready=true`、`restartCount=0`。公开材料不包含节点、Pod UID、内部 Registry 或生产镜像 Digest；镜像交付路径仅保留“固定 amd64 平台 → staging → 内部同步”的可复现过程。
 
 ## 11. 停止条件与结论边界
 
