@@ -1,3 +1,10 @@
+---
+title: 用 SGLang-Omni 部署 MiniMax-Music3：从一句创意到完整歌曲
+description: 在 Kubernetes 单卡部署 MiniMax-Music3，并接入 OpenAI 兼容大模型自动生成歌名、结构化歌词和编曲描述
+status: draft
+last_reviewed: 2026-08-17
+---
+
 # 用 SGLang-Omni 部署 MiniMax-Music3：从一句创意到完整歌曲
 
 生成式音乐应用通常包含两类完全不同的模型：一类负责理解创作意图、写歌词和整理编曲描述，另一类负责把歌词与编曲条件真正渲染成音频。本文记录一套已经跑通的实现：在 GPU 集群中用 SGLang-Omni 部署 MiniMax-Music3，再接入一个 OpenAI 兼容的大语言模型作为“歌曲策划”，最后用 Gradio 提供接近 Suno 的简化创作界面。
