@@ -379,7 +379,7 @@ Client
 公开命令使用占位符隐藏环境标识。进入手工 Pod：
 
 ```bash
-gmanctl --cluster <CLUSTER> \
+kubectl --context <KUBE_CONTEXT> \
   -n <NAMESPACE> \
   exec -it <MANUAL_POD> -- bash
 ```
@@ -648,7 +648,7 @@ AIBrix v0.7.0 根据 Fleet 顶层模型标签管理 HTTPRoute。两份 Fleet若�
 
 ### 11.3 镜像与执行器兼容性
 
-上游 `vllm/vllm-openai:v0.26.0-cu129` 固定为 `linux/amd64` 后，先推送到 staging，再使用 `gmanctl image sync-gd5c` 串行同步到生产和云上环境。单平台 manifest digest 为：
+上游 `vllm/vllm-openai:v0.26.0-cu129` 固定为 `linux/amd64` 后，应先推送到隔离的暂存仓库，完成镜像扫描与 Digest 校验，再通过组织批准的镜像同步流程分发到目标环境。单平台 manifest digest 为：
 
 ```text
 sha256:3c5c53248febaa72823a4b7e51aafa1cd2b65d860392e3930414da4d3864f541

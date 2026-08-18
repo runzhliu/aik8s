@@ -1,11 +1,11 @@
 ---
-title: GLM-5.2 FP8 在 8×H20 141GB 上的 vLLM 与 SGLang 实测
-description: 记录 GLM-5.2 FP8 单节点 TP=8 的 vLLM 基线、AIBrix 路由、性能实测，以及 SGLang 从共享文件系统加载权重与首次 JIT 的完整启动过程
+title: GLM-5.2 FP8 在 H20 上的 vLLM、SGLang 与 P/D RDMA 实测
+description: 记录 GLM-5.2 FP8 单节点 TP=8 的 vLLM 与 SGLang 基线，以及双节点 P/D 分离下 TCP 和 RDMA 的 KV 传输与端到端性能对比
 status: exploratory
-last_reviewed: 2026-08-14
+last_reviewed: 2026-08-18
 ---
 
-# GLM-5.2 FP8 在 8×H20 141GB 上的 vLLM 与 SGLang 实测
+# GLM-5.2 FP8 在 H20 上的 vLLM、SGLang 与 P/D RDMA 实测
 
 这次实验回答一个具体问题：GLM-5.2 FP8 是否一定要用 SGLang，还是可以直接使用 AIBrix + vLLM，在一台 `8 × H20 141 GB` 节点上提供 OpenAI-compatible 服务？
 
@@ -14,6 +14,8 @@ last_reviewed: 2026-08-14
 这只是功能正确且可复现的 vLLM 基线，不是最终性能结论。本轮没有启用 MTP/DSpark，使用的通用镜像也未发现可独立导入的 DeepGEMM 包，不能把结果直接与官方优化配置或此前其他模型的推测解码数据比较。
 
 随后我们又用相同 FP8 Checkpoint、相同节点和 TP=8 启动了隔离的 SGLang 0.5.16b1 实例。第三轮在限制模型加载并发、为启动探针保留 60 分钟窗口后成功 Ready，最小确定性请求得到正确结果。它证明 SGLang 能在这套硬件上运行该 FP8 Checkpoint，但尚未形成与 vLLM 参数严格对齐的性能 A/B。
+
+在单节点基线之后，我们还增加了两个 `8 × H20 141 GB` 节点上的 vLLM P/D 分离实验：Prefill 和 Decode 各自使用 TP=8，通过 NIXL 传递 KV Cache，并在保持模型、节点、路由和压测负载不变的前提下只切换 UCX 的 TCP 与 RDMA 数据面。结果显示，RDMA 将 NIXL 的 Rank 聚合传输速率提高约 21.9 倍，并在 4K Prompt 场景提高约 22% 输出吞吐；但短 Prompt、并发 8 的尾延迟明显回退，因此不能把“KV 传得更快”直接等同于“所有请求都更快”。
 
 ## 1. 为什么单机八卡能够放下
 
@@ -154,6 +156,72 @@ vLLM /v1/models
 四组请求均无失败。短请求从 C=1 增至 C=8，总输出吞吐提高约 3.35 倍，但 p95 TTFT 从约 225 ms 增至 3.24 秒，p95 TPOT 从 12.13 ms 增至 52.46 ms。当前配置在并发 8 时已经明显用单请求尾延迟换取总吞吐。4K 输入的 p95 TTFT 为 4.42 秒，Prefill 成为主要延迟来源。
 
 单请求场景的输出吞吐为 65.24 tok/s，但 p95 TPOT 12.13 ms 对应稳定 Decode 阶段约 82 tok/s；二者口径不同，前者把 TTFT 和整轮持续时间计算在内，不能混为同一个数字。
+
+### 6.1 两节点 P/D：TCP 与 RDMA 对照
+
+单节点基线回答了模型能否放下以及普通共置服务的性能范围，下一步要验证的是：当 Prefill 和 Decode 分别占用一个完整八卡节点时，RDMA 加速 KV Cache 传输能否转化为端到端收益。
+
+实验拓扑如下。这里有两份完整模型实例，而不是把一个 TP=16 Engine 拆成两个角色：
+
+```text
+Benchmark Client
+       │
+       ▼
+ AIBrix P/D Router
+       │
+       ├─ Prefill：Node A，8 × H20 141 GB，TP=8
+       │       │
+       │       └─ NIXL + UCX：传输 KV Cache
+       │                         │
+       └─ Decode：Node B，8 × H20 141 GB，TP=8
+```
+
+主要软件与参数如下。模型权重的分发方式、集群标识、节点地址、镜像仓库、Namespace 和入口配置均不属于本文公开范围：
+
+| 项目 | 配置 |
+| --- | --- |
+| 模型 | GLM-5.2 FP8，同一 Revision |
+| GPU | 两个节点，每节点 8 × H20 141 GB，共 16 张 |
+| Engine | vLLM 0.26.0，Prefill TP=8、Decode TP=8 |
+| KV Connector | NIXL 1.3.2，FP8 KV Cache，失败时允许 Recompute |
+| P/D 路由 | AIBrix 0.7.0，固定 Prefill/Decode 角色配对 |
+| 上下文与批处理 | 131,072；`max_num_seqs=16`；`max_num_batched_tokens=32768` |
+| RDMA 组 | `UCX_TLS=rc,cuda_copy,cuda_ipc`，8 路 ConnectX-7 |
+| TCP 对照组 | `UCX_TLS=tcp,cuda_copy,cuda_ipc` |
+
+对照实验只改变 `UCX_TLS`，不改变节点、GPU、模型、路由、压测客户端和 vLLM 参数。TCP 组的 Pod 仍能发现 RDMA 设备，但 UCX 被限制为 TCP；测试前后 RDMA 端口计数完全不变，避免了“名义上配置 TCP、实际仍走 RDMA”的伪对照。
+
+压测仍使用 `vllm bench serve`、精确随机长度、`temperature=0`、`ignore-eos` 和无限请求到达速率。每组先以相同并发完成 Warm-up，再使用两个不同 Seed 各运行一轮：C=1 为每轮 16 个请求，C=4 为 32 个请求，C=8 为 64 个请求，4K 输入为 16 个请求。TCP 与 RDMA 合计 512 个正式请求，失败数为 0。
+
+下面是两轮中相同指标的算术平均。这里的 p95 是“两次独立 p95 的平均值”，不是把两轮原始样本合并后重新计算的 p95；小样本尾延迟只能用于识别趋势，不能替代长时间稳定性测试。
+
+| 场景 | TCP 输出 tok/s | RDMA 输出 tok/s | 吞吐变化 | TCP p95 TTFT | RDMA p95 TTFT | TTFT 变化 | TCP p95 E2EL | RDMA p95 E2EL | E2EL 变化 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128 in / 64 out，C=1 | 58.39 | 60.22 | +3.1% | 566 ms | 479 ms | -15.3% | 1,326 ms | 1,239 ms | -6.5% |
+| 128 in / 64 out，C=4 | 177.55 | 177.29 | -0.1% | 1,445 ms | 1,597 ms | +10.5% | 2,375 ms | 2,530 ms | +6.5% |
+| 128 in / 64 out，C=8 | 287.89 | 255.85 | -11.1% | 786 ms | 2,806 ms | +257.2% | 2,076 ms | 4,079 ms | +96.5% |
+| 4096 in / 128 out，C=4 | 77.89 | 95.03 | **+22.0%** | 6,279 ms | 4,531 ms | **-27.8%** | 8,166 ms | 6,597 ms | **-19.2%** |
+
+C=1 和 C=4 的两轮尾延迟都有明显波动，不能据此宣称稳定收益。C=8 的 RDMA 回退和 4K Prompt 的 RDMA 收益则在两轮中方向一致：
+
+- 对短 Prompt 高并发，KV 数据量较小，路由、批处理、P/D 同步、连接状态和队列抖动足以覆盖网络收益；当前 C=8 结果说明该配置仍需调优；
+- 对 4K Prompt，Prefill 产生的 KV 更多，网络传输更容易进入关键路径。RDMA 把 p95 TTFT 降低约 28%，最终带来约 22% 输出吞吐和约 19% p95 E2EL 收益；
+- TPOT 主要描述 Decode 稳态阶段，本轮两次 4K 测试的 TPOT 方向并不完全一致。RDMA 优化的是 Prefill 后的 KV 传输，不能预期它稳定改善每 Token Decode 时间。
+
+### 6.2 如何证明数据面真的经过 RDMA
+
+只看到 P/D 两个 Pod 都收到 HTTP 请求，不能证明 KV Tensor 已经通过 RDMA 传输。本轮同时核对 NIXL 指标与八个 RDMA 端口的硬件计数：
+
+| 同规模完整轮次 | NIXL 传输数据 | NIXL 累计 `xfer_time` | Rank 聚合有效速率 |
+| --- | ---: | ---: | ---: |
+| TCP | 约 32.81 GB | 136.284 s | 约 0.241 GB/s |
+| RDMA | 33.25 GB | 6.295 s | 约 5.28 GB/s |
+
+按这个口径，RDMA 的 NIXL Rank 聚合有效传输速率约为 TCP 的 **21.9 倍**。需要特别说明：`bytes / sum(xfer_time)` 汇总了八个 TP Rank，是用于同拓扑 A/B 的框架指标，不是单张网卡的物理线速。RDMA 轮次中，八路端口发送计数合计增加约 38.18 GB，方向与 NIXL 指标一致；TCP 轮次完成全部请求后，RDMA 端口计数保持不变。两种传输均未记录失败。
+
+最后还直连 Decode 实例，在不提供远端 `kv_transfer_params` 的情况下让它本地计算 Prompt。`128 in / 64 out，C=1` 得到 65.58 输出 tok/s、p95 TTFT 220 ms、p95 E2EL 981 ms，NIXL 传输计数没有增长，与第 6 节的 65.24 tok/s、225 ms、989 ms 基本一致。这个检查证明此前单机基线仍可作为方向性参照；但该进程仍加载了 NIXL Connector 并使用 Recompute 回退，不应包装成一个全新、完全独立的纯共置 Engine A/B。
+
+这组数据最重要的结论不是“RDMA 一定更快”，而是：**RDMA 已经把大块 KV 传输从明显瓶颈降为较小成本，但端到端收益取决于 Prompt 长度、并发、P/D 容量比例和调度同步。** 下一轮应使用固定 RPS 阶梯、至少五次重复和阶段 Trace，把排队时间、Prefill、KV 传输、首 Token 与 Decode 分开；同时分别测试 UCX 网卡绑定、连接预热，以及 Prefill/Decode 独立的 `max_num_seqs` 和 `max_num_batched_tokens`。
 
 ## 7. 与现有 SGLang W4AFP8 参数的静态对比
 
@@ -491,7 +559,7 @@ GPU 完成生成，Metrics 显示 running=0、queue=0
 这类问题不能停留在 `kubectl logs --previous`。我们通过节点上的运维 DaemonSet 进入宿主机 Mount Namespace，只读核验内核、kubelet 和容器运行时日志：
 
 ```bash
-gmanctl -n <NODE_AGENT_NAMESPACE> exec <NODE_AGENT_POD> -- \
+kubectl -n <NODE_AGENT_NAMESPACE> exec <NODE_AGENT_POD> -- \
   nsenter --mount=/proc/1/ns/mnt -- bash -lc '
     journalctl -k --since "<START_TIME>" --until "<END_TIME>" --no-pager |
     grep -Ei "oom|out of memory|killed process|NVRM: Xid|nfs: server|rpc.*timeout|I/O error|hung task"
@@ -550,13 +618,15 @@ EAGLE Verify 读取未初始化的 Mamba Track Index
 
 ## 8. 这组数据能说明什么
 
-它证明了四件事：
+它证明了七件事：
 
 - GLM-5.2 FP8 可以使用标准 vLLM 在单台八卡 H20 141 GB 上完成 TP=8 加载；
 - AIBrix 不要求后端一定是 SGLang，可以发现并路由 vLLM Engine；
 - AIBrix Gateway 的 completions、chat 和 OpenWebUI 链路均功能正确；
 - SGLang 0.5.16b1 也能在同一张 FP8 Checkpoint 和单节点 TP=8 上完成加载、结构化输出、工具调用和 117K 长上下文检索；
-- 在没有 MTP/DSpark 的基线下，增加并发能够提高总吞吐，但尾延迟很快恶化。
+- 在没有 MTP/DSpark 的基线下，增加并发能够提高总吞吐，但尾延迟很快恶化；
+- vLLM 的 Prefill/Decode 可以各占一个八卡节点，通过 NIXL 完成跨节点 KV 传输；
+- RDMA 能显著提高 KV 数据面的有效传输速率，并改善长 Prompt 性能，但当前短 Prompt 高并发配置仍可能出现端到端回退。
 
 它还不能证明 vLLM 比 SGLang 更快，也不能代表官方 GLM-5.2 H20 的最优性能。下一轮严格 A/B 应只改变一个变量：
 
@@ -564,7 +634,8 @@ EAGLE Verify 读取未初始化的 Mamba Track Index
 2. 当前通用镜像与带 DeepGEMM 的官方优化构建；
 3. 模型先分发到节点本地 NVMe，再让 vLLM 与 SGLang 使用相同 Revision、上下文、KV 精度、并发和推测解码策略；
 4. 直连 vLLM 与经 AIBrix Gateway，量化网关本身的开销；
-5. 共享文件系统冷读、节点 NVMe 命中和持久编译缓存命中三种冷启动状态。
+5. 共享文件系统冷读、节点 NVMe 命中和持久编译缓存命中三种冷启动状态；
+6. P/D 的固定 RPS 阶梯、更多重复与阶段 Trace，定位短请求 C=8 的 RDMA 尾延迟回退。
 
 在完成这些 A/B 前，当前服务适合作为 AIBrix + vLLM 的可用基线，不应直接替代已有生产路径。
 
