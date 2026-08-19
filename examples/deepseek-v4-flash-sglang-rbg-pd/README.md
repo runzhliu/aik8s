@@ -1,5 +1,8 @@
 # DeepSeek V4 Flash：RBG + SGLang 双机 P/D 分离
 
+统一的 TP=8、P/D TCP/RDMA 和 4K–255K 长上下文复测矩阵见
+[`../llm-long-context-pd-benchmark/`](../llm-long-context-pd-benchmark/)。本目录继续保存部署示例，复测请求与结果判定由该公共套件固定。
+
 这组清单用于在 Kubernetes 中准备一个最小的 SGLang Prefill/Decode 分离实例：一个 Prefill Pod、一个 Decode Pod，每个 Pod 使用单机 8 卡 TP=8，由 RBG 管理生命周期，由 AIBrix Gateway 完成 P/D 选路和请求编排。
 
 当前目录是经过一次真实双机实验修正后的**脱敏模板**，不会直接命中任何真实镜像仓库或对象存储。镜像都使用 `example.invalid` 占位，Secret 也只有假值，因此误执行不会启动 16 卡服务。替换环境参数并通过预检后再部署；本次实验现象和性能数据记录在第 9 节。

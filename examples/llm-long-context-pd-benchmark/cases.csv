@@ -1,0 +1,22 @@
+case_id,stage,input_tokens,output_tokens,concurrency,num_prompts,repeats,request_rate,description
+smoke-128-64-c1,smoke,128,64,1,4,1,inf,endpoint and result format smoke test
+short-128-64-c1,baseline,128,64,1,100,5,inf,short request latency baseline
+short-128-64-c4,baseline,128,64,4,128,5,inf,short request moderate concurrency
+short-128-64-c8,baseline,128,64,8,256,5,inf,short request high concurrency
+prefill-4k-128-c4,baseline,4096,128,4,64,5,inf,prefill dominated baseline
+ctx-4k-1k-c1,capacity,4096,1024,1,3,1,inf,long output capacity probe
+ctx-4k-1k-c2,capacity,4096,1024,2,6,1,inf,long output capacity probe
+ctx-4k-1k-c4,capacity,4096,1024,4,12,1,inf,long output capacity probe
+ctx-4k-1k-c8,capacity,4096,1024,8,24,1,inf,long output capacity probe
+ctx-20k-1k-c1,capacity,20480,1024,1,3,1,inf,long context capacity probe
+ctx-20k-1k-c2,capacity,20480,1024,2,6,1,inf,long context capacity probe
+ctx-20k-1k-c4,capacity,20480,1024,4,12,1,inf,long context capacity probe
+ctx-39k-1k-c1,capacity,39936,1024,1,3,1,inf,long context capacity probe
+ctx-39k-1k-c2,capacity,39936,1024,2,6,1,inf,long context capacity probe
+ctx-39k-1k-c4,capacity,39936,1024,4,12,1,inf,long context capacity probe
+ctx-80k-1k-c1,capacity,81920,1024,1,3,1,inf,long context capacity probe
+ctx-80k-1k-c2,capacity,81920,1024,2,6,1,inf,long context capacity probe
+ctx-127k-1k-c1,capacity,130048,1024,1,3,1,inf,long context probe at 131072 total tokens
+ctx-127k-1k-c2,capacity,130048,1024,2,6,1,inf,long context probe at 131072 total tokens
+ctx-199k-1k-c1,capacity,203776,1024,1,3,1,inf,long context probe at 204800 total tokens
+ctx-255k-1k-c1,capacity,261120,1024,1,3,1,inf,long context probe at 262144 total tokens

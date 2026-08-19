@@ -2,7 +2,7 @@
 title: Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录
 description: 记录 Qwen3.8-27B 官方 FP8 制品、vLLM 与 SGLang 镜像、单卡 L20 Kubernetes 实测、OpenWebUI 接入，以及后续 MTP 和长上下文 A/B
 status: draft
-last_reviewed: 2026-08-17
+last_reviewed: 2026-08-19
 ---
 
 # Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录
@@ -30,7 +30,7 @@ Qwen 官方模型卡给出的 coding 对比中，Qwen3.8-27B 与 `Opus4.6 Max` �
 这组数字最合理的解读是：Qwen3.8-27B 已经进入值得和前沿闭源 coding 模型正面对照的区间，而不是已经在每一种代码任务上确定性战胜 Opus 4.6。还要注意三条边界：
 
 1. 表格来自 Qwen 官方评测，不是本文实测，也不是独立第三方复现；
-2. `Opus4.6 Max` 的 Harness、Effort、工具和上下文配置必须与 Qwen 侧一致，才能形成严格 A/B；
+2. `Opus4.6 Max` 的评测流程、Effort、工具和上下文配置必须与 Qwen 侧一致，才能形成严格 A/B；
 3. Anthropic 发布页强调的是 Opus 4.6 在长时 Agent、代码库操作、Review 和 Debug 上的整体提升，单个静态 Benchmark 不能覆盖真实 vibe coding 体验。
 
 因此本文会把“编码能力”拆成四层：短代码正确性、Repo 级修改、工具调用与恢复、长时间 Agent 任务。吞吐高不代表代码好，榜单高也不代表服务稳定。
@@ -376,6 +376,8 @@ P1 文本基线通过后，移除 `--language-model-only`，分别测试：
 | 中长上下文 | 32768 / 256 | 1、2、4 | KV 占用、TTFT、稳定性 |
 | 长上下文 | 64K/128K/262K | 1 | Needle、OOM 边界、Graph/JIT |
 
+当前公开实例为了保留单卡并发，将运行时上下文限制为 32,768 token，因此还没有产生 128K 实测结果。实际权重的 `max_position_embeddings` 为 262,144；对应架构的官方模型卡也将 262K 定义为原生上下文，并建议显存不足时尽量维持至少 128K，以保留复杂任务的 Thinking 能力。后续 128K 必须使用独立 candidate，从 `127K 输入 + 1K 输出、C=1` 开始，同时通过 Needle/长文问答正确性和随机 Token 性能测试。只测随机 Token 吞吐不能证明长上下文有效。
+
 示例命令：
 
 ```bash
@@ -425,7 +427,7 @@ TP A/B 必须同时报告总 tokens/s 和 tokens/s/GPU。用四张卡换来两�
 - 长时 Agent：允许工具调用和失败恢复，限制总时间与 Token；
 - Vibe coding：从自然语言需求生成可运行页面，并通过浏览器或截图验收。
 
-为了与个人 Opus 4.5/4.6 体验形成有意义的对照，必须固定 Harness、系统提示、工具权限、仓库 Revision、时间上限、最大 Token 和验收测试。记录“是否完成、人工接管次数、测试通过率、耗时、输入输出 Token”，不能只凭主观观感选胜者。
+为了与个人 Opus 4.5/4.6 体验形成有意义的对照，必须固定评测流程、系统提示、工具权限、仓库 Revision、时间上限、最大 Token 和验收测试。记录“是否完成、人工接管次数、测试通过率、耗时、输入输出 Token”，不能只凭主观观感选胜者。
 
 ## 9. 观测与结果记录模板
 
@@ -475,6 +477,17 @@ SGLang 的“成功 API Ready”来自第二个 Pod。第一个 Pod 在权重、
 
 这不是“双方默认参数”的严格同构 A/B：vLLM 使用 `--language-model-only`；SGLang 加载完整多模态模型，默认 prefill CUDA Graph 又因 L20 OOM 被单独禁用。结果能说明当前两条可运行配置的实际表现，但不能直接推导 Engine 的普遍优劣。原始 JSON 分别保存在 `examples/qwen38-27b-l20-vllm/results/` 与 `examples/qwen38-27b-l20-sglang/results/`。
 
+#### 9.2.1 统一压测工具链可用性验证
+
+为了让后续 DeepSeek、GLM-5.2、Combined TP=8、P/D 双 TP=8 和 TCP/RDMA 复测使用同一套请求定义，仓库新增了[公共测试套件](../../../examples/llm-long-context-pd-benchmark/)。正式占用大规模 GPU 资源前，先用已经运行的 Qwen3.8-27B vLLM/SGLang 接口做了一次低负载验证：客户端统一为 vLLM 0.26.0，固定 128 输入、64 输出、C=1、一个 Warm-up、四个正式请求、相同 Tokenizer 与 Seed。
+
+| Engine | 成功/总数 | req/s | 输出 tok/s | p95 TTFT | p95 TPOT | p95 ITL | p95 E2EL |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| vLLM | 4/4 | 0.27 | 17.42 | 112.75 ms | 56.56 ms | 57.05 ms | 3,675.39 ms |
+| SGLang | 4/4 | 0.30 | 19.10 | 175.19 ms | 50.52 ms | 51.04 ms | 3,357.38 ms |
+
+这组数据只证明用例读取、固定长度请求、两种 OpenAI-compatible 接口、指标采集、JSON 保存和 A/B 汇总全部跑通。四个请求不足以形成稳定分位数，不能用于宣称哪个引擎更快，也不替代上一节每个 cell 32–64 个请求的正式基线。它与正式 C=1 结果量级接近，可用于排除工具链出现明显口径漂移。
+
 ### 9.3 MTP
 
 2026 年 8 月 17 日在同一张 L20 上完成 MTP Off/1/2/3 A/B。请求形状固定为 128 输入、64 输出、`ignore-eos=true`、`temperature=0`、`request-rate=inf`；每行 64 个请求和 8 个 warmup。Off 使用 64 请求的 day0 JSON，MTP 使用临时副本串行复测，未修改原服务。临时副本只把 Kubernetes Host Memory Request 从 64 GiB 降到 60 GiB 以适配节点当时的剩余调度资源；128 GiB Limit、GPU、镜像和所有 Engine 参数不变。
@@ -512,7 +525,7 @@ SGLang 主线已经包含 `Qwen3_5ForConditionalGeneration` 的实现，而 Qwen
 - 初次启动完整 Qwen3.8 FP8 Checkpoint，不传 `--language-only`。SGLang 当前对 Qwen3.5 text-extract/language-only Checkpoint 有已知兼容性讨论，而官方 Qwen3.8 FP8 是带 Vision 配置的完整 Checkpoint；
 - 首轮关闭 MTP/EAGLE。Hybrid GDN 模型的投机解码仍有显存利用率问题记录，先取得无投机基线；
 - 固定 TP=1、32K、FP8 KV 与同一 CephFS 模型目录，服务名另设为 `qwen3-8-27b-fp8-l20-sglang`，避免覆盖正在被 OpenWebUI 使用的 vLLM 服务；
-- 对照时继续使用同一个 `vllm bench serve` 客户端和相同随机输入、并发、输出长度，让测试 Harness 不变，只替换后端 URL；
+- 对照时继续使用同一个 `vllm bench serve` 客户端和相同随机输入、并发、输出长度，让压测工具链不变，只替换后端 URL；
 - 稳定版若无法解析发布次日 Checkpoint，保留完整错误后再切换到固定日期、固定 Digest 的 nightly，不能使用浮动 `latest` 得出不可复现结论。
 
 单卡 L20 的首轮启动验证了权重与 KV 分配，但默认 8192-token prefill CUDA Graph 在捕获到 3328-token shape 时 OOM；模型权重此前已成功加载。第二轮只设置 `--cuda-graph-backend-prefill disabled`，保留 decode CUDA Graph、32K、FP8 KV 与完整多模态。这个变更会影响 Prefill/TTFT 对照，必须单独披露，不能把修复后的数字称为“双方默认参数”的公平 A/B。
@@ -537,7 +550,7 @@ SGLang 主线已经包含 `Qwen3_5ForConditionalGeneration` 的实现，而 Qwen
 
 1. **配置口径**：镜像、权重、API 和 Kubernetes 运行参数；
 2. **运行数据**：上下文、并发、显存、吞吐和延迟；
-3. **评估边界**：在固定 Harness 下继续比较 coding/Agent 质量与 GPU 成本。
+3. **评估边界**：在固定评测流程下继续比较 coding/Agent 质量与 GPU 成本。
 
 它不能仅凭官方 Benchmark 宣称 Qwen3.8-27B 已经全面替代 Opus 4.6，也不能仅凭一次短压测给出生产容量。本文先留下 vLLM 与 SGLang 在固定 L20 环境中的一组可复现数据，后续再用 Coding、Agent 和长上下文任务继续验证实际体验。
 
@@ -545,6 +558,7 @@ SGLang 主线已经包含 `Qwen3_5ForConditionalGeneration` 的实现，而 Qwen
 
 - [Qwen3.8-27B 官方模型卡](https://huggingface.co/Qwen/Qwen3.8-27B)
 - [Qwen3.8-27B-FP8 官方模型卡](https://huggingface.co/Qwen/Qwen3.8-27B-FP8)
+- [Qwen3.5-27B 官方模型卡：原生上下文与部署建议](https://huggingface.co/Qwen/Qwen3.5-27B)
 - [vLLM Qwen3.8-27B Recipe](https://recipes.vllm.ai/Qwen/Qwen3.8-27B)
 - [vLLM Docker Hub](https://hub.docker.com/r/vllm/vllm-openai/tags)
 - [Claude Opus 4.5 发布公告](https://www.anthropic.com/news/claude-opus-4-5)
