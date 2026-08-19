@@ -10,3 +10,7 @@ glm52-vllm-pd-rdma-tp8x2,GLM-5.2-FP8,vLLM,pd,rdma,8,8,16,off,131072,glm52-target
 glm52-sglang-combined-tp8,GLM-5.2-FP8,SGLang,combined,local,8,0,8,off,204800,glm52-engine,Optional engine comparison after topology A-B
 qwen38-27b-vllm-tp1-l20,Qwen3.8-27B-FP8,vLLM,combined,local,1,0,1,off,32768,qwen38-engine,Existing single L20 vLLM calibration profile
 qwen38-27b-sglang-tp1-l20,Qwen3.8-27B-FP8,SGLang,combined,local,1,0,1,off,32768,qwen38-engine,Existing single L20 SGLang calibration profile
+qwen38-27b-vllm-tp1-l20-64k,Qwen3.8-27B-FP8,vLLM,combined,local,1,0,1,off,65536,qwen38-context-curve,Temporary single L20 64K feasibility candidate
+qwen38-27b-sglang-tp1-l20-64k,Qwen3.8-27B-FP8,SGLang,combined,local,1,0,1,off,65536,qwen38-context-curve,Temporary single L20 64K feasibility candidate
+qwen38-27b-vllm-tp1-l20-128k,Qwen3.8-27B-FP8,vLLM,combined,local,1,0,1,off,131072,qwen38-128k,Temporary single L20 128K feasibility candidate
+qwen38-27b-sglang-tp1-l20-128k,Qwen3.8-27B-FP8,SGLang,combined,local,1,0,1,off,131072,qwen38-128k,Temporary single L20 128K feasibility candidate

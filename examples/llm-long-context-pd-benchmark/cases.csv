@@ -11,9 +11,11 @@ ctx-4k-1k-c8,capacity,4096,1024,8,24,1,inf,long output capacity probe
 ctx-20k-1k-c1,capacity,20480,1024,1,3,1,inf,long context capacity probe
 ctx-20k-1k-c2,capacity,20480,1024,2,6,1,inf,long context capacity probe
 ctx-20k-1k-c4,capacity,20480,1024,4,12,1,inf,long context capacity probe
+ctx-31k-1k-c1,capacity,31744,1024,1,3,1,inf,long context probe at 32768 total tokens
 ctx-39k-1k-c1,capacity,39936,1024,1,3,1,inf,long context capacity probe
 ctx-39k-1k-c2,capacity,39936,1024,2,6,1,inf,long context capacity probe
 ctx-39k-1k-c4,capacity,39936,1024,4,12,1,inf,long context capacity probe
+ctx-63k-1k-c1,capacity,64512,1024,1,3,1,inf,long context probe at 65536 total tokens
 ctx-80k-1k-c1,capacity,81920,1024,1,3,1,inf,long context capacity probe
 ctx-80k-1k-c2,capacity,81920,1024,2,6,1,inf,long context capacity probe
 ctx-127k-1k-c1,capacity,130048,1024,1,3,1,inf,long context probe at 131072 total tokens

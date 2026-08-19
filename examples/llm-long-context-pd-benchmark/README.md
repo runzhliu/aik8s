@@ -10,6 +10,8 @@
 
 目录不包含集群名、节点地址、模型挂载路径、镜像仓库或网络配置。部署层仍使用各环境已有的清单；这里仅固定公开可复现的请求与判定方法。
 
+如果对 `128/64`、`4096/128`、`32K/64K/128K`、`127K+1K C=1` 这些写法不熟悉，先看 [TOKENS_EXPLAINED.md](./TOKENS_EXPLAINED.md)，里面用具体算式和请求例子解释 token、上下文窗口与并发的区别。
+
 ## 为什么分两轮
 
 `capacity` 阶段沿用“每个并发约 3 个请求”的容量探测方式，目的是快速发现 OOM、上下文上限、JIT 编译或调度异常，**不能直接用于稳定的 p95/p99 结论**。通过容量探测的单元格，再用至少 5 轮和更多请求做正式复测。
@@ -57,6 +59,30 @@ Qwen3.8 27B 校准 profile 当前按运行时的 32,768 token 上下文建模：
 若要测试 128K，应启动独立的 131,072-token candidate，先只跑 `ctx-127k-1k-c1`，确认显存、正确性和首 token 时间后再探索 C=2。不要直接修改仍承担流量的 32K 基线实例。官方 262K 示例使用 TP=8；单卡 L20 是否能稳定容纳 128K 必须以启动时 KV 容量和实测为准，不能从模型上限直接推导。
 
 Qwen 的 128K 测试用于回答长文档、RAG 和长会话下的 Prefill、TTFT、KV 容量问题；常规请求性能仍由 short 与 4K 基线回答。它必须同时通过 127K needle retrieval 或长文问答，以及随机 token 性能测试；只测随机 token 吞吐不能证明模型在 128K 有效。该校准项是 TP=1，不可直接和 DeepSeek/GLM 的 TP=8 数值比较。
+
+若要画出单卡上下文成本曲线，使用完全一致的 C=1、1 次预热和 3 次正式请求，依次测试 `ctx-31k-1k-c1`（32K 配置）、`ctx-63k-1k-c1`（64K 配置）和 `ctx-127k-1k-c1`（128K 配置）。这组数据比较的是不同输入长度的实际成本，不应解释成只修改 `max_context` 所产生的配置开销。
+
+128K candidate 启动并通过 API smoke 后，先运行三个 Needle 位置：
+
+```bash
+python3 needle.py \
+  --base-url http://MODEL_ENDPOINT \
+  --model SERVED_MODEL_NAME \
+  --tokenizer /path/to/tokenizer \
+  --target-input-tokens 130048 \
+  --positions 0.1,0.5,0.9 \
+  --output results/needle-127k.json
+```
+
+三个位置全部正确后，才执行随机 Token 性能 cell：
+
+```bash
+./run-matrix.sh ... \
+  --profile qwen38-27b-vllm-tp1-l20-128k \
+  --stage capacity \
+  --case ctx-127k-1k-c1 \
+  --execute
+```
 
 ## 离线检查
 
