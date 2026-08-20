@@ -308,7 +308,41 @@ Base 能理解故障并生成合法 JSON，却会自行创造一套看似合理�
 
 ms-swift 的官方 MoE LoRA 示例提醒：如果不希望训练 Router，应显式限制 `target_modules` 为 Attention 和 MLP 投影层，而不是盲目匹配所有参数。[Qwen3 MoE LoRA 示例](https://github.com/modelscope/ms-swift/blob/main/examples/train/moe/qwen3_moe.sh)
 
+### 9.1 Qwen3-30B-A3B 在单张 L20 上的加载门槛
+
+2026 年 8 月 20 日使用单张 L20 对 `Qwen3-30B-A3B-Instruct-2507` 做了真实加载测试。模型有 30.5B 总参数、3.3B 激活参数、128 个 Expert 且每 Token 选择 8 个 Expert；“3.3B 激活”描述主要计算路径，不等于其余权重可以不驻留。BF16 权重本身的理论下限约为 56.8 GiB，尚未计算 Activation、CUDA Workspace 和 LoRA 状态，已经超过测试卡可见的 44.4 GiB。[Qwen3-30B-A3B 模型卡](https://huggingface.co/Qwen/Qwen3-30B-A3B)
+
+| 路径 | 实测结果 | 训练与盲测 |
+| --- | --- | --- |
+| 4B BF16 LoRA | 成功；120 Step 峰值 8.1 GiB | 完成，Step 60 Adapter 故障码准确率 90.9% |
+| 30B-A3B BF16 + BNB NF4 | 加载到 411/531 时 OOM；进程已占 44.37 GiB | 未开始，不报告 Loss 和分数 |
+| 30B-A3B GPTQ-Int4 | 加载软件兼容性通过，但测试时可用副本缺少权重分片 | 未开始，不把元数据目录算作成功 |
+
+BNB 失败的现象与 Qwen3-MoE 的融合 Expert 表示有关：Transformers 5 会把部分专家矩阵保存为 3D `nn.Parameter`，而不是普通 `nn.Linear`。这不仅影响量化覆盖，也影响 LoRA 注入；PEFT 要求通过 `target_parameters` 显式覆盖 `mlp.experts.gate_up_proj` 和 `mlp.experts.down_proj`。[PEFT LoRA 文档](https://huggingface.co/docs/peft/package_reference/lora)
+
+所以这次结论不是“所有 4-bit 方案都不可能”，而是：现有 BF16 + 标准 BNB NF4 组合不能在单张 L20 上完成加载。下一轮只有拿到完整的预量化 GPTQ/AWQ 权重，检查量化 Kernel 和 Expert Adapter 参数名，并完成至少一个 Forward/Backward 后，才值得继续跑相同的 60-Step 与 110 条盲测 A/B。原始失败记录保存在 [`l20-qwen3-30b-a3b-20260820.json`](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/l20-qwen3-30b-a3b-20260820.json)。
+
 这个阶段的目标是验证 MoE 训练行为，不要把“小型 MoE 能用 Transformers + PEFT 训练”外推为 DeepSeek V4 的特殊 Attention 和 Checkpoint 格式已经兼容。
+
+### 9.2 单机 8 × L20 的 BF16 LoRA 容量验证
+
+同日使用单机 8 张 L20 对相同 BF16 Checkpoint 完成了 60-Step LoRA。直接启动 8 个 ZeRO-3 进程会在模型加载阶段同时构造多份完整权重，主机内存先于显存耗尽；通过单进程 `device_map=balanced` 将 48 层均匀放到 8 张 GPU 后，模型、数据、Forward/Backward、验证和 Adapter 保存均通过。
+
+| 指标 | 实测结果 |
+| --- | ---: |
+| 可训练参数 | 497.42M / 1.603% |
+| Max Length / 梯度累积 | 512 / 8 |
+| 训练运行时间 | 1,438 秒 |
+| 训练速度 | 0.042 Step/s |
+| 平均 Train Loss | 0.348 |
+| 最后一个日志窗口 Train Loss | 0.00915 |
+| Eval Loss（Step 20 / 40 / 60） | 0.16276 / 0.02949 / 0.02811 |
+| Step 60 Eval Token Accuracy | 99.34% |
+| 最佳 Checkpoint | Step 60，Adapter 约 1.9 GiB |
+
+镜像中的 Transformers 5.12.1 与 PEFT 0.19.1 在训练结束后重新热加载最佳 Adapter 时存在 `WeightConverter` 参数兼容问题。由于三次验证持续改善、Step 60 本身就是最佳 Checkpoint，本轮关闭 `load_best_model_at_end`，保留 Trainer 的最佳 Checkpoint 选择和保存，最终进程以退出码 0 完成。这个绕行只跳过训练后的热加载，不跳过训练、验证或保存。
+
+需要特别限定结论：这是一条“先证明能装下并能训练”的单进程层切分路径，不是高效的 8 卡并行基线。执行会随层跨 GPU 流动，不能把 8 卡总显存可用误读为 8 卡算力线性叠加。下一轮应对比 FSDP/ZeRO-3 的低主机内存初始化或 Megatron Expert Parallel，并补齐固定 110 条盲测的 Base/Adapter 生成 A/B；在此之前，不用很低的验证 Loss 代替业务效果结论。
 
 ## 10. 升级到完整 DeepSeek V4 Flash
 
@@ -443,7 +477,7 @@ known_limitations:
 2. 已完成初测：单机双卡与双机单卡的 NCCL 对照，以及双机单卡 TCP 的 SFT 强扩展；
 3. 资源可用后补齐：单机双卡 SFT，并把全部初测重复三轮取中位数；
 4. 换成一份经过人工审核的真实小数据集，运行 100～500 Step，并用固定 Prompt 比较 Base 与 Adapter；
-5. 如果最终目标是 MoE，先用小型 MoE 验证 Router、Expert LoRA 和 All-to-All；
+5. 已完成单张 L20 的加载边界与单机 8 × L20 的 BF16 LoRA 容量验证；下一轮补齐 30B Base/Adapter 盲测，并比较 FSDP/ZeRO-3 与 Expert Parallel；
 6. 高显存与 RDMA 资源可用后，用相同拓扑完成 TCP/RDMA A/B，再运行 DeepSeek V4 Flash Adapter-only Smoke；
 7. 只有正确性和评测通过后，才扩大数据、长度和训练时间，并设计多机全参数训练与 Checkpoint 基线。
 

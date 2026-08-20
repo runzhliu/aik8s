@@ -1,0 +1,97 @@
+{
+  "date": "2026-08-20",
+  "repetitions": 1,
+  "hardware": {
+    "gpu": "1 x NVIDIA L20",
+    "visible_memory_gib": 44.392,
+    "multi_gpu_validation": "1 node x 8 NVIDIA L20"
+  },
+  "model": {
+    "name": "Qwen3-30B-A3B-Instruct-2507",
+    "total_parameters_billion": 30.5,
+    "active_parameters_billion": 3.3,
+    "experts": 128,
+    "active_experts_per_token": 8
+  },
+  "software": {
+    "framework": "ms-swift 4.4.1",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.12.1",
+    "peft": "0.19.1",
+    "bitsandbytes": "0.49.2"
+  },
+  "attempts": [
+    {
+      "name": "BF16 checkpoint with BNB NF4 double quantization",
+      "status": "oom_during_load",
+      "weight_load_progress": "411/531",
+      "process_gpu_memory_gib": 44.37,
+      "pytorch_allocated_gib": 44.04,
+      "free_gpu_memory_mib": 11.38,
+      "training_started": false
+    },
+    {
+      "name": "pre-quantized GPTQ Int4 checkpoint",
+      "status": "checkpoint_incomplete",
+      "loader_compatibility": "GPTQModel 7.2.0 imported with Transformers 5.12.1",
+      "missing_artifact": "model weight shards",
+      "training_started": false
+    },
+    {
+      "name": "BF16 LoRA with single-process balanced layer placement on 8 GPUs",
+      "status": "succeeded",
+      "training_started": true,
+      "training_steps": 60,
+      "max_length": 512,
+      "gradient_accumulation_steps": 8,
+      "trainable_parameters": 497418200,
+      "trainable_parameter_ratio": 0.01603,
+      "train_runtime_seconds": 1438,
+      "train_steps_per_second": 0.042,
+      "average_train_loss": 0.348,
+      "final_logged_train_loss": 0.0091457888,
+      "eval_loss_by_step": {
+        "20": 0.16275537,
+        "40": 0.0294905882,
+        "60": 0.0281115677
+      },
+      "final_eval_token_accuracy": 0.9934111446,
+      "selected_checkpoint_step": 60,
+      "adapter_size_gib": 1.9,
+      "job_exit_code": 0
+    }
+  ],
+  "comparison": {
+    "qwen3_4b_bf16_lora": {
+      "load_succeeded": true,
+      "training_succeeded": true,
+      "selected_checkpoint_step": 60,
+      "peak_memory_gib": 8.1,
+      "blind_test_code_accuracy": 0.9090909091
+    },
+    "qwen3_30b_a3b_single_l20": {
+      "load_succeeded": false,
+      "training_succeeded": false,
+      "blind_test_code_accuracy": null
+    },
+    "qwen3_30b_a3b_8_l20": {
+      "load_succeeded": true,
+      "training_succeeded": true,
+      "selected_checkpoint_step": 60,
+      "final_eval_loss": 0.0281115677,
+      "blind_test_code_accuracy": null
+    }
+  },
+  "conclusion": "The available BF16 checkpoint did not pass the single-L20 load gate with standard BNB NF4. The same BF16 model completed a 60-step LoRA validation on eight L20 GPUs with single-process balanced layer placement, but no blind-test score is reported for the 30B run.",
+  "next_validation": [
+    "Run the fixed 110-example blind test for Base and Adapter before claiming a behavior-quality gain.",
+    "Compare the capacity-first device-map run with FSDP, ZeRO-3 efficient initialization, or Megatron Expert Parallel.",
+    "Use a complete pre-quantized GPTQ or AWQ checkpoint for the single-GPU path."
+  ],
+  "limitations": [
+    "Each path has one repetition, so timings are not a throughput benchmark.",
+    "The eight-GPU success uses single-process layer placement, not data parallelism or expert parallelism; GPU execution is largely sequential across layers.",
+    "The GPTQ path was not evaluated because the available checkpoint copy contained no weight shards.",
+    "The 30B run completed training and validation loss evaluation but did not run the blind generation A/B, so no behavior score is imputed."
+  ]
+}

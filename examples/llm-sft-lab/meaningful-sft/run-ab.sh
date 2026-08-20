@@ -6,6 +6,7 @@ LAB_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 : "${TRAIN_MODEL_ID:=Qwen/Qwen3-4B-Instruct-2507}"
 : "${EVAL_BATCH_SIZE:=8}"
 : "${EVAL_LIMIT:=}"
+: "${TRAIN_QUANT_BITS:=}"
 
 DATA_DIR="${RUN_ROOT}/data"
 RESULT_DIR="${RUN_ROOT}/results"
@@ -19,12 +20,18 @@ if [[ -n "${EVAL_LIMIT}" ]]; then
   LIMIT_ARGS=(--limit "${EVAL_LIMIT}")
 fi
 
+QUANT_ARGS=()
+if [[ -n "${TRAIN_QUANT_BITS}" ]]; then
+  QUANT_ARGS=(--quant-bits "${TRAIN_QUANT_BITS}")
+fi
+
 echo "Running Base evaluation"
 python "${LAB_ROOT}/evaluate.py" \
   --model "${TRAIN_MODEL_ID}" \
   --test-file "${DATA_DIR}/test.jsonl" \
   --output "${RESULT_DIR}/base-predictions.jsonl" \
   --batch-size "${EVAL_BATCH_SIZE}" \
+  "${QUANT_ARGS[@]}" \
   "${LIMIT_ARGS[@]}"
 
 RUN_ROOT="${RUN_ROOT}" \
@@ -40,6 +47,7 @@ python "${LAB_ROOT}/evaluate.py" \
   --test-file "${DATA_DIR}/test.jsonl" \
   --output "${RESULT_DIR}/adapter-predictions.jsonl" \
   --batch-size "${EVAL_BATCH_SIZE}" \
+  "${QUANT_ARGS[@]}" \
   "${LIMIT_ARGS[@]}"
 
 python "${LAB_ROOT}/score.py" \

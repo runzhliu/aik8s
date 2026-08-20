@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 
 def parse_args() -> argparse.Namespace:
@@ -21,6 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--max-input-tokens", type=int, default=512)
     parser.add_argument("--max-new-tokens", type=int, default=192)
+    parser.add_argument("--quant-bits", type=int, choices=(4, 8))
     parser.add_argument("--limit", type=int)
     return parser.parse_args()
 
@@ -33,17 +34,27 @@ def render_prompt(tokenizer: Any, messages: list[dict[str, str]]) -> str:
         return tokenizer.apply_chat_template(messages, **kwargs)
 
 
-def load_model(model_path: str, adapter_path: str | None) -> tuple[Any, Any]:
+def load_model(model_path: str, adapter_path: str | None, quant_bits: int | None) -> tuple[Any, Any]:
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     tokenizer.padding_side = "left"
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_path,
-        dtype=torch.bfloat16,
-        device_map={"": "cuda:0"},
-    )
+    model_kwargs: dict[str, Any] = {
+        "dtype": torch.bfloat16,
+        "device_map": {"": "cuda:0"},
+    }
+    if quant_bits == 4:
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True,
+        )
+    elif quant_bits == 8:
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit=True)
+
+    model = AutoModelForCausalLM.from_pretrained(model_path, **model_kwargs)
     if adapter_path:
         from peft import PeftModel
 
@@ -60,7 +71,7 @@ def main() -> None:
     rows = [json.loads(line) for line in Path(args.test_file).read_text(encoding="utf-8").splitlines() if line]
     if args.limit:
         rows = rows[: args.limit]
-    tokenizer, model = load_model(args.model, args.adapter)
+    tokenizer, model = load_model(args.model, args.adapter, args.quant_bits)
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
