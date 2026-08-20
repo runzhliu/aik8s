@@ -45,7 +45,63 @@ Adapter Checkpoint
 
 20 Step 的 Smoke Test 只能验证工程链路，不能证明模型质量提升。
 
-## 2. 为什么先选 ms-swift 和 Qwen3-4B
+## 2. 预训练、SFT 和对齐到底在做什么
+
+把大模型训练统一理解成“拿数据继续训”很容易选错方法。它们都可能使用 Next Token Prediction，但数据形态、Loss 作用位置和希望改变的能力不同。
+
+```text
+海量原始文本
+    ↓ 预训练（Pretraining）
+基础模型：掌握语言、模式、知识和通用能力
+    ↓ 可选：继续预训练（CPT / DAPT）
+领域基础模型：更熟悉行业语料、术语和分布
+    ↓ 监督微调（SFT）
+指令模型：学会怎样理解指令、组织答案和遵循格式
+    ↓ 偏好与安全对齐（DPO / RLHF / GRPO 等）
+更符合人类偏好、业务边界和安全要求的模型
+    ↓ 推理时结合 RAG / Tools
+获取最新或私有事实，并执行外部动作
+```
+
+| 阶段 | 典型数据 | Loss 主要作用于 | 更擅长改变什么 | 常见规模 |
+| --- | --- | --- | --- | --- |
+| 预训练 | 去重清洗后的网页、代码、书籍等连续 Token | 几乎所有可预测 Token | 从零形成语言、知识和通用能力 | 数十亿到数万亿 Token |
+| 继续预训练 | 医疗、金融、代码或企业领域原始语料 | 连续语料 Token | 领域词汇、表达和知识分布 | 通常远大于 SFT 数据 |
+| SFT | `用户问题 → 理想回答`、多轮对话、工具轨迹 | 通常只计算 Assistant 回答 Token | 指令遵循、回答结构、任务流程和风格 | 数千到数百万条高质量样本 |
+| 偏好对齐 | Preferred/Rejected 对，或可计算 Reward 的 Rollout | 偏好或奖励目标 | 取舍、边界、安全和可用性 | 取决于算法与任务 |
+| RAG | 文档索引和查询时检索结果 | 不修改模型参数 | 最新、私有、可溯源的事实 | 推理时动态变化 |
+
+### 2.1 预训练不是“更大的 SFT”
+
+预训练通常把连续文本切成 Token 序列，让模型预测下一个 Token。它不要求每条数据都有问题和标准答案，目标是从非常大的语料分布中学习表示、语言规律和世界模式。继续预训练沿用相似目标，只是从通用语料转向某个领域，因此更适合让模型熟悉大量行业术语和文体。[领域继续预训练研究](https://arxiv.org/abs/2004.10964)
+
+这类训练会更新大量甚至全部参数，Optimizer State、Gradient、Activation 和 Checkpoint 都很大。数据并行需要同步大量梯度，模型并行和 ZeRO/FSDP 还会引入 All-Gather、Reduce-Scatter 或点对点通信，所以它通常比小型 LoRA SFT 更依赖多机高速网络。
+
+### 2.2 SFT 主要是在教“应该怎样回答”
+
+SFT 把 Prompt、上下文和理想回答拼成一条序列，但常见做法只对 Assistant 部分计算监督 Loss。例如：
+
+```text
+System: 你是一个谨慎的基础设施助手。      Loss Mask = 0
+User: Loss 降了，可以直接上线吗？           Loss Mask = 0
+Assistant: 不可以，还需要隔离评测……         Loss Mask = 1
+```
+
+模型因此学习“看到这种输入时，应该生成怎样的输出”。它很适合固定回答格式、工具调用协议、推理流程和业务语气，但几十条问答无法可靠注入一整套知识库；样本过少或重复过多时，Loss 下降更可能代表记住了训练答案。
+
+LoRA 又是 SFT 的一种参数高效实现：冻结基座权重，只训练插入的低秩矩阵。它能显著减少可训练参数、Optimizer State 和 Checkpoint，但每张数据并行 GPU 仍需加载基座模型。[LoRA 论文](https://arxiv.org/abs/2106.09685)
+
+### 2.3 应该选哪一种
+
+- 希望模型掌握大量领域语言和语料分布：先评估继续预训练；
+- 希望模型按指定格式回答、调用工具或遵循工作流程：使用 SFT；
+- 希望模型在多个可用答案之间形成偏好和安全边界：在 SFT 后做偏好对齐；
+- 知识变化快、需要权限控制或引用来源：优先使用 RAG，而不是频繁重新训练；
+- 需求同时存在：可以采用“继续预训练 → SFT → 偏好对齐 → RAG”的组合，但每阶段都要保留独立评测。
+
+本章当前的 12 条数据和 20 Step 属于 **LoRA SFT 工程 Smoke Test**，不是预训练，也不能证明领域知识已经写入模型。
+
+## 3. 为什么先选 ms-swift 和 Qwen3-4B
 
 ms-swift 官方快速开始给出了 `Qwen3-4B-Instruct-2507` 在单张 RTX 3090 上进行 LoRA SFT 的例子，标注显存占用约 13 GB；框架同时支持自定义 JSONL 数据、LoRA、推理和导出。这比第一次就安装 Megatron-Core、准备数百 GB 权重和占用八张高显存卡更适合排错。[ms-swift Quick Start](https://github.com/modelscope/ms-swift#-quick-start)
 
@@ -59,9 +115,9 @@ ms-swift 官方快速开始给出了 `Qwen3-4B-Instruct-2507` 在单张 RTX 3090
 
 不能直接复用的是 DeepSeek V4 的 Hybrid Attention、MoE Expert Parallel、MTP、FP4/FP8 权重转换和多机通信配置，这些在第二阶段单独验证。
 
-## 3. 最小硬件与软件
+## 4. 最小硬件与软件
 
-### 3.1 单卡 Smoke Test
+### 4.1 单卡 Smoke Test
 
 | 项目 | 最低建议 | 说明 |
 | --- | --- | --- |
@@ -80,7 +136,7 @@ TRAIN_TORCH_DTYPE=float16 bash train-qwen3-4b-lora.sh
 
 16 GB 是本实验参数下的尝试下限，不是所有 4B LoRA 任务的通用承诺。模型版本、Attention 实现、序列长度和 Batch 都会改变显存占用。
 
-### 3.2 完整 DeepSeek V4 Flash LoRA
+### 4.2 完整 DeepSeek V4 Flash LoRA
 
 DeepSeek V4 Flash 有 284B 总参数、每 Token 激活 13B 参数；LoRA 只减少可训练参数和优化器状态，不会把 284B 基座变成 13B 模型。[DeepSeek V4 官方模型卡](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro)
 
@@ -95,7 +151,7 @@ DeepSeek V4 Flash 有 284B 总参数、每 Token 激活 13B 参数；LoRA 只减
 
 因此本章把 `8 × 96 GB` 视为完整 V4-Flash LoRA 的合理起点，`8 × 141 GB` 会有更充足的激活值和通信缓冲余量。`8 × 80 GB` 是否能稳定运行需要以精确 Checkpoint、加载精度和实测峰值显存为准，不能只用总显存相加判断。[Megatron-SWIFT DeepSeek V4 最佳实践](https://github.com/modelscope/ms-swift/blob/main/docs/source/BestPractices/deepseek-v4.md)
 
-## 4. 五分钟准备最小实验
+## 5. 五分钟准备最小实验
 
 进入示例目录：
 
@@ -132,7 +188,7 @@ bash preflight.sh
 
 预检必须确认 `torch.cuda.is_available()` 为 `True`。如果 PyTorch 看不到 GPU，不要开始下载模型和训练。
 
-## 5. 看懂训练数据
+## 6. 看懂训练数据
 
 ms-swift 支持 JSON、JSONL 和 CSV。最小实验使用每行一条样本的 JSONL：
 
@@ -150,7 +206,7 @@ ms-swift 支持 JSON、JSONL 和 CSV。最小实验使用每行一条样本的 J
 - 决定是否保留 Thinking 内容、工具调用和多轮上下文；
 - 记录数据生成方式、审核状态和版本 Hash。
 
-## 6. 跑通单卡 LoRA
+## 7. 跑通单卡 LoRA
 
 默认执行 20 Step、最大长度 1024：
 
@@ -188,7 +244,7 @@ ADAPTER_PATH=/workspace/output/qwen3-4b-domain-lora/v0-xxx/checkpoint-100 \
 bash infer-latest-adapter.sh
 ```
 
-### 6.1 单张 L20 实测结果
+### 7.1 单张 L20 实测结果
 
 2026 年 8 月 20 日使用本章的默认 20-Step 配置完成了一次真实 Smoke Test。环境为 `1 × NVIDIA L20 46 GB`、`Qwen3-4B-Instruct-2507`、`ms-swift 4.4.1`、`PyTorch 2.11.0 + CUDA 13.0` 和 `Transformers 5.12.1`；12 条示例经 `0.2` 比例切分为 10 条训练数据和 2 条验证数据。
 
@@ -211,7 +267,7 @@ bash infer-latest-adapter.sh
 
 这次结果证明单卡训练、保存与 Adapter 加载链路可用，但不证明 12 条 Smoke 数据具有业务效果。正式结论仍需要扩大数据集，并固定 Base/Adapter 对照评测。
 
-## 7. 怎样判断不是“能跑但没学到”
+## 8. 怎样判断不是“能跑但没学到”
 
 准备至少三组固定问题：
 
@@ -225,7 +281,23 @@ bash infer-latest-adapter.sh
 
 Loss 降低只是优化器拟合了训练 Token，不等于答案更可靠。十几条 Smoke 数据尤其容易在几步内过拟合。
 
-## 8. 升级到小型 MoE
+### 8.1 一次能量化效果的小规模 SFT
+
+仓库的 [`meaningful-sft`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/meaningful-sft) 实验把“是否学会”定义为可自动评分的任务：模型读取 Kubernetes 或训练故障证据，使用 11 个实验自定义故障码，并只输出固定 JSON Schema。训练、验证和盲测使用不同的描述模板族，避免随机切分近重复改写造成数据泄漏。
+
+2026 年 8 月 20 日在单张 L20 上完成的 `Qwen3-4B + BF16 LoRA` A/B 使用 330 条训练、55 条验证和 110 条盲测样本。120 Step 训练耗时 257.6 秒，峰值显存 8.1 GiB；验证集选出的最佳 Checkpoint 是 Step 60。
+
+| 盲测指标 | Base | Adapter |
+| --- | ---: | ---: |
+| JSON 合法率 | 100% | 100% |
+| 自定义故障码准确率 | 0% | 90.9% |
+| 故障码 Macro-F1 | 0% | 90.4% |
+| 信息不足判断准确率 | 100% | 100% |
+| 禁止动作关键字覆盖 | 8.2% | 90.9% |
+
+Base 能理解故障并生成合法 JSON，却会自行创造一套看似合理的分类名，因此自定义故障码得分为 0；Adapter 学会了组织约定的分类映射和排障边界。它也没有在盲测上达到 100%：Gang 与 Taint 的两个新表达族共出现 10 条误判。这比只展示成功案例更有价值，因为它直接指出下一轮应增加哪类训练表达，以及为什么修改数据后必须换一份新的盲测集。
+
+## 9. 升级到小型 MoE
 
 在投入完整 V4 前，可以用 Qwen3-30B-A3B 一类较小 MoE 验证：
 
@@ -238,7 +310,7 @@ ms-swift 的官方 MoE LoRA 示例提醒：如果不希望训练 Router，应显
 
 这个阶段的目标是验证 MoE 训练行为，不要把“小型 MoE 能用 Transformers + PEFT 训练”外推为 DeepSeek V4 的特殊 Attention 和 Checkpoint 格式已经兼容。
 
-## 9. 升级到完整 DeepSeek V4 Flash
+## 10. 升级到完整 DeepSeek V4 Flash
 
 仓库的 `train-deepseek-v4-flash-lora.sh` 是根据官方公开方案收敛出的 **Adapter-only Smoke 模板**。和官方长跑示例相比，它把 Micro Batch 降为 1、Global Batch 降为 8，并关闭自动 Merge，目的是先降低峰值显存和避免产生巨大的完整合并权重。
 
@@ -269,7 +341,59 @@ bash train-deepseek-v4-flash-lora.sh
 
 DeepSeek V4 当前不能直接进行 FP4 blockwise 训练，公开方案会在加载阶段转为 FP8 或 BF16；当前专项方案也暂不支持 `TP>1`。LoRA 与 FP8 组合时应只保存 Adapter，再与 BF16 基座合并，避免低精度舍入吞掉 LoRA Delta。[DeepSeek V4 训练说明](https://github.com/modelscope/ms-swift/blob/main/docs/source/BestPractices/deepseek-v4.md)
 
-## 10. 什么时候需要 Kubernetes
+## 11. 从单机多卡测到多机 RDMA
+
+分布式训练不能只比较一组“训练总时间”。建议先用集合通信微基准确认链路，再用相同 SFT 负载观察网络差异是否进入端到端瓶颈：
+
+| 阶段 | 拓扑 | 主要回答的问题 |
+| --- | --- | --- |
+| 单卡 | 1 节点 × 1 GPU | 没有梯度同步时的计算基线是多少 |
+| 单机多卡 | 1 节点 × 2/4/8 GPU | PCIe/NVLink 与 DDP 引入多少开销 |
+| 多机 TCP | 2 节点 × N GPU，`NCCL_IB_DISABLE=1` | 默认以太网跨机后损失多少 |
+| 多机 RDMA | 保持相同节点和 GPU 数，只启用 RDMA | RDMA 能追回多少通信时间 |
+
+配套的 [`distributed`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/distributed) Harness 提供：
+
+- PyTorch/NCCL AllReduce 消息大小扫描；
+- 可重复生成、带 Token 长度与 SHA-256 的本地数据；
+- 固定 Global Batch 的 Qwen3-4B LoRA 强扩展测试；
+- 机器可读的 `NCCL_BENCH` 和 `SFT_BENCH_RESULT` 输出。
+
+固定 Global Batch 时：
+
+```text
+N 卡扩展效率 = N 卡 samples/s ÷（单卡 samples/s × N）
+```
+
+每个拓扑至少重复三轮，比较中位数；镜像拉取、模型加载、Tokenize 和 Checkpoint 不计入训练区间。TCP/RDMA A/B 必须固定节点、模型、数据 Hash、Batch、Step、软件版本和功耗设置，并从 NCCL INFO 日志确认实际选择的是 `NET/Socket` 还是 `NET/IB`。
+
+还要注意训练方法本身决定通信量。本章 Rank-8 LoRA 只有约 1650 万个可训练参数，DDP 同步的梯度远小于全参数 SFT；如果 LoRA 的 TCP/RDMA 差异很小，这是有意义的业务结论，不应外推为 RDMA 对继续预训练、FSDP/ZeRO 或大型 MoE 没有收益。
+
+### 11.1 L20 单机与多机 TCP 初测
+
+2026 年 8 月 20 日先在可用的 L20 上完成了一轮资源占用较小的初测。软件栈与前面的单卡实验相同，NCCL 版本为 2.28.9。通信微基准使用相同的 `world_size=2`：单机组是 `1 节点 × 2 GPU`，跨机组是 `2 节点 × 1 GPU`，两组都显式关闭 IB，并从 NCCL INFO 确认跨机组使用 `NET/Socket + eth0`。这样可以避免把 GPU 数量变化误当成网络差异。
+
+| AllReduce 消息大小 | 单机双卡延迟 | 双机单卡 TCP 延迟 | 单机双卡 BusBw | 双机单卡 TCP BusBw |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 MiB | 0.105 ms | 0.773 ms | 10.00 GB/s | 1.36 GB/s |
+| 16 MiB | 1.164 ms | 10.306 ms | 14.42 GB/s | 1.63 GB/s |
+| 64 MiB | 4.608 ms | 40.910 ms | 14.56 GB/s | 1.64 GB/s |
+| 256 MiB | 18.342 ms | 163.131 ms | 14.63 GB/s | 1.65 GB/s |
+
+在 256 MiB 消息上，跨节点 TCP 延迟约为单机双卡的 `8.89×`，BusBw 只有约 `11.2%`。这说明当前普通以太网确实是大消息集合通信的明显瓶颈，但微基准不能直接等价为训练会慢 8.89 倍。
+
+随后用相同模型、数据 Hash、555 Token 样本、20 Step、Micro Batch 1 和 Global Batch 8 做 LoRA SFT 强扩展。512 条确定性样本的 SHA-256 是 `0782c78c725ee1d6f3ac9aab3ef91c65000d5841b551f4185eca66aa74080973`。双卡组按 `2 节点 × 1 GPU` 运行，梯度累积从单卡的 8 降为 4，因此每个 Optimizer Step 看到的数据量保持不变。
+
+| 拓扑 | World Size | Global Batch | Train Runtime | samples/s | 峰值显存/GPU | 相对单卡加速 | 扩展效率 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 节点 × 1 L20 | 1 | 8 | 57.49 s | 2.783 | 9.05 GiB | 1.00× | 100% |
+| 2 节点 × 1 L20，TCP | 2 | 8 | 33.41 s | 4.789 | 9.11 GiB | 1.72× | 86.0% |
+
+即使 AllReduce 微基准显示 TCP 明显慢于单机互联，这个 Rank-8 LoRA 仍取得 `1.72×` 加速，训练时间减少约 `41.9%`。原因是它只有 1651 万个可训练参数，梯度同步量较小，计算仍占主要部分；这正说明必须同时看通信微基准和真实训练，不能只凭带宽推算业务收益。
+
+以上数字只运行了一轮，适合做环境摸底，不是正式容量结论。单机双卡 SFT、更多卡数以及 TCP/RDMA 同拓扑 A/B 要等到对应空闲资源出现后，再按至少三轮取中位数的口径补齐。
+
+## 12. 什么时候需要 Kubernetes
 
 单卡 Smoke 阶段直接在已有 GPU 开发容器里运行最简单。满足下面任一条件后，再把命令封装成 Kubernetes Job、Kubeflow TrainJob 或 JobSet：
 
@@ -281,7 +405,7 @@ DeepSeek V4 当前不能直接进行 FP4 blockwise 训练，公开方案会在�
 
 Kubernetes 只负责资源和作业生命周期，不会修复错误的数据、Loss Mask、模型实现或并行策略。先在单卡容器中跑通，再做平台封装，能够明显缩短定位链路。
 
-## 11. 实验记录模板
+## 13. 实验记录模板
 
 每次运行至少保存：
 
@@ -313,21 +437,24 @@ known_limitations:
 
 第一轮结果回填本章时，应同时记录失败尝试。OOM、转换错误、NCCL 初始化超时和无法被推理引擎加载，都是决定最终方案的重要证据。
 
-## 12. 下一轮实验顺序
+## 14. 下一轮实验顺序
 
-1. 在一张 GPU 上运行仓库的 Qwen3-4B 20-Step Smoke；
-2. 用固定 Prompt 比较 Base 与 Adapter，保存原始输出；
-3. 换成一份经过人工审核的真实小数据集，运行 100～500 Step；
-4. 如果最终目标是 MoE，先用小型 MoE 验证 Router、Expert LoRA 和通信；
-5. 准备单机八卡高显存节点，运行 DeepSeek V4 Flash Adapter-only Smoke；
-6. 只有正确性和评测通过后，扩大数据、长度和训练时间；
-7. 最后再设计多机全参数训练、Checkpoint 和 RDMA 基线。
+1. 已完成：单张 GPU 的 Qwen3-4B 20-Step Smoke、Adapter 保存和加载回归；
+2. 已完成初测：单机双卡与双机单卡的 NCCL 对照，以及双机单卡 TCP 的 SFT 强扩展；
+3. 资源可用后补齐：单机双卡 SFT，并把全部初测重复三轮取中位数；
+4. 换成一份经过人工审核的真实小数据集，运行 100～500 Step，并用固定 Prompt 比较 Base 与 Adapter；
+5. 如果最终目标是 MoE，先用小型 MoE 验证 Router、Expert LoRA 和 All-to-All；
+6. 高显存与 RDMA 资源可用后，用相同拓扑完成 TCP/RDMA A/B，再运行 DeepSeek V4 Flash Adapter-only Smoke；
+7. 只有正确性和评测通过后，才扩大数据、长度和训练时间，并设计多机全参数训练与 Checkpoint 基线。
 
 这条路线把最便宜的错误留在单卡阶段，把昂贵 GPU 用在已经通过数据与训练闭环验证的问题上。
 
 ## 参考资料
 
 - [ms-swift Quick Start](https://github.com/modelscope/ms-swift#-quick-start)
+- [Don't Stop Pretraining：领域继续预训练](https://arxiv.org/abs/2004.10964)
+- [LoRA：Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)
+- [InstructGPT：SFT、Reward Model 与 RLHF](https://arxiv.org/abs/2203.02155)
 - [Qwen3 使用 ms-swift 训练](https://github.com/QwenLM/Qwen3/blob/main/docs/source/training/ms_swift.md)
 - [Megatron-SWIFT Quick Start](https://github.com/modelscope/ms-swift/blob/main/docs/source_en/Megatron-SWIFT/Quick-start.md)
 - [Megatron-SWIFT DeepSeek V4 最佳实践](https://github.com/modelscope/ms-swift/blob/main/docs/source/BestPractices/deepseek-v4.md)

@@ -55,6 +55,8 @@ bash train-qwen3-4b-lora.sh
 | `infer-latest-adapter.sh` | 自动查找最新 Checkpoint 并交互推理 |
 | `install-deepseek-v4-training.sh` | 安装 V4 公开方案需要的开发版组件 |
 | `train-deepseek-v4-flash-lora.sh` | 单机八卡 V4-Flash Adapter-only 模板 |
+| `distributed/` | 单机多卡、多机 TCP/RDMA 的 NCCL 与 SFT 对照 Harness |
+| `meaningful-sft/` | 带盲测集和自动评分的故障分诊 Base/Adapter A/B |
 
 ## 成功标准
 

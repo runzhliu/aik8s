@@ -1,0 +1,55 @@
+{
+  "date": "2026-08-20",
+  "repetitions": 1,
+  "hardware": {
+    "gpu": "1 x NVIDIA L20 46 GB"
+  },
+  "software": {
+    "model": "Qwen3-4B-Instruct-2507",
+    "framework": "ms-swift 4.4.1",
+    "dtype": "bfloat16",
+    "tuner": "LoRA rank 8 alpha 32"
+  },
+  "dataset": {
+    "categories": 11,
+    "train_examples": 330,
+    "validation_examples": 55,
+    "blind_test_examples": 110,
+    "train_sha256": "f89e2b537fab145cd176da52f21cfb708ee085fd4465ebe3c3540340745002f3",
+    "validation_sha256": "a3bd49e8dd45177db6c5513dd6e89cef9172b2bda665baaa065c577b315c3b9d",
+    "blind_test_sha256": "44adb4db5a40c4983665476598b76243015be26f303aa2f9d001dc316bc4093e",
+    "mean_train_tokens": 265.036364
+  },
+  "training": {
+    "max_steps": 120,
+    "best_checkpoint_step": 60,
+    "best_validation_loss": 0.04263,
+    "runtime_seconds": 257.6,
+    "peak_memory_gib": 8.1
+  },
+  "base": {
+    "json_valid_rate": 1.0,
+    "required_fields_rate": 1.0,
+    "code_accuracy": 0.0,
+    "code_macro_f1": 0.0,
+    "needs_more_evidence_accuracy": 1.0,
+    "prohibited_action_keyword_recall": 0.0818181818
+  },
+  "adapter": {
+    "json_valid_rate": 1.0,
+    "required_fields_rate": 1.0,
+    "code_accuracy": 0.9090909091,
+    "code_macro_f1": 0.9039672083,
+    "needs_more_evidence_accuracy": 1.0,
+    "prohibited_action_keyword_recall": 0.9090909091
+  },
+  "known_errors": {
+    "total": 10,
+    "description": "One held-out QUE-202 template family and one held-out SCH-103 template family each achieved 5/10 recall; errors fell into adjacent scheduling categories."
+  },
+  "limitations": [
+    "This is one run, not a repeated statistical benchmark.",
+    "The dataset is curated and template-generated rather than sampled from production incidents.",
+    "The experiment measures custom taxonomy and structured behavior, not broad knowledge acquisition."
+  ]
+}
