@@ -1,6 +1,6 @@
 # 大模型 SFT 最小闭环
 
-这组材料对应文档《大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4》。默认使用单张 GPU、Qwen3-4B-Instruct-2507、LoRA 和十几条本地 JSONL 数据运行 20 Step，只用于验证训练与 Adapter 推理链路。
+这组材料对应文档《大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4》。`train-qwen3-4b-lora.sh` 保留为 20-Step 工程 Smoke；当前可量化实验位于 `meaningful-sft/`，默认使用单张 GPU、Qwen3.5-4B、LoRA 和隔离盲测比较 Base/Adapter。
 
 ## 最短运行路径
 
@@ -18,6 +18,15 @@ bash infer-latest-adapter.sh
 ```
 
 如果已经有可用的 CUDA PyTorch 和 ms-swift 环境，可以跳过安装脚本。
+
+要验证训练前后的实际差值，而不是只看 Loss：
+
+```bash
+cd meaningful-sft
+TRAIN_MODEL_ID=/models/Qwen3.5-4B bash run-ab.sh
+```
+
+该实验生成 330 条训练、55 条验证和 110 条盲测样本，并输出结构化指标与机器可读对比结果。
 
 想先通过界面认识参数，可以运行 `swift web-ui`；正式实验仍建议保存并执行本目录中的 CLI 脚本，便于审查和复跑。不要把无认证的训练 UI 直接暴露到公网。
 
@@ -56,7 +65,8 @@ bash train-qwen3-4b-lora.sh
 | `install-deepseek-v4-training.sh` | 安装 V4 公开方案需要的开发版组件 |
 | `train-deepseek-v4-flash-lora.sh` | 单机八卡 V4-Flash Adapter-only 模板 |
 | `distributed/` | 单机多卡、多机 TCP/RDMA 的 NCCL 与 SFT 对照 Harness |
-| `meaningful-sft/` | 带盲测集和自动评分的故障分诊 Base/Adapter A/B |
+| `meaningful-sft/` | 默认 Qwen3.5-4B，带盲测集和自动评分的故障分诊 Base/Adapter A/B |
+| `swanlab/` | SwanLab 私有化部署边界与 ms-swift 接入示例 |
 
 ## 成功标准
 
@@ -83,3 +93,23 @@ bash train-deepseek-v4-flash-lora.sh
 ```
 
 默认关闭 Merge，只保存 Adapter，避免 Smoke 阶段额外生成数百 GB 的完整权重。
+
+## 接入 SwanLab
+
+TensorBoard 不是唯一选择。激活私有化 SwanLab、创建 API Key 后，先在训练目录完成项目级登录，避免把凭据保存到共享用户目录：
+
+```bash
+python -m pip install 'swanlab>=0.8,<1'
+swanlab login --host https://swanlab.example.com --local
+```
+
+再让 ms-swift 把训练指标上报到 SwanLab：
+
+```bash
+TRAIN_REPORT_TO=swanlab \
+TRAIN_SWANLAB_PROJECT=llm-sft-lab \
+TRAIN_SWANLAB_EXP_NAME=qwen3-4b-lora-smoke \
+bash train-qwen3-4b-lora.sh
+```
+
+API Key 不应写进脚本、镜像或 Git；在 Kubernetes 中应通过 Secret 注入，或在受控工作目录执行项目级登录。部署说明见 [`swanlab/README.md`](swanlab/README.md)。

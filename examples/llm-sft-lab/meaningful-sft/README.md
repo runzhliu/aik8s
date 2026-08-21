@@ -35,15 +35,15 @@ python make-dataset.py --output-dir ./run/data
 
 ## 单卡运行
 
-环境需要 PyTorch、Transformers、PEFT 和 ms-swift：
+默认模型是 `Qwen3.5-4B`。环境需要 PyTorch、Transformers、PEFT、ms-swift，以及 Qwen3.5 所需的 `qwen_vl_utils`、FLA 和 `causal_conv1d`：
 
 ```bash
-TRAIN_MODEL_ID=/models/Qwen3-4B-Instruct-2507 \
+TRAIN_MODEL_ID=/models/Qwen3.5-4B \
 RUN_ROOT=./run \
 bash run-ab.sh
 ```
 
-默认参数是 LoRA Rank 8、最大长度 512、Global Batch 8 和 120 Step，约等于遍历训练集 2.9 次。训练脚本按验证集 Loss 选择最佳 Checkpoint；Base 与 Adapter 推理均使用 greedy decoding 和相同的最大输出长度。
+默认参数是 LoRA Rank 8、最大长度 512、Global Batch 8 和 120 Step，约等于遍历训练集 2.9 次。Qwen3.5 默认使用 `add_non_thinking_prefix=true` 与 `loss_scale=ignore_empty_think`；训练脚本按验证集 Loss 选择最佳 Checkpoint，Base 与 Adapter 推理均使用 greedy decoding 和相同的最大输出长度。相关依赖与模板要求见 [ms-swift Qwen3.5 Best Practice](https://github.com/modelscope/ms-swift/blob/main/docs/source/BestPractices/Qwen3_5-Best-Practice.md)。
 
 可以先用少量盲测样本检查环境：
 
@@ -78,7 +78,41 @@ MoE 需要额外核对 LoRA 覆盖范围。Transformers 5 中的 Qwen3-MoE 把�
 
 这个实验验证的是分类、结构化输出、排障顺序和谨慎行为，不代表模型通过几百条样本获得了完整的 Kubernetes 知识库。
 
-## 单张 L20 实测
+## Qwen3.5-4B 单张 L20 实测
+
+2026 年 8 月 21 日使用 `Qwen3.5-4B + ms-swift 4.4.1 + BF16 LoRA` 跑完 330/55/110 的 Train、Validation 和 Blind Test。LoRA 训练参数为 16.23M，占模型参数约 0.3563%；120 Step 耗时 612.6 秒，训练框架记录峰值显存 9.33 GiB。
+
+| Validation | Loss | Token Accuracy |
+| ---: | ---: | ---: |
+| Step 30 | 0.06195 | 98.40% |
+| Step 60 | **0.05315** | 98.71% |
+| Step 90 | 0.06081 | 98.97% |
+| Step 120 | 0.05700 | 98.97% |
+
+验证 Loss 在 Step 60 最低，之后回升，因此 A/B 使用 Step 60 Adapter，而不是机械地选择最后一步。这也是同时记录 Validation 曲线的意义。
+
+![Qwen3.5-4B LoRA 的训练曲线](../../../docs/assets/training/qwen35-4b-sft/swanlab-train-curves.png)
+
+![Qwen3.5-4B LoRA 的验证曲线](../../../docs/assets/training/qwen35-4b-sft/swanlab-eval-curves.png)
+
+两张图来自真实 SFT Run，并已裁掉账号、地址、Run ID 和其他内部信息。SwanLab SDK `0.8.4` 能正常记录数值型 Loss、Accuracy、Learning Rate 和 Gradient Norm；ms-swift 4.4.1 还会上报 `30/120`、`3m 53s` 一类字符串展示值，旧 SDK 会拒绝这些 String Scalar，但不影响训练或上述数值曲线。
+
+| 110 条盲测指标 | Base | Step 60 Adapter | 绝对提升 |
+| --- | ---: | ---: | ---: |
+| JSON 合法率 | 99.1% | 100% | +0.9 pp |
+| 必填字段完整率 | 99.1% | 100% | +0.9 pp |
+| 自定义故障码准确率 | 0% | 77.3% | +77.3 pp |
+| 故障码 Macro-F1 | 0% | 75.3% | +75.3 pp |
+| 信息不足判断准确率 | 51.8% | 100% | +48.2 pp |
+| 禁止动作关键字覆盖 | 5.5% | 88.2% | +82.7 pp |
+
+Base 能理解故障语义，却为几乎每种场景生成自己的英文标签；Adapter 则学会了自定义故障码、信息不足判断和禁止动作协议。它仍有 25 条故障码错误，并明显过度预测 `SCH-103`：平衡盲测中每类只有 10 条，它却输出了 25 次。这个结果证明小数据 SFT 可以改变稳定行为，也同时暴露了分类边界和语言覆盖仍需扩充。
+
+较新的模型不保证在同一小数据任务上自动超过旧模型：本轮 Qwen3.5-4B 的故障码准确率低于下面 Qwen3-4B 历史对照的 90.9%。由于两次运行的模型 Chat Template 和推理实现不同，这还不是严格的模型排行榜；若要比较模型，应锁定框架、模板、解码参数和数据 Hash 后至少重复三次。
+
+机器可读结果保存在 [`results/l20-qwen35-4b-20260821.json`](results/l20-qwen35-4b-20260821.json)。
+
+## 历史对照：Qwen3-4B 单张 L20 实测
 
 2026 年 8 月 20 日使用 `Qwen3-4B-Instruct-2507 + ms-swift 4.4.1 + BF16 LoRA` 完成了完整 A/B。训练样本平均 265 Token，120 Step 耗时 257.6 秒，框架记录峰值显存 8.1 GiB。验证集最佳 Checkpoint 出现在 Step 60，Validation Loss 为 0.0426。
 
@@ -99,9 +133,9 @@ Adapter 仍有 10 条分类错误：`QUE-202` 和 `SCH-103` 两类各有一个�
 
 本次机器可读结果保存在 [`results/l20-qwen3-4b-20260820.json`](results/l20-qwen3-4b-20260820.json)。
 
-## Qwen3-30B-A3B 单卡边界实测
+## 历史容量记录：Qwen3-30B-A3B
 
-同一天使用同一张 L20 对 `Qwen3-30B-A3B-Instruct-2507` 做了加载门槛测试。该 MoE 有 30.5B 总参数、每 Token 激活 3.3B 参数、128 个 Expert 中激活 8 个。3.3B 决定每 Token 的主要计算量，却不表示只需保存 3.3B 权重；单卡推理或训练仍要让全部 Expert 权重可访问。[Qwen3-30B-A3B 模型卡](https://huggingface.co/Qwen/Qwen3-30B-A3B)
+这组结果只作为可复现的容量边界保留，不再作为新的训练文章主角。同一天使用同一张 L20 对 `Qwen3-30B-A3B-Instruct-2507` 做了加载门槛测试。该 MoE 有 30.5B 总参数、每 Token 激活 3.3B 参数、128 个 Expert 中激活 8 个。3.3B 决定每 Token 的主要计算量，却不表示只需保存 3.3B 权重；单卡推理或训练仍要让全部 Expert 权重可访问。[Qwen3-30B-A3B 模型卡](https://huggingface.co/Qwen/Qwen3-30B-A3B)
 
 | 单卡路径 | 加载结果 | 是否进入训练 | 结论 |
 | --- | --- | --- | --- |

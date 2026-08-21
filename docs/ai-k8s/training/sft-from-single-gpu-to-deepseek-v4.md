@@ -1,8 +1,8 @@
 ---
 title: 大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4
-description: 用 ms-swift 和 Qwen3 单卡跑通数据、LoRA、Checkpoint 与推理闭环，再迁移到 Megatron-SWIFT 和 DeepSeek V4 Flash
+description: 用 ms-swift 和 Qwen3.5-4B 单卡跑通数据、LoRA、Checkpoint、SwanLab 与盲测闭环，再迁移到 Megatron-SWIFT 和 DeepSeek V4 Flash
 status: evolving
-last_reviewed: 2026-08-20
+last_reviewed: 2026-08-21
 ---
 
 # 大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4
@@ -11,7 +11,7 @@ last_reviewed: 2026-08-20
 
 本章提供两条路径：
 
-1. **可立即运行的最小实验**：单卡 `Qwen3-4B-Instruct-2507 + ms-swift + LoRA`；
+1. **可立即运行且能量化效果的实验**：单卡 `Qwen3.5-4B + ms-swift + LoRA`，完成 Base/Adapter 盲测；
 2. **DeepSeek V4 Flash 升级模板**：单机八卡、`Megatron-SWIFT + EP=8 + LoRA`。
 
 配套脚本和示例数据位于 [`examples/llm-sft-lab`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab)。示例不包含集群名、内部镜像、存储地址和网络配置。
@@ -99,11 +99,11 @@ LoRA 又是 SFT 的一种参数高效实现：冻结基座权重，只训练插�
 - 知识变化快、需要权限控制或引用来源：优先使用 RAG，而不是频繁重新训练；
 - 需求同时存在：可以采用“继续预训练 → SFT → 偏好对齐 → RAG”的组合，但每阶段都要保留独立评测。
 
-本章当前的 12 条数据和 20 Step 属于 **LoRA SFT 工程 Smoke Test**，不是预训练，也不能证明领域知识已经写入模型。
+本章保留的 12 条数据和 20 Step 只属于 **LoRA SFT 工程 Smoke Test**，不是预训练，也不能证明领域知识已经写入模型。当前推荐的 Qwen3.5 实验使用相互隔离的 Train、Validation 和 Blind Test，并比较 Base 与 Adapter。
 
-## 3. 为什么先选 ms-swift 和 Qwen3-4B
+## 3. 为什么先选 ms-swift 和 Qwen3.5-4B
 
-ms-swift 官方快速开始给出了 `Qwen3-4B-Instruct-2507` 在单张 RTX 3090 上进行 LoRA SFT 的例子，标注显存占用约 13 GB；框架同时支持自定义 JSONL 数据、LoRA、推理和导出。这比第一次就安装 Megatron-Core、准备数百 GB 权重和占用八张高显存卡更适合排错。[ms-swift Quick Start](https://github.com/modelscope/ms-swift#-quick-start)
+`Qwen3.5-4B` 比仓库早期使用的 Qwen3-4B 更新，同时仍保留 4B Dense 模型适合单卡复现的规模。ms-swift 已给出 Qwen3.5 的 LoRA 最佳实践，并特别要求为非思考训练设置 `add_non_thinking_prefix` 和 `ignore_empty_think` Loss Scale；框架也支持自定义 JSONL、Adapter 保存和推理。[ms-swift Qwen3.5 Best Practice](https://github.com/modelscope/ms-swift/blob/main/docs/source/BestPractices/Qwen3_5-Best-Practice.md)
 
 这里选择 4B 模型不是因为它的架构等价于 DeepSeek V4，而是因为以下内容可以复用：
 
@@ -208,11 +208,22 @@ ms-swift 支持 JSON、JSONL 和 CSV。最小实验使用每行一条样本的 J
 
 ## 7. 跑通单卡 LoRA
 
-默认执行 20 Step、最大长度 1024：
+若只想确认旧版最小链路，仍可运行 20-Step Smoke：
 
 ```bash
 bash train-qwen3-4b-lora.sh
 ```
+
+要获得可以验收的 Qwen3.5 结果，应直接运行包含 330 条训练、55 条验证和 110 条盲测的 Base/Adapter A/B：
+
+```bash
+cd meaningful-sft
+TRAIN_MODEL_ID=/models/Qwen3.5-4B \
+TRAIN_REPORT_TO=swanlab \
+bash run-ab.sh
+```
+
+该脚本默认使用 `evaluate-swift.py` 兼容 Qwen3.5，并启用 `add_non_thinking_prefix=true` 与 `loss_scale=ignore_empty_think`。不接实验平台时将 `TRAIN_REPORT_TO=none` 即可，盲测结果仍会写入本地 JSON。
 
 脚本支持使用环境变量覆盖关键参数：
 
@@ -244,7 +255,7 @@ ADAPTER_PATH=/workspace/output/qwen3-4b-domain-lora/v0-xxx/checkpoint-100 \
 bash infer-latest-adapter.sh
 ```
 
-### 7.1 单张 L20 实测结果
+### 7.1 早期 Qwen3-4B 工程 Smoke
 
 2026 年 8 月 20 日使用本章的默认 20-Step 配置完成了一次真实 Smoke Test。环境为 `1 × NVIDIA L20 46 GB`、`Qwen3-4B-Instruct-2507`、`ms-swift 4.4.1`、`PyTorch 2.11.0 + CUDA 13.0` 和 `Transformers 5.12.1`；12 条示例经 `0.2` 比例切分为 10 条训练数据和 2 条验证数据。
 
@@ -281,25 +292,32 @@ bash infer-latest-adapter.sh
 
 Loss 降低只是优化器拟合了训练 Token，不等于答案更可靠。十几条 Smoke 数据尤其容易在几步内过拟合。
 
-### 8.1 一次能量化效果的小规模 SFT
+### 8.1 Qwen3.5-4B：一次能量化效果的小规模 SFT
 
 仓库的 [`meaningful-sft`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/meaningful-sft) 实验把“是否学会”定义为可自动评分的任务：模型读取 Kubernetes 或训练故障证据，使用 11 个实验自定义故障码，并只输出固定 JSON Schema。训练、验证和盲测使用不同的描述模板族，避免随机切分近重复改写造成数据泄漏。
 
-2026 年 8 月 20 日在单张 L20 上完成的 `Qwen3-4B + BF16 LoRA` A/B 使用 330 条训练、55 条验证和 110 条盲测样本。120 Step 训练耗时 257.6 秒，峰值显存 8.1 GiB；验证集选出的最佳 Checkpoint 是 Step 60。
+2026 年 8 月 21 日在单张 L20 上完成的 `Qwen3.5-4B + BF16 LoRA` A/B 使用 330 条训练、55 条验证和 110 条盲测样本。120 Step 训练耗时 612.6 秒，框架记录峰值显存 9.33 GiB；16.23M 个可训练参数约占 0.3563%。Validation Loss 在 Step 30/60/90/120 分别为 0.06195/0.05315/0.06081/0.05700，因此选择 Step 60，而不是最后一步。
 
-| 盲测指标 | Base | Adapter |
-| --- | ---: | ---: |
-| JSON 合法率 | 100% | 100% |
-| 自定义故障码准确率 | 0% | 90.9% |
-| 故障码 Macro-F1 | 0% | 90.4% |
-| 信息不足判断准确率 | 100% | 100% |
-| 禁止动作关键字覆盖 | 8.2% | 90.9% |
+![Qwen3.5-4B LoRA 的真实训练曲线](../../assets/training/qwen35-4b-sft/swanlab-train-curves.png)
 
-Base 能理解故障并生成合法 JSON，却会自行创造一套看似合理的分类名，因此自定义故障码得分为 0；Adapter 学会了组织约定的分类映射和排障边界。它也没有在盲测上达到 100%：Gang 与 Taint 的两个新表达族共出现 10 条误判。这比只展示成功案例更有价值，因为它直接指出下一轮应增加哪类训练表达，以及为什么修改数据后必须换一份新的盲测集。
+![Qwen3.5-4B LoRA 的真实验证曲线](../../assets/training/qwen35-4b-sft/swanlab-eval-curves.png)
 
-## 9. 升级到小型 MoE
+| 110 条盲测指标 | Base | Step 60 Adapter | 绝对提升 |
+| --- | ---: | ---: | ---: |
+| JSON 合法率 | 99.1% | 100% | +0.9 pp |
+| 必填字段完整率 | 99.1% | 100% | +0.9 pp |
+| 自定义故障码准确率 | 0% | 77.3% | +77.3 pp |
+| 故障码 Macro-F1 | 0% | 75.3% | +75.3 pp |
+| 信息不足判断准确率 | 51.8% | 100% | +48.2 pp |
+| 禁止动作关键字覆盖 | 5.5% | 88.2% | +82.7 pp |
 
-在投入完整 V4 前，可以用 Qwen3-30B-A3B 一类较小 MoE 验证：
+Base 能理解故障并基本遵守 JSON，却会自行创造英文分类名，因此无法命中实验自定义故障码；Adapter 学会了分类映射、证据不足判断和禁止动作。它也没有在盲测上达到 100%：仍有 25 条故障码错误，并把平衡测试中只有 10 条的 `SCH-103` 输出了 25 次。这比只展示成功案例更有价值，因为它指出了分类边界和表达覆盖仍需补强。
+
+较新的模型不会在每个小数据任务上自动胜过旧模型：同一数据生成器的早期 Qwen3-4B 单次实验达到过 90.9% 故障码准确率，而本轮 Qwen3.5-4B 为 77.3%。两次运行的 Chat Template 和推理实现并未完全锁死，因此这里只把它视为风险信号，不写成模型排行榜。机器可读记录见 [`l20-qwen35-4b-20260821.json`](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/l20-qwen35-4b-20260821.json)。
+
+## 9. 历史 MoE 容量记录与下一步选择
+
+Qwen3-30B-A3B 的实验保留为容量与 LoRA 注入问题的历史记录，不再作为新的训练实战主角。若要在投入完整 V4 前验证较新的小型 MoE，应重新选择当前仍有研究价值、框架已有明确训练支持的模型，再复用下面四项验收口径：
 
 - Expert 权重是否被 LoRA 覆盖；
 - Router 是否冻结，或是否需要辅助均衡 Loss；
@@ -308,7 +326,7 @@ Base 能理解故障并生成合法 JSON，却会自行创造一套看似合理�
 
 ms-swift 的官方 MoE LoRA 示例提醒：如果不希望训练 Router，应显式限制 `target_modules` 为 Attention 和 MLP 投影层，而不是盲目匹配所有参数。[Qwen3 MoE LoRA 示例](https://github.com/modelscope/ms-swift/blob/main/examples/train/moe/qwen3_moe.sh)
 
-### 9.1 Qwen3-30B-A3B 在单张 L20 上的加载门槛
+### 9.1 历史记录：Qwen3-30B-A3B 的单卡加载门槛
 
 2026 年 8 月 20 日使用单张 L20 对 `Qwen3-30B-A3B-Instruct-2507` 做了真实加载测试。模型有 30.5B 总参数、3.3B 激活参数、128 个 Expert 且每 Token 选择 8 个 Expert；“3.3B 激活”描述主要计算路径，不等于其余权重可以不驻留。BF16 权重本身的理论下限约为 56.8 GiB，尚未计算 Activation、CUDA Workspace 和 LoRA 状态，已经超过测试卡可见的 44.4 GiB。[Qwen3-30B-A3B 模型卡](https://huggingface.co/Qwen/Qwen3-30B-A3B)
 
@@ -324,7 +342,7 @@ BNB 失败的现象与 Qwen3-MoE 的融合 Expert 表示有关：Transformers 5 
 
 这个阶段的目标是验证 MoE 训练行为，不要把“小型 MoE 能用 Transformers + PEFT 训练”外推为 DeepSeek V4 的特殊 Attention 和 Checkpoint 格式已经兼容。
 
-### 9.2 单机 8 × L20 的 BF16 LoRA 容量验证
+### 9.2 历史记录：单机 8 × L20 的 BF16 LoRA 容量验证
 
 同日使用单机 8 张 L20 对相同 BF16 Checkpoint 完成了 60-Step LoRA。直接启动 8 个 ZeRO-3 进程会在模型加载阶段同时构造多份完整权重，主机内存先于显存耗尽；通过单进程 `device_map=balanced` 将 48 层均匀放到 8 张 GPU 后，模型、数据、Forward/Backward、验证和 Adapter 保存均通过。
 
@@ -427,7 +445,42 @@ N 卡扩展效率 = N 卡 samples/s ÷（单卡 samples/s × N）
 
 以上数字只运行了一轮，适合做环境摸底，不是正式容量结论。单机双卡 SFT、更多卡数以及 TCP/RDMA 同拓扑 A/B 要等到对应空闲资源出现后，再按至少三轮取中位数的口径补齐。
 
-## 12. 什么时候需要 Kubernetes
+## 12. 用 SwanLab 管训练实验，用 Grafana 看基础设施
+
+TensorBoard 适合快速查看本地曲线，但多人共享训练集群后，项目、Run、超参数、标签、实验对比和访问控制会成为新的需求。此时可把 SwanLab 作为实验追踪层，把 Prometheus、DCGM Exporter 和 Grafana 保留为基础设施监控层：
+
+```text
+ms-swift -> SwanLab：Loss、Learning Rate、Gradient Norm、吞吐、配置、Run 对比
+GPU / NIC / Kubernetes -> Prometheus -> Grafana：利用率、显存、功耗、慢 Rank、网络与告警
+```
+
+训练镜像中的 SwanLab SDK 应先登录到私有服务。共享主机上优先使用项目级登录，Kubernetes Job 则通过 Secret 注入 API Key：
+
+```bash
+python -m pip install 'swanlab>=0.8,<1'
+swanlab login --host https://swanlab.example.com --local
+```
+
+本章最小脚本支持在 TensorBoard 和 SwanLab 间切换：
+
+```bash
+TRAIN_REPORT_TO=swanlab \
+TRAIN_SWANLAB_PROJECT=llm-sft-lab \
+TRAIN_SWANLAB_EXP_NAME=qwen3-4b-lora-smoke \
+bash train-qwen3-4b-lora.sh
+```
+
+对应的 ms-swift 参数是 `--report_to swanlab`、`--swanlab_project` 和 `--swanlab_exp_name`。API Key 不要作为命令行参数、明文环境值或镜像层；Pod 应通过 `secretKeyRef` 引用 Secret，并限制 Secret 的读权限。
+
+2026 年 8 月 21 日完成过一次不占 GPU 的端到端 Smoke：训练镜像自带 SwanLab SDK `0.8.4`，成功创建 6 Step 合成 Run，并上传 39 条 Loss、Learning Rate 和 Tokens/s 记录。验证也发现了 SDK 与新版文档的接口差异，因此镜像升级不能只做 `import swanlab`，至少还要跑完登录、创建 Run、连续写入、正常结束和 Web 页面打开五项检查。
+
+同日的 Qwen3.5-4B 真实 SFT Run 又上传了 120 Step 数值指标，Train Loss、Gradient Norm、Learning Rate、Token Accuracy 和四次 Validation 都能在页面查看。集成也暴露了一项非阻断兼容问题：ms-swift 4.4.1 把 `30/120`、`3m 53s` 一类展示值作为 String Scalar 上报，SwanLab SDK 0.8.4 会拒绝这些字符串；数值型指标、训练、Checkpoint 和盲测均不受影响。升级 SDK 后仍应保留这个回归用例，而不是只检查页面能否登录。
+
+正式训练需要同时回答两个问题：Loss 是否按预期变化，变化是否来自健康的训练过程。Loss 下降不等于模型效果提升；还应在隔离评测集上比较 Base 与 Adapter，并用统一的 Run ID 把训练 Step 对齐到 Grafana 的 GPU、网络和系统指标。部署边界、生产注意事项和示例 Values 见 [`examples/llm-sft-lab/swanlab`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/swanlab)。
+
+总结公开实验时至少保留真实 Run 的训练与验证曲线，并同时记录关键超参数；如果文章讨论 GPU 或网络瓶颈，再增加同一时间窗的 Grafana 图。截图旁边仍要给出模型版本、数据 Hash、训练参数和机器可读原始结果，不能让截图成为唯一证据。公开前裁掉地址栏、内部域名、用户名、Run URL、节点名和其他组织信息，确认画面中没有 API Key、数据样本或敏感日志。合成 Smoke 只用于验证链路，不得作为 SFT 效果图。
+
+## 13. 什么时候需要 Kubernetes
 
 单卡 Smoke 阶段直接在已有 GPU 开发容器里运行最简单。满足下面任一条件后，再把命令封装成 Kubernetes Job、Kubeflow TrainJob 或 JobSet：
 
@@ -439,7 +492,7 @@ N 卡扩展效率 = N 卡 samples/s ÷（单卡 samples/s × N）
 
 Kubernetes 只负责资源和作业生命周期，不会修复错误的数据、Loss Mask、模型实现或并行策略。先在单卡容器中跑通，再做平台封装，能够明显缩短定位链路。
 
-## 13. 实验记录模板
+## 14. 实验记录模板
 
 每次运行至少保存：
 
@@ -466,18 +519,20 @@ mean_step_time:
 final_train_loss:
 eval_result:
 checkpoint_path:
+metric_run_id:
+metric_screenshot_paths:
 known_limitations:
 ```
 
 第一轮结果回填本章时，应同时记录失败尝试。OOM、转换错误、NCCL 初始化超时和无法被推理引擎加载，都是决定最终方案的重要证据。
 
-## 14. 下一轮实验顺序
+## 15. 下一轮实验顺序
 
-1. 已完成：单张 GPU 的 Qwen3-4B 20-Step Smoke、Adapter 保存和加载回归；
+1. 已完成：单张 GPU 的 Qwen3-4B 20-Step Smoke，以及 Qwen3.5-4B 的 120-Step LoRA、SwanLab 曲线和 110 条 Base/Adapter 盲测；
 2. 已完成初测：单机双卡与双机单卡的 NCCL 对照，以及双机单卡 TCP 的 SFT 强扩展；
 3. 资源可用后补齐：单机双卡 SFT，并把全部初测重复三轮取中位数；
-4. 换成一份经过人工审核的真实小数据集，运行 100～500 Step，并用固定 Prompt 比较 Base 与 Adapter；
-5. 已完成单张 L20 的加载边界与单机 8 × L20 的 BF16 LoRA 容量验证；下一轮补齐 30B Base/Adapter 盲测，并比较 FSDP/ZeRO-3 与 Expert Parallel；
+4. 把合成故障分诊数据换成经过人工审核的真实小数据集，运行 100～500 Step，并重新制作从未用于调参的盲测；
+5. Qwen3-30B-A3B 只保留为历史容量记录；重新选择较新的小型 MoE 后，再比较 FSDP/ZeRO-3 与 Expert Parallel；
 6. 高显存与 RDMA 资源可用后，用相同拓扑完成 TCP/RDMA A/B，再运行 DeepSeek V4 Flash Adapter-only Smoke；
 7. 只有正确性和评测通过后，才扩大数据、长度和训练时间，并设计多机全参数训练与 Checkpoint 基线。
 
@@ -490,6 +545,10 @@ known_limitations:
 - [LoRA：Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)
 - [InstructGPT：SFT、Reward Model 与 RLHF](https://arxiv.org/abs/2203.02155)
 - [Qwen3 使用 ms-swift 训练](https://github.com/QwenLM/Qwen3/blob/main/docs/source/training/ms_swift.md)
+- [ms-swift Qwen3.5 Best Practice](https://github.com/modelscope/ms-swift/blob/main/docs/source/BestPractices/Qwen3_5-Best-Practice.md)
 - [Megatron-SWIFT Quick Start](https://github.com/modelscope/ms-swift/blob/main/docs/source_en/Megatron-SWIFT/Quick-start.md)
 - [Megatron-SWIFT DeepSeek V4 最佳实践](https://github.com/modelscope/ms-swift/blob/main/docs/source/BestPractices/deepseek-v4.md)
 - [DeepSeek V4 官方模型卡](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro)
+- [SwanLab Kubernetes 部署](https://docs.swanlab.cn/self_host/kubernetes/deploy.html)
+- [SwanLab Python 登录 API](https://docs.swanlab.cn/api/py-login.html)
+- [ms-swift 命令行参数](https://github.com/modelscope/ms-swift/blob/main/docs/source/Instruction/Command-line-parameters.md)

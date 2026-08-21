@@ -1,0 +1,95 @@
+global:
+  podAntiAffinityPreset: soft
+  settings:
+    host: "https://swanlab.example.com"
+
+gateway:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+vector:
+  replicas: 2
+  persistence:
+    storageClass: "<STORAGE_CLASS>"
+    storageSize: 60Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+service:
+  server:
+    replicas: 2
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "2"
+        memory: 2Gi
+  auth:
+    replicas: 2
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: "1"
+        memory: 512Mi
+  house:
+    replicas: 2
+    persistence:
+      storageClass: "<STORAGE_CLASS>"
+      storageSize: 20Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "2"
+        memory: 2Gi
+  cloud:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+  next:
+    replicas: 2
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: "1"
+        memory: 512Mi
+
+dependencies:
+  postgres:
+    persistence:
+      storageClass: "<STORAGE_CLASS>"
+      storageSize: 20Gi
+  redis:
+    persistence:
+      storageClass: "<STORAGE_CLASS>"
+      storageSize: 10Gi
+  clickhouse:
+    persistence:
+      storageClass: "<STORAGE_CLASS>"
+      storageSize: 50Gi
+  s3:
+    persistence:
+      storageClass: "<STORAGE_CLASS>"
+      storageSize: 50Gi

@@ -9,6 +9,9 @@ TRAIN_MAX_LENGTH="${TRAIN_MAX_LENGTH:-1024}"
 TRAIN_MAX_STEPS="${TRAIN_MAX_STEPS:-20}"
 TRAIN_TORCH_DTYPE="${TRAIN_TORCH_DTYPE:-bfloat16}"
 TRAIN_GPU_ID="${TRAIN_GPU_ID:-0}"
+TRAIN_REPORT_TO="${TRAIN_REPORT_TO:-tensorboard}"
+TRAIN_SWANLAB_PROJECT="${TRAIN_SWANLAB_PROJECT:-llm-sft-lab}"
+TRAIN_SWANLAB_EXP_NAME="${TRAIN_SWANLAB_EXP_NAME:-qwen3-4b-lora}"
 
 if [[ ! -f "${TRAIN_DATASET_PATH}" ]]; then
   echo "Dataset not found: ${TRAIN_DATASET_PATH}" >&2
@@ -39,6 +42,9 @@ swift sft \
   --warmup_ratio 0.05 \
   --dataset_num_proc 1 \
   --dataloader_num_workers 1 \
+  --report_to "${TRAIN_REPORT_TO}" \
+  --swanlab_project "${TRAIN_SWANLAB_PROJECT}" \
+  --swanlab_exp_name "${TRAIN_SWANLAB_EXP_NAME}" \
   --output_dir "${TRAIN_OUTPUT_DIR}"
 
 echo "Training finished. Output: ${TRAIN_OUTPUT_DIR}"

@@ -3,7 +3,7 @@ set -euo pipefail
 
 LAB_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 : "${RUN_ROOT:=${LAB_ROOT}/run}"
-: "${TRAIN_MODEL_ID:=Qwen/Qwen3-4B-Instruct-2507}"
+: "${TRAIN_MODEL_ID:=Qwen/Qwen3.5-4B}"
 : "${TRAIN_OUTPUT_DIR:=${RUN_ROOT}/output}"
 : "${TRAIN_MAX_LENGTH:=512}"
 : "${TRAIN_MAX_STEPS:=120}"
@@ -28,6 +28,11 @@ LAB_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 : "${TRAIN_BNB_4BIT_USE_DOUBLE_QUANT:=true}"
 : "${TRAIN_EXPERTS_IMPL:=}"
 : "${TRAIN_ROUTER_AUX_LOSS_COEF:=}"
+: "${TRAIN_REPORT_TO:=none}"
+: "${TRAIN_SWANLAB_PROJECT:=llm-sft-lab}"
+: "${TRAIN_SWANLAB_EXP_NAME:=meaningful-sft}"
+: "${TRAIN_ADD_NON_THINKING_PREFIX:=}"
+: "${TRAIN_LOSS_SCALE:=}"
 
 TRAIN_FILE="${RUN_ROOT}/data/train.jsonl"
 VALIDATION_FILE="${RUN_ROOT}/data/validation.jsonl"
@@ -74,6 +79,22 @@ fi
 DISTRIBUTED_ARGS=()
 if [[ -n "${TRAIN_DEEPSPEED}" ]]; then
   DISTRIBUTED_ARGS+=(--deepspeed "${TRAIN_DEEPSPEED}")
+fi
+
+REPORT_ARGS=(--report_to "${TRAIN_REPORT_TO}")
+if [[ "${TRAIN_REPORT_TO}" == *swanlab* ]]; then
+  REPORT_ARGS+=(
+    --swanlab_project "${TRAIN_SWANLAB_PROJECT}"
+    --swanlab_exp_name "${TRAIN_SWANLAB_EXP_NAME}"
+  )
+fi
+
+TEMPLATE_ARGS=()
+if [[ -n "${TRAIN_ADD_NON_THINKING_PREFIX}" ]]; then
+  TEMPLATE_ARGS+=(--add_non_thinking_prefix "${TRAIN_ADD_NON_THINKING_PREFIX}")
+fi
+if [[ -n "${TRAIN_LOSS_SCALE}" ]]; then
+  TEMPLATE_ARGS+=(--loss_scale "${TRAIN_LOSS_SCALE}")
 fi
 if [[ -n "${TRAIN_DEVICE_MAP}" ]]; then
   DISTRIBUTED_ARGS+=(--device_map "${TRAIN_DEVICE_MAP}")
@@ -123,9 +144,10 @@ NPROC_PER_NODE="${TRAIN_NPROC_PER_NODE}" \
   --train_dataloader_shuffle true \
   --dataset_num_proc 1 \
   --dataloader_num_workers 2 \
-  --report_to none \
   --seed 42 \
   --output_dir "${TRAIN_OUTPUT_DIR}" \
+  "${REPORT_ARGS[@]}" \
+  "${TEMPLATE_ARGS[@]}" \
   "${TARGET_PARAMETER_ARGS[@]}" \
   "${QUANT_ARGS[@]}" \
   "${MOE_ARGS[@]}" \

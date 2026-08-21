@@ -1,0 +1,94 @@
+{
+  "status": "complete",
+  "date": "2026-08-21",
+  "model": {
+    "id": "Qwen/Qwen3.5-4B",
+    "architecture": "Qwen3_5ForConditionalGeneration",
+    "weight_dtype": "bfloat16"
+  },
+  "hardware": {
+    "gpu_count": 1,
+    "gpu_model": "NVIDIA L20",
+    "visible_memory_gib": 44.39
+  },
+  "software": {
+    "ms_swift": "4.4.1",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.12.1",
+    "swanlab_sdk": "0.8.4"
+  },
+  "dataset": {
+    "train_examples": 330,
+    "validation_examples": 55,
+    "blind_test_examples": 110,
+    "train_sha256": "f89e2b537fab145cd176da52f21cfb708ee085fd4465ebe3c3540340745002f3",
+    "validation_sha256": "a3bd49e8dd45177db6c5513dd6e89cef9172b2bda665baaa065c577b315c3b9d",
+    "blind_test_sha256": "44adb4db5a40c4983665476598b76243015be26f303aa2f9d001dc316bc4093e"
+  },
+  "training": {
+    "method": "BF16 LoRA",
+    "target_modules": "all-linear",
+    "trainable_parameters_millions": 16.2324,
+    "total_parameters_millions": 4555.4980,
+    "trainable_ratio_percent": 0.3563,
+    "lora_rank": 8,
+    "lora_alpha": 32,
+    "max_length": 512,
+    "micro_batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "max_steps": 120,
+    "add_non_thinking_prefix": true,
+    "loss_scale": "ignore_empty_think",
+    "runtime_seconds": 612.6,
+    "samples_per_second": 1.567,
+    "steps_per_second": 0.196,
+    "aggregate_train_loss": 0.1602,
+    "framework_peak_memory_gib": 9.33,
+    "best_checkpoint_step": 60,
+    "validation": [
+      {
+        "step": 30,
+        "loss": 0.06195,
+        "token_accuracy": 0.9840
+      },
+      {
+        "step": 60,
+        "loss": 0.05315,
+        "token_accuracy": 0.9871
+      },
+      {
+        "step": 90,
+        "loss": 0.06081,
+        "token_accuracy": 0.9897
+      },
+      {
+        "step": 120,
+        "loss": 0.05700,
+        "token_accuracy": 0.9897
+      }
+    ]
+  },
+  "blind_test": {
+    "base": {
+      "json_valid_rate": 0.9909090909,
+      "required_fields_rate": 0.9909090909,
+      "code_accuracy": 0.0,
+      "code_macro_f1": 0.0,
+      "needs_more_evidence_accuracy": 0.5181818182,
+      "prohibited_action_keyword_recall": 0.0545454545
+    },
+    "adapter": {
+      "json_valid_rate": 1.0,
+      "required_fields_rate": 1.0,
+      "code_accuracy": 0.7727272727,
+      "code_macro_f1": 0.7530769884,
+      "needs_more_evidence_accuracy": 1.0,
+      "prohibited_action_keyword_recall": 0.8818181818
+    }
+  },
+  "tracking": {
+    "backend": "SwanLab",
+    "numeric_metrics_uploaded": true,
+    "known_compatibility_issue": "ms-swift 4.4.1 emits several display metrics as strings; SwanLab SDK 0.8.4 rejects those string scalars while numeric loss, accuracy, learning-rate and gradient-norm metrics remain available."
+  }
+}

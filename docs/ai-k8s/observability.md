@@ -2,7 +2,7 @@
 title: GPU、训练与推理可观测性
 description: 从用户请求和训练作业到 Pod、GPU、网络与存储的指标和追踪体系
 status: evolving
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-21
 ---
 
 # GPU、训练与推理可观测性
@@ -78,7 +78,46 @@ step_time
 
 如果只记录总 step time，网络抖动、数据饥饿和计算回退会混在一起。
 
-## 5. 分布式训练如何找慢 Rank
+## 5. 实验追踪与基础设施监控要分层
+
+训练曲线和 GPU 监控解决的是两类问题，不应强行塞进同一个系统：
+
+| 工具 | 最适合回答的问题 | 不适合替代 |
+| --- | --- | --- |
+| TensorBoard | 单次或少量本地实验的曲线与计算图 | 团队级项目、权限和实验治理 |
+| SwanLab | Run、超参数、Loss、媒体文件和跨实验对比 | GPU、节点、RDMA 和 Kubernetes 监控 |
+| MLflow | 实验、模型制品与模型注册生命周期 | 高频基础设施指标 |
+| Weights & Biases | 托管式实验追踪与团队协作 | 内网完全自托管场景的默认选择 |
+| Prometheus + Grafana | GPU、节点、网络、队列和集群告警 | 训练数据、超参数和模型制品管理 |
+
+一个实用的训练基础设施组合是：
+
+```text
+ms-swift / PyTorch
+  -> SwanLab SDK -> Gateway
+                    -> Server / Auth -> PostgreSQL
+                    -> House / Vector -> ClickHouse
+                    -> 媒体与制品 -> S3 兼容对象存储
+
+Kubernetes / DCGM Exporter / NIC
+  -> Prometheus -> Grafana
+```
+
+两条链路用统一的 `run_id`、`job_id`、模型版本和 Git Commit 对齐。看到 Loss 抖动时，先在 SwanLab 定位具体 Step，再到 Grafana 查看同一时间窗的 GPU 利用率、显存、功耗、慢 Rank 和网络异常。
+
+### 一次自托管 PoC 的验证结果
+
+2026 年 8 月 21 日使用官方 Helm Chart `0.6.2`、SwanLab `v3.1.1` 在 Kubernetes 1.30 环境完成了基础设施 Smoke：10 个 Deployment、1 个 StatefulSet 和 1 个初始化 Job 均成功启动，11 个常驻 Pod 全部 Ready 且未重启；数据库迁移和对象存储 Bucket 初始化成功，Gateway 激活页与 API 均可访问。
+
+这轮 PoC 为了先验证组件、镜像和入口链路，所有有状态目录都使用临时卷，没有创建 PVC。它能证明页面和基础 API 可用，却不能证明数据耐久性；Pod 被替换后，账号、实验和曲线都可能丢失。生产环境应改用持久 PostgreSQL、ClickHouse 和对象存储，并完成备份恢复演练。
+
+实例激活后，又使用训练镜像内置的 SwanLab SDK `0.8.4` 创建了一个 6 Step 合成 Run。SDK 成功上传 39 条记录，包含 `train/loss`、Learning Rate 和 Tokens/s，外部 Web 入口中的 Run 页面返回 200。第一轮兼容性 Smoke 还发现：该镜像中的 `swanlab.login()` 不接受新版文档里的 `web_host` 参数，因此训练镜像升级时要同时固定 SDK 版本，并以真实镜像跑一次登录、建 Run、写指标和结束 Run 的回归测试。
+
+随后使用相同链路完成了真实 `Qwen3.5-4B + BF16 LoRA`：120 Step 的 Train Loss、Learning Rate、Gradient Norm、Token Accuracy 和四次 Validation 都能查看，最佳 Checkpoint 由 Validation Loss 选在 Step 60；110 条隔离盲测的自定义故障码准确率由 Base 的 0% 提升到 Adapter 的 77.3%。这才形成“指标链路 + Checkpoint + Base/Adapter 效果”的完整证据。
+
+真实 Run 也暴露了版本兼容细节：ms-swift 4.4.1 会把 `30/120`、`3m 53s` 等展示字段作为字符串上报，SwanLab SDK 0.8.4 拒绝 String Scalar，但数值型指标、训练和盲测不受影响。这个问题应进入镜像升级回归用例。可复用的部署边界、脱敏曲线和机器可读结果见 [`examples/llm-sft-lab/swanlab`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/swanlab) 与 [`meaningful-sft`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/meaningful-sft)。
+
+## 6. 分布式训练如何找慢 Rank
 
 应同时观察：
 
@@ -91,7 +130,7 @@ step_time
 
 最慢 Rank 决定同步训练的整体速度。不要只看集群平均值，平均值会隐藏单节点异常。
 
-## 6. LLM 推理的核心指标
+## 7. LLM 推理的核心指标
 
 | 指标 | 含义 | 使用方式 |
 | --- | --- | --- |
@@ -107,7 +146,7 @@ step_time
 
 所有延迟都应按模型、输入长度、输出长度、优先级和流式/非流式请求分桶，否则 P95 缺乏可比性。
 
-## 7. 从基础设施 SLI 到业务 SLO
+## 8. 从基础设施 SLI 到业务 SLO
 
 建议至少定义三类 SLO：
 
@@ -134,7 +173,7 @@ step_time
 
 基础设施 SLO 达标而模型输出错误，仍然是一次失败发布。
 
-## 8. 日志设计
+## 9. 日志设计
 
 训练日志应结构化包含：时间、Job、Rank、step、组件和错误类别。推理日志应区分网关、调度器、模型服务器和下游工具调用。
 
@@ -148,7 +187,7 @@ step_time
 
 为排障临时提高日志级别时，应设置自动过期，并限制访问权限。
 
-## 9. Trace 应覆盖哪些边界
+## 10. Trace 应覆盖哪些边界
 
 一次推理请求可以跨越：
 
@@ -166,7 +205,7 @@ API Gateway
 
 Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提供 Trace、Metric、Log 和 Resource 的语义约定，可用统一资源属性关联信号。参考：[OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/concepts/semantic-conventions/)
 
-## 10. 告警应该可行动
+## 11. 告警应该可行动
 
 较好的告警示例：
 
@@ -179,7 +218,7 @@ Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提
 
 “CPU 高”或“Pod 重启”本身通常不够行动化，需要包含影响对象、可能原因和 Runbook 链接。
 
-## 11. 控制指标基数和成本
+## 12. 控制指标基数和成本
 
 - 不把 request ID、用户 ID、文件名作为 Metric Label；
 - 模型版本只保留当前和少量历史版本；
@@ -190,7 +229,7 @@ Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提
 
 可观测系统把生产集群拖慢，是平台常见的二次故障。
 
-## 12. 推荐 Dashboard
+## 13. 推荐 Dashboard
 
 1. **平台总览**：GPU 容量、队列、成本、SLO、告警；
 2. **节点详情**：GPU、NVLink、NIC、CPU、存储、XID；
@@ -199,9 +238,10 @@ Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提
 5. **租户视图**：配额、GPU-hours、成功率、等待时间和成本；
 6. **发布视图**：新旧版本的质量、性能和错误对比。
 
-## 13. 上线清单
+## 14. 上线清单
 
 - [ ] 指标能从集群关联到团队、Job、模型和发布版本；
+- [ ] 实验追踪系统与 Prometheus/Grafana 使用相同的 Run 和 Job 标识；
 - [ ] GPU 指标来自 DCGM，并验证 Pod 映射正确；
 - [ ] 训练能看到数据、计算、通信和 Checkpoint 分解；
 - [ ] 推理同时记录 TTFT、TPOT、队列和 Token 吞吐；
@@ -217,3 +257,5 @@ Trace 的价值是解释端到端延迟，不是替代指标。OpenTelemetry 提
 - [DCGM Exporter Metrics](https://docs.nvidia.com/datacenter/dcgm/latest/reference/dcgm-exporter-metrics.html)
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/concepts/semantic-conventions/)
 - [Kueue Monitoring](https://kueue.sigs.k8s.io/docs/tasks/manage/monitor_pending_workloads/)
+- [SwanLab Kubernetes 部署](https://docs.swanlab.cn/self_host/kubernetes/deploy.html)
+- [SwanLab 私有服务登录](https://docs.swanlab.cn/api/cli-swanlab-login.html)
