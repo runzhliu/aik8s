@@ -41,6 +41,7 @@ nav = [
     {"分布式训练" = [
       {"分布式训练平台" = "ai-k8s/distributed-training.md"},
       {"SFT 训练实战：从单卡 LoRA 到 DeepSeek V4" = "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md"},
+      {"SwanLab 自托管与 SFT 指标" = "ai-k8s/training/swanlab-self-hosted.md"},
       {"Ray 大模型训练与推理" = "ai-k8s/ray-llm-platform.md"},
       {"可靠性与故障恢复" = "ai-k8s/reliability.md"},
     ]},

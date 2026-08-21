@@ -115,7 +115,7 @@ Kubernetes / DCGM Exporter / NIC
 
 随后使用相同链路完成了真实 `Qwen3.5-4B + BF16 LoRA`：120 Step 的 Train Loss、Learning Rate、Gradient Norm、Token Accuracy 和四次 Validation 都能查看，最佳 Checkpoint 由 Validation Loss 选在 Step 60；110 条隔离盲测的自定义故障码准确率由 Base 的 0% 提升到 Adapter 的 77.3%。这才形成“指标链路 + Checkpoint + Base/Adapter 效果”的完整证据。
 
-真实 Run 也暴露了版本兼容细节：ms-swift 4.4.1 会把 `30/120`、`3m 53s` 等展示字段作为字符串上报，SwanLab SDK 0.8.4 拒绝 String Scalar，但数值型指标、训练和盲测不受影响。这个问题应进入镜像升级回归用例。可复用的部署边界、脱敏曲线和机器可读结果见 [`examples/llm-sft-lab/swanlab`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/swanlab) 与 [`meaningful-sft`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/meaningful-sft)。
+真实 Run 也暴露了版本兼容细节：ms-swift 4.4.1 会把 `30/120`、`3m 53s` 等展示字段作为字符串上报，SwanLab SDK 0.8.4 拒绝 String Scalar，但数值型指标、训练和盲测不受影响。这个问题应进入镜像升级回归用例。可复用的部署边界与脱敏曲线见 [SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标](training/swanlab-self-hosted.md)，机器可读结果见 [`meaningful-sft`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/meaningful-sft)。
 
 ## 6. 分布式训练如何找慢 Rank
 

@@ -476,7 +476,7 @@ bash train-qwen3-4b-lora.sh
 
 同日的 Qwen3.5-4B 真实 SFT Run 又上传了 120 Step 数值指标，Train Loss、Gradient Norm、Learning Rate、Token Accuracy 和四次 Validation 都能在页面查看。集成也暴露了一项非阻断兼容问题：ms-swift 4.4.1 把 `30/120`、`3m 53s` 一类展示值作为 String Scalar 上报，SwanLab SDK 0.8.4 会拒绝这些字符串；数值型指标、训练、Checkpoint 和盲测均不受影响。升级 SDK 后仍应保留这个回归用例，而不是只检查页面能否登录。
 
-正式训练需要同时回答两个问题：Loss 是否按预期变化，变化是否来自健康的训练过程。Loss 下降不等于模型效果提升；还应在隔离评测集上比较 Base 与 Adapter，并用统一的 Run ID 把训练 Step 对齐到 Grafana 的 GPU、网络和系统指标。部署边界、生产注意事项和示例 Values 见 [`examples/llm-sft-lab/swanlab`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/swanlab)。
+正式训练需要同时回答两个问题：Loss 是否按预期变化，变化是否来自健康的训练过程。Loss 下降不等于模型效果提升；还应在隔离评测集上比较 Base 与 Adapter，并用统一的 Run ID 把训练 Step 对齐到 Grafana 的 GPU、网络和系统指标。完整部署边界、生产注意事项和示例 Values 见 [SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标](swanlab-self-hosted.md)。
 
 总结公开实验时至少保留真实 Run 的训练与验证曲线，并同时记录关键超参数；如果文章讨论 GPU 或网络瓶颈，再增加同一时间窗的 Grafana 图。截图旁边仍要给出模型版本、数据 Hash、训练参数和机器可读原始结果，不能让截图成为唯一证据。公开前裁掉地址栏、内部域名、用户名、Run URL、节点名和其他组织信息，确认画面中没有 API Key、数据样本或敏感日志。合成 Smoke 只用于验证链路，不得作为 SFT 效果图。
 

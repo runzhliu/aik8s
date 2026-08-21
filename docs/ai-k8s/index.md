@@ -88,6 +88,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 ### 分布式训练
 
 - [分布式训练平台](distributed-training.md)：Kubeflow Trainer、KubeRay、JobSet 与训练生命周期。
+- [SwanLab 自托管与 SFT 指标](training/swanlab-self-hosted.md)：官方 Helm 部署、PoC/生产边界、ms-swift 接入、真实曲线和版本兼容性。
 - [Ray 在大模型训练与推理中的角色](ray-llm-platform.md)：Ray Core、Data、Train、Tune、Serve、Serve LLM 与 KubeRay 的端到端边界。
 - [可靠性、Checkpoint 与故障恢复](reliability.md)：RPO/RTO、Spot、优雅退出和故障演练。
 

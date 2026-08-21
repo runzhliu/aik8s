@@ -2,6 +2,8 @@
 
 这个目录记录一套可公开复用的 SwanLab 私有化部署与训练接入方法。示例不包含内部集群、节点、镜像仓库、存储端点、域名、Secret 或跨集群入口实现。
 
+面向网站阅读的完整文章见 [SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标](https://aik8s.run/ai-k8s/training/swanlab-self-hosted/)。本目录保留可执行脚本和 Values 模板。
+
 ## 组件与边界
 
 SwanLab 自托管版不是一个只读取日志目录的单容器。当前官方 Kubernetes Chart 会部署 Gateway、前端、Server、Auth、House、PostgreSQL、Redis、ClickHouse、Vector 和 S3 兼容对象存储。它适合管理项目、实验、超参数、Loss 曲线和运行对比；Prometheus、DCGM Exporter 与 Grafana 仍负责 GPU、节点和网络指标。
