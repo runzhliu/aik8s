@@ -6,7 +6,7 @@
 
 710 个 PR、212 位贡献者；新模型、启动、Decode、MoE、P/D、HiCache、Diffusion 和异构硬件都在更新。
 
-很快，[一篇传播较广的社区解读](https://mp.weixin.qq.com/s/7eNxP01f9xyGHQdsik-GDQ)用“推理速度暴涨”“全模型适配”“多硬件全域优化”来概括这次发布。
+今天看到一篇公众号文章，宣称 SGLang v0.5.18“推理速度暴涨”“全模型适配”“多硬件全域优化”。这些表述很吸引眼球，性能提升看起来也相当夸张，所以我决定用真实环境测试验证一下。
 
 这些说法不能说毫无依据，但我更关心另一个问题：
 
@@ -166,7 +166,6 @@ v0.5.18 的价值包括新的模型与 Cookbook、P/D 和缓存路径增强、Py
 
 ## 资料来源
 
-- [被核对的社区解读：SGLang v0.5.18 重磅发布](https://mp.weixin.qq.com/s/7eNxP01f9xyGHQdsik-GDQ)
 - [SGLang v0.5.18 官方 Release](https://github.com/sgl-project/sglang/releases/tag/v0.5.18)
 - [SGLang v0.5.17 官方 Release](https://github.com/sgl-project/sglang/releases/tag/v0.5.17)
 - [SGLang 官方 Cookbook](https://docs.sglang.io/cookbook)

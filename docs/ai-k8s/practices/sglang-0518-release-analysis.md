@@ -9,6 +9,8 @@ last_reviewed: 2026-08-24
 
 > SGLang v0.5.18 已于 2026 年 8 月 22 日发布，共合入 710 个 PR、来自 212 位贡献者。除了拆解官方 H100、B200 与 Blackwell 数据，本文还使用三张官方 `lmsysorg/sglang` 运行时镜像，在同一张 L20、同一个 Qwen3.8-27B-FP8 和同一压测客户端上完成 v0.5.16 / v0.5.17 / v0.5.18 A/B。结论很明确：短请求单请求性能几乎没有版本级跃升；v0.5.17 存在运行槽容量下降；v0.5.17 与 v0.5.18 在本次 4K 混合 Prefill/Decode 用例中出现可复现的尾延迟抬升。
 
+这次测试的起因很简单：今天看到一篇公众号文章宣称 v0.5.18“推理速度暴涨”，展示的性能提升相当夸张。与其转述结论，本文选择回到官方 PR 的原始测试口径，并在可用的 L20 环境中完成一次独立复测。
+
 ## 1. 实测先给结论
 
 | 问题 | 实测结果 | 判断 |
@@ -310,7 +312,6 @@ SGLang v0.5.18 值得跟进，尤其是以下场景：
 
 ## 参考资料
 
-- [被核对的社区解读：SGLang v0.5.18 重磅发布](https://mp.weixin.qq.com/s/7eNxP01f9xyGHQdsik-GDQ)
 - [SGLang v0.5.18 Release](https://github.com/sgl-project/sglang/releases/tag/v0.5.18)
 - [SGLang v0.5.17 Release](https://github.com/sgl-project/sglang/releases/tag/v0.5.17)
 - [SGLang Cookbook](https://docs.sglang.io/cookbook)
