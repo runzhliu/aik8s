@@ -180,6 +180,12 @@ SwanLab 能显示 Train Loss、Gradient Norm、Learning Rate、Token Accuracy �
 
 这次同样保留边界：曲线来自真实数值记录，但 110 条隔离 Blind Test 尚未完成 Base/Adapter A/B，所以只能证明训练与验证优化过程，不宣称任务准确率已经提升。机器可读记录见 [DeepSeek V4 Flash 0731 实测](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/h20-deepseek-v4-flash-0731-20260824.json)。
 
+2026 年 8 月 25 日又把 SwanLab 用于双机 TCP/RDMA 性能对照：`DeepSeek V4 Flash + PP=1 / EP=16 / Dense DP=16` 的六个正式 Run 全部完成上报。三轮稳定 Step 均值的中位数由 TCP `4.490` 降到 RDMA `3.050 秒`，等价吞吐提升 `47.23%`。项目比较页同时保留 Loss、Gradient Norm、Learning Rate、MoE Load Balancing Loss、显存与累计 Step Time，便于确认不同 Transport 下优化轨迹仍然可比。
+
+![SwanLab 中的六轮 DeepSeek V4 TCP/RDMA 实验](../../assets/training/deepseek-v4-rdma/swanlab-runs.png)
+
+这张图也说明 SwanLab 和网络监控的边界：它负责 Run、参数和训练指标对比，但不能证明底层流量实际走了 RDMA。Transport 仍由 NCCL INFO 的 `NET/Socket`、`NET/IB` 与 `GDRDMA` 日志验收，NIC Counter 和拥塞则交给 Prometheus/Grafana。完整正负对照与原始数据见 [DeepSeek V4 双机 RDMA 训练实测](rdma-distributed-training-benchmark.md)。
+
 ## 8. 本次发现的兼容问题
 
 训练镜像中的 SDK `0.8.4` 与较新的文档和 ms-swift 输出存在两个差异：

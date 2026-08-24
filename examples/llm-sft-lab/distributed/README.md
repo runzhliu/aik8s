@@ -13,6 +13,14 @@
 
 先运行 `run-nccl-benchmark.sh`，再运行 `run-sft-benchmark.sh`。NCCL 测试能说明通信链路，SFT 才能说明网络差异是否成为当前模型与训练方法的实际瓶颈。
 
+`AllReduce` 接近 DDP、FSDP 和 ZeRO 的梯度或参数同步，`All-to-All` 接近 MoE Expert Parallel 的 Token Dispatch/Combine。大型 Dense 全参数训练通常更关注前者，大型 MoE 训练需要两者都测：
+
+```bash
+NCCL_BENCH_COLLECTIVES=all_reduce,all_to_all \
+NCCL_BENCH_SIZES_MB=1,16,64,256 \
+bash run-nccl-benchmark.sh
+```
+
 ## 单机示例
 
 两张 GPU 的 NCCL AllReduce：
@@ -77,5 +85,11 @@ Qwen3-4B 的 Rank-8 LoRA 只有约 1650 万个可训练参数，梯度通信量�
 - NCCL INFO 日志：TCP 组应出现 Socket，RDMA 组应出现 IB/RoCE HCA。
 
 正式报告至少重复三轮，记录中位数和离散程度；剔除镜像拉取、模型加载、Tokenize 和 Checkpoint 时间，只比较训练区间。
+
+## 已完成的双机 MoE 对照
+
+2026 年 8 月 25 日使用相同方法完成 `2 节点 × 8 GPU` 的 DeepSeek V4 Flash 对照。`PP=1 / EP=16 / Dense DP=16` 使 All-to-All 与 Dense DP 同步跨节点，TCP/RDMA 各三轮的稳定 Step 均值中位数分别为 `4.490 / 3.050 秒`，RDMA 对应 `32.08%` 的步耗时下降与 `47.23%` 的等价吞吐提升。
+
+相反，`PP=2 / EP=8` 把 EP 与 DP 通信组留在单节点内，TCP/RDMA 稳定 Step 只相差 `0.35%`，没有可测收益。这个负对照说明必须先检查通信组是否跨节点，再解释网络带宽。机器可读结果见 [`h20-deepseek-v4-rdma-tcp-20260825.json`](../meaningful-sft/results/h20-deepseek-v4-rdma-tcp-20260825.json)。
 
 参考：[ms-swift 多机环境变量](https://github.com/modelscope/ms-swift/blob/main/docs/source/Instruction/Command-line-parameters.md)、[NVIDIA NCCL Tests](https://github.com/NVIDIA/nccl-tests)

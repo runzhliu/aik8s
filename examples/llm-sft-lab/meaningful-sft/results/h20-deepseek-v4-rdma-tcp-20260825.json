@@ -1,0 +1,234 @@
+{
+  "status": "complete_transport_effect_evaluation",
+  "date": "2026-08-25",
+  "objective": "Measure when RDMA changes real distributed MoE SFT throughput, while keeping model, data, nodes, rank placement, batch size and software fixed.",
+  "model": {
+    "id": "DeepSeek-V4-Flash-0731-FP8-DSpark",
+    "model_type": "deepseek_v4",
+    "training_method": "BF16 LoRA over block-FP8 base weights",
+    "total_parameters_million": 24863.3824,
+    "trainable_parameters_million": 242.4558,
+    "trainable_percent": 0.9752
+  },
+  "hardware": {
+    "nodes": 2,
+    "gpus_per_node": 8,
+    "world_size": 16,
+    "gpu_model": "NVIDIA H20",
+    "visible_memory_mib_per_gpu": 143771,
+    "rdma_nics_per_node": 8
+  },
+  "software": {
+    "ms_swift": "4.6.0.dev0",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.12.1",
+    "transformer_engine": "2.16.1+3e6f4139",
+    "megatron_core": "0.19.0",
+    "mcore_bridge": "1.7.0.dev0",
+    "nccl": "2.28.9+cuda13.0"
+  },
+  "dataset": {
+    "task": "OpsRoute synthetic fault-triage JSON classification",
+    "train_examples": 330,
+    "validation_examples_not_used_in_timing_run": 55,
+    "train_sha256": "f89e2b537fab145cd176da52f21cfb708ee085fd4465ebe3c3540340745002f3"
+  },
+  "methodology": {
+    "matched_pair": true,
+    "transport_is_only_intended_variable": true,
+    "repetitions_per_transport": 3,
+    "train_steps_per_run": 20,
+    "warmup_steps_excluded": 5,
+    "stable_steps": "6-20",
+    "instantaneous_step_derivation": "instant_n = n * cumulative_mean_n - (n - 1) * cumulative_mean_(n - 1)",
+    "global_batch_size": 16,
+    "micro_batch_size": 1,
+    "max_length": 512,
+    "checkpoint_and_eval_disabled": true,
+    "same_nodes_used_for_every_pair": true,
+    "rank_zero_node_reversed_in_round_3": true
+  },
+  "collective_microbenchmark": {
+    "configuration": {
+      "world_size": 16,
+      "collectives": ["all_reduce", "all_to_all"],
+      "sizes_mib_per_rank": [1, 16, 64, 256],
+      "warmup_iterations": 5,
+      "measured_iterations": 20,
+      "bandwidth_unit": "decimal GB/s",
+      "latency_aggregation": "maximum rank elapsed time"
+    },
+    "transport_proof": {
+      "tcp": "NCCL NET/Socket",
+      "rdma": "NCCL NET/IB with GDRDMA/Shared"
+    },
+    "runs": {
+      "tcp": [
+        {
+          "round": 1,
+          "all_reduce": [[1, 1.856966, 0.564672], [16, 13.180615, 1.272870], [64, 48.700707, 1.377985], [256, 190.104873, 1.412039]],
+          "all_to_all": [[1, 1.560182, 0.672086], [16, 11.991314, 1.399114], [64, 46.316051, 1.448933], [256, 197.739285, 1.357522]]
+        },
+        {
+          "round": 2,
+          "all_reduce": [[1, 1.551900, 0.675673], [16, 17.141497, 0.978749], [64, 54.727211, 1.226243], [256, 211.582221, 1.268705]],
+          "all_to_all": [[1, 1.342316, 0.781169], [16, 12.514732, 1.340597], [64, 51.761653, 1.296498], [256, 184.032522, 1.458631]]
+        },
+        {
+          "round": 3,
+          "all_reduce": [[1, 1.737294, 0.603569], [16, 14.386280, 1.166196], [64, 50.024143, 1.341530], [256, 186.360676, 1.440408]],
+          "all_to_all": [[1, 1.300586, 0.806233], [16, 11.538496, 1.454021], [64, 45.320707, 1.480755], [256, 185.601041, 1.446304]]
+        }
+      ],
+      "rdma": [
+        {
+          "round": 1,
+          "all_reduce": [[1, 0.277401, 3.779995], [16, 0.187053, 89.692291], [64, 0.506668, 132.451423], [256, 1.352563, 198.464326]],
+          "all_to_all": [[1, 0.227428, 4.610580], [16, 0.505150, 33.212371], [64, 1.642115, 40.867346], [256, 6.851354, 39.179913]]
+        },
+        {
+          "round": 2,
+          "all_reduce": [[1, 0.088172, 11.892425], [16, 0.539955, 31.071511], [64, 0.471247, 142.406847], [256, 1.289152, 208.226445]],
+          "all_to_all": [[1, 0.219692, 4.772928], [16, 1.032679, 16.246302], [64, 2.282013, 29.407752], [256, 6.037934, 44.458167]]
+        },
+        {
+          "round": 3,
+          "all_reduce": [[1, 0.086341, 12.144569], [16, 0.185532, 90.427520], [64, 0.467257, 143.622921], [256, 1.312756, 204.482401]],
+          "all_to_all": [[1, 0.206389, 5.080589], [16, 0.692264, 24.235288], [64, 4.702621, 14.270524], [256, 14.306655, 18.762978]]
+        }
+      ]
+    },
+    "array_columns": ["size_mib_per_rank", "latency_ms", "algorithm_bandwidth_GBps"],
+    "median_at_256_mib_per_rank": {
+      "all_reduce": {
+        "tcp_GBps": 1.412039,
+        "rdma_GBps": 204.482401,
+        "rdma_to_tcp_ratio": 144.81
+      },
+      "all_to_all": {
+        "tcp_GBps": 1.446304,
+        "rdma_GBps": 39.179913,
+        "rdma_to_tcp_ratio": 27.09
+      }
+    }
+  },
+  "negative_control": {
+    "purpose": "Show that an RDMA-capable job does not become faster when the dominant cross-node communication is only a small pipeline activation exchange.",
+    "parallelism": {"tp": 1, "pp": 2, "ep": 8, "dense_dp": 8, "expert_dp": 1},
+    "placement_note": "Each EP and DP group stayed within one eight-GPU node; only the pipeline boundary crossed nodes.",
+    "matched_pairs": 1,
+    "stable_mean_seconds_per_step": {"tcp": 4.109359, "rdma": 4.123557},
+    "rdma_step_time_change_percent": 0.35,
+    "interpretation": "No measurable benefit; the observed change is within normal run variance."
+  },
+  "positive_case": {
+    "parallelism": {"tp": 1, "pp": 1, "ep": 16, "dense_dp": 16, "expert_dp": 1},
+    "placement_note": "EP=16 and dense DP=16 both span the two nodes, forcing MoE All-to-All and dense/LoRA synchronization onto the inter-node transport.",
+    "runs": {
+      "tcp": [
+        {
+          "round": 1,
+          "stable_mean_seconds_per_step": 4.436541,
+          "stable_median_seconds_per_step": 4.392477,
+          "stable_min_seconds_per_step": 4.198952,
+          "stable_max_seconds_per_step": 4.742098,
+          "final_cumulative_mean_seconds_per_step": 7.976547,
+          "framework_peak_memory_gib_per_gpu": 50.89,
+          "loss_first": 1.5058794,
+          "loss_last": 0.19019589,
+          "instantaneous_step_seconds": [46.692958, 31.599624, 4.877330, 4.972348, 4.840570, 4.742098, 4.657562, 4.552974, 4.462027, 4.391449, 4.632702, 4.427822, 4.244982, 4.486792, 4.198952, 4.375170, 4.392477, 4.378869, 4.312414, 4.291820]
+        },
+        {
+          "round": 2,
+          "stable_mean_seconds_per_step": 4.490382,
+          "stable_median_seconds_per_step": 4.428890,
+          "stable_min_seconds_per_step": 4.260345,
+          "stable_max_seconds_per_step": 4.887555,
+          "final_cumulative_mean_seconds_per_step": 7.945681,
+          "framework_peak_memory_gib_per_gpu": 50.88,
+          "loss_first": 1.5058794,
+          "loss_last": 0.19356006,
+          "instantaneous_step_seconds": [44.551491, 32.146797, 4.898901, 5.081207, 4.879489, 4.771317, 4.634899, 4.512955, 4.419442, 4.356582, 4.704143, 4.436977, 4.301056, 4.604954, 4.260345, 4.389829, 4.428890, 4.284138, 4.362653, 4.887555]
+        },
+        {
+          "round": 3,
+          "stable_mean_seconds_per_step": 4.566000,
+          "stable_median_seconds_per_step": 4.491572,
+          "stable_min_seconds_per_step": 4.227719,
+          "stable_max_seconds_per_step": 5.180870,
+          "final_cumulative_mean_seconds_per_step": 7.888864,
+          "framework_peak_memory_gib_per_gpu": 50.85,
+          "loss_first": 1.5058794,
+          "loss_last": 0.19756092,
+          "instantaneous_step_seconds": [42.708974, 31.586728, 4.964283, 5.131291, 4.896009, 4.898645, 4.748136, 4.552854, 4.495188, 4.491572, 4.958822, 4.405406, 4.388075, 4.603373, 4.227719, 4.448365, 4.422952, 4.229518, 4.438500, 5.180870]
+        }
+      ],
+      "rdma": [
+        {
+          "round": 1,
+          "stable_mean_seconds_per_step": 3.028291,
+          "stable_median_seconds_per_step": 3.014051,
+          "stable_min_seconds_per_step": 2.893529,
+          "stable_max_seconds_per_step": 3.212710,
+          "final_cumulative_mean_seconds_per_step": 6.643571,
+          "framework_peak_memory_gib_per_gpu": 50.87,
+          "loss_first": 1.5058794,
+          "loss_last": 0.19354403,
+          "instantaneous_step_seconds": [48.360566, 29.362818, 3.099445, 3.364871, 3.259350, 3.212710, 3.059145, 2.937591, 2.959491, 3.203363, 3.198760, 2.920374, 2.913581, 3.179425, 2.936685, 2.907569, 3.014051, 2.893529, 3.061783, 3.026313]
+        },
+        {
+          "round": 2,
+          "stable_mean_seconds_per_step": 3.095234,
+          "stable_median_seconds_per_step": 2.939279,
+          "stable_min_seconds_per_step": 2.903827,
+          "stable_max_seconds_per_step": 4.053888,
+          "final_cumulative_mean_seconds_per_step": 6.761236,
+          "framework_peak_memory_gib_per_gpu": 50.85,
+          "loss_first": 1.5058794,
+          "loss_last": 0.19305748,
+          "instantaneous_step_seconds": [48.365999, 30.681149, 3.117368, 3.332520, 3.299174, 3.437908, 3.070483, 2.939279, 2.931069, 3.045351, 3.173437, 2.927951, 2.903827, 3.187775, 2.936820, 2.922946, 3.069627, 2.907191, 2.920958, 4.053888]
+        },
+        {
+          "round": 3,
+          "stable_mean_seconds_per_step": 3.049931,
+          "stable_median_seconds_per_step": 3.056369,
+          "stable_min_seconds_per_step": 2.893524,
+          "stable_max_seconds_per_step": 3.284981,
+          "final_cumulative_mean_seconds_per_step": 6.674331,
+          "framework_peak_memory_gib_per_gpu": 50.87,
+          "loss_first": 1.5058794,
+          "loss_last": 0.19455433,
+          "instantaneous_step_seconds": [48.793271, 29.174323, 3.132966, 3.344736, 3.292359, 3.074181, 3.187069, 3.063239, 2.955297, 3.056369, 3.284981, 2.967449, 2.947831, 3.170195, 2.893524, 3.083602, 3.057164, 3.010512, 2.946350, 3.051202]
+        }
+      ]
+    },
+    "median_of_run_means": {
+      "tcp_seconds_per_step": 4.490382,
+      "rdma_seconds_per_step": 3.049931,
+      "rdma_step_time_reduction_percent": 32.08,
+      "rdma_throughput_gain_percent": 47.23,
+      "tcp_samples_per_second": 3.563171,
+      "rdma_samples_per_second": 5.246020
+    },
+    "experiment_tracking": {
+      "system": "self-hosted SwanLab",
+      "project": "deepseek-v4-rdma-benchmark",
+      "runs_per_transport": 3,
+      "numeric_metrics_uploaded": true,
+      "run_names_and_private_service_location_omitted": true
+    }
+  },
+  "interpretation": [
+    "RDMA benefits a training step only when significant collectives cross nodes and communication is on the critical path.",
+    "The collective microbenchmark proves transport capacity; the matched SFT A/B measures application-level impact.",
+    "The 144.81x and 27.09x microbenchmark ratios must not be presented as end-to-end SFT speedups.",
+    "The negative control prevents the false conclusion that merely attaching an RDMA device makes every distributed workload faster."
+  ],
+  "known_limitations": [
+    "The SFT runs contain 20 optimizer steps and exclude the first five; they are a throughput experiment, not a convergence study.",
+    "The dataset is synthetic and max length is 512, so the exact percentage should not be generalized to other sequence lengths, routing distributions or hardware.",
+    "This is LoRA rather than full-parameter training; full-parameter DP, FSDP and ZeRO communication volumes differ.",
+    "The third RDMA All-to-All microbenchmark repetition was much slower than the first two, so the report uses three-run medians and exposes the raw variance.",
+    "Loss trajectories are comparable but not bitwise identical because distributed floating-point reduction order is nondeterministic; this benchmark does not compare model quality."
+  ]
+}

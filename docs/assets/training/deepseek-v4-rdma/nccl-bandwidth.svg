@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<rect width="1280" height="720" fill="#f8fafc"/>
+<text x="64" y="76" font-family="system-ui,sans-serif" font-size="34" font-weight="700" fill="#0b1f44">NCCL 微基准：链路能力与真实训练收益要分开看</text>
+<text x="64" y="112" font-family="system-ui,sans-serif" font-size="18" fill="#64748b">World Size 16 · 256 MiB/Rank · 5 次预热 + 20 次计时 · 三轮中位数</text>
+<rect x="64" y="154" width="548" height="452" rx="22" fill="white" stroke="#dbe4f0" stroke-width="2"/>
+<text x="94" y="204" font-family="system-ui,sans-serif" font-size="27" font-weight="700" fill="#0b1f44">AllReduce</text>
+<text x="94" y="236" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">对应 DP / FSDP / ZeRO 的梯度与参数同步</text>
+<text x="94" y="317" font-family="system-ui,sans-serif" font-size="18" fill="#0b1f44">TCP</text>
+<rect x="170" y="294" width="438" height="34" rx="9" fill="#eef2f7"/>
+<rect x="170" y="294" width="3.0" height="34" rx="9" fill="#f97316"/>
+<text x="184.8" y="318" text-anchor="start" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">1.41 GB/s</text>
+<text x="94" y="422" font-family="system-ui,sans-serif" font-size="18" fill="#0b1f44">RDMA</text>
+<rect x="170" y="399" width="438" height="34" rx="9" fill="#eef2f7"/>
+<rect x="170" y="399" width="405.6" height="34" rx="9" fill="#2563eb"/>
+<text x="565.6" y="423" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="white">204.48 GB/s</text>
+<text x="338" y="535" text-anchor="middle" font-family="system-ui,sans-serif" font-size="32" font-weight="800" fill="#10b981">144.81×</text>
+<text x="338" y="568" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" fill="#64748b">RDMA / TCP 算法带宽</text>
+<rect x="652" y="154" width="548" height="452" rx="22" fill="white" stroke="#dbe4f0" stroke-width="2"/>
+<text x="682" y="204" font-family="system-ui,sans-serif" font-size="27" font-weight="700" fill="#0b1f44">All-to-All</text>
+<text x="682" y="236" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">对应 MoE Expert Parallel 的 Token Dispatch / Combine</text>
+<text x="682" y="317" font-family="system-ui,sans-serif" font-size="18" fill="#0b1f44">TCP</text>
+<rect x="758" y="294" width="438" height="34" rx="9" fill="#eef2f7"/>
+<rect x="758" y="294" width="15.0" height="34" rx="9" fill="#f97316"/>
+<text x="785.0" y="318" text-anchor="start" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">1.45 GB/s</text>
+<text x="682" y="422" font-family="system-ui,sans-serif" font-size="18" fill="#0b1f44">RDMA</text>
+<rect x="758" y="399" width="438" height="34" rx="9" fill="#eef2f7"/>
+<rect x="758" y="399" width="405.6" height="34" rx="9" fill="#2563eb"/>
+<text x="1153.6" y="423" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="white">39.18 GB/s</text>
+<text x="926" y="535" text-anchor="middle" font-family="system-ui,sans-serif" font-size="32" font-weight="800" fill="#10b981">27.09×</text>
+<text x="926" y="568" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" fill="#64748b">RDMA / TCP 算法带宽</text>
+<text x="64" y="684" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">注意：GB/s 是 16 Rank Collective 的算法带宽，不是单张网卡线速，也不是端到端训练加速比。</text>
+</svg>

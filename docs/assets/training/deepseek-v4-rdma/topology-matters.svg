@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<rect width="1280" height="720" fill="#f8fafc"/>
+<text x="64" y="76" font-family="system-ui,sans-serif" font-size="34" font-weight="700" fill="#0b1f44">为什么同一套 RDMA，一组没收益，另一组快 32%？</text>
+<text x="64" y="112" font-family="system-ui,sans-serif" font-size="18" fill="#64748b">决定因素不是“有没有 RDMA”，而是关键 Collective 是否跨节点并进入 Step 关键路径</text>
+<rect x="64" y="154" width="560" height="466" rx="24" fill="white" stroke="#dbe4f0" stroke-width="2"/>
+<text x="96" y="205" font-family="system-ui,sans-serif" font-size="25" font-weight="700" fill="#0b1f44">负对照：PP=2 / EP=8</text>
+<rect x="122" y="258" width="188" height="138" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="216" y="290" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">Node 1</text>
+<rect x="142" y="310" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="175" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="224" y="310" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="257" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="142" y="348" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="175" y="367" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="224" y="348" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="257" y="367" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="378" y="258" width="188" height="138" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="472" y="290" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">Node 2</text>
+<rect x="398" y="310" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="431" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="480" y="310" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="513" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="398" y="348" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="431" y="367" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="480" y="348" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="513" y="367" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<line x1="310" y1="327" x2="378" y2="327" stroke="#f97316" stroke-width="5" stroke-dasharray="10 8"/>
+<text x="344" y="315" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#f97316">PP</text>
+<text x="344" y="446" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" fill="#0b1f44">EP 与 DP 组留在单节点</text>
+<text x="344" y="478" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" fill="#64748b">跨机只传 Pipeline Activation</text>
+<rect x="94" y="520" width="500" height="64" rx="14" fill="#f97316"/>
+<text x="344" y="560" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" font-weight="750" fill="white">RDMA 变化 +0.35%：无可测收益</text>
+<rect x="656" y="154" width="560" height="466" rx="24" fill="white" stroke="#dbe4f0" stroke-width="2"/>
+<text x="688" y="205" font-family="system-ui,sans-serif" font-size="25" font-weight="700" fill="#0b1f44">正向案例：PP=1 / EP=16</text>
+<rect x="714" y="258" width="188" height="138" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="808" y="290" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">Node 1</text>
+<rect x="734" y="310" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="767" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="816" y="310" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="849" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="734" y="348" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="767" y="367" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="816" y="348" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="849" y="367" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="970" y="258" width="188" height="138" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="1064" y="290" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">Node 2</text>
+<rect x="990" y="310" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="1023" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="1072" y="310" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="1105" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="990" y="348" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="1023" y="367" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<rect x="1072" y="348" width="66" height="27" rx="6" fill="#0b1f44"/>
+<text x="1105" y="367" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="white">GPU</text>
+<line x1="902" y1="302" x2="970" y2="302" stroke="#06b6d4" stroke-width="5"/>
+<line x1="902" y1="327" x2="970" y2="327" stroke="#06b6d4" stroke-width="5"/>
+<line x1="902" y1="352" x2="970" y2="352" stroke="#06b6d4" stroke-width="5"/>
+<text x="936" y="292" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#2563eb">EP / DP</text>
+<text x="936" y="446" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" fill="#0b1f44">EP 与 Dense DP 都跨两节点</text>
+<text x="936" y="478" text-anchor="middle" font-family="system-ui,sans-serif" font-size="17" fill="#64748b">All-to-All + 同步进入跨机路径</text>
+<rect x="686" y="520" width="500" height="64" rx="14" fill="#2563eb"/>
+<text x="936" y="560" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" font-weight="750" fill="white">稳定 Step -32.08% · 吞吐 +47.23%</text>
+<text x="64" y="684" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">拓扑图只展示通信域关系；每个节点实际使用 8 张 GPU。</text>
+</svg>

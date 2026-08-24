@@ -140,14 +140,16 @@
     }
   },
   "rdma_baseline": {
-    "status": "not_run",
-    "reason": "The free GPU nodes did not expose an allocatable RDMA resource. The nodes that did expose the resource had all GPUs occupied by existing workloads.",
-    "required_next_step": "Repeat the identical two-node workload on the same nodes with RDMA enabled, verify NCCL NET/IB in logs, and run at least three repetitions."
+    "status": "completed_in_follow_up",
+    "follow_up_date": "2026-08-25",
+    "result_file": "h20-deepseek-v4-rdma-tcp-20260825.json",
+    "summary": "A three-round matched TCP/RDMA A/B with PP=1, EP=16 and dense DP=16 reduced the median stable step time from 4.490382 to 3.049931 seconds, equivalent to 32.08% lower step time or 47.23% higher throughput.",
+    "transport_proof": "NCCL logs showed NET/Socket for TCP and NET/IB with GDRDMA/Shared for RDMA."
   },
   "known_limitations": [
     "The isolated 110-example Base-versus-Adapter blind test was prepared but not executed for this checkpoint.",
     "The 20-step validation curve proves an optimization signal, not production task quality.",
-    "The TCP comparison has one repetition and only four optimizer steps.",
-    "No RDMA gain is reported because no valid RDMA run was launched."
+    "The original PP=2 TCP comparison has one repetition and only four optimizer steps.",
+    "The later transport-effect experiment is reported separately because it uses a communication-heavy PP=1, EP=16 topology and three repetitions per transport."
   ]
 }

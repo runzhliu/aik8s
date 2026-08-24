@@ -505,7 +505,7 @@ World Size = Expert TP × EP × PP × Expert DP
 
 更重要的是，这不是“16 卡为什么没有比 8 卡快”的数据并行扩展实验。双机组使用 `PP=2` 把模型层分到两个 Stage，目标是把每卡显存降下来；它增加了 Pipeline Bubble 和跨节点点对点通信，短序列、小 Batch 时变慢符合预期。真正的 RDMA 收益必须比较 **相同的双机 PP=2 拓扑**：TCP 与 RDMA 只改变网络传输，其他条件全部固定。
 
-本轮没有启动 RDMA 对照。原因是空闲 GPU 节点未暴露可申请的 RDMA 扩展资源，而具备完整 RDMA 资源的节点 GPU 已被其他工作负载占满。这里把结论明确写成“RDMA 未测”，不根据能力标签、理论带宽或其他节点的数据推算收益。
+这轮初测当时没有可用的 RDMA 资源，因此原始记录明确写成“RDMA 未测”。资源可用后又补做了同拓扑负对照：`PP=2 / EP=8` 的稳定段由 TCP `4.109` 变为 RDMA `4.124 秒/Step`，慢 `0.35%`，没有可测收益。原因是 EP 与 DP 通信组仍位于单节点内，跨机主要只有 Pipeline Activation；这也证明不能根据能力标签或理论带宽直接推算训练收益。
 
 ### 10.5 公开复现模板
 
@@ -586,7 +586,20 @@ N 卡扩展效率 = N 卡 samples/s ÷（单卡 samples/s × N）
 
 即使 AllReduce 微基准显示 TCP 明显慢于单机互联，这个 Rank-8 LoRA 仍取得 `1.72×` 加速，训练时间减少约 `41.9%`。原因是它只有 1651 万个可训练参数，梯度同步量较小，计算仍占主要部分；这正说明必须同时看通信微基准和真实训练，不能只凭带宽推算业务收益。
 
-以上数字只运行了一轮，适合做环境摸底，不是正式容量结论。单机双卡 SFT、更多卡数以及 TCP/RDMA 同拓扑 A/B 要等到对应空闲资源出现后，再按至少三轮取中位数的口径补齐。
+以上数字只运行了一轮，适合做环境摸底，不是正式容量结论。后续 H20 双机实验已经按至少三轮取中位数的口径补齐，但使用的是更能触发跨机 MoE Collective 的拓扑，不能与这组小模型 L20 数字直接拼成扩展曲线。
+
+### 11.2 H20 双机 MoE 的 TCP/RDMA 三轮 A/B
+
+2026 年 8 月 25 日使用 `2 节点 × 8 张 H20` 进一步完成正式 Transport 对照。模型为 DeepSeek V4 Flash 0731，设置 `TP=1、PP=1、EP=16、Dense DP=16`，使 MoE All-to-All 和 Dense DP 同步都跨节点。固定 Global Batch 16、Max Length 512、数据 Hash 和软件栈后，TCP 与 RDMA 各运行三轮，每轮 20 Step，并排除前 5 个编译与暖机 Step。
+
+| 口径 | TCP | RDMA | 变化 |
+| --- | ---: | ---: | ---: |
+| 三轮稳定均值中位数 | 4.490 s/Step | 3.050 s/Step | **-32.08%** |
+| 等价样本吞吐 | 3.563 samples/s | 5.246 samples/s | **+47.23%** |
+| 256 MiB/Rank AllReduce | 1.412 GB/s | 204.482 GB/s | 144.81× |
+| 256 MiB/Rank All-to-All | 1.446 GB/s | 39.180 GB/s | 27.09× |
+
+NCCL 日志分别确认 TCP 组使用 `NET/Socket`，RDMA 组使用 `NET/IB/.../GDRDMA/Shared`。微基准比例只说明链路能力，不等于训练加速比；真实 SFT 最终兑现的是约 32% 的稳定步耗时下降。完整三轮原始数据、负对照、SwanLab 截图与复现口径见[RDMA 到底能让分布式训练快多少：DeepSeek V4 双机 16 卡实测](rdma-distributed-training-benchmark.md)。
 
 ## 12. 用 SwanLab 管训练实验，用 Grafana 看基础设施
 
@@ -675,7 +688,7 @@ known_limitations:
 2. 已完成训练链路、待补效果闭环：Qwen3.6-35B-A3B 在单机 8 张 L20 上完成 ZeRO-3 LoRA 的 120 Step 和四次 Validation，但临时任务清理前未导出 Adapter 盲测汇总；
 3. 已完成初测：单机双卡与双机单卡的 NCCL 对照，以及双机单卡 TCP 的 SFT 强扩展；
 4. 已完成：DeepSeek V4 Flash 0731 在单机 8 张 H20 上完成 20-Step LoRA、四次 Validation、四个 Checkpoint 和 SwanLab 上报；
-5. 已完成 TCP 链路、待补 RDMA：同口径 4-Step 负载完成单机 EP=8 和双机 PP=2 × EP=8 TCP 对照；RDMA 资源可用后保持双机拓扑不变，至少重复三轮；
+5. 已完成：双机 `PP=2 / EP=8` TCP/RDMA 负对照无可测收益；双机 `PP=1 / EP=16 / Dense DP=16` 各完成三轮 TCP/RDMA A/B，稳定步耗时下降 32.08%，等价吞吐提升 47.23%；
 6. 待补效果闭环：对 DeepSeek V4 的 110 条隔离 Blind Test 运行 Base/Adapter A/B，不能用 Validation Loss 替代；
 7. 把合成故障分诊数据换成经过人工审核的真实小数据集，运行 100～500 Step，并重新制作从未用于调参的盲测；
 8. 只有正确性和评测通过后，才扩大数据、长度和训练时间，并设计多机全参数训练与 Checkpoint 基线。

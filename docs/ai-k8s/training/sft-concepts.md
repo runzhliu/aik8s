@@ -634,8 +634,9 @@ known_limitations: 已知限制
 理解本文名词后，可以按下面顺序继续：
 
 1. [大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](sft-from-single-gpu-to-deepseek-v4.md)：查看真实 Qwen、MoE、DeepSeek V4、单机和多机实验；
-2. [SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标](swanlab-self-hosted.md)：查看 Loss、Learning Rate、Gradient Norm 与 GPU 指标；
-3. [分布式训练平台](../distributed-training.md)：理解训练任务怎样由 Kubernetes 调度、启动和恢复；
+2. [DeepSeek V4 双机 RDMA 训练实测](rdma-distributed-training-benchmark.md)：查看 TP/PP/EP/DP 拓扑如何决定 RDMA 是否进入关键路径；
+3. [SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标](swanlab-self-hosted.md)：查看 Loss、Learning Rate、Gradient Norm 与 GPU 指标；
+4. [分布式训练平台](../distributed-training.md)：理解训练任务怎样由 Kubernetes 调度、启动和恢复；
 4. [`examples/llm-sft-lab`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab)：获取可以运行的脚本、示例数据和结果记录。
 
 最重要的判断标准只有一句：**训练成功不是“作业退出码为 0”或“Loss 降了”，而是数据、优化、Checkpoint、推理和独立评测形成了可复现闭环。**

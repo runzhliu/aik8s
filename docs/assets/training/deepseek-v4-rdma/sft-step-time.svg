@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<rect width="1280" height="720" fill="#f8fafc"/>
+<text x="64" y="76" font-family="system-ui,sans-serif" font-size="34" font-weight="700" fill="#0b1f44">真实 MoE SFT：三轮 A/B 都显示 RDMA 更快</text>
+<text x="64" y="112" font-family="system-ui,sans-serif" font-size="18" fill="#64748b">DeepSeek V4 Flash · 2 节点 × 8 GPU · PP=1 / EP=16 / Dense DP=16 · 稳定 Step 6–20</text>
+<line x1="110.0" y1="180" x2="110.0" y2="510" stroke="#dbe4f0"/>
+<text x="110.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">0</text>
+<line x1="320.0" y1="180" x2="320.0" y2="510" stroke="#dbe4f0"/>
+<text x="320.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">1</text>
+<line x1="530.0" y1="180" x2="530.0" y2="510" stroke="#dbe4f0"/>
+<text x="530.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">2</text>
+<line x1="740.0" y1="180" x2="740.0" y2="510" stroke="#dbe4f0"/>
+<text x="740.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">3</text>
+<line x1="950.0" y1="180" x2="950.0" y2="510" stroke="#dbe4f0"/>
+<text x="950.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">4</text>
+<line x1="1160.0" y1="180" x2="1160.0" y2="510" stroke="#dbe4f0"/>
+<text x="1160.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">5</text>
+<rect x="110" y="208" width="931.7" height="25" rx="7" fill="#f97316"/>
+<text x="92" y="226" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" fill="#0b1f44">R1 TCP</text>
+<text x="1053.7" y="226" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">4.437 s</text>
+<rect x="110" y="242" width="635.9" height="25" rx="7" fill="#2563eb"/>
+<text x="92" y="260" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" fill="#0b1f44">R1 RDMA</text>
+<text x="757.9" y="260" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">3.028 s</text>
+<rect x="110" y="304" width="943.0" height="25" rx="7" fill="#f97316"/>
+<text x="92" y="322" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" fill="#0b1f44">R2 TCP</text>
+<text x="1065.0" y="322" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">4.490 s</text>
+<rect x="110" y="338" width="650.0" height="25" rx="7" fill="#2563eb"/>
+<text x="92" y="356" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" fill="#0b1f44">R2 RDMA</text>
+<text x="772.0" y="356" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">3.095 s</text>
+<rect x="110" y="400" width="958.9" height="25" rx="7" fill="#f97316"/>
+<text x="92" y="418" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" fill="#0b1f44">R3 TCP</text>
+<text x="1080.9" y="418" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">4.566 s</text>
+<rect x="110" y="434" width="640.5" height="25" rx="7" fill="#2563eb"/>
+<text x="92" y="452" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" fill="#0b1f44">R3 RDMA</text>
+<text x="762.5" y="452" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#0b1f44">3.050 s</text>
+<rect x="64" y="566" width="1152" height="76" rx="16" fill="#0b1f44"/>
+<text x="100" y="614" font-family="system-ui,sans-serif" font-size="25" font-weight="700" fill="white">三轮中位数：4.490 → 3.050 s/Step</text>
+<text x="914" y="614" text-anchor="middle" font-family="system-ui,sans-serif" font-size="28" font-weight="800" fill="#06b6d4">吞吐 +47.23%</text>
+<text x="64" y="684" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">口径：相同节点、模型、数据、Batch、镜像与 Rank 映射；仅切换 NCCL Transport。</text>
+</svg>

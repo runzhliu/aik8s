@@ -11,6 +11,7 @@ LAB_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 : "${NCCL_IB_DISABLE:=1}"
 : "${NCCL_SOCKET_IFNAME:=eth0}"
 : "${NCCL_BENCH_SIZES_MB:=1,16,64,256}"
+: "${NCCL_BENCH_COLLECTIVES:=all_reduce}"
 : "${NCCL_BENCH_WARMUP:=5}"
 : "${NCCL_BENCH_ITERATIONS:=20}"
 
@@ -26,5 +27,6 @@ torchrun \
   --master_port "${MASTER_PORT}" \
   "${LAB_ROOT}/torch-nccl-allreduce.py" \
   --sizes-mb "${NCCL_BENCH_SIZES_MB}" \
+  --collectives "${NCCL_BENCH_COLLECTIVES}" \
   --warmup "${NCCL_BENCH_WARMUP}" \
   --iterations "${NCCL_BENCH_ITERATIONS}"

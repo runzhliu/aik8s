@@ -11,7 +11,7 @@ last_reviewed: 2026-08-04
 
 如果数据处理、训练、Tune、后训练 Rollout 和在线服务计划统一使用 Ray，见[Ray 在大模型训练与推理中的角色](ray-llm-platform.md)。
 
-如果还不熟悉 Loss、LoRA、Batch、Epoch、DP、TP、PP 和 EP，先读[大模型 SFT 入门：把常见名词一次讲明白](training/sft-concepts.md)。如果目标是亲手跑通训练，再逐步扩展到 MoE 和 DeepSeek V4，见[大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](training/sft-from-single-gpu-to-deepseek-v4.md)。该实验先用单卡 LoRA 验证数据、Loss、Adapter 和推理闭环，再给出完整 V4-Flash 的八卡升级入口。
+如果还不熟悉 Loss、LoRA、Batch、Epoch、DP、TP、PP 和 EP，先读[大模型 SFT 入门：把常见名词一次讲明白](training/sft-concepts.md)。如果目标是亲手跑通训练，再逐步扩展到 MoE 和 DeepSeek V4，见[大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](training/sft-from-single-gpu-to-deepseek-v4.md)。该实验先用单卡 LoRA 验证数据、Loss、Adapter 和推理闭环，再给出完整 V4-Flash 的八卡升级入口。需要判断跨机训练是否值得上 RDMA 时，见[DeepSeek V4 双机 16 卡 TCP/RDMA 实测](training/rdma-distributed-training-benchmark.md)。
 
 ## 1. 一次训练任务经过什么
 

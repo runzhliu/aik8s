@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small torch.distributed AllReduce benchmark for container/network smoke tests."""
+"""Small torch.distributed collective benchmark for container/network smoke tests."""
 
 import argparse
 import json
@@ -14,6 +14,11 @@ import torch.distributed as dist
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sizes-mb", default="1,16,64,256")
+    parser.add_argument(
+        "--collectives",
+        default="all_reduce",
+        help="Comma-separated collectives: all_reduce,all_to_all",
+    )
     parser.add_argument("--warmup", type=int, default=5)
     parser.add_argument("--iterations", type=int, default=20)
     return parser.parse_args()
@@ -46,45 +51,62 @@ def main() -> None:
             flush=True,
         )
 
-    for size_mb in [int(item) for item in args.sizes_mb.split(",")]:
-        size_bytes = size_mb * 1024 * 1024
-        tensor = torch.ones(size_bytes // 4, dtype=torch.float32, device=device)
+    collectives = [item.strip() for item in args.collectives.split(",") if item.strip()]
+    unknown = sorted(set(collectives) - {"all_reduce", "all_to_all"})
+    if unknown:
+        raise ValueError(f"Unsupported collectives: {', '.join(unknown)}")
 
-        dist.barrier()
-        for _ in range(args.warmup):
-            dist.all_reduce(tensor)
-        torch.cuda.synchronize(device)
+    for collective in collectives:
+        for size_mb in [int(item) for item in args.sizes_mb.split(",")]:
+            size_bytes = size_mb * 1024 * 1024
+            tensor = torch.ones(size_bytes // 4, dtype=torch.float32, device=device)
+            output = torch.empty_like(tensor) if collective == "all_to_all" else None
 
-        dist.barrier()
-        started = time.perf_counter()
-        for _ in range(args.iterations):
-            dist.all_reduce(tensor)
-        torch.cuda.synchronize(device)
-        elapsed = (time.perf_counter() - started) / args.iterations
+            def run_collective() -> None:
+                if collective == "all_reduce":
+                    dist.all_reduce(tensor)
+                else:
+                    dist.all_to_all_single(output, tensor)
 
-        elapsed_tensor = torch.tensor(elapsed, dtype=torch.float64, device=device)
-        dist.all_reduce(elapsed_tensor, op=dist.ReduceOp.MAX)
-        critical_seconds = elapsed_tensor.item()
-        alg_bw_gbps = size_bytes / critical_seconds / 1e9
-        bus_bw_gbps = alg_bw_gbps * 2 * (world_size - 1) / world_size
+            dist.barrier()
+            for _ in range(args.warmup):
+                run_collective()
+            torch.cuda.synchronize(device)
 
-        if rank == 0:
-            print(
-                "NCCL_BENCH "
-                + json.dumps(
-                    {
-                        "size_mib": size_mb,
-                        "iterations": args.iterations,
-                        "latency_ms": critical_seconds * 1000,
-                        "algbw_gbps": alg_bw_gbps,
-                        "busbw_gbps": bus_bw_gbps,
-                    }
-                ),
-                flush=True,
-            )
+            dist.barrier()
+            started = time.perf_counter()
+            for _ in range(args.iterations):
+                run_collective()
+            torch.cuda.synchronize(device)
+            elapsed = (time.perf_counter() - started) / args.iterations
 
-        del tensor
-        torch.cuda.empty_cache()
+            elapsed_tensor = torch.tensor(elapsed, dtype=torch.float64, device=device)
+            dist.all_reduce(elapsed_tensor, op=dist.ReduceOp.MAX)
+            critical_seconds = elapsed_tensor.item()
+            alg_bw_gbytes_s = size_bytes / critical_seconds / 1e9
+            if collective == "all_reduce":
+                bus_bw_gbytes_s = alg_bw_gbytes_s * 2 * (world_size - 1) / world_size
+            else:
+                bus_bw_gbytes_s = alg_bw_gbytes_s * (world_size - 1) / world_size
+
+            if rank == 0:
+                print(
+                    "NCCL_BENCH "
+                    + json.dumps(
+                        {
+                            "collective": collective,
+                            "size_mib_per_rank": size_mb,
+                            "iterations": args.iterations,
+                            "latency_ms": critical_seconds * 1000,
+                            "algbw_GBps": alg_bw_gbytes_s,
+                            "busbw_GBps": bus_bw_gbytes_s,
+                        }
+                    ),
+                    flush=True,
+                )
+
+            del tensor, output
+            torch.cuda.empty_cache()
 
     dist.destroy_process_group()
 

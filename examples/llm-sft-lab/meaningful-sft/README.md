@@ -144,7 +144,7 @@ Base 能理解故障语义，却为几乎每种场景生成自己的英文标签
 
 另用 12 条固定数据和 4 Step no-save 负载比较单机 `EP=8` 与双机 `PP=2 × EP=8` 强制 TCP。双机每卡显存从 84.87 GiB 降到 43.69 GiB，但第 4 步累计均值由 25.20 增至 37.88 秒/Step。这个测试说明 Pipeline 分片能显著降低单卡显存，同时在短序列、小 Batch 下引入明显 Bubble 与跨机通信开销；它不是数据并行加速比。
 
-本轮没有在缺少可申请 RDMA 资源的节点上伪造 RDMA 结果，也尚未完成 110 条 Blind Test 的 Base/Adapter A/B，因此不报告 RDMA 收益或任务准确率提升。完整参数、曲线和限制见 [`results/h20-deepseek-v4-flash-0731-20260824.json`](results/h20-deepseek-v4-flash-0731-20260824.json)，方法解释见 [大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](../../../docs/ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md)。
+初测时没有在缺少可申请 RDMA 资源的节点上伪造结果。后续资源可用后，先补做 `PP=2 / EP=8` 负对照，TCP `4.109` 与 RDMA `4.124 秒/Step` 没有可测差异；再改用会让 MoE All-to-All 与 Dense DP 同步跨节点的 `PP=1 / EP=16 / Dense DP=16`，完成 TCP 与 RDMA 各三轮 A/B。稳定步耗时中位数由 `4.490` 降到 `3.050 秒`，等价吞吐提升 `47.23%`。完整原始数据见 [`results/h20-deepseek-v4-rdma-tcp-20260825.json`](results/h20-deepseek-v4-rdma-tcp-20260825.json)，初始训练记录仍保存在 [`results/h20-deepseek-v4-flash-0731-20260824.json`](results/h20-deepseek-v4-flash-0731-20260824.json)。
 
 ## 历史对照：Qwen3-4B 单张 L20 实测
 
