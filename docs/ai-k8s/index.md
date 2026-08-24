@@ -89,6 +89,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [分布式训练平台](distributed-training.md)：Kubeflow Trainer、KubeRay、JobSet 与训练生命周期。
 - [大模型 SFT 入门](training/sft-concepts.md)：从一条问答样本开始，解释 Loss、LoRA、Batch、Epoch、Checkpoint、Dense、MoE 与各种并行方式。
+- [Kubernetes 领域 SFT 社区实践](training/kubernetes-domain-sft-community.md)：分析 KubeFix、K8s Distill、KubeBench 和 ITBench，说明领域数据、工具调用、安全边界与可执行评测应该怎样设计。
 - [SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](training/sft-from-single-gpu-to-deepseek-v4.md)：单卡闭环、多卡 MoE、DeepSeek V4 与多机网络实测。
 - [SwanLab 自托管与 SFT 指标](training/swanlab-self-hosted.md)：官方 Helm 部署、PoC/生产边界、ms-swift 接入、真实曲线和版本兼容性。
 - [Ray 在大模型训练与推理中的角色](ray-llm-platform.md)：Ray Core、Data、Train、Tune、Serve、Serve LLM 与 KubeRay 的端到端边界。
