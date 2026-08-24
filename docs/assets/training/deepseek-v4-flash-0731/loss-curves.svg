@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="430" viewBox="0 0 820 430" role="img" aria-labelledby="title desc">
+  <title id="title">DeepSeek V4 Flash 0731 LoRA train and validation loss</title>
+  <desc id="desc">Train loss over 20 optimizer steps and validation loss at steps 5, 10, 15 and 20.</desc>
+  <rect width="820" height="430" rx="16" fill="#f8fafc"/>
+  <text x="70" y="34" fill="#0f172a" font-family="system-ui, sans-serif" font-size="20" font-weight="700">DeepSeek V4 Flash 0731 · 20-Step LoRA</text>
+  <text x="70" y="53" fill="#64748b" font-family="system-ui, sans-serif" font-size="12">8 × H20 · TP=1 · PP=1 · EP=8 · 330 train / 55 validation</text>
+
+  <g stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 5">
+    <line x1="70" y1="60" x2="750" y2="60"/>
+    <line x1="70" y1="105" x2="750" y2="105"/>
+    <line x1="70" y1="150" x2="750" y2="150"/>
+    <line x1="70" y1="195" x2="750" y2="195"/>
+    <line x1="70" y1="240" x2="750" y2="240"/>
+    <line x1="70" y1="285" x2="750" y2="285"/>
+    <line x1="70" y1="330" x2="750" y2="330"/>
+  </g>
+  <g fill="#64748b" font-family="system-ui, sans-serif" font-size="11" text-anchor="end">
+    <text x="60" y="64">1.8</text>
+    <text x="60" y="109">1.5</text>
+    <text x="60" y="154">1.2</text>
+    <text x="60" y="199">0.9</text>
+    <text x="60" y="244">0.6</text>
+    <text x="60" y="289">0.3</text>
+    <text x="60" y="334">0.0</text>
+  </g>
+  <g stroke="#94a3b8" stroke-width="1.5">
+    <line x1="70" y1="330" x2="750" y2="330"/>
+    <line x1="70" y1="60" x2="70" y2="330"/>
+  </g>
+  <g fill="#64748b" font-family="system-ui, sans-serif" font-size="11" text-anchor="middle">
+    <text x="70" y="351">1</text>
+    <text x="213.2" y="351">5</text>
+    <text x="392.1" y="351">10</text>
+    <text x="571.1" y="351">15</text>
+    <text x="750" y="351">20</text>
+    <text x="410" y="377" font-size="12">Optimizer step</text>
+  </g>
+  <text x="18" y="200" fill="#64748b" font-family="system-ui, sans-serif" font-size="12" transform="rotate(-90 18 200)">Loss</text>
+
+  <polyline fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+    points="70,129.2 105.8,78.6 141.6,157.9 177.4,155.9 213.2,184.2 248.9,187.1 284.7,202.8 320.5,195.0 356.3,189.2 392.1,232.7 427.9,269.8 463.7,239.5 499.5,247.8 535.3,266.6 571.1,272.1 606.8,278.4 642.6,280.0 678.4,284.3 714.2,270.4 750,289.6"/>
+  <polyline fill="none" stroke="#f97316" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+    points="213.2,183.7 392.1,239.4 571.1,266.4 750,278.0"/>
+  <g fill="#f97316" stroke="#fff" stroke-width="2">
+    <circle cx="213.2" cy="183.7" r="5"/>
+    <circle cx="392.1" cy="239.4" r="5"/>
+    <circle cx="571.1" cy="266.4" r="5"/>
+    <circle cx="750" cy="278.0" r="5"/>
+  </g>
+
+  <g font-family="system-ui, sans-serif" font-size="12">
+    <line x1="500" y1="30" x2="530" y2="30" stroke="#2563eb" stroke-width="3"/>
+    <text x="538" y="34" fill="#334155">Train loss</text>
+    <line x1="620" y1="30" x2="650" y2="30" stroke="#f97316" stroke-width="3"/>
+    <circle cx="635" cy="30" r="4" fill="#f97316"/>
+    <text x="658" y="34" fill="#334155">Validation loss</text>
+  </g>
+
+  <rect x="70" y="390" width="680" height="25" rx="6" fill="#fff7ed"/>
+  <text x="82" y="407" fill="#9a3412" font-family="system-ui, sans-serif" font-size="12">Validation loss: 0.9755 → 0.3469 (-64.4%). Blind-test A/B is still required before claiming task-quality improvement.</text>
+</svg>

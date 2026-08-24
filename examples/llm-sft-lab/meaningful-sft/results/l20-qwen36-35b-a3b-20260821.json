@@ -1,0 +1,104 @@
+{
+  "status": "training_complete_blind_comparison_unavailable",
+  "date": "2026-08-21",
+  "repetitions": 1,
+  "model": {
+    "name": "Qwen3.6-35B-A3B",
+    "weight_dtype": "bfloat16",
+    "weight_shards_gib": 66.97,
+    "total_parameters_billion": 35.115
+  },
+  "hardware": {
+    "topology": "1 node x 8 GPUs",
+    "gpu_model": "NVIDIA L20",
+    "visible_memory_gib_per_gpu": 44.39
+  },
+  "software": {
+    "framework": "ms-swift 4.4.1",
+    "parallelism": "DeepSpeed ZeRO-3",
+    "swanlab_sdk": "0.8.4"
+  },
+  "dataset": {
+    "train_examples": 330,
+    "validation_examples": 55,
+    "blind_test_examples": 110,
+    "train_sha256": "f89e2b537fab145cd176da52f21cfb708ee085fd4465ebe3c3540340745002f3",
+    "validation_sha256": "a3bd49e8dd45177db6c5513dd6e89cef9172b2bda665baaa065c577b315c3b9d",
+    "blind_test_sha256": "44adb4db5a40c4983665476598b76243015be26f303aa2f9d001dc316bc4093e"
+  },
+  "training": {
+    "method": "BF16 LoRA",
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "in_proj_a",
+      "in_proj_b",
+      "in_proj_qkv",
+      "in_proj_z",
+      "out_proj"
+    ],
+    "trainable_parameters_millions": 8.1254,
+    "trainable_ratio_percent": 0.0231,
+    "lora_rank": 8,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "max_length": 256,
+    "global_batch_size": 8,
+    "max_steps": 120,
+    "epochs": 2.9268,
+    "runtime_seconds": 1086.7124,
+    "samples_per_second": 0.883,
+    "steps_per_second": 0.11,
+    "aggregate_train_loss": 0.2413691681,
+    "final_logged_train_loss": 0.0009794952,
+    "framework_peak_memory_gib_per_rank": 16.13,
+    "best_checkpoint_step": 120,
+    "validation": [
+      {
+        "step": 30,
+        "loss": 0.3428944051,
+        "token_accuracy": 0.9051554506
+      },
+      {
+        "step": 60,
+        "loss": 0.0631450266,
+        "token_accuracy": 0.9826839827
+      },
+      {
+        "step": 90,
+        "loss": 0.0605081059,
+        "token_accuracy": 0.9885871704
+      },
+      {
+        "step": 120,
+        "loss": 0.0591501854,
+        "token_accuracy": 0.9897678079
+      }
+    ]
+  },
+  "blind_test": {
+    "base_generation": "completed_before_training",
+    "adapter_generation": "not_verifiable_after_ephemeral_job_cleanup",
+    "comparison": null
+  },
+  "tracking": {
+    "backend": "SwanLab",
+    "run_state": "FINISHED",
+    "numeric_metrics_uploaded": true,
+    "known_compatibility_issue": "ms-swift 4.4.1 emits several display metrics as strings; SwanLab SDK 0.8.4 rejects those string scalars while numeric training and validation metrics remain available."
+  },
+  "conclusion": "The eight-GPU ZeRO-3 run completed all 120 training steps, four validations and checkpoint creation. The decreasing validation loss proves that the optimization path worked, but no behavior-quality improvement is claimed because the final Base/Adapter blind-test comparison was not exported before the ephemeral job was cleaned up.",
+  "limitations": [
+    "This is one run and is not a throughput benchmark.",
+    "The framework memory metric is a per-rank training metric rather than a sampled whole-card peak.",
+    "The adapter checkpoint and prediction files were intentionally stored only in the ephemeral job filesystem and are no longer available.",
+    "Validation token accuracy is not a substitute for the fixed 110-example behavior evaluation."
+  ],
+  "next_validation": [
+    "Repeat the same fixed-hash run and upload the small comparison metrics before the ephemeral job exits.",
+    "Keep Base and Adapter decoding parameters identical and report all six blind-test metrics.",
+    "Do not require durable model storage merely to retain the numerical A/B result."
+  ]
+}

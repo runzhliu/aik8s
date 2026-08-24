@@ -1,0 +1,152 @@
+{
+  "status": "partial_effect_evaluation",
+  "date": "2026-08-24",
+  "model": {
+    "id": "DeepSeek-V4-Flash-0731-FP8-DSpark",
+    "model_type": "deepseek_v4",
+    "weight_format": "block_fp8",
+    "total_layers": 43,
+    "declared_mtp_layers": 1,
+    "trained_mtp_layers": 0,
+    "mtp_note": "The tested checkpoint index does not contain the auxiliary MTP projection and normalization weights, so this run disables MTP instead of silently initializing missing weights."
+  },
+  "hardware": {
+    "single_node": {
+      "nodes": 1,
+      "gpu_count": 8,
+      "gpu_model": "NVIDIA H20",
+      "visible_memory_mib_per_gpu": 143771
+    },
+    "multi_node_tcp": {
+      "nodes": 2,
+      "gpu_count": 16,
+      "gpu_model": "NVIDIA H20",
+      "visible_memory_mib_per_gpu": 143771
+    }
+  },
+  "software": {
+    "ms_swift": "4.6.0.dev0",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.12.1",
+    "transformer_engine": "2.16.1+3e6f4139",
+    "megatron_core": "0.19.0",
+    "mcore_bridge": "1.7.0.dev0",
+    "nccl": "2.28.9+cuda13.0"
+  },
+  "dataset": {
+    "task": "OpsRoute synthetic fault-triage JSON classification",
+    "train_examples": 330,
+    "validation_examples": 55,
+    "blind_test_examples_prepared_but_not_run": 110,
+    "train_sha256": "f89e2b537fab145cd176da52f21cfb708ee085fd4465ebe3c3540340745002f3",
+    "validation_sha256": "a3bd49e8dd45177db6c5513dd6e89cef9172b2bda665baaa065c577b315c3b9d",
+    "blind_test_sha256": "44adb4db5a40c4983665476598b76243015be26f303aa2f9d001dc316bc4093e"
+  },
+  "meaningful_single_node_run": {
+    "parallelism": {
+      "tp": 1,
+      "pp": 1,
+      "ep": 8,
+      "dp": 1
+    },
+    "training": {
+      "method": "BF16 LoRA over block-FP8 base weights",
+      "target_modules": "all-linear",
+      "lora_rank": 16,
+      "lora_alpha": 32,
+      "max_length": 512,
+      "micro_batch_size": 1,
+      "global_batch_size": 8,
+      "train_steps": 20,
+      "eval_steps": 5,
+      "save_steps": 5,
+      "framework_peak_memory_gib_per_gpu": 85.74,
+      "train_loop_seconds_including_eval_and_checkpoint": 270,
+      "final_train_loss": 0.26916465,
+      "train_loss": [
+        1.33838189,
+        1.67603374,
+        1.14746606,
+        1.16086411,
+        0.97209144,
+        0.9526161,
+        0.84780055,
+        0.90006346,
+        0.93859702,
+        0.64838421,
+        0.40148985,
+        0.60338867,
+        0.54822344,
+        0.42281759,
+        0.38585734,
+        0.34380558,
+        0.3335216,
+        0.30475834,
+        0.39748985,
+        0.26916465
+      ],
+      "validation": [
+        {"step": 5, "loss": 0.97545534},
+        {"step": 10, "loss": 0.60407764},
+        {"step": 15, "loss": 0.42375544},
+        {"step": 20, "loss": 0.34688976}
+      ],
+      "validation_loss_reduction_step5_to_step20_percent": 64.44,
+      "checkpoints_saved": [5, 10, 15, 20]
+    },
+    "tracking": {
+      "backend": "SwanLab",
+      "upload_complete": true,
+      "uploaded_record_count": 1797,
+      "public_record_omits_private_run_url": true
+    }
+  },
+  "parallelism_baseline": {
+    "common": {
+      "dataset_examples": 12,
+      "train_steps": 4,
+      "max_length": 512,
+      "micro_batch_size": 1,
+      "global_batch_size": 8,
+      "lora_rank": 16,
+      "lora_alpha": 32,
+      "checkpoint_and_eval_disabled": true
+    },
+    "single_node_ep8": {
+      "parallelism": {"tp": 1, "pp": 1, "ep": 8, "dp": 1},
+      "loss": [3.72533107, 3.96866822, 3.53763485, 3.05626607],
+      "cumulative_elapsed_seconds": [63.091139, 93.504098, 97.082931, 100.78148],
+      "final_cumulative_mean_seconds_per_step": 25.19537,
+      "trainer_progress_total_seconds": 118,
+      "framework_peak_memory_gib_per_gpu": 84.87
+    },
+    "two_node_tcp_pp2_ep8": {
+      "parallelism": {"tp": 1, "pp": 2, "ep": 8, "dp": 1},
+      "pipeline_layout": "Et*22|t*21L",
+      "transport": "NCCL Socket over Ethernet",
+      "rdma_explicitly_disabled": true,
+      "loss": [3.72533107, 3.96866822, 3.53002048, 3.0692966],
+      "cumulative_elapsed_seconds": [91.327537, 141.90749, 146.563911, 151.502328],
+      "final_cumulative_mean_seconds_per_step": 37.875582,
+      "trainer_progress_total_seconds": 165,
+      "framework_peak_memory_gib_per_gpu": 43.69
+    },
+    "observed_difference": {
+      "tcp_two_node_cumulative_mean_slower_percent": 50.33,
+      "pp2_memory_reduction_percent": 48.52,
+      "repetitions": 1,
+      "interpretation": "A four-step smoke is dominated by compilation and warm-up. The timing is an initial observation, not a production throughput claim."
+    }
+  },
+  "rdma_baseline": {
+    "status": "not_run",
+    "reason": "The free GPU nodes did not expose an allocatable RDMA resource. The nodes that did expose the resource had all GPUs occupied by existing workloads.",
+    "required_next_step": "Repeat the identical two-node workload on the same nodes with RDMA enabled, verify NCCL NET/IB in logs, and run at least three repetitions."
+  },
+  "known_limitations": [
+    "The isolated 110-example Base-versus-Adapter blind test was prepared but not executed for this checkpoint.",
+    "The 20-step validation curve proves an optimization signal, not production task quality.",
+    "The TCP comparison has one repetition and only four optimizer steps.",
+    "No RDMA gain is reported because no valid RDMA run was launched."
+  ]
+}

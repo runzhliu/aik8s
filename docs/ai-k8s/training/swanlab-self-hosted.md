@@ -1,15 +1,15 @@
 ---
 title: SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标
-description: 在 Kubernetes 部署 SwanLab，接入 ms-swift，区分实验追踪与基础设施监控，并用真实 Qwen3.5 SFT 验证指标链路
+description: 在 Kubernetes 部署 SwanLab，接入 ms-swift，区分实验追踪与基础设施监控，并用 Qwen3.5、Qwen3.6 MoE 和 DeepSeek V4 的真实 SFT 验证指标链路
 status: evolving
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-24
 ---
 
 # SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标
 
 训练日志能写进 TensorBoard，只解决了“曲线在哪里看”的问题。多人共享训练平台后，还需要项目、Run、超参数、标签、实验对比、权限和长期检索。SwanLab 可以承担这层实验追踪，但它不替代 Prometheus、DCGM Exporter 和 Grafana。
 
-本文记录一套可公开复用的 Kubernetes 部署与 ms-swift 接入方法，并用一次真实 `Qwen3.5-4B` LoRA SFT 验证从训练容器到 Web 曲线的完整链路。文中不包含企业内部的集群、镜像仓库、存储端点、域名或入口配置。
+本文记录一套可公开复用的 Kubernetes 部署与 ms-swift 接入方法，并用真实 `Qwen3.5-4B`、`Qwen3.6-35B-A3B` 和 `DeepSeek V4 Flash` LoRA SFT 验证从训练容器到 Web 曲线的完整链路。文中不包含企业内部的集群、镜像仓库、存储端点、域名或入口配置。
 
 ## 1. 先划清系统边界
 
@@ -169,6 +169,16 @@ SwanLab 能显示 Train Loss、Gradient Norm、Learning Rate、Token Accuracy �
 | 禁止动作关键字覆盖 | 5.5% | 88.2% |
 
 完整训练参数、数据 Hash 和机器可读结果见 [Qwen3.5 小规模 SFT 实验](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab/meaningful-sft)。Loss 曲线与盲测必须同时保留：前者说明优化过程，后者才回答模型行为是否改善。
+
+随后一轮 `Qwen3.6-35B-A3B + 8 × L20 + ZeRO-3 LoRA` 也完成了 120 Step 和四次 Validation，SwanLab 保存的 Step 30/60/90/120 Validation Loss 分别为 `0.34289/0.06315/0.06051/0.05915`，最后一步 Token Accuracy 为 `98.98%`。这证明较大的多卡 Run 也能持续上传数值指标，并正常进入 `FINISHED` 状态。
+
+这轮同时暴露了实验生命周期缺口：模型 Checkpoint、Adapter 和预测文件都使用临时任务目录没有问题，但 Base/Adapter 的最终汇总也只留在本地；任务清理后便无法恢复。正确做法是在退出前把少量数值指标和数据 Hash 上传 SwanLab，模型权重和预测原文仍可保持不持久化。公开结果因此只记录训练与 Validation，不推断盲测提升。机器可读记录见 [Qwen3.6-35B-A3B 实测](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/l20-qwen36-35b-a3b-20260821.json)。
+
+2026 年 8 月 24 日，`DeepSeek V4 Flash 0731 + 8 × H20 + EP=8` 的 20-Step LoRA 又成功上传 1797 条 SwanLab 记录。Train Loss 从 Step 1 的 `1.3384` 降到 Step 20 的 `0.2692`，Step 5/10/15/20 的 Validation Loss 为 `0.9755/0.6041/0.4238/0.3469`，四个 Checkpoint 全部生成。这个 Run 证明实验追踪链路可以覆盖完整 MoE 的 Expert Parallel 训练，而不只适用于单卡 Dense 模型。
+
+![DeepSeek V4 Flash 0731 的真实训练与验证 Loss](../../assets/training/deepseek-v4-flash-0731/loss-curves.svg)
+
+这次同样保留边界：曲线来自真实数值记录，但 110 条隔离 Blind Test 尚未完成 Base/Adapter A/B，所以只能证明训练与验证优化过程，不宣称任务准确率已经提升。机器可读记录见 [DeepSeek V4 Flash 0731 实测](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/h20-deepseek-v4-flash-0731-20260824.json)。
 
 ## 8. 本次发现的兼容问题
 

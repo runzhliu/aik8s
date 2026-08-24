@@ -112,6 +112,40 @@ Base 能理解故障语义，却为几乎每种场景生成自己的英文标签
 
 机器可读结果保存在 [`results/l20-qwen35-4b-20260821.json`](results/l20-qwen35-4b-20260821.json)。
 
+## Qwen3.6-35B-A3B 单机 8 × L20 ZeRO-3 实测
+
+2026 年 8 月 21 日使用单机 8 张 L20 对 `Qwen3.6-35B-A3B` 的 BF16 Checkpoint 完成了 120-Step LoRA。模型权重分片约 66.97 GiB，总参数约 35.115B；本轮使用 DeepSpeed ZeRO-3，LoRA 只覆盖 Attention 投影层，可训练参数为 8.1254M，约占总参数的 0.0231%。最大长度为 256，Global Batch 为 8，120 Step 约等于 2.93 个 Epoch。
+
+| 指标 | 实测值 |
+| --- | ---: |
+| 训练运行时间 | 1,086.7 秒 |
+| 训练速度 | 0.110 Step/s |
+| 平均 Train Loss | 0.24137 |
+| 最后一个日志窗口 Train Loss | 0.0009795 |
+| 框架记录的每 Rank 峰值显存 | 16.13 GiB |
+| 完成状态 | 120/120 Step，四次 Validation，Checkpoint 已生成 |
+
+| Validation | Loss | Token Accuracy |
+| ---: | ---: | ---: |
+| Step 30 | 0.34289 | 90.52% |
+| Step 60 | 0.06315 | 98.27% |
+| Step 90 | 0.06051 | 98.86% |
+| Step 120 | **0.05915** | **98.98%** |
+
+这组结果证明 BF16 权重、ZeRO-3 分片、LoRA 注入、Forward/Backward、四次验证、Checkpoint 和实验追踪链路均已跑通。Validation Loss 持续下降，Step 120 是本轮最低点。
+
+但它还不是完整的“模型效果提升”证据。Base 的 110 条盲测生成已在训练前完成，Adapter、预测文件和最终对比结果只保存在临时任务目录；任务自动清理后，这些本地文件无法再审计，因此不补写 Adapter 准确率，也不拿 98.98% 的 Token Accuracy 代替盲测分数。下一轮应在临时任务退出前，把六项 Base/Adapter 数值写入实验追踪系统；这不要求持久化模型权重或预测原文。
+
+机器可读训练记录与限制保存在 [`results/l20-qwen36-35b-a3b-20260821.json`](results/l20-qwen36-35b-a3b-20260821.json)。
+
+## DeepSeek V4 Flash 0731：8 × H20 EP 与双机 TCP
+
+2026 年 8 月 24 日把同一数据生成器迁移到 `DeepSeek-V4-Flash-0731-FP8-DSpark`，使用单机 8 张 H20、`TP=1/PP=1/EP=8` 完成 20-Step BF16 LoRA。330 条训练和 55 条验证数据均成功处理，Validation Loss 在 Step 5/10/15/20 分别为 `0.97546/0.60408/0.42376/0.34689`，框架记录峰值显存为 85.74 GiB/GPU；四个 Checkpoint 和 SwanLab 数值上报均完成。
+
+另用 12 条固定数据和 4 Step no-save 负载比较单机 `EP=8` 与双机 `PP=2 × EP=8` 强制 TCP。双机每卡显存从 84.87 GiB 降到 43.69 GiB，但第 4 步累计均值由 25.20 增至 37.88 秒/Step。这个测试说明 Pipeline 分片能显著降低单卡显存，同时在短序列、小 Batch 下引入明显 Bubble 与跨机通信开销；它不是数据并行加速比。
+
+本轮没有在缺少可申请 RDMA 资源的节点上伪造 RDMA 结果，也尚未完成 110 条 Blind Test 的 Base/Adapter A/B，因此不报告 RDMA 收益或任务准确率提升。完整参数、曲线和限制见 [`results/h20-deepseek-v4-flash-0731-20260824.json`](results/h20-deepseek-v4-flash-0731-20260824.json)，方法解释见 [大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](../../../docs/ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md)。
+
 ## 历史对照：Qwen3-4B 单张 L20 实测
 
 2026 年 8 月 20 日使用 `Qwen3-4B-Instruct-2507 + ms-swift 4.4.1 + BF16 LoRA` 完成了完整 A/B。训练样本平均 265 Token，120 Step 耗时 257.6 秒，框架记录峰值显存 8.1 GiB。验证集最佳 Checkpoint 出现在 Step 60，Validation Loss 为 0.0426。

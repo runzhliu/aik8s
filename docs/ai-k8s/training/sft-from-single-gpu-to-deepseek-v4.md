@@ -1,18 +1,19 @@
 ---
 title: 大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4
-description: 用 ms-swift 和 Qwen3.5-4B 单卡跑通数据、LoRA、Checkpoint、SwanLab 与盲测闭环，再迁移到 Megatron-SWIFT 和 DeepSeek V4 Flash
+description: 用 Qwen3.5-4B 跑通 LoRA、SwanLab 与盲测闭环，再用 8 至 16 张 H20 实测 DeepSeek V4 Flash 的 Expert Parallel、Pipeline Parallel 和跨机 TCP
 status: evolving
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-24
 ---
 
 # 大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4
 
 直接把第一次 SFT 放在 284B 的 DeepSeek V4 Flash 上，会把数据格式、训练参数、分布式通信、精度转换和 Checkpoint 问题同时引入。更容易成功的路线是先用相同的数据格式和训练框架，在一张 GPU 上完成一个可以验收的 LoRA 闭环；只有这个闭环稳定后，再切换到 Megatron-SWIFT 和完整 MoE 模型。
 
-本章提供两条路径：
+本章提供三条路径：
 
 1. **可立即运行且能量化效果的实验**：单卡 `Qwen3.5-4B + ms-swift + LoRA`，完成 Base/Adapter 盲测；
-2. **DeepSeek V4 Flash 升级模板**：单机八卡、`Megatron-SWIFT + EP=8 + LoRA`。
+2. **较新 MoE 的多卡实验**：单机八卡 `Qwen3.6-35B-A3B + ZeRO-3 + LoRA`，验证分片加载、训练、验证和 Checkpoint；
+3. **完整 DeepSeek V4 Flash 实测**：单机 `8 × H20 + EP=8` 完成 20-Step 训练，再用双机 `PP=2 × EP=8` 跑通强制 TCP 对照。
 
 配套脚本和示例数据位于 [`examples/llm-sft-lab`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab)。示例不包含集群名、内部镜像、存储地址和网络配置。
 
@@ -315,6 +316,21 @@ Base 能理解故障并基本遵守 JSON，却会自行创造英文分类名，�
 
 较新的模型不会在每个小数据任务上自动胜过旧模型：同一数据生成器的早期 Qwen3-4B 单次实验达到过 90.9% 故障码准确率，而本轮 Qwen3.5-4B 为 77.3%。两次运行的 Chat Template 和推理实现并未完全锁死，因此这里只把它视为风险信号，不写成模型排行榜。机器可读记录见 [`l20-qwen35-4b-20260821.json`](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/l20-qwen35-4b-20260821.json)。
 
+### 8.2 Qwen3.6-35B-A3B：8 张 L20 的 ZeRO-3 LoRA
+
+同日使用单机 8 张 L20 对 `Qwen3.6-35B-A3B` BF16 Checkpoint 完成 120-Step LoRA。约 66.97 GiB 的权重通过 DeepSpeed ZeRO-3 分片；LoRA 只覆盖 Attention 投影层，8.1254M 个可训练参数约占 35.115B 总参数的 0.0231%。最大长度为 256、Global Batch 为 8，训练耗时 1,086.7 秒，速度为 0.110 Step/s，框架记录的每 Rank 峰值显存为 16.13 GiB。
+
+| Validation | Loss | Token Accuracy |
+| ---: | ---: | ---: |
+| Step 30 | 0.34289 | 90.52% |
+| Step 60 | 0.06315 | 98.27% |
+| Step 90 | 0.06051 | 98.86% |
+| Step 120 | **0.05915** | **98.98%** |
+
+训练、四次验证和 Step 120 Checkpoint 均成功，说明这条多卡优化链路能够工作。不过本轮把 Adapter 和预测结果保存在临时任务目录，任务清理前没有把最终 Base/Adapter 比较导出到实验追踪系统，因而公开记录不报告盲测提升。这个失败口径同样重要：**Validation Loss 和 Token Accuracy 只能证明拟合过程，不能替代隔离盲测。** 后续即使继续采用临时存储，也应在退出前上传体积很小的 A/B 汇总指标。
+
+完整训练参数和限制见 [`l20-qwen36-35b-a3b-20260821.json`](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/l20-qwen36-35b-a3b-20260821.json)。
+
 ## 9. 历史 MoE 容量记录与下一步选择
 
 Qwen3-30B-A3B 的实验保留为容量与 LoRA 注入问题的历史记录，不再作为新的训练实战主角。若要在投入完整 V4 前验证较新的小型 MoE，应重新选择当前仍有研究价值、框架已有明确训练支持的模型，再复用下面四项验收口径：
@@ -362,9 +378,69 @@ BNB 失败的现象与 Qwen3-MoE 的融合 Expert 表示有关：Transformers 5 
 
 需要特别限定结论：这是一条“先证明能装下并能训练”的单进程层切分路径，不是高效的 8 卡并行基线。执行会随层跨 GPU 流动，不能把 8 卡总显存可用误读为 8 卡算力线性叠加。下一轮应对比 FSDP/ZeRO-3 的低主机内存初始化或 Megatron Expert Parallel，并补齐固定 110 条盲测的 Base/Adapter 生成 A/B；在此之前，不用很低的验证 Loss 代替业务效果结论。
 
-## 10. 升级到完整 DeepSeek V4 Flash
+## 10. 完整 DeepSeek V4 Flash：从“理论可行”到真实训练
 
 仓库的 `train-deepseek-v4-flash-lora.sh` 是根据官方公开方案收敛出的 **Adapter-only Smoke 模板**。和官方长跑示例相比，它把 Micro Batch 降为 1、Global Batch 降为 8，并关闭自动 Merge，目的是先降低峰值显存和避免产生巨大的完整合并权重。
+
+### 10.1 单机 8 × H20：20-Step 有验证集的 LoRA
+
+2026 年 8 月 24 日使用 `DeepSeek-V4-Flash-0731-FP8-DSpark` 完成一次真实 LoRA SFT。基座为 Block-FP8 权重，训练计算使用 BF16；并行策略为 `TP=1、PP=1、EP=8、DP=1`。数据沿用前文的 OpsRoute 合成故障分诊任务，但训练集、验证集和盲测模板族相互隔离。
+
+| 项目 | 实测配置或结果 |
+| --- | --- |
+| GPU | 1 节点 × 8 张 NVIDIA H20 141 GB |
+| 软件 | ms-swift 4.6.0.dev0、Megatron-Core 0.19.0、MCore-Bridge 1.7.0.dev0、PyTorch 2.11.0 + CUDA 13.0 |
+| 数据 | 330 Train / 55 Validation；另准备 110 条 Blind Test |
+| 最大长度 / Micro Batch / Global Batch | 512 / 1 / 8 |
+| LoRA | Rank 16、Alpha 32、`all-linear` |
+| 训练 / 验证 / 保存间隔 | 20 / 5 / 5 Step |
+| 框架记录峰值显存 | 85.74 GiB/GPU |
+| 训练循环总时长 | 4 分 30 秒，包含四次验证和四次 Checkpoint |
+| Train Loss | Step 1 为 1.3384，Step 20 为 0.2692 |
+| Eval Loss | 0.9755 → 0.6041 → 0.4238 → 0.3469 |
+| 实验追踪 | SwanLab 上传完成，共 1797 条记录 |
+
+![DeepSeek V4 Flash 0731 LoRA 的真实训练与验证 Loss](../../assets/training/deepseek-v4-flash-0731/loss-curves.svg)
+
+从 Step 5 到 Step 20，Validation Loss 下降约 `64.4%`，且训练过程中没有 NaN、OOM 或梯度爆炸；Step 5/10/15/20 的 Megatron Checkpoint 和 Safetensors Adapter 都成功保存。这证明数据、Template、FP8 基座加载、8 路 Expert Parallel、LoRA Forward/Backward、验证、Checkpoint 和实验追踪已经形成完整工程链路。
+
+但这仍不能写成“领域效果提升 64.4%”：下降的是 Token Loss，不是任务准确率。110 条隔离 Blind Test 已准备好，本轮却还没有完成 Base/Adapter 生成对照，因此状态只能记为 **训练与验证完成，行为效果待验收**。完整逐步曲线、数据 Hash 和限制见 [`h20-deepseek-v4-flash-0731-20260824.json`](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/h20-deepseek-v4-flash-0731-20260824.json)。
+
+### 10.2 三个会直接导致失败的兼容点
+
+第一，稳定版 `ms-swift 4.4.1 + Megatron-Core 0.18.0 + MCore-Bridge 1.6.0` 还不能识别 `dsv4_hybrid` Attention 变体。本轮使用了公开仓库主线快照；复现时应锁定三者的提交和版本，不能只写“安装最新版”。
+
+第二，模型配置声明一层 MTP，但测试 Checkpoint 的权重索引中缺少对应的归一化和投影权重。直接设置 `mtp_num_layers=1` 会在加载阶段报告缺失键。本轮显式使用 `mtp_num_layers=0`，这是“本轮不训练辅助 MTP Head”，不是声称 DeepSeek V4 架构没有 MTP。
+
+第三，Pipeline Layout 必须与 MTP 配置一致。`MTP=0` 的双 Stage 布局使用：
+
+```text
+Et*22|t*21L
+```
+
+这里 `E` 是 Embedding，43 个 `t` 是 Transformer Layer，`L` 是 Loss。若布局里仍保留 `m`，Megatron 会在初始化阶段拒绝执行，因为布局中的 MTP 层数与 `mtp_num_layers=0` 不一致。
+
+### 10.3 单机 EP=8 与双机 PP=2 × EP=8 的 TCP 初测
+
+为了把 Checkpoint 和验证开销排除，另用同一模型、12 条固定数据、4 个 Optimizer Step、相同 LoRA、最大长度和 Global Batch 跑了 no-save 对照。双机组显式禁用 RDMA，并从 NCCL 配置确认走以太网 Socket。
+
+| 口径 | 单机 8 GPU | 双机 16 GPU，TCP | 变化 |
+| --- | ---: | ---: | ---: |
+| TP / PP / EP / DP | 1 / 1 / 8 / 1 | 1 / 2 / 8 / 1 | 仅增加 Pipeline Stage |
+| 第 1 步累计耗时 | 63.09 s | 91.33 s | +44.8% |
+| 第 4 步累计耗时 | 100.78 s | 151.50 s | +50.3% |
+| 第 4 步累计均值 | 25.20 s/Step | 37.88 s/Step | +50.3% |
+| Trainer 进度条总时长 | 118 s | 165 s | +39.8% |
+| 峰值显存/GPU | 84.87 GiB | 43.69 GiB | -48.5% |
+| 最终 Loss | 3.0563 | 3.0693 | 数值轨迹接近 |
+
+前两步包含 TorchInductor 编译和通信暖机；从进度时间估算，第 3～4 步约为单机 `3～4 秒/步`、双机 TCP `5 秒/步`。只有 4 Step、单次运行，这组数字适合证明链路与观察量级，不适合当作吞吐承诺。
+
+更重要的是，这不是“16 卡为什么没有比 8 卡快”的数据并行扩展实验。双机组使用 `PP=2` 把模型层分到两个 Stage，目标是把每卡显存降下来；它增加了 Pipeline Bubble 和跨节点点对点通信，短序列、小 Batch 时变慢符合预期。真正的 RDMA 收益必须比较 **相同的双机 PP=2 拓扑**：TCP 与 RDMA 只改变网络传输，其他条件全部固定。
+
+本轮没有启动 RDMA 对照。原因是空闲 GPU 节点未暴露可申请的 RDMA 扩展资源，而具备完整 RDMA 资源的节点 GPU 已被其他工作负载占满。这里把结论明确写成“RDMA 未测”，不根据能力标签、理论带宽或其他节点的数据推算收益。
+
+### 10.4 公开复现模板
 
 安装当前公开要求的组件：
 
@@ -529,12 +605,13 @@ known_limitations:
 ## 15. 下一轮实验顺序
 
 1. 已完成：单张 GPU 的 Qwen3-4B 20-Step Smoke，以及 Qwen3.5-4B 的 120-Step LoRA、SwanLab 曲线和 110 条 Base/Adapter 盲测；
-2. 已完成初测：单机双卡与双机单卡的 NCCL 对照，以及双机单卡 TCP 的 SFT 强扩展；
-3. 资源可用后补齐：单机双卡 SFT，并把全部初测重复三轮取中位数；
-4. 把合成故障分诊数据换成经过人工审核的真实小数据集，运行 100～500 Step，并重新制作从未用于调参的盲测；
-5. Qwen3-30B-A3B 只保留为历史容量记录；重新选择较新的小型 MoE 后，再比较 FSDP/ZeRO-3 与 Expert Parallel；
-6. 高显存与 RDMA 资源可用后，用相同拓扑完成 TCP/RDMA A/B，再运行 DeepSeek V4 Flash Adapter-only Smoke；
-7. 只有正确性和评测通过后，才扩大数据、长度和训练时间，并设计多机全参数训练与 Checkpoint 基线。
+2. 已完成训练链路、待补效果闭环：Qwen3.6-35B-A3B 在单机 8 张 L20 上完成 ZeRO-3 LoRA 的 120 Step 和四次 Validation，但临时任务清理前未导出 Adapter 盲测汇总；
+3. 已完成初测：单机双卡与双机单卡的 NCCL 对照，以及双机单卡 TCP 的 SFT 强扩展；
+4. 已完成：DeepSeek V4 Flash 0731 在单机 8 张 H20 上完成 20-Step LoRA、四次 Validation、四个 Checkpoint 和 SwanLab 上报；
+5. 已完成 TCP 链路、待补 RDMA：同口径 4-Step 负载完成单机 EP=8 和双机 PP=2 × EP=8 TCP 对照；RDMA 资源可用后保持双机拓扑不变，至少重复三轮；
+6. 待补效果闭环：对 DeepSeek V4 的 110 条隔离 Blind Test 运行 Base/Adapter A/B，不能用 Validation Loss 替代；
+7. 把合成故障分诊数据换成经过人工审核的真实小数据集，运行 100～500 Step，并重新制作从未用于调参的盲测；
+8. 只有正确性和评测通过后，才扩大数据、长度和训练时间，并设计多机全参数训练与 Checkpoint 基线。
 
 这条路线把最便宜的错误留在单卡阶段，把昂贵 GPU 用在已经通过数据与训练闭环验证的问题上。
 
