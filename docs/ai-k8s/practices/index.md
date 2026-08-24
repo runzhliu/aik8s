@@ -19,6 +19,7 @@ last_reviewed: 2026-08-14
 
 ## 性能、成本与容量
 
+- [SGLang v0.5.16 / v0.5.17 / v0.5.18 单卡 L20 实测：升级真的更快吗](sglang-0518-release-analysis.md)
 - [DeepSeek V4 Flash 的分布式 KV Cache：从 P/D 直传到全局缓存池](distributed-kv-cache-deepseek-v4.md)
 - [从半小时到五分钟：大模型冷启动全链路优化](llm-cold-start-optimization.md)
 - [大模型权重分发与加载加速：社区与商业方案选型](model-weight-delivery-acceleration.md)

@@ -1,0 +1,91 @@
+{
+  "date": "2026-08-24",
+  "scope": "single-gpu SGLang version comparison",
+  "hardware": {
+    "gpu": "NVIDIA L20",
+    "gpu_memory_mib": 46068,
+    "gpu_count": 1
+  },
+  "model": {
+    "name": "Qwen3.8-27B-FP8",
+    "tensor_parallel_size": 1,
+    "context_length": 32768,
+    "kv_cache_dtype": "fp8_e4m3",
+    "multimodal": true
+  },
+  "method": {
+    "dataset": "random-ids",
+    "seed": 42,
+    "temperature": 0,
+    "request_rate": "inf",
+    "fixed_benchmark_client": "SGLang v0.5.16 official runtime",
+    "notes": [
+      "All engine versions used official lmsysorg/sglang cu129 runtime images.",
+      "The model, GPU, server arguments, tokenizer, client, seed and request shapes were unchanged.",
+      "Image pull time is excluded from engine startup time.",
+      "Weight-load time is observational because later runs can benefit from a warm host page cache."
+    ]
+  },
+  "versions": [
+    {
+      "version": "0.5.16",
+      "official_image": "lmsysorg/sglang:v0.5.16-cu129-runtime",
+      "torch": "2.11.0+cu129",
+      "startup": {
+        "weight_load_s": 24.90,
+        "decode_cuda_graph_s": 32.55,
+        "container_to_internal_ready_s": 125.57
+      },
+      "capacity": {
+        "max_total_tokens": 181320,
+        "effective_max_running_requests": 6
+      }
+    },
+    {
+      "version": "0.5.17",
+      "official_image": "lmsysorg/sglang:v0.5.17-cu129-runtime",
+      "torch": "2.11.0+cu129",
+      "startup": {
+        "weight_load_s": 14.65,
+        "decode_cuda_graph_s": 32.82,
+        "container_to_internal_ready_s": 131.00
+      },
+      "capacity": {
+        "max_total_tokens": 158375,
+        "effective_max_running_requests": 5
+      }
+    },
+    {
+      "version": "0.5.18",
+      "official_image": "lmsysorg/sglang:v0.5.18-cu129-runtime",
+      "torch": "2.13.0+cu129",
+      "startup": {
+        "weight_load_s": 16.79,
+        "decode_cuda_graph_s": 30.88,
+        "container_to_internal_ready_s": 122.44
+      },
+      "capacity": {
+        "max_total_tokens": 178120,
+        "effective_max_running_requests": 6
+      }
+    }
+  ],
+  "short_request_results": [
+    {"version": "0.5.16", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 1, "requests": 64, "successful": 64, "output_tokens_per_s": 18.9177, "p95_ttft_ms": 187.4570, "p95_tpot_ms": 50.6323, "p95_e2e_ms": 3368.9646},
+    {"version": "0.5.17", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 1, "requests": 64, "successful": 64, "output_tokens_per_s": 18.8873, "p95_ttft_ms": 188.3657, "p95_tpot_ms": 50.5831, "p95_e2e_ms": 3373.6634},
+    {"version": "0.5.18", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 1, "requests": 64, "successful": 64, "output_tokens_per_s": 18.8278, "p95_ttft_ms": 204.2592, "p95_tpot_ms": 50.6793, "p95_e2e_ms": 3389.1829},
+    {"version": "0.5.16", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 4, "requests": 64, "successful": 64, "output_tokens_per_s": 79.5857, "p95_ttft_ms": 267.2663, "p95_tpot_ms": 47.3432, "p95_e2e_ms": 3250.8050},
+    {"version": "0.5.17", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 4, "requests": 64, "successful": 64, "output_tokens_per_s": 79.6365, "p95_ttft_ms": 272.9076, "p95_tpot_ms": 47.2837, "p95_e2e_ms": 3251.7878},
+    {"version": "0.5.18", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 4, "requests": 64, "successful": 64, "output_tokens_per_s": 80.1987, "p95_ttft_ms": 277.9671, "p95_tpot_ms": 46.9169, "p95_e2e_ms": 3235.7718},
+    {"version": "0.5.16", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 8, "requests": 64, "successful": 64, "output_tokens_per_s": 110.8349, "p95_ttft_ms": 3705.4983, "p95_tpot_ms": 48.4223, "p95_e2e_ms": 6755.6163},
+    {"version": "0.5.17", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 8, "requests": 64, "successful": 64, "output_tokens_per_s": 95.6118, "p95_ttft_ms": 3601.7677, "p95_tpot_ms": 47.9791, "p95_e2e_ms": 6617.2199},
+    {"version": "0.5.18", "input_tokens": 128, "output_tokens": 64, "max_concurrency": 8, "requests": 64, "successful": 64, "output_tokens_per_s": 111.7132, "p95_ttft_ms": 3678.6835, "p95_tpot_ms": 48.0140, "p95_e2e_ms": 6701.8397}
+  ],
+  "long_request_results": [
+    {"version": "0.5.16", "pass": 1, "input_tokens": 4096, "output_tokens": 128, "max_concurrency": 4, "requests": 32, "successful": 32, "output_tokens_per_s": 44.0447, "p95_ttft_ms": 5902.9804, "p95_tpot_ms": 60.9113, "p95_itl_ms": 50.4550, "max_itl_ms": 1944.61},
+    {"version": "0.5.16", "pass": 2, "input_tokens": 4096, "output_tokens": 128, "max_concurrency": 4, "requests": 32, "successful": 32, "output_tokens_per_s": 43.9145, "p95_ttft_ms": 5921.2023, "p95_tpot_ms": 60.5962, "p95_itl_ms": 50.0098, "max_itl_ms": 1877.49},
+    {"version": "0.5.17", "pass": 1, "input_tokens": 4096, "output_tokens": 128, "max_concurrency": 4, "requests": 32, "successful": 32, "output_tokens_per_s": 44.1247, "p95_ttft_ms": 5819.9103, "p95_tpot_ms": 71.4542, "p95_itl_ms": 48.6712, "max_itl_ms": 3121.59},
+    {"version": "0.5.18", "pass": 1, "input_tokens": 4096, "output_tokens": 128, "max_concurrency": 4, "requests": 32, "successful": 32, "output_tokens_per_s": 44.3279, "p95_ttft_ms": 5790.4995, "p95_tpot_ms": 70.8842, "p95_itl_ms": 48.3084, "max_itl_ms": 3109.77},
+    {"version": "0.5.18", "pass": 2, "input_tokens": 4096, "output_tokens": 128, "max_concurrency": 4, "requests": 32, "successful": 32, "output_tokens_per_s": 44.4249, "p95_ttft_ms": 5784.7060, "p95_tpot_ms": 71.0558, "p95_itl_ms": 48.2867, "max_itl_ms": 3072.33}
+  ]
+}
