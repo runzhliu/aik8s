@@ -173,13 +173,26 @@ def cover() -> None:
     draw.text((58, 91), "SGLang 0.5.16 / 0.5.17 / 0.5.18", font=font(38, bold=True, latin=True), fill="white")
     draw.text((58, 151), "一张 L20，升级真的更快吗？", font=font(30, bold=True), fill="#dbeafe")
     draw.text((58, 213), "短请求吞吐  ·  实际运行槽  ·  4K 尾延迟", font=font(20), fill="#bfdbfe")
-    draw.rounded_rectangle((58, 272, 360, 326), radius=27, fill="#2563eb")
-    draw.text((89, 286), "官方镜像 · 固定客户端", font=font(18, bold=True), fill="white")
+    button = (58, 272, 360, 326)
+    button_label = "官方镜像 · 固定客户端"
+    button_font = font(18, bold=True)
+    draw.rounded_rectangle(button, radius=27, fill="#2563eb")
+    text_box = draw.textbbox((0, 0), button_label, font=button_font)
+    text_width = text_box[2] - text_box[0]
+    text_height = text_box[3] - text_box[1]
+    text_x = (button[0] + button[2] - text_width) / 2 - text_box[0]
+    text_y = (button[1] + button[3] - text_height) / 2 - text_box[1]
+    draw.text((text_x, text_y), button_label, font=button_font, fill="white")
     draw.rounded_rectangle((674, 92, 842, 260), radius=24, fill="#0f2f66", outline="#60a5fa", width=2)
-    slots = [(707, 127, "6", "#64748b"), (774, 127, "5", "#f59e0b"), (740, 194, "6", "#2563eb")]
-    for x, y, value, color in slots:
-        draw.rounded_rectangle((x, y, x + 48, y + 48), radius=10, fill=color)
-        draw.text((x + 15, y + 7), value, font=font(25, bold=True, latin=True), fill="white")
+    nodes = [(692, 110), (774, 110), (692, 178), (774, 178)]
+    draw.line((736, 132, 774, 132), fill="#60a5fa", width=3)
+    draw.line((736, 200, 774, 200), fill="#60a5fa", width=3)
+    draw.line((714, 154, 714, 178), fill="#60a5fa", width=3)
+    draw.line((796, 154, 796, 178), fill="#60a5fa", width=3)
+    for x, y in nodes:
+        draw.rounded_rectangle((x, y, x + 44, y + 44), radius=9, fill="#1d4ed8", outline="#93c5fd", width=2)
+        draw.ellipse((x + 15, y + 15, x + 29, y + 29), fill="#dbeafe")
+    draw.text((791, 232), "SGL", font=font(15, bold=True, latin=True), fill="white")
     path = OUT_DIR / "sglang-0518-cover.png"
     image.save(path, format="PNG", optimize=True)
     print(f"generated: {path}")
