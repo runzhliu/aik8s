@@ -384,7 +384,7 @@ BNB 失败的现象与 Qwen3-MoE 的融合 Expert 表示有关：Transformers 5 
 
 ### 10.1 单机 8 × H20：20-Step 有验证集的 LoRA
 
-2026 年 8 月 24 日使用 `DeepSeek-V4-Flash-0731-FP8-DSpark` 完成一次真实 LoRA SFT。基座为 Block-FP8 权重，训练计算使用 BF16；并行策略为 `TP=1、PP=1、EP=8、DP=1`。数据沿用前文的 OpsRoute 合成故障分诊任务，但训练集、验证集和盲测模板族相互隔离。
+2026 年 8 月 24 日使用 `DeepSeek-V4-Flash-0731-FP8-DSpark` 完成一次真实 LoRA SFT。基座为 Block-FP8 权重，训练计算使用 BF16；并行策略为 `TP=1、PP=1、EP=8`。Megatron 对非 Expert 参数推导出的 Dense DP 为 8，而 Expert DP 为 1；两种 DP 口径的区别见 10.3 节。数据沿用前文的 OpsRoute 合成故障分诊任务，但训练集、验证集和盲测模板族相互隔离。
 
 | 项目 | 实测配置或结果 |
 | --- | --- |
@@ -420,13 +420,78 @@ Et*22|t*21L
 
 这里 `E` 是 Embedding，43 个 `t` 是 Transformer Layer，`L` 是 Loss。若布局里仍保留 `m`，Megatron 会在初始化阶段拒绝执行，因为布局中的 MTP 层数与 `mtp_num_layers=0` 不一致。
 
-### 10.3 单机 EP=8 与双机 PP=2 × EP=8 的 TCP 初测
+### 10.3 TP、PP、EP 和 DP 到底在切什么
+
+四种并行都在使用更多 GPU，但切分对象完全不同：
+
+| 并行方式 | 切分对象 | 每张 GPU 主要保存什么 | 主要通信 | 首要目标 |
+| --- | --- | --- | --- | --- |
+| TP：Tensor Parallel | 同一层内的矩阵和计算 | 一层权重的一部分 | 每层内频繁 All-Reduce、All-Gather 或 Reduce-Scatter | 让单层大矩阵放得下 |
+| PP：Pipeline Parallel | 模型深度 | 连续若干层 | 相邻 Stage 传 Activation，反向传 Gradient | 让很深的模型按层分段 |
+| EP：Expert Parallel | MoE 的 Expert | 一部分 Expert；Attention 和共享模块通常仍复制 | Router 后的 Token All-to-All | 让大量 Expert 权重分散到多卡 |
+| DP：Data Parallel | 输入 Batch | 一份完整模型或完整模型分片组 | 每 Step 同步 Gradient；ZeRO/FSDP 还会同步参数和优化器状态 | 提高样本吞吐 |
+
+可以把一次训练理解成下面四种分工：
+
+```text
+TP：一个 Transformer Layer 的大矩阵
+    ├─ GPU 0 保存/计算矩阵分片 0
+    └─ GPU 1 保存/计算矩阵分片 1
+       两张卡合起来才完成这一层
+
+PP：Input → GPU 组 0：Layer 1～22 → GPU 组 1：Layer 23～43 → Loss
+    多个 Micro Batch 像流水线一样依次通过各 Stage
+
+EP：Token → Router → GPU 0 的 Expert 0～31
+                  → GPU 1 的 Expert 32～63
+                  → ...
+    计算后再把 Token 送回原来的序列位置
+
+DP：Batch A → 完整模型组 0 ┐
+    Batch B → 完整模型组 1 ├─ 同步 Gradient 后更新相同参数
+    Batch C → 完整模型组 2 ┘
+```
+
+它们对性能和显存的影响也不同：
+
+- **TP** 会减少单层权重和部分 Activation 的每卡占用，但几乎每层都要通信，通常最依赖节点内 NVLink/NVSwitch，不宜首先跨普通以太网；当前 DeepSeek V4 专项训练方案也暂不支持 `TP>1`。
+- **PP** 能近似按 Stage 数减少每卡持有的层数，但会产生 Pipeline Bubble。Micro Batch 太少时，后面的 Stage 经常等前面的 Stage，增加 GPU 不一定更快。
+- **EP** 只分散 MoE Expert，不能把 Attention、Embedding、Router 和共享 Expert 都自动除以 EP。它的 All-to-All 会随 Token 数和路由分布增长，是 DeepSeek 这类 MoE 关注 RDMA 的重要原因。
+- **DP** 让不同副本处理不同样本，最直接提升吞吐；普通 DDP 不减少模型权重显存，ZeRO/FSDP 才会进一步切分 Gradient、Optimizer State 或参数。
+
+#### 为什么不能直接写 `GPU 数 = TP × PP × EP × DP`
+
+在纯 Dense 模型里，忽略 Context Parallel 时，常用关系是：
+
+```text
+World Size = TP × PP × Dense DP
+```
+
+但 Megatron 的 MoE Rank 同时存在两套视角。EP 会复用 Dense DP 域中的 Rank 来切 Expert，并不是再乘一个完全独立的轴。Expert 权重使用另一条关系：
+
+```text
+World Size = Expert TP × EP × PP × Expert DP
+```
+
+所以一个 MoE Run 只写一个 `DP` 容易产生误解。以本次实测为例：
+
+| 拓扑 | World Size | TP | PP | EP | Dense DP | Expert DP | 实际含义 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 单机 8 GPU | 8 | 1 | 1 | 8 | 8 | 1 | 8 个 Rank 各处理一份 Micro Batch，同时各持有约 1/8 的 Expert；Expert 没有副本 |
+| 双机 16 GPU | 16 | 1 | 2 | 8 | 8 | 1 | 先分成 2 个 Pipeline Stage；每个 Stage 内再用 8 个 Rank 分 Expert，Expert 仍没有副本 |
+
+单机配置的 `Global Batch=8、Micro Batch=1` 也可以由 Dense DP 解释：`1 × Dense DP 8 = 8`，不需要额外梯度累积。双机增加的是 PP Stage，不是第二份数据副本，因此 Global Batch 仍为 8。
+
+最实用的选型顺序是：层本身放不下先看 TP，模型太深或整模型放不下看 PP，MoE Expert 太多看 EP，希望提高样本吞吐再增加 DP；长序列还要另外考虑 CP。四者通常组合使用，而不是互相替代。以上定义与进程组关系可对照 [Megatron Core 并行策略指南](https://docs.nvidia.com/megatron-core/developer-guide/latest/user-guide/parallelism-guide.html) 和 [Megatron Core `parallel_state.py`](https://github.com/NVIDIA/Megatron-LM/blob/main/megatron/core/parallel_state.py)。
+
+### 10.4 单机 EP=8 与双机 PP=2 × EP=8 的 TCP 初测
 
 为了把 Checkpoint 和验证开销排除，另用同一模型、12 条固定数据、4 个 Optimizer Step、相同 LoRA、最大长度和 Global Batch 跑了 no-save 对照。双机组显式禁用 RDMA，并从 NCCL 配置确认走以太网 Socket。
 
 | 口径 | 单机 8 GPU | 双机 16 GPU，TCP | 变化 |
 | --- | ---: | ---: | ---: |
-| TP / PP / EP / DP | 1 / 1 / 8 / 1 | 1 / 2 / 8 / 1 | 仅增加 Pipeline Stage |
+| TP / PP / EP | 1 / 1 / 8 | 1 / 2 / 8 | 仅增加 Pipeline Stage |
+| Dense DP / Expert DP | 8 / 1 | 8 / 1 | 两组都没有 Expert 副本 |
 | 第 1 步累计耗时 | 63.09 s | 91.33 s | +44.8% |
 | 第 4 步累计耗时 | 100.78 s | 151.50 s | +50.3% |
 | 第 4 步累计均值 | 25.20 s/Step | 37.88 s/Step | +50.3% |
@@ -440,7 +505,7 @@ Et*22|t*21L
 
 本轮没有启动 RDMA 对照。原因是空闲 GPU 节点未暴露可申请的 RDMA 扩展资源，而具备完整 RDMA 资源的节点 GPU 已被其他工作负载占满。这里把结论明确写成“RDMA 未测”，不根据能力标签、理论带宽或其他节点的数据推算收益。
 
-### 10.4 公开复现模板
+### 10.5 公开复现模板
 
 安装当前公开要求的组件：
 

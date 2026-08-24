@@ -47,7 +47,8 @@
       "tp": 1,
       "pp": 1,
       "ep": 8,
-      "dp": 1
+      "dense_dp": 8,
+      "expert_dp": 1
     },
     "training": {
       "method": "BF16 LoRA over block-FP8 base weights",
@@ -113,7 +114,7 @@
       "checkpoint_and_eval_disabled": true
     },
     "single_node_ep8": {
-      "parallelism": {"tp": 1, "pp": 1, "ep": 8, "dp": 1},
+      "parallelism": {"tp": 1, "pp": 1, "ep": 8, "dense_dp": 8, "expert_dp": 1},
       "loss": [3.72533107, 3.96866822, 3.53763485, 3.05626607],
       "cumulative_elapsed_seconds": [63.091139, 93.504098, 97.082931, 100.78148],
       "final_cumulative_mean_seconds_per_step": 25.19537,
@@ -121,7 +122,7 @@
       "framework_peak_memory_gib_per_gpu": 84.87
     },
     "two_node_tcp_pp2_ep8": {
-      "parallelism": {"tp": 1, "pp": 2, "ep": 8, "dp": 1},
+      "parallelism": {"tp": 1, "pp": 2, "ep": 8, "dense_dp": 8, "expert_dp": 1},
       "pipeline_layout": "Et*22|t*21L",
       "transport": "NCCL Socket over Ethernet",
       "rdma_explicitly_disabled": true,
