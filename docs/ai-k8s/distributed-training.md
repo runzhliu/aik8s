@@ -11,7 +11,7 @@ last_reviewed: 2026-08-04
 
 如果数据处理、训练、Tune、后训练 Rollout 和在线服务计划统一使用 Ray，见[Ray 在大模型训练与推理中的角色](ray-llm-platform.md)。
 
-如果目标是先亲手跑通一次大模型 SFT，再逐步扩展到 MoE 和 DeepSeek V4，见[大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](training/sft-from-single-gpu-to-deepseek-v4.md)。该实验先用单卡 LoRA 验证数据、Loss、Adapter 和推理闭环，再给出完整 V4-Flash 的八卡升级入口。
+如果还不熟悉 Loss、LoRA、Batch、Epoch、DP、TP、PP 和 EP，先读[大模型 SFT 入门：把常见名词一次讲明白](training/sft-concepts.md)。如果目标是亲手跑通训练，再逐步扩展到 MoE 和 DeepSeek V4，见[大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](training/sft-from-single-gpu-to-deepseek-v4.md)。该实验先用单卡 LoRA 验证数据、Loss、Adapter 和推理闭环，再给出完整 V4-Flash 的八卡升级入口。
 
 ## 1. 一次训练任务经过什么
 

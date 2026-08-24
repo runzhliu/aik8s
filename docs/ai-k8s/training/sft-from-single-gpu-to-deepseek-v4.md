@@ -7,6 +7,8 @@ last_reviewed: 2026-08-24
 
 # 大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4
 
+如果还不熟悉 Loss、LoRA、QLoRA、Batch、Epoch、Checkpoint、DP、TP、PP 和 EP，建议先读[大模型 SFT 入门：把常见名词一次讲明白](sft-concepts.md)，再继续本章的真实实验。
+
 直接把第一次 SFT 放在 284B 的 DeepSeek V4 Flash 上，会把数据格式、训练参数、分布式通信、精度转换和 Checkpoint 问题同时引入。更容易成功的路线是先用相同的数据格式和训练框架，在一张 GPU 上完成一个可以验收的 LoRA 闭环；只有这个闭环稳定后，再切换到 Megatron-SWIFT 和完整 MoE 模型。
 
 本章提供三条路径：
