@@ -158,8 +158,8 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 
 ## 关注微信公众号
 
-更多 AI/LLM on Kubernetes 实战、部署记录与性能分析会同步到微信公众号 **runzhliu**。使用微信扫描二维码，或在“微信搜一搜”中搜索 `runzhliu`：
+更多 AI/LLM on Kubernetes 实战、部署记录与性能分析会同步到微信公众号 **AI-K8S技术工程**。使用微信扫描二维码，或在“微信搜一搜”中搜索 `AI-K8S技术工程`：
 
 <p align="center">
-  <img src="assets/wechat-official-account-promo.png" alt="扫描二维码或通过微信搜一搜关注公众号 runzhliu" width="900">
+  <img src="assets/wechat-official-account-promo.png" alt="扫描二维码或通过微信搜一搜关注公众号 AI-K8S技术工程" width="900">
 </p>

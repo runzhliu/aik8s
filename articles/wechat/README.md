@@ -16,7 +16,7 @@ $EDITOR .deploy-secrets/wechat.env
 ```dotenv
 WECHAT_APP_ID=<公众号 AppID>
 WECHAT_APP_SECRET=<公众号 AppSecret>
-WECHAT_AUTHOR=runzhliu
+WECHAT_AUTHOR=AI-K8S技术工程
 # 可选的默认“阅读原文”地址；也可以在 make 命令中逐篇覆盖
 WECHAT_SOURCE_URL=https://aik8s.run/path/to/article/
 ```

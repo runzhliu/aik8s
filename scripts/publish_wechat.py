@@ -385,7 +385,7 @@ def command_draft(args: argparse.Namespace) -> None:
     load_env_file(args.env_file)
     app_id = required_env("WECHAT_APP_ID")
     app_secret = required_env("WECHAT_APP_SECRET")
-    author = os.environ.get("WECHAT_AUTHOR", "runzhliu").strip()
+    author = os.environ.get("WECHAT_AUTHOR", "AI-K8S技术工程").strip()
     source_url = (
         args.source_url.strip()
         if args.source_url is not None
@@ -419,7 +419,7 @@ def command_update(args: argparse.Namespace) -> None:
     load_env_file(args.env_file)
     app_id = required_env("WECHAT_APP_ID")
     app_secret = required_env("WECHAT_APP_SECRET")
-    author = os.environ.get("WECHAT_AUTHOR", "runzhliu").strip()
+    author = os.environ.get("WECHAT_AUTHOR", "AI-K8S技术工程").strip()
     source_url = (
         args.source_url.strip()
         if args.source_url is not None
