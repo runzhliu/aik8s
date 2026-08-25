@@ -13,6 +13,11 @@ RESULT = (
     / "examples/llm-sft-lab/meaningful-sft/results"
     / "h20-deepseek-v4-rdma-tcp-20260825.json"
 )
+CONVERGENCE_RESULT = (
+    ROOT
+    / "examples/llm-sft-lab/meaningful-sft/results"
+    / "h20-deepseek-v4-convergence-20260825.json"
+)
 OUTPUT = ROOT / "docs/assets/training/deepseek-v4-rdma"
 
 NAVY = "#0b1f44"
@@ -140,13 +145,58 @@ def render_topology(data: dict) -> str:
     return finish(parts, "拓扑图只展示通信域关系；每个节点实际使用 8 张 GPU。")
 
 
+def render_convergence(data: dict) -> str:
+    validation = data["metrics"]["validation_loss"]
+    best_step = data["metrics"]["best_validation_step"]
+    best_loss = data["metrics"]["best_validation_loss"]
+    final_loss = validation[-1]["loss"]
+    increase = data["metrics"]["validation_loss_increase_best_to_step60_percent"]
+    parts = svg_start(
+        "60 Step 收敛实验：Train Loss 继续下降，Validation 已经回升",
+        "DeepSeek V4 Flash · 2 节点 × 8 GPU · EP=16 · GDRDMA · 每 10 Step 验证",
+    )
+    x0, y0, chart_w, chart_h = 110, 180, 1050, 330
+    max_loss = 0.6
+    for tick in range(7):
+        value = tick * 0.1
+        y = y0 + chart_h - chart_h * value / max_loss
+        parts.append(f'<line x1="{x0}" y1="{y:.1f}" x2="{x0 + chart_w}" y2="{y:.1f}" stroke="{GRID}"/>')
+        parts.append(f'<text x="{x0 - 18}" y="{y + 5:.1f}" text-anchor="end" font-family="system-ui,sans-serif" font-size="15" fill="{SLATE}">{value:.1f}</text>')
+    for item in validation:
+        x = x0 + chart_w * (item["step"] - 10) / 50
+        parts.append(f'<line x1="{x:.1f}" y1="{y0}" x2="{x:.1f}" y2="{y0 + chart_h}" stroke="{GRID}"/>')
+        parts.append(f'<text x="{x:.1f}" y="{y0 + chart_h + 30}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="{SLATE}">{item["step"]}</text>')
+    best_x = x0 + chart_w * (best_step - 10) / 50
+    parts.append(f'<rect x="{best_x:.1f}" y="{y0}" width="{x0 + chart_w - best_x:.1f}" height="{chart_h}" fill="#fff7ed" opacity="0.85"/>')
+    points = []
+    for item in validation:
+        x = x0 + chart_w * (item["step"] - 10) / 50
+        y = y0 + chart_h - chart_h * item["loss"] / max_loss
+        points.append(f"{x:.1f},{y:.1f}")
+    parts.append(f'<polyline points="{" ".join(points)}" fill="none" stroke="{BLUE}" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>')
+    for item in validation:
+        x = x0 + chart_w * (item["step"] - 10) / 50
+        y = y0 + chart_h - chart_h * item["loss"] / max_loss
+        color = GREEN if item["step"] == best_step else BLUE
+        radius = 10 if item["step"] == best_step else 7
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{radius}" fill="{color}" stroke="white" stroke-width="4"/>')
+        parts.append(f'<text x="{x:.1f}" y="{y - 18:.1f}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="{NAVY}">{item["loss"]:.4f}</text>')
+    parts.append(f'<text x="{best_x + 24:.1f}" y="{y0 + 34}" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="{ORANGE}">Step {best_step} 之后：过拟合观察区</text>')
+    parts.append(f'<rect x="64" y="566" width="1152" height="76" rx="16" fill="{NAVY}"/>')
+    parts.append(f'<text x="100" y="614" font-family="system-ui,sans-serif" font-size="24" font-weight="700" fill="white">最佳 Validation Loss：{best_loss:.5f}（Step {best_step}）</text>')
+    parts.append(f'<text x="1160" y="614" text-anchor="end" font-family="system-ui,sans-serif" font-size="23" font-weight="800" fill="{ORANGE}">Step 60：{final_loss:.5f} · 回升 {increase:.2f}%</text>')
+    return finish(parts, "结论：继续压低 Train Loss 不等于泛化继续改善；保存间隔应与验证间隔对齐。")
+
+
 def main() -> None:
     data = json.loads(RESULT.read_text(encoding="utf-8"))
+    convergence = json.loads(CONVERGENCE_RESULT.read_text(encoding="utf-8"))
     OUTPUT.mkdir(parents=True, exist_ok=True)
     assets = {
         "sft-step-time.svg": render_sft(data),
         "nccl-bandwidth.svg": render_nccl(data),
         "topology-matters.svg": render_topology(data),
+        "convergence-validation.svg": render_convergence(convergence),
     }
     for name, content in assets.items():
         (OUTPUT / name).write_text(content, encoding="utf-8")

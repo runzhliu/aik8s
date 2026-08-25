@@ -1,0 +1,114 @@
+{
+  "status": "meaningful_convergence_completed_effect_pending",
+  "date": "2026-08-25",
+  "objective": "Use a longer two-node LoRA run with an isolated validation set to distinguish real optimization progress from a short performance smoke test.",
+  "model": {
+    "id": "DeepSeek-V4-Flash-0731-FP8-DSpark",
+    "weight_format": "block_fp8",
+    "training_compute": "bf16",
+    "trained_mtp_layers": 0
+  },
+  "hardware": {
+    "nodes": 2,
+    "gpu_count": 16,
+    "gpu_model": "NVIDIA H20",
+    "visible_memory_mib_per_gpu": 143771,
+    "peak_framework_memory_gib_per_gpu": 50.87
+  },
+  "parallelism": {
+    "world_size": 16,
+    "tp": 1,
+    "pp": 1,
+    "ep": 16,
+    "dense_dp": 16,
+    "expert_dp": 1
+  },
+  "transport": {
+    "type": "GPUDirect RDMA",
+    "nccl_evidence": [
+      "NET/IB/.../GDRDMA",
+      "GPU Direct RDMA Enabled",
+      "Connected all rings, use ring PXN 1 GDR 1"
+    ],
+    "topology": "Each of the eight GPUs had a PIX-local NIC in nvidia-smi topo -m; NCCL mapped the eight cross-node ranks to eight HCA paths.",
+    "interpretation": "This run validates the GDRDMA path but is not an isolated transport benchmark. The matched three-round TCP versus GDRDMA result is recorded separately."
+  },
+  "dataset": {
+    "task": "OpsRoute synthetic fault-triage JSON classification",
+    "train_examples": 330,
+    "validation_examples_configured": 55,
+    "blind_test_examples_prepared_but_not_run": 110,
+    "train_sha256": "f89e2b537fab145cd176da52f21cfb708ee085fd4465ebe3c3540340745002f3",
+    "validation_sha256": "a3bd49e8dd45177db6c5513dd6e89cef9172b2bda665baaa065c577b315c3b9d",
+    "blind_test_sha256": "44adb4db5a40c4983665476598b76243015be26f303aa2f9d001dc316bc4093e",
+    "mean_train_tokens": 243.539394,
+    "mean_validation_tokens": 241.254545,
+    "eval_iters_per_event": 3
+  },
+  "training": {
+    "method": "LoRA over a block-FP8 base checkpoint",
+    "target_modules": "all-linear",
+    "lora_rank": 16,
+    "lora_alpha": 32,
+    "max_length": 512,
+    "micro_batch_size": 1,
+    "global_batch_size": 16,
+    "train_steps": 60,
+    "approximate_dataset_passes": 2.91,
+    "eval_steps": 10,
+    "save_steps": 20,
+    "checkpoints_generated": [20, 40, 60],
+    "job_wall_seconds_including_startup_and_export": 657,
+    "swanlab_run_seconds": 371,
+    "train_metric_window_seconds": 275
+  },
+  "metrics": {
+    "train_loss": [
+      {"step": 1, "loss": 1.5058794021606443},
+      {"step": 10, "loss": 0.6664772033691406},
+      {"step": 20, "loss": 0.04238556697964668},
+      {"step": 30, "loss": 0.017863770946860313},
+      {"step": 40, "loss": 0.001864682650193572},
+      {"step": 50, "loss": 0.0008269816171377897},
+      {"step": 60, "loss": 0.000297859514830634}
+    ],
+    "validation_loss": [
+      {"step": 10, "loss": 0.545049250125885},
+      {"step": 20, "loss": 0.06901756674051285},
+      {"step": 30, "loss": 0.04058664292097092},
+      {"step": 40, "loss": 0.04132511466741562},
+      {"step": 50, "loss": 0.05687964707612991},
+      {"step": 60, "loss": 0.0646347627043724}
+    ],
+    "best_validation_step": 30,
+    "best_validation_loss": 0.04058664292097092,
+    "validation_loss_reduction_step10_to_best_percent": 92.55,
+    "validation_loss_increase_best_to_step60_percent": 59.25,
+    "best_generated_checkpoint_step": 40,
+    "best_generated_checkpoint_validation_loss": 0.04132511466741562,
+    "final_cumulative_train_speed_seconds_per_iteration": 5.402724
+  },
+  "tracking": {
+    "backend": "self-hosted SwanLab",
+    "experiment_state": "FINISHED",
+    "numeric_columns": [
+      "eval/loss",
+      "eval/seq_load_balancing_loss",
+      "train/loss",
+      "train/grad_norm",
+      "train/learning_rate",
+      "train/memory(GiB)",
+      "train/seq_load_balancing_loss",
+      "train/train_speed(s_it)"
+    ],
+    "public_record_omits_private_run_url_and_id": true
+  },
+  "conclusion": "The adapter learned the synthetic task and generalized to the held-out validation template families through about step 30. Train loss continued to fall while validation loss rose after step 30, which is direct evidence of overfitting rather than continued useful learning.",
+  "known_limitations": [
+    "The isolated 110-example Base-versus-Adapter blind generation test was not executed, so token loss is not reported as task accuracy.",
+    "The framework automatically selected three validation iterations per event; this run did not independently prove that every one of the 55 configured validation rows contributed to every metric.",
+    "save_steps was 20 while eval_steps was 10, so the exact best state at step 30 was not checkpointed; among generated checkpoints, step 40 had the lowest validation loss.",
+    "Checkpoints were generated on ephemeral Pod volumes and are intentionally not a durable model artifact after workload cleanup.",
+    "This is a convergence experiment with GDRDMA enabled, not an isolated measurement of GDRDMA versus host-staged RDMA."
+  ]
+}

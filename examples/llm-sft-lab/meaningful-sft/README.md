@@ -146,6 +146,8 @@ Base 能理解故障语义，却为几乎每种场景生成自己的英文标签
 
 初测时没有在缺少可申请 RDMA 资源的节点上伪造结果。后续资源可用后，先补做 `PP=2 / EP=8` 负对照，TCP `4.109` 与 RDMA `4.124 秒/Step` 没有可测差异；再改用会让 MoE All-to-All 与 Dense DP 同步跨节点的 `PP=1 / EP=16 / Dense DP=16`，完成 TCP 与 RDMA 各三轮 A/B。稳定步耗时中位数由 `4.490` 降到 `3.050 秒`，等价吞吐提升 `47.23%`。完整原始数据见 [`results/h20-deepseek-v4-rdma-tcp-20260825.json`](results/h20-deepseek-v4-rdma-tcp-20260825.json)，初始训练记录仍保存在 [`results/h20-deepseek-v4-flash-0731-20260824.json`](results/h20-deepseek-v4-flash-0731-20260824.json)。
 
+随后又使用相同双机 `PP=1 / EP=16 / Dense DP=16` 拓扑和 GDRDMA 完成 60-Step 收敛实验。Train Loss 持续降到 `0.00030`，Validation Loss 却在 Step 30 达到最佳 `0.04059` 后回升，Step 60 比最佳点高 `59.25%`，构成小规模数据过拟合的直接证据。由于 `eval_steps=10`、`save_steps=20`，精确的最佳 Step 30 没有保存；110 条隔离 Blind Test 也尚未执行。逐点指标、配置和限制见 [`results/h20-deepseek-v4-convergence-20260825.json`](results/h20-deepseek-v4-convergence-20260825.json)。
+
 ## 历史对照：Qwen3-4B 单张 L20 实测
 
 2026 年 8 月 20 日使用 `Qwen3-4B-Instruct-2507 + ms-swift 4.4.1 + BF16 LoRA` 完成了完整 A/B。训练样本平均 265 Token，120 Step 耗时 257.6 秒，框架记录峰值显存 8.1 GiB。验证集最佳 Checkpoint 出现在 Step 60，Validation Loss 为 0.0426。

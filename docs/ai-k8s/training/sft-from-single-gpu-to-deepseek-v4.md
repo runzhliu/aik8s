@@ -1,8 +1,8 @@
 ---
 title: 大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4
-description: 用 Qwen3.5-4B 跑通 LoRA、SwanLab 与盲测闭环，再用 8 至 16 张 H20 实测 DeepSeek V4 Flash 的 Expert Parallel、Pipeline Parallel 和跨机 TCP
+description: 用 Qwen3.5-4B 跑通 LoRA、SwanLab 与盲测闭环，再用 8 至 16 张 H20 实测 DeepSeek V4 Flash 的 Expert Parallel、跨机 GDRDMA 与过拟合拐点
 status: evolving
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-25
 ---
 
 # 大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4
@@ -15,7 +15,7 @@ last_reviewed: 2026-08-24
 
 1. **可立即运行且能量化效果的实验**：单卡 `Qwen3.5-4B + ms-swift + LoRA`，完成 Base/Adapter 盲测；
 2. **较新 MoE 的多卡实验**：单机八卡 `Qwen3.6-35B-A3B + ZeRO-3 + LoRA`，验证分片加载、训练、验证和 Checkpoint；
-3. **完整 DeepSeek V4 Flash 实测**：单机 `8 × H20 + EP=8` 完成 20-Step 训练，再用双机 `PP=2 × EP=8` 跑通强制 TCP 对照。
+3. **完整 DeepSeek V4 Flash 实测**：单机 `8 × H20 + EP=8` 跑通训练，再用双机 16 卡完成 TCP/GDRDMA 对照和 60-Step 收敛实验。
 
 配套脚本和示例数据位于 [`examples/llm-sft-lab`](https://github.com/runzhliu/aik8s/tree/main/examples/llm-sft-lab)。示例不包含集群名、内部镜像、存储地址和网络配置。
 
@@ -601,6 +601,27 @@ N 卡扩展效率 = N 卡 samples/s ÷（单卡 samples/s × N）
 
 NCCL 日志分别确认 TCP 组使用 `NET/Socket`，RDMA 组使用 `NET/IB/.../GDRDMA/Shared`。微基准比例只说明链路能力，不等于训练加速比；真实 SFT 最终兑现的是约 32% 的稳定步耗时下降。完整三轮原始数据、负对照、SwanLab 截图与复现口径见[RDMA 到底能让分布式训练快多少：DeepSeek V4 双机 16 卡实测](rdma-distributed-training-benchmark.md)。
 
+### 11.3 双机 60-Step 收敛实验：最佳点不是最后一步
+
+前面的 20-Step TCP/RDMA A/B 用于比较性能，不能回答模型是否继续泛化。为此又在相同的双机 16 卡 `TP=1 / PP=1 / EP=16 / Dense DP=16` 拓扑上单独运行一次 60-Step LoRA，使用 330 条训练数据和 55 条隔离 Validation，固定 GDRDMA，并每 10 Step 验证一次。
+
+| 项目 | 配置或结果 |
+| --- | --- |
+| 最大长度 / Micro Batch / Global Batch | 512 / 1 / 16 |
+| LoRA | Rank 16、Alpha 32、`all-linear` |
+| 训练 / 验证 / 保存间隔 | 60 / 10 / 20 Step |
+| 近似数据轮数 | 2.91 Epoch |
+| 框架记录峰值显存 | 50.87 GiB/GPU |
+| Train Loss | 1.50588 → 0.00030 |
+| 最佳 Validation | Step 30，0.04059 |
+| 最终 Validation | Step 60，0.06463；比最佳点回升 59.25% |
+
+![双机 60-Step DeepSeek V4 Validation Loss](../../assets/training/deepseek-v4-rdma/convergence-validation.svg)
+
+这次终于观察到了短 Smoke 看不到的拐点：Train Loss 从 Step 30 的 `0.01786` 一路降到 Step 60 的 `0.00030`，Validation Loss 却在 Step 30 触底后连续回升。它说明 Adapter 已经开始记忆这批小规模合成训练数据，继续训练反而削弱了对隔离模板族的泛化。正式训练因此应该按 Validation 选择和早停，而不是默认发布最后一步。
+
+实验也暴露了一个可复现性问题：`eval_steps=10`、`save_steps=20` 导致精确的最佳 Step 30 没有保存；现存三个 Checkpoint 中只能选择 Validation 次优的 Step 40。下一轮应让保存间隔覆盖每个验证点，或启用“最佳指标触发保存”。此外，框架每次自动只运行 3 个 Validation Iteration，本轮没有独立证明 55 条配置数据都参加了每次验证；110 条 Blind Test 也尚未执行，因此不能把 Token Loss 写成任务准确率。公开的逐点数值见 [`h20-deepseek-v4-convergence-20260825.json`](https://github.com/runzhliu/aik8s/blob/main/examples/llm-sft-lab/meaningful-sft/results/h20-deepseek-v4-convergence-20260825.json)。
+
 ## 12. 用 SwanLab 管训练实验，用 Grafana 看基础设施
 
 TensorBoard 适合快速查看本地曲线，但多人共享训练集群后，项目、Run、超参数、标签、实验对比和访问控制会成为新的需求。此时可把 SwanLab 作为实验追踪层，把 Prometheus、DCGM Exporter 和 Grafana 保留为基础设施监控层：
@@ -689,7 +710,7 @@ known_limitations:
 3. 已完成初测：单机双卡与双机单卡的 NCCL 对照，以及双机单卡 TCP 的 SFT 强扩展；
 4. 已完成：DeepSeek V4 Flash 0731 在单机 8 张 H20 上完成 20-Step LoRA、四次 Validation、四个 Checkpoint 和 SwanLab 上报；
 5. 已完成：双机 `PP=2 / EP=8` TCP/RDMA 负对照无可测收益；双机 `PP=1 / EP=16 / Dense DP=16` 各完成三轮 TCP/RDMA A/B，稳定步耗时下降 32.08%，等价吞吐提升 47.23%；
-6. 待补效果闭环：对 DeepSeek V4 的 110 条隔离 Blind Test 运行 Base/Adapter A/B，不能用 Validation Loss 替代；
+6. 已完成收敛观察、待补效果闭环：双机 GDRDMA 60-Step 在 Step 30 取得最佳 Validation，Step 60 回升 59.25%；下一轮对 110 条隔离 Blind Test 运行 Base/Adapter A/B；
 7. 把合成故障分诊数据换成经过人工审核的真实小数据集，运行 100～500 Step，并重新制作从未用于调参的盲测；
 8. 只有正确性和评测通过后，才扩大数据、长度和训练时间，并设计多机全参数训练与 Checkpoint 基线。
 

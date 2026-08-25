@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<rect width="1280" height="720" fill="#f8fafc"/>
+<text x="64" y="76" font-family="system-ui,sans-serif" font-size="34" font-weight="700" fill="#0b1f44">60 Step 收敛实验：Train Loss 继续下降，Validation 已经回升</text>
+<text x="64" y="112" font-family="system-ui,sans-serif" font-size="18" fill="#64748b">DeepSeek V4 Flash · 2 节点 × 8 GPU · EP=16 · GDRDMA · 每 10 Step 验证</text>
+<line x1="110" y1="510.0" x2="1160" y2="510.0" stroke="#dbe4f0"/>
+<text x="92" y="515.0" text-anchor="end" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">0.0</text>
+<line x1="110" y1="455.0" x2="1160" y2="455.0" stroke="#dbe4f0"/>
+<text x="92" y="460.0" text-anchor="end" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">0.1</text>
+<line x1="110" y1="400.0" x2="1160" y2="400.0" stroke="#dbe4f0"/>
+<text x="92" y="405.0" text-anchor="end" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">0.2</text>
+<line x1="110" y1="345.0" x2="1160" y2="345.0" stroke="#dbe4f0"/>
+<text x="92" y="350.0" text-anchor="end" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">0.3</text>
+<line x1="110" y1="290.0" x2="1160" y2="290.0" stroke="#dbe4f0"/>
+<text x="92" y="295.0" text-anchor="end" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">0.4</text>
+<line x1="110" y1="235.0" x2="1160" y2="235.0" stroke="#dbe4f0"/>
+<text x="92" y="240.0" text-anchor="end" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">0.5</text>
+<line x1="110" y1="180.0" x2="1160" y2="180.0" stroke="#dbe4f0"/>
+<text x="92" y="185.0" text-anchor="end" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">0.6</text>
+<line x1="110.0" y1="180" x2="110.0" y2="510" stroke="#dbe4f0"/>
+<text x="110.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">10</text>
+<line x1="320.0" y1="180" x2="320.0" y2="510" stroke="#dbe4f0"/>
+<text x="320.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">20</text>
+<line x1="530.0" y1="180" x2="530.0" y2="510" stroke="#dbe4f0"/>
+<text x="530.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">30</text>
+<line x1="740.0" y1="180" x2="740.0" y2="510" stroke="#dbe4f0"/>
+<text x="740.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">40</text>
+<line x1="950.0" y1="180" x2="950.0" y2="510" stroke="#dbe4f0"/>
+<text x="950.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">50</text>
+<line x1="1160.0" y1="180" x2="1160.0" y2="510" stroke="#dbe4f0"/>
+<text x="1160.0" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">60</text>
+<rect x="530.0" y="180" width="630.0" height="330" fill="#fff7ed" opacity="0.85"/>
+<polyline points="110.0,210.2 320.0,472.0 530.0,487.7 740.0,487.3 950.0,478.7 1160.0,474.5" fill="none" stroke="#2563eb" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="110.0" cy="210.2" r="7" fill="#2563eb" stroke="white" stroke-width="4"/>
+<text x="110.0" y="192.2" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#0b1f44">0.5450</text>
+<circle cx="320.0" cy="472.0" r="7" fill="#2563eb" stroke="white" stroke-width="4"/>
+<text x="320.0" y="454.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#0b1f44">0.0690</text>
+<circle cx="530.0" cy="487.7" r="10" fill="#10b981" stroke="white" stroke-width="4"/>
+<text x="530.0" y="469.7" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#0b1f44">0.0406</text>
+<circle cx="740.0" cy="487.3" r="7" fill="#2563eb" stroke="white" stroke-width="4"/>
+<text x="740.0" y="469.3" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#0b1f44">0.0413</text>
+<circle cx="950.0" cy="478.7" r="7" fill="#2563eb" stroke="white" stroke-width="4"/>
+<text x="950.0" y="460.7" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#0b1f44">0.0569</text>
+<circle cx="1160.0" cy="474.5" r="7" fill="#2563eb" stroke="white" stroke-width="4"/>
+<text x="1160.0" y="456.5" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#0b1f44">0.0646</text>
+<text x="554.0" y="214" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#f97316">Step 30 之后：过拟合观察区</text>
+<rect x="64" y="566" width="1152" height="76" rx="16" fill="#0b1f44"/>
+<text x="100" y="614" font-family="system-ui,sans-serif" font-size="24" font-weight="700" fill="white">最佳 Validation Loss：0.04059（Step 30）</text>
+<text x="1160" y="614" text-anchor="end" font-family="system-ui,sans-serif" font-size="23" font-weight="800" fill="#f97316">Step 60：0.06463 · 回升 59.25%</text>
+<text x="64" y="684" font-family="system-ui,sans-serif" font-size="15" fill="#64748b">结论：继续压低 Train Loss 不等于泛化继续改善；保存间隔应与验证间隔对齐。</text>
+</svg>

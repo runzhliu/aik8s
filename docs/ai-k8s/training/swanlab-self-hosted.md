@@ -1,8 +1,8 @@
 ---
 title: SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标
-description: 在 Kubernetes 部署 SwanLab，接入 ms-swift，区分实验追踪与基础设施监控，并用 Qwen3.5、Qwen3.6 MoE 和 DeepSeek V4 的真实 SFT 验证指标链路
+description: 在 Kubernetes 部署 SwanLab，接入 ms-swift，区分实验追踪与基础设施监控，并用 Qwen3.5、Qwen3.6 MoE 和 DeepSeek V4 的真实 SFT 验证指标链路与过拟合拐点
 status: evolving
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-25
 ---
 
 # SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标
@@ -185,6 +185,12 @@ SwanLab 能显示 Train Loss、Gradient Norm、Learning Rate、Token Accuracy �
 ![SwanLab 中的六轮 DeepSeek V4 TCP/RDMA 实验](../../assets/training/deepseek-v4-rdma/swanlab-runs.png)
 
 这张图也说明 SwanLab 和网络监控的边界：它负责 Run、参数和训练指标对比，但不能证明底层流量实际走了 RDMA。Transport 仍由 NCCL INFO 的 `NET/Socket`、`NET/IB` 与 `GDRDMA` 日志验收，NIC Counter 和拥塞则交给 Prometheus/Grafana。完整正负对照与原始数据见 [DeepSeek V4 双机 RDMA 训练实测](rdma-distributed-training-benchmark.md)。
+
+同日还完成了一次独立的双机 16 卡、60-Step DeepSeek V4 收敛 Run。SwanLab 正常记录 8 列数值指标并以 `FINISHED` 结束；Validation Loss 在 Step 30 达到最低 `0.04059`，随后在 Train Loss 继续下降时回升，到 Step 60 为 `0.06463`。这组曲线让实验追踪从“证明 SDK 能上报”进一步变成训练决策依据：小数据 SFT 应按 Validation 择优或早停，不能默认选择最后一步。
+
+![DeepSeek V4 60-Step 收敛曲线](../../assets/training/deepseek-v4-rdma/convergence-validation.svg)
+
+这轮还说明超参数本身也必须进入追踪：`eval_steps=10`、`save_steps=20` 使最佳 Step 30 没有对应 Checkpoint。下一轮应让验证与保存间隔对齐，并在 Run 结束前上传 Base/Adapter 盲测汇总；仅有曲线仍不足以证明任务准确率提升。
 
 ## 8. 本次发现的兼容问题
 

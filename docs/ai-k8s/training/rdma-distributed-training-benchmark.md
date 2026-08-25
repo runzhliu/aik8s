@@ -78,6 +78,40 @@ GPU Direct RDMA Enabled
 
 如果只看到节点具备 RDMA 网卡、Pod 挂到了设备，或只把 `NCCL_IB_DISABLE` 设为 `0`，都不能算链路验收通过。
 
+### 2.3 GDRDMA 比普通 RDMA 多解决了什么
+
+普通 TCP 会让跨机 Tensor 经历 GPU Memory、Host Memory、内核网络栈、NIC 的多段路径。RDMA 绕过内核网络栈，但如果 GPU 数据仍需先落到 Host Memory，CPU、PCIe 与内存带宽仍会参与中转。GPUDirect RDMA（下文简称 GDRDMA）允许兼容 NIC 通过 PCIe 直接 DMA GPU Memory，减少 Host Memory Bounce、CPU 拷贝与中断开销。
+
+```text
+TCP：     GPU → Host Memory → Kernel/Socket → NIC → Network
+RDMA：    GPU → Host Memory → RDMA NIC       → Network
+GDRDMA：  GPU Memory      ↔ RDMA NIC          → Network
+```
+
+这条路径通常带来三类价值：大消息 Collective 更容易逼近 NIC 带宽；频繁通信的延迟和 CPU 开销更低；CPU 与 Host Memory 不再承担同样规模的 Bounce Buffer 后，训练 Step 的抖动更容易收敛。它对本轮 `EP=16` 尤其重要，因为 MoE Token Dispatch/Combine 每一步都会跨机执行 All-to-All。
+
+GDRDMA 既需要硬件能力，也受物理拓扑影响：
+
+- GPU、RDMA NIC、PCIe 平台和驱动需要支持 Peer Memory，内核侧通常由 DMA-BUF 或 `nvidia-peermem` 提供能力；
+- GPU 到 NIC 最好位于同一 NUMA，并尽量共享较近的 PCIe Root Complex；跨 CPU Socket 的 `SYS` 路径会增加开销；
+- NVLink/NVSwitch 解决机内 GPU-GPU 通信，GDRDMA 解决跨机 GPU-NIC-GPU 通信，二者互补而不是互相替代；
+- Kubernetes 分配到 GPU 与 RDMA 设备只是前提，NCCL、CUDA、NIC Driver、Peer Memory 和容器设备映射仍需共同匹配。
+
+本轮节点的 `nvidia-smi topo -m` 显示 8 张 GPU 各有一张一一对应的 NIC：`GPU0↔NIC0`、`GPU1↔NIC1`，直到 `GPU7↔NIC7` 都是 `PIX`，即最多经过一个 PCIe Bridge；GPU 0～3 与 GPU 4～7 分属两个 NUMA，但各自的本地 NIC 仍在同 NUMA。NCCL 最终也按这个映射为每个跨机 Rank 选择对应 HCA，并报告：
+
+```text
+Channel 00/0 : 0[0] -> 8[0] [send] via NET/IB/0/GDRDMA
+Channel 01/0 : 1[1] -> 9[1] [send] via NET/IB/1/GDRDMA
+...
+Channel 07/0 : 7[7] -> 15[7] [send] via NET/IB/7/GDRDMA
+```
+
+因此验收要分四层：Pod 能看到 RDMA 设备；GPU/NIC 拓扑没有明显绕远；NCCL INFO 明确出现跨节点 `NET/IB/.../GDRDMA`；最后再用相同训练负载做 TCP/RDMA A/B。前三层证明“路径成立”，第四层才回答“业务快了多少”。
+
+还要注意，本章对照的是 `NET/Socket` 与 `NET/IB + GDRDMA` 的整体差异，并没有单独增加“IB 但禁用 GDRDMA”的第三组，所以不能把全部 32.08% 步耗时下降只归因于 GDRDMA。若要隔离它本身的贡献，应保持 IB Transport 不变，仅控制 NCCL 的 GDR 策略并再次做三轮 A/B。
+
+参考：[NVIDIA GPUDirect RDMA 说明](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-operator-rdma.html)、[NCCL 环境变量](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html)。
+
 ## 3. NCCL 微基准：通信能力差距很大
 
 微基准使用 16 Rank，消息大小为 `1/16/64/256 MiB per Rank`，每个点 5 次预热、20 次正式迭代，并取所有 Rank 中最慢者的耗时。TCP 与 RDMA 各重复三轮。
