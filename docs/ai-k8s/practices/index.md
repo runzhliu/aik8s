@@ -31,6 +31,7 @@ last_reviewed: 2026-08-14
 ## 平台和调度
 
 - [大模型时代 GPU 开发平台踩坑记](gpu-notebook-platform-evolution.md)
+- [8 卡节点的四卡任务，如何避免拿到跨 NUMA 的碎片 GPU](gpu-topology-fragmentation-scheduling.md)
 - [GPU 资源银行与潮汐推理平台实践蓝图](gpu-resource-bank-tidal-platform.md)
 - [Kueue 与 Volcano 对比实验](kueue-vs-volcano.md)
 - [Kubernetes 还是 Slurm](kubernetes-vs-slurm.md)

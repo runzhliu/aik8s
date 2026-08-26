@@ -148,6 +148,8 @@ Volcano 适合已有大量批任务、需要统一调度算法或对 Gang/抢占
 
 建议给节点维护稳定的拓扑标签，由 Kueue TAS 或调度器决定 Pod 组需要“尽量集中”还是“必须位于同一拓扑域”。不要让训练脚本自己猜测物理拓扑。
 
+节点内同样可能存在拓扑碎片：例如一台 8 卡节点虽然还剩 4 张 GPU，但空闲设备横跨两个 NUMA 或 PCIe 域。传统扩展资源只表达数量，不能保证四卡任务得到一个完整高速互联分组。关于 NVIDIA Device Plugin、Topology Manager、Volcano、Koordinator、HAMi 与 DRA 的能力边界和落地选择，见[8 卡节点的四卡任务，如何避免拿到跨 NUMA 的碎片 GPU](practices/gpu-topology-fragmentation-scheduling.md)。
+
 ## 7. 容量与配额模型
 
 GPU 平台至少需要三种口径：
