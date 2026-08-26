@@ -112,6 +112,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - [大模型 SFT 入门：把 Loss、LoRA、Batch 和并行一次讲明白](ai-k8s/training/sft-concepts.md)
 - [大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md)
 - [SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标](ai-k8s/training/swanlab-self-hosted.md)
+- [从 W&B Local 到 SwanLab：两年团队实验追踪实践与选型](ai-k8s/training/wandb-vs-swanlab.md)
 - [Ray 在大模型训练与推理中的角色](ai-k8s/ray-llm-platform.md)
 - [LLM 推理平台总览](ai-k8s/llm-inference.md)
 - [推理引擎选型](ai-k8s/inference/engines.md)

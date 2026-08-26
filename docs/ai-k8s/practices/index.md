@@ -45,6 +45,7 @@ last_reviewed: 2026-08-14
 - [大模型 SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](../training/sft-from-single-gpu-to-deepseek-v4.md)
 - [RDMA 到底能让分布式训练快多少：DeepSeek V4 双机 16 卡实测](../training/rdma-distributed-training-benchmark.md)
 - [SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标](../training/swanlab-self-hosted.md)
+- [从 W&B Local 到 SwanLab：两年团队实验追踪实践与选型](../training/wandb-vs-swanlab.md)
 - [用 SGLang-Omni 部署 MiniMax-Music3：从一句创意到完整歌曲](minimax-music3-sglang-omni.md)
 - [Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录](qwen38-27b-day0.md)
 - [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](deepseek-harness-kubernetes.md)

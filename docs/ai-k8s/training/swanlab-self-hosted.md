@@ -9,6 +9,8 @@ last_reviewed: 2026-08-25
 
 训练日志能写进 TensorBoard，只解决了“曲线在哪里看”的问题。多人共享训练平台后，还需要项目、Run、超参数、标签、实验对比、权限和长期检索。SwanLab 可以承担这层实验追踪，但它不替代 Prometheus、DCGM Exporter 和 Grafana。
 
+如果需要从既有 W&B 使用经验出发评估选型、授权与迁移边界，先读[从 W&B Local 到 SwanLab：两年团队实验追踪实践与选型](wandb-vs-swanlab.md)。
+
 本文记录一套可公开复用的 Kubernetes 部署与 ms-swift 接入方法，并用真实 `Qwen3.5-4B`、`Qwen3.6-35B-A3B` 和 `DeepSeek V4 Flash` LoRA SFT 验证从训练容器到 Web 曲线的完整链路。文中不包含企业内部的集群、镜像仓库、存储端点、域名或入口配置。
 
 ## 1. 先划清系统边界

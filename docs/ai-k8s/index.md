@@ -93,6 +93,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [SFT 训练实战：从单卡 LoRA 到 DeepSeek V4](training/sft-from-single-gpu-to-deepseek-v4.md)：单卡闭环、多卡 MoE、DeepSeek V4 与多机网络实测。
 - [DeepSeek V4 双机 RDMA 训练实测](training/rdma-distributed-training-benchmark.md)：用三轮 TCP/RDMA A/B、NCCL AllReduce/All-to-All 和负对照解释哪些训练能真正受益。
 - [SwanLab 自托管与 SFT 指标](training/swanlab-self-hosted.md)：官方 Helm 部署、PoC/生产边界、ms-swift 接入、真实曲线和版本兼容性。
+- [从 W&B Local 到 SwanLab](training/wandb-vs-swanlab.md)：结合两年团队化 W&B Local 运维记录与当前 SwanLab 实测，比较功能、生产复杂度、迁移和授权边界。
 - [Ray 在大模型训练与推理中的角色](ray-llm-platform.md)：Ray Core、Data、Train、Tune、Serve、Serve LLM 与 KubeRay 的端到端边界。
 - [可靠性、Checkpoint 与故障恢复](reliability.md)：RPO/RTO、Spot、优雅退出和故障演练。
 
