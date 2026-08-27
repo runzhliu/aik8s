@@ -38,6 +38,18 @@
     "cache_flushed_per_case": true,
     "probe": "TCP socket; no hidden generation traffic"
   },
+  "arrival_rate_first_pass": {
+    "workload": {"input_tokens": 128, "output_tokens": 64, "requests_per_rate": 64, "max_concurrency": 64, "arrival_process": "poisson"},
+    "interpretation": "Finite 64-request runs include the drain phase. Offered rates above 8 req/s were not sustained, and batching makes the tail metrics non-monotonic. This is an online-arrival smoke test, not a production saturation curve.",
+    "rates": [
+      {"offered_requests_per_second": 2, "achieved_requests_per_second": 2.0846, "output_tokens_per_second": 133.41, "average_concurrency": 2.656, "p95_ttft_ms": 494.06, "p99_ttft_ms": 591.04, "p95_tpot_ms": 26.42, "p95_e2e_ms": 2060.99},
+      {"offered_requests_per_second": 4, "achieved_requests_per_second": 4.0332, "output_tokens_per_second": 258.13, "average_concurrency": 8.893, "p95_ttft_ms": 782.27, "p99_ttft_ms": 957.39, "p95_tpot_ms": 52.79, "p95_e2e_ms": 3769.23},
+      {"offered_requests_per_second": 8, "achieved_requests_per_second": 7.2204, "output_tokens_per_second": 462.10, "average_concurrency": 35.790, "p95_ttft_ms": 970.19, "p99_ttft_ms": 1169.11, "p95_tpot_ms": 121.87, "p95_e2e_ms": 8103.37},
+      {"offered_requests_per_second": 16, "achieved_requests_per_second": 11.9458, "output_tokens_per_second": 764.53, "average_concurrency": 42.610, "p95_ttft_ms": 2901.50, "p99_ttft_ms": 3340.12, "p95_tpot_ms": 75.71, "p95_e2e_ms": 5256.17},
+      {"offered_requests_per_second": 24, "achieved_requests_per_second": 15.2400, "output_tokens_per_second": 975.36, "average_concurrency": 45.631, "p95_ttft_ms": 1884.92, "p99_ttft_ms": 2308.48, "p95_tpot_ms": 57.43, "p95_e2e_ms": 4127.13},
+      {"offered_requests_per_second": 32, "achieved_requests_per_second": 17.8671, "output_tokens_per_second": 1143.50, "average_concurrency": 47.708, "p95_ttft_ms": 1525.70, "p99_ttft_ms": 1952.37, "p95_tpot_ms": 47.75, "p95_e2e_ms": 3523.23}
+    ]
+  },
   "short_context": [
     {"concurrency": 1, "input_tokens": 128, "output_tokens": 64, "requests": 16, "output_tokens_per_second": 90.32, "median_ttft_ms": 196.07, "p95_ttft_ms": 200.30, "p95_tpot_ms": 8.14, "p95_e2e_ms": 710.69},
     {"concurrency": 4, "input_tokens": 128, "output_tokens": 64, "requests": 32, "run": "steady_state_r2", "output_tokens_per_second": 334.95, "median_ttft_ms": 181.84, "p95_ttft_ms": 385.01, "p95_tpot_ms": 8.86, "p95_e2e_ms": 942.41},
@@ -61,6 +73,47 @@
     {"concurrency": 1, "input_tokens": 128, "output_tokens": 1024, "requests": 4, "output_tokens_per_second": 114.11, "median_ttft_ms": 199.63, "p95_ttft_ms": 205.14, "p95_tpot_ms": 8.57, "p95_e2e_ms": 8974.44},
     {"concurrency": 8, "input_tokens": 128, "output_tokens": 1024, "requests": 16, "output_tokens_per_second": 702.56, "median_ttft_ms": 382.66, "p95_ttft_ms": 385.49, "p95_tpot_ms": 11.19, "p95_e2e_ms": 11824.78}
   ],
+  "long_short_mixed": {
+    "short_baseline": {"arrival_rate_requests_per_second": 4, "requests": 64, "input_tokens": 128, "output_tokens": 64, "p95_ttft_ms": 782.27, "p95_e2e_ms": 3769.23},
+    "long_background": {"concurrency": 2, "requests": 8, "input_tokens": 65536, "output_tokens": 128},
+    "short_during_long_prefill": {"arrival_rate_requests_per_second": 4, "requests": 64, "input_tokens": 128, "output_tokens": 64, "output_tokens_per_second": 182.73, "p95_ttft_ms": 7747.93, "p99_ttft_ms": 7874.89, "p95_tpot_ms": 150.19, "p95_e2e_ms": 10727.43},
+    "impact": {"p95_ttft_multiplier": 9.90, "p95_e2e_multiplier": 2.85},
+    "interpretation": "Long prefill causes strong head-of-line interference for short interactive requests on a shared instance."
+  },
+  "long_context_correctness": {
+    "method": "Exact tokenizer-counted synthetic single-needle retrieval; cache flushed before every case; this is a smoke test, not a complex long-document reasoning benchmark.",
+    "needle_positions_percent": [10, 50, 90],
+    "cases": [
+      {"input_tokens": 32768, "passed": 3, "total": 3, "elapsed_seconds": [2.026, 2.029, 2.021]},
+      {"input_tokens": 131072, "passed": 3, "total": 3, "elapsed_seconds": [8.403, 8.390, 8.410]},
+      {"input_tokens": 250000, "passed": 3, "total": 3, "elapsed_seconds": [18.912, 18.895, 18.897]}
+    ],
+    "total_passed": 9,
+    "total_cases": 9
+  },
+  "ple_ab": {
+    "method": "Same FP8 checkpoint, TP4/EP4 and H20 GPU count; only PLE embedding offload changed. Stable-state latency differences are within run-to-run variance.",
+    "ple_on": {"weight_gib_per_rank": 32.20, "max_mamba_cache_size": 2939, "max_total_tokens": 3680256, "max_running_requests": 587, "c8_short_output_tokens_per_second_rerun": 535.12, "c8_short_p95_ttft_ms_rerun": 377.89, "c1_32k_input_tokens_per_second_rerun": 10694.21},
+    "ple_off": {"weight_gib_per_rank": 43.86, "max_mamba_cache_size": 2538, "max_total_tokens": 3178560, "max_running_requests": 507, "c8_short_output_tokens_per_second": 559.99, "c8_short_p95_ttft_ms": 381.10, "c1_32k_input_tokens_per_second": 10714.06},
+    "capacity_gain_percent": 15.8,
+    "weight_saved_gib_per_rank": 11.66,
+    "interpretation": "PLE is primarily a capacity feature on this configuration: it saves GPU weight memory and reinvests it into Mamba/KV state, while stable short and prefill performance remains effectively unchanged."
+  },
+  "mtp_ab": {
+    "runtime_adjustment": "The model configuration selected bfloat16 Mamba SSM state, but FlashInfer GDN target verification requires float32 for this MTP path. Explicit --mamba-ssm-dtype float32 was required on H20.",
+    "initial_failure": "AssertionError: initial_state must be float32, got torch.bfloat16",
+    "mtp_parameters": {"algorithm": "NEXTN", "num_steps": 3, "eagle_topk": 1, "num_draft_tokens": 4, "mamba_ssm_dtype": "float32", "max_running_requests": 48},
+    "memory": {"target_weight_gib_per_rank": 32.20, "draft_weight_gib_per_rank": 1.18, "max_mamba_cache_size": 817, "max_total_tokens": 4295808},
+    "short_output": [
+      {"concurrency": 1, "input_tokens": 128, "output_tokens": 64, "requests": 16, "accept_length": 2.52, "output_tokens_per_second": 137.60, "p95_ttft_ms": 265.06, "p95_tpot_ms": 4.77, "p95_e2e_ms": 574.78},
+      {"concurrency": 8, "input_tokens": 128, "output_tokens": 64, "requests": 64, "run": "steady_state_r2", "accept_length": 2.38, "output_tokens_per_second": 278.27, "p95_ttft_ms": 496.42, "p95_tpot_ms": 32.90, "p95_e2e_ms": 2563.60}
+    ],
+    "long_output": [
+      {"concurrency": 1, "input_tokens": 128, "output_tokens": 1024, "requests": 4, "accept_length": 1.92, "output_tokens_per_second": 180.32, "p95_ttft_ms": 213.33, "p95_tpot_ms": 8.17, "p95_e2e_ms": 8571.62},
+      {"concurrency": 8, "input_tokens": 128, "output_tokens": 1024, "requests": 16, "accept_length": 2.30, "output_tokens_per_second": 823.35, "p95_ttft_ms": 395.71, "p95_tpot_ms": 11.96, "p95_e2e_ms": 12497.35}
+    ],
+    "interpretation": "MTP materially improves low-concurrency and long-generation decode, but the 64-token C8 case regresses. It is a workload-dependent low-latency recipe, not a universal throughput switch."
+  },
   "shared_prefix": {
     "comparison_note": "The shared-prefix workload has slightly more input tokens than the random baseline, so the result is directional rather than a perfectly token-identical A/B test.",
     "random_baseline": {"concurrency": 8, "input_tokens_per_request": 4224, "output_tokens": 64, "requests": 32, "total_input_tokens": 135168, "duration_seconds": 11.10, "input_tokens_per_second": 12174.35, "output_tokens_per_second": 184.46, "median_ttft_ms": 1798.39, "p95_ttft_ms": 2284.69, "p95_e2e_ms": 3060.28},

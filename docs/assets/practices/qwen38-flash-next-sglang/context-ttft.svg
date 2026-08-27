@@ -3,27 +3,27 @@
   <desc id="desc">输入从 4K 增长到接近 262K token，P95 TTFT 从 254 毫秒增长到 19.16 秒。</desc>
   <rect width="960" height="520" fill="#ffffff"/>
   <text x="64" y="42" fill="#0f172a" font-family="sans-serif" font-size="24" font-weight="700">原生 262K 上下文可运行，但首 Token 要付 Prefill 成本</text>
-  <text x="64" y="70" fill="#64748b" font-family="sans-serif" font-size="14">并发 1 · 输出 128 Token · P95 TTFT（越低越好）</text>
+  <text x="64" y="74" fill="#64748b" font-family="sans-serif" font-size="14">并发 1 · 输出 128 Token · P95 TTFT（越低越好）</text>
   <g stroke="#e2e8f0" stroke-width="1">
-    <line x1="92" y1="430" x2="910" y2="430"/><line x1="92" y1="340" x2="910" y2="340"/>
-    <line x1="92" y1="250" x2="910" y2="250"/><line x1="92" y1="160" x2="910" y2="160"/>
-    <line x1="92" y1="70" x2="910" y2="70"/>
+    <line x1="92" y1="420" x2="910" y2="420"/><line x1="92" y1="345" x2="910" y2="345"/>
+    <line x1="92" y1="270" x2="910" y2="270"/><line x1="92" y1="195" x2="910" y2="195"/>
+    <line x1="92" y1="120" x2="910" y2="120"/>
   </g>
   <g fill="#64748b" font-family="sans-serif" font-size="13" text-anchor="end">
-    <text x="82" y="435">0</text><text x="82" y="345">5s</text><text x="82" y="255">10s</text>
-    <text x="82" y="165">15s</text><text x="82" y="75">20s</text>
+    <text x="82" y="425">0</text><text x="82" y="350">5s</text><text x="82" y="275">10s</text>
+    <text x="82" y="200">15s</text><text x="82" y="125">20s</text>
   </g>
-  <polyline points="160,425 335,397 510,363 685,287 860,85" fill="none" stroke="#f97316" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="160,416 335,392 510,364 685,301 860,133" fill="none" stroke="#f97316" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
   <g fill="#f97316" stroke="#fff" stroke-width="4">
-    <circle cx="160" cy="425" r="9"/><circle cx="335" cy="397" r="9"/><circle cx="510" cy="363" r="9"/>
-    <circle cx="685" cy="287" r="9"/><circle cx="860" cy="85" r="9"/>
+    <circle cx="160" cy="416" r="9"/><circle cx="335" cy="392" r="9"/><circle cx="510" cy="364" r="9"/>
+    <circle cx="685" cy="301" r="9"/><circle cx="860" cy="133" r="9"/>
   </g>
   <g fill="#0f172a" font-family="sans-serif" font-size="14" text-anchor="middle">
-    <text x="160" y="405">0.25s</text><text x="335" y="377">1.86s</text><text x="510" y="343">3.72s</text>
-    <text x="685" y="267">7.95s</text><text x="860" y="110">19.16s</text>
+    <text x="160" y="396">0.25s</text><text x="335" y="372">1.86s</text><text x="510" y="344">3.72s</text>
+    <text x="685" y="281">7.95s</text><text x="860" y="158">19.16s</text>
   </g>
   <g fill="#475569" font-family="sans-serif" font-size="14" text-anchor="middle">
-    <text x="160" y="458">4K</text><text x="335" y="458">32K</text><text x="510" y="458">64K</text>
-    <text x="685" y="458">128K</text><text x="860" y="458">261K</text><text x="500" y="493" fill="#64748b">输入 Token</text>
+    <text x="160" y="450">4K</text><text x="335" y="450">32K</text><text x="510" y="450">64K</text>
+    <text x="685" y="450">128K</text><text x="860" y="450">261K</text><text x="500" y="488" fill="#64748b">输入 Token</text>
   </g>
 </svg>

@@ -1,6 +1,6 @@
 ---
 title: Qwen3.8-Flash-Next Day 0 实战：4×H20 跑通原生 262K
-description: 用 SGLang Day-0 官方镜像和 FP8 权重，在 4×H20 上验证 Qwen4 预览架构、OpenAI-compatible API、长上下文、长输出与共享前缀性能
+description: 用 SGLang Day-0 官方镜像和 FP8 权重，在 4×H20 上验证 Qwen4 预览架构、262K 长上下文、PLE、MTP、长短混部与框架支持边界
 status: published
 last_reviewed: 2026-08-27
 ---
@@ -10,6 +10,8 @@ last_reviewed: 2026-08-27
 2026 年 8 月 26 日，Qwen 发布 Qwen3.8-Flash-Next，并把它定位为 Qwen4 架构的实验性预览；SGLang 同日给出专用镜像和部署 Cookbook。一天之内，我在 Kubernetes 上完成了两条实测：官方 FP8 权重在 **4×141 GB H20** 上以 TP4/EP4 跑通原生 262,144 Token Context，Thinking、Tool Call 和图片输入均可用；官方镜像在 **8×48 GB L20** 上不能直接运行，只有替换 QSA Decode Kernel 的兼容补丁能够生成，而且性能不具备生产参考价值。
 
 H20 短请求输出吞吐从并发 1 的 90.32 tok/s 扩展到并发 64 的 1,860.09 tok/s；接近 262K 的单请求可完成，P95 TTFT 为 19.16 秒；4K 共享系统提示词场景得到 50.2% 的缓存命中率。这里的结论来自本地实测，不使用官方 H200/B200 数字代替。
+
+框架支持也必须带时间戳看：**截至 2026 年 8 月 27 日，SGLang 已经提供 Qwen3.8-Flash-Next 的 Day-0 专用镜像、模型实现和官方启动配方；vLLM 稳定版与主分支尚不能直接部署，模型注册、PLE 和 Qwen4 融合 Kernel 仍在 Open PR 中。** 这不是说 vLLM 永远不支持，而是本文发布当天两者的可用状态不同。
 
 ## 1. 模型名字和规模先说清楚
 
@@ -54,7 +56,7 @@ QSA 的目标是改变长上下文 Attention 的增长曲线，所以只测 128 
 | Runtime | SGLang `0.0.0.dev1+gd91c3682b` |
 | PyTorch / CUDA / Transformers | `2.13.0+cu130` / `13.0` / `5.12.1` |
 | GDN Backend | Prefill 与 Decode 均为 FlashInfer |
-| Mamba State | BF16 |
+| Mamba State | 普通路径 BF16；MTP 兼容复测 FP32 |
 | PLE | N-gram Embedding Offload 开启 |
 | API | OpenAI-compatible `/v1` |
 
@@ -192,23 +194,105 @@ sglang serve \
 
 服务端报告 72,640 个 Device Cached Token，缓存命中率 50.2%。共享前缀组的输入 Token 反而略多，因此它不是逐 Token 完全相同的微基准；但总时长下降 35.6%、P95 TTFT 下降 52.4%，方向非常清楚。统一 System Prompt、长文档问答和多轮 Agent 会比完全随机请求更能吃到 Radix Cache 收益。
 
-## 10. L20 为什么不能当作正式性能路径
+## 10. 固定到达率：短跑不能伪装成容量曲线
+
+为了接近在线流量，我用 Poisson Arrival 做了第一轮 128 输入、64 输出测试。每档只有 64 个请求，客户端并发上限为 64：
+
+| Offered Rate | Achieved Rate | Output tok/s | 平均并发 | P95 TTFT | P99 TTFT |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 req/s | 2.08 req/s | 133.41 | 2.66 | 494 ms | 591 ms |
+| 4 req/s | 4.03 req/s | 258.13 | 8.89 | 782 ms | 957 ms |
+| 8 req/s | 7.22 req/s | 462.10 | 35.79 | 970 ms | 1.17 s |
+| 16 req/s | 11.95 req/s | 764.53 | 42.61 | 2.90 s | 3.34 s |
+| 24 req/s | 15.24 req/s | 975.36 | 45.63 | 1.88 s | 2.31 s |
+| 32 req/s | 17.87 req/s | 1,143.50 | 47.71 | 1.53 s | 1.95 s |
+
+16、24、32 req/s 的尾延迟没有单调上升，不能解读为“流量越高反而越快”。原因是每档只有 64 个请求，测试包含明显的尾部 Drain 阶段；高档 Offered Rate 也没有真正维持住。它的价值是证明在线到达过程与 `request-rate=inf` 的一次性 Burst 不是同一个问题，并找到 8 req/s 之后客户端已经无法按设定速率稳定送达。正式 SLO 曲线仍应把每档延长到 10–30 分钟，并同步记录队列、错误率和 GPU 指标。
+
+## 11. 长短混部：短请求 P95 TTFT 放大 9.9 倍
+
+这一组更接近生产事故：后台运行 2 路 65,536 输入、128 输出的长请求，前台继续以 4 req/s 发送 64 个 128/64 短请求。
+
+| 短请求场景 | P95 TTFT | P99 TTFT | P95 TPOT | P95 E2E |
+| --- | ---: | ---: | ---: | ---: |
+| 独立运行 | 782 ms | 957 ms | 52.79 ms | 3.77 s |
+| 叠加 64K Prefill | 7.75 s | 7.87 s | 150.19 ms | 10.73 s |
+| 变化 | **9.9×** | 8.2× | 2.8× | **2.85×** |
+
+![长 Prefill 对短请求尾延迟的影响](../../assets/practices/qwen38-flash-next-sglang/qwen38-flash-next-h20-mixed-workload.png)
+
+这说明单实例里长 Prefill 会对交互请求形成明显的 Head-of-Line Interference。即使模型能容纳 262K，也不意味着长文档请求应该和短 Chat 进入同一个无差别队列。生产上至少要按 Prompt 长度分池，进一步可以使用优先级调度、Prefill/Decode 分离或独立长上下文实例。
+
+## 12. 250K 不只“跑完”，还要能找回信息
+
+随机 Token 压测只能验证容量和速度。我增加了一个精确 Tokenizer 计数的 Needle-in-a-Haystack 冒烟：在 32,768、131,072 和 250,000 Token 的 Chat Prompt 中，分别把随机 Key 放在 10%、50% 和 90% 位置；每次请求前清空缓存。
+
+| 输入长度 | Needle 位置 | 正确 / 总数 | 单次耗时范围 |
+| ---: | --- | ---: | ---: |
+| 32,768 | 10% / 50% / 90% | 3 / 3 | 2.02–2.03 s |
+| 131,072 | 10% / 50% / 90% | 3 / 3 | 8.39–8.41 s |
+| 250,000 | 10% / 50% / 90% | 3 / 3 | 18.90–18.91 s |
+
+![原生长上下文 TTFT 与 250K Needle 结果](../../assets/practices/qwen38-flash-next-sglang/qwen38-flash-next-h20-long-context.png)
+
+9/9 通过说明这条 FP8 路径在接近上下文上限时仍能完成简单单针检索。它不等于复杂长文档推理已经过关：真实评估还需要多针、干扰项、跨段归纳和 LongBench。公开脚本 [`needle.py`](https://github.com/runzhliu/aik8s/blob/main/examples/qwen38-flash-next-sglang/needle.py) 会同时校验本地构造长度与服务端 Prompt Token 数，避免把“字符数”误写成“Token 数”。
+
+## 13. PLE 与 MTP：一个换容量，一个有条件换速度
+
+### 13.1 PLE Offload 主要提升容量
+
+只切换 PLE，其余保持 FP8、TP4/EP4 和 4×H20：
+
+| 指标 | PLE On | PLE Off | 变化 |
+| --- | ---: | ---: | ---: |
+| 每 Rank 权重 | 32.20 GiB | 43.86 GiB | 节省 11.66 GiB |
+| `max_total_num_tokens` | 3,680,256 | 3,178,560 | +15.8% |
+| `max_running_requests` | 587 | 507 | +15.8% |
+| C8 128/64 Output tok/s | 535.12 | 559.99 | 短跑波动范围 |
+| C1 32K Input tok/s | 10,694.21 | 10,714.06 | 基本相同 |
+
+PLE 把约 51B N-gram Embedding 放到 CPU Pinned Memory 后，每 Rank 少占 11.66 GiB 权重空间，内存求解器把空间重新分给 Mamba/KV Cache。稳定态短请求与 32K Prefill 差异接近运行波动，因此这套配置里的主收益是约 15.8% 的容量，而不是可证明的吞吐加速。
+
+### 13.2 MTP 对长生成有效，但不是万能开关
+
+SGLang 官方低延迟配方使用 NEXTN、3 个推测步骤和 4 个 Draft Token。第一次在 H20 原样启动时，GDN Target Verify 报：
+
+```text
+AssertionError: initial_state must be float32, got torch.bfloat16
+```
+
+显式设置 `--mamba-ssm-dtype float32` 后能够启动并完成生成。Draft Head 每 Rank 额外加载约 1.18 GiB，实际平均接受长度为 1.92–2.52。
+
+| 输入 / 输出 | 并发 | 普通路径 Output tok/s | MTP Output tok/s | 变化 |
+| ---: | ---: | ---: | ---: | ---: |
+| 128 / 64 | 1 | 90.32 | 137.60 | +52.3% |
+| 128 / 64 | 8 | 535.12 | 278.27 | -48.0% |
+| 128 / 1,024 | 1 | 114.11 | 180.32 | +58.0% |
+| 128 / 1,024 | 8 | 702.56 | 823.35 | +17.2% |
+
+![PLE 容量收益与 MTP 性能边界](../../assets/practices/qwen38-flash-next-sglang/qwen38-flash-next-h20-ple-mtp.png)
+
+单并发和 1K 长生成得到明显收益，但 64 Token、C8 反而退化。这与官方把该组参数称为 Low Latency Recipe 是一致的：推测、验证和调度本身有固定成本，输出太短或并发形态不合适时无法摊薄。MTP 还把最大 Running Request 固定为 48，SSM State 精度也从 BF16 改为 FP32，因此生产采用前必须按真实输出长度和并发重做 A/B，不能把单并发的 +58% 外推到全部流量。
+
+参考：[SGLang Qwen3.8-Flash-Next 官方配置源码](https://github.com/sgl-project/sglang/blob/1c8f2b38cbb318cadb6e0b5cd7cc8ce6a3fc8209/docs/src/snippets/configs/Qwen/qwen3.8-flash-next.jsx)、[SGLang Mamba Server Arguments](https://github.com/sgl-project/sglang/blob/main/docs/advanced_features/server_arguments.md)。
+
+## 14. L20 为什么不能当作正式性能路径
 
 官方 Day-0 镜像在 L20（SM89）上直接失败：FlashInfer GDN 要求 SM90+；改用 Triton GDN 后可以越过线性注意力，但 QSA 的 FA4/CuTe 路径继续报 `unable to compute crd2idx`。
 
 为了判断是权重还是 Kernel 问题，我做了一个兼容性补丁：QSA Decode 逐请求回退到 PyTorch SDPA，并关闭 CUDA Graph。8×L20、TP8/EP8、32K 可以正确生成，但 C1 128/64 只有 7.47 tok/s，P95 TPOT 131.77 ms；这是正确性证明，不是 SGLang 的正式 L20 性能。公开结果必须同时写出补丁和禁用项，不能只留下“L20 已支持”。
 
-## 11. vLLM 现在支持吗
+## 15. SGLang 已支持，vLLM 还在适配
 
-截至 2026 年 8 月 27 日，答案是：**稳定版和主分支尚不能直接部署，社区适配正在进行，FP8 也还不能按正式支持使用。**
+截至 2026 年 8 月 27 日，框架状态可以归纳为：**SGLang 已经能用官方 Day-0 镜像和配方直接部署；vLLM 稳定版和主分支尚不能直接部署，社区适配正在进行，FP8 也还不能按正式支持使用。**
 
 - [vLLM PR #53896](https://github.com/vllm-project/vllm/pull/53896) 正在加入 `Qwen4ExpForConditionalGeneration`、模型注册、测试和 FP8 量化相关改动，状态仍为 Open/Blocked；
 - [vLLM PR #53899](https://github.com/vllm-project/vllm/pull/53899) 单独实现 PLE Offload，状态 Open，且当日存在冲突；
-- [vLLM PR #53909](https://github.com/vllm-project/vllm/pull/53909) 补 Qwen4 HyperConnection/QSA/PLE Triton Kernel，状态仍为 Open/Blocked。
+- [vLLM PR #53909](https://github.com/vllm-project/vllm/pull/53909) 补 Qwen4 HyperConnection/QSA/PLE Triton Kernel，状态仍为 Open。
 
-因此可以拉取 PR Commit 做实验，但那是维护自定义分支，不应注册成生产稳定模型。本文选择 SGLang，不是因为 vLLM 永远不能支持，而是 SGLang 在发布当天已经交付了可运行的模型实现、专用镜像、PLE、GDN/QSA Backend 和启动配方。
+因此可以拉取 vLLM PR Commit 做实验，但那是维护自定义分支，不应注册成生产稳定模型。本文选择 SGLang，不是因为 vLLM 永远不能支持，而是 SGLang 在发布当天已经交付了可运行的模型实现、专用镜像、PLE、GDN/QSA Backend 和启动配方。这个判断只代表 2026 年 8 月 27 日的上游状态，后续应以 PR 合入和 Release Notes 为准。
 
-## 12. 接入 OpenWebUI
+## 16. 接入 OpenWebUI
 
 SGLang 暴露的是 OpenAI-compatible API，OpenWebUI 不需要理解 QSA、PLE 或 TP/EP。在管理员的 OpenAI-compatible Connections 中填写：
 
@@ -220,7 +304,7 @@ Model ID: qwen38-flash-next
 
 注册前应从 OpenWebUI 所在网络分别验证 `/v1/models` 和一次 Chat Completion。只验证浏览器能打开入口不够：模型服务可能 Ready，但跨网络路由、证书、超时或访问控制仍会使 UI 返回 502。
 
-## 13. 可以复用的 Day-0 检查表
+## 17. 可以复用的 Day-0 检查表
 
 1. 固定模型 Revision、镜像 Digest 和硬件架构，不只记 Tag；
 2. 用零 GPU Pod 验证精确模型目录和运行时模型注册；
