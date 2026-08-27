@@ -81,7 +81,7 @@ def cover() -> None:
     draw.text((56, 36), "AIK8S  ·  DAY 0 推理实测", font=font(19), fill="#93C5FD")
     draw.text((56, 82), "Qwen3.8-Flash-Next", font=font(39, latin=True, bold=True), fill=WHITE)
     draw.text((56, 137), "4×H20 跑通原生 262K", font=font(31, bold=True), fill="#DBEAFE")
-    draw.text((56, 196), "FP8 · PLE · MTP · 长短混部", font=font(20), fill="#BFDBFE")
+    draw.text((56, 196), "BF16 / FP8 · PLE · MTP · 长短混部", font=font(20), fill="#BFDBFE")
     button = (56, 266, 364, 322)
     draw.rounded_rectangle(button, radius=28, fill=BLUE)
     center_text(draw, button, "SGLang Day-0 实战", font(18, bold=True), WHITE)
@@ -101,9 +101,9 @@ def cover() -> None:
 
 def topology() -> None:
     image, draw = canvas()
-    header(draw, "Day-0 实测路径", "官方 FP8 Checkpoint 与 SGLang 专用镜像；不使用官方 H200/B200 数字代替")
+    header(draw, "Day-0 实测路径", "官方 BF16 / FP8 Checkpoint 与 SGLang 专用镜像；不使用官方 H200/B200 数字代替")
     cards = [
-        (50, 192, 290, 508, "模型", ["176B Serving Body", "约 6B Active / Token", "FP8 · 172.76 GiB", "原生 262K Context"], BLUE, "#EFF6FF"),
+        (50, 192, 290, 508, "模型", ["176B Serving Body", "约 6B Active / Token", "BF16 335 / FP8 173 GiB", "原生 262K Context"], BLUE, "#EFF6FF"),
         (335, 192, 575, 508, "框架", ["SGLang Day-0", "QSA + GDN", "PLE Offload", "OpenAI-compatible"], CYAN, "#ECFEFF"),
         (620, 192, 860, 508, "硬件", ["4 × H20 141 GB", "TP4 / EP4", "单机 SM90", "约 15.25 GiB 余量"], ORANGE, "#FFF7ED"),
         (905, 192, 1150, 508, "验证", ["Thinking / Tool", "Vision / OpenWebUI", "250K Needle 9/9", "PLE / MTP A/B"], TEAL, "#F0FDFA"),
@@ -196,14 +196,14 @@ def mixed_workload() -> None:
         ("P95 E2E", 3.769, 10.727, "2.85×"),
     ]
     for idx, (label, base, mixed, multiple) in enumerate(groups):
-        x = 116 + idx * 510
+        x = 116 + idx * 534
         draw.text((x, 205), label, font=font(28, latin=True, bold=True), fill=INK)
         draw.text((x, 250), "短请求独立", font=font(18), fill=MUTED)
-        draw.rounded_rectangle((x + 150, 250, x + 150 + int(base / 11 * 290), 284), radius=8, fill=BLUE)
-        draw.text((x + 455, 250), f"{base:.2f}s", font=font(19, latin=True, bold=True), fill=BLUE)
+        draw.rounded_rectangle((x + 150, 250, x + 150 + int(base / 11 * 230), 284), radius=8, fill=BLUE)
+        draw.text((x + 410, 250), f"{base:.2f}s", font=font(19, latin=True, bold=True), fill=BLUE)
         draw.text((x, 322), "+ 65K Prefill", font=font(18), fill=MUTED)
-        draw.rounded_rectangle((x + 150, 322, x + 150 + int(mixed / 11 * 290), 356), radius=8, fill=RED)
-        draw.text((x + 455, 322), f"{mixed:.2f}s", font=font(19, latin=True, bold=True), fill=RED)
+        draw.rounded_rectangle((x + 150, 322, x + 150 + int(mixed / 11 * 230), 356), radius=8, fill=RED)
+        draw.text((x + 410, 322), f"{mixed:.2f}s", font=font(19, latin=True, bold=True), fill=RED)
         draw.rounded_rectangle((x + 150, 405, x + 330, 468), radius=31, fill="#FEF2F2")
         center_text(draw, (x + 150, 405, x + 330, 468), multiple, font(31, latin=True, bold=True), RED)
     draw.line((590, 205, 590, 494), fill="#E2E8F0", width=2)
@@ -247,6 +247,51 @@ def ple_mtp() -> None:
     save(image, "qwen38-flash-next-h20-ple-mtp.png", copy_to_docs=True)
 
 
+def precision_ab() -> None:
+    image, draw = canvas(900)
+    header(draw, "BF16 与 FP8：容量优势不等于所有负载都更快", "同一套 4×H20、SGLang 与 TP4/EP4；短时合成 A/B，不是质量评测")
+
+    cards = [
+        (54, 158, 388, 334, "权重加载", "88.11s", "149.24s", "FP8 快 40.9%"),
+        (433, 158, 767, 334, "Token Pool", "3.680M", "2.458M", "FP8 多 49.7%"),
+        (812, 158, 1146, 334, "Running Requests", "587", "392", "FP8 多 49.7%"),
+    ]
+    for left, top, right, bottom, title, fp8, bf16, note in cards:
+        draw.rounded_rectangle((left, top, right, bottom), radius=22, fill=WHITE, outline=GRID, width=2)
+        center_text(draw, (left + 18, top + 15, right - 18, top + 51), title, font(20, bold=True), INK)
+        draw.text((left + 30, top + 70), "FP8", font=font(17, latin=True, bold=True), fill=BLUE)
+        draw.text((left + 102, top + 65), fp8, font=font(27, latin=True, bold=True), fill=BLUE)
+        draw.text((left + 30, top + 111), "BF16", font=font(17, latin=True, bold=True), fill=ORANGE)
+        draw.text((left + 102, top + 106), bf16, font=font(27, latin=True, bold=True), fill=ORANGE)
+        draw.rounded_rectangle((left + 86, top + 143, right - 28, bottom - 10), radius=14, fill="#ECFDF5")
+        center_text(draw, (left + 86, top + 143, right - 28, bottom - 10), note, font(15, bold=True), TEAL)
+
+    draw.rounded_rectangle((54, 364, 1146, 812), radius=24, fill=WHITE, outline=GRID, width=2)
+    draw.text((82, 392), "实测吞吐", font=font(27, bold=True), fill=INK)
+    draw.text((82, 433), "场景", font=font(18, bold=True), fill=MUTED)
+    draw.text((500, 433), "FP8", font=font(18, latin=True, bold=True), fill=BLUE)
+    draw.text((680, 433), "BF16", font=font(18, latin=True, bold=True), fill=ORANGE)
+    draw.text((860, 433), "观察", font=font(18, bold=True), fill=MUTED)
+    rows = [
+        ("128/64 · C1 输出 tok/s", "90.32", "97.16", "BF16 +7.6%"),
+        ("128/64 · C8 输出 tok/s", "535.12", "531.38", "基本持平"),
+        ("128/64 · C64 输出 tok/s", "1,860.09", "1,999.76", "BF16 +7.5%"),
+        ("128/1K · C1 输出 tok/s", "114.11", "123.43", "BF16 +8.2%"),
+        ("128/1K · C8 输出 tok/s", "702.56", "750.18", "BF16 +6.8%"),
+        ("32K/128 · C1 输入 tok/s", "10,668.22", "10,329.37", "FP8 +3.3%"),
+    ]
+    for idx, (case, fp8, bf16, note) in enumerate(rows):
+        y = 478 + idx * 51
+        if idx % 2 == 0:
+            draw.rounded_rectangle((76, y - 8, 1122, y + 34), radius=8, fill="#F8FAFC")
+        draw.text((86, y), case, font=font(17), fill=INK)
+        draw.text((500, y), fp8, font=font(17, latin=True, bold=True), fill=BLUE)
+        draw.text((680, y), bf16, font=font(17, latin=True, bold=True), fill=ORANGE)
+        draw.text((860, y), note, font=font(17, bold=True), fill=TEAL if "FP8" in note or "持平" in note else ORANGE)
+    draw.text((58, 852), "结论：FP8 的确定性收益是容量与启动；Decode 吞吐需按业务实测，不能从精度名称直接推断。", font=font(19, bold=True), fill=MUTED)
+    save(image, "qwen38-flash-next-h20-precision.png", copy_to_docs=True)
+
+
 def framework_status() -> None:
     image, draw = canvas()
     header(draw, "发布当天，两个框架处于不同阶段", "截至 2026-08-27；这是带日期的上游状态，不是永久结论")
@@ -274,6 +319,7 @@ def main() -> None:
     long_context()
     mixed_workload()
     ple_mtp()
+    precision_ab()
     framework_status()
 
 

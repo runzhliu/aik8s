@@ -1,7 +1,8 @@
 # 实验结果记录
 
 状态：2026-08-27 已完成 L20 兼容性回退，以及 4×141 GB H20 官方 FP8 路径的
-启动、API、短请求、长输出、原生 262K Context、共享前缀、长短混部、PLE 和 MTP 实测。
+启动、API、短请求、长输出、原生 262K Context、共享前缀、长短混部、PLE 和 MTP 实测；
+同硬件上的官方 BF16 路径已完成启动、容量、典型吞吐、32K Prefill 与 250K Needle A/B。
 
 ## 制品基线
 
@@ -134,6 +135,7 @@ Input Throughput 从 12,174.35 增至 20,243.86 tok/s，P95 TTFT 从 2.285 秒�
 机器可读的完整结果：
 
 - [`h20-fp8-summary-20260827.json`](h20-fp8-summary-20260827.json)
+- [`h20-bf16-summary-20260827.json`](h20-bf16-summary-20260827.json)
 - [`l20-sdpa-fallback-summary-20260827.json`](l20-sdpa-fallback-summary-20260827.json)
 
 ## 追加实测：长上下文正确性与长短混部
@@ -147,6 +149,22 @@ LongBench 或真实长文档推理质量评估。
 128/64 短请求。短请求 P95 TTFT 从独立运行的 782.27 ms 增至 7,747.93 ms，约
 9.9 倍；P95 E2E 从 3.77 秒增至 10.73 秒，约 2.85 倍。这说明单实例上长 Prefill
 会明显干扰交互请求，生产入口至少需要按请求长度分池、调度或隔离。
+
+## 追加实测：BF16 与 FP8 A/B
+
+同一套 4×H20、SGLang、TP4/EP4、PLE On、MTP Off 配置下，BF16 权重加载为
+149.24 秒，每 Rank 权重 60.44 GiB，`max_total_num_tokens=2458432`，最大 Running
+Request 为 392。FP8 对应为 88.11 秒、32.20 GiB、3,680,256 和 587：FP8 权重加载
+快 40.9%，Token Pool 与 Running Request 容量多 49.7%。
+
+性能不呈现“FP8 全面更快”：128/64 的 C1、稳定态 C8、C64 Output Throughput，
+BF16 分别为 97.16、531.38、1,999.76 tok/s，FP8 为 90.32、535.12、1,860.09
+tok/s；128/1,024 的 C1/C8，BF16 为 123.43/750.18 tok/s，FP8 为
+114.11/702.56 tok/s。32K/128 C1 的 Input Throughput 则是 FP8 10,668.22、BF16
+10,329.37 tok/s。两条路径的 250K 单针都在三个位置 3/3 通过。
+
+这组短时合成 A/B 只能说明 FP8 在启动和容量上有确定收益，而 Decode 吞吐需要按负载
+实测；它不是输出质量比较，也不能把个位数差异外推成所有硬件和并发下的固定结论。
 
 ## 追加实测：PLE Offload A/B
 

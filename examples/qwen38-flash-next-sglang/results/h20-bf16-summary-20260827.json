@@ -1,0 +1,139 @@
+{
+  "date": "2026-08-27",
+  "status": "experimental_day0_precision_ab",
+  "model": "Qwen/Qwen3.8-Flash-Next",
+  "model_revision": "f5d08274bafd880402bd16f5e3e6c514136ec06c",
+  "weight_bytes": 359999963128,
+  "weight_shards": 131,
+  "runtime": {
+    "engine": "SGLang",
+    "version": "0.0.0.dev1+gd91c3682b",
+    "pytorch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "gpu": "NVIDIA H20-3e 141GB",
+    "gpu_count": 4,
+    "tensor_parallel": 4,
+    "expert_parallel": 4,
+    "context_length": 262144,
+    "ple_offload_embedding": true,
+    "linear_attention_prefill_backend": "flashinfer",
+    "linear_attention_decode_backend": "flashinfer",
+    "mamba_ssm_dtype": "bfloat16",
+    "mtp": false
+  },
+  "startup": {
+    "weight_load_seconds": 149.24,
+    "decode_cuda_graph_seconds": 93.67,
+    "engine_ready_seconds": 271.40,
+    "weight_gib_per_rank": 60.44,
+    "max_total_tokens": 2458432,
+    "max_running_requests": 392,
+    "max_mamba_cache_size": 1962,
+    "cache_k_gib_per_rank": 14.07,
+    "cache_v_gib_per_rank": 14.07,
+    "available_memory_after_graph_gib_per_rank": 16.54,
+    "gpu_memory_used_mib": [128990, 128682, 128680, 128200],
+    "gpu_memory_total_mib": 143771
+  },
+  "method": {
+    "backend": "sglang native token-id endpoint",
+    "dataset": "random-ids",
+    "exact_token_lengths": true,
+    "request_rate": "infinite",
+    "temperature": 0,
+    "cache_flushed_per_case": true,
+    "probe": "TCP socket; no hidden generation traffic",
+    "comparison": "Same 4xH20 runtime, TP4/EP4, PLE enabled and MTP disabled as the FP8 baseline. Results are short synthetic runs, not a quality evaluation."
+  },
+  "short_context": [
+    {
+      "concurrency": 1,
+      "input_tokens": 128,
+      "output_tokens": 64,
+      "output_tokens_per_second": 97.16,
+      "p95_ttft_ms": 189.99,
+      "p95_tpot_ms": 7.50,
+      "p95_e2e_ms": 659.82
+    },
+    {
+      "concurrency": 8,
+      "input_tokens": 128,
+      "output_tokens": 64,
+      "run": "steady_state_r2",
+      "output_tokens_per_second": 531.38,
+      "p95_ttft_ms": 359.73,
+      "p95_tpot_ms": 10.26,
+      "p95_e2e_ms": 988.77,
+      "note": "The first C8 run captured a cold shape and is excluded from the stable precision comparison."
+    },
+    {
+      "concurrency": 64,
+      "input_tokens": 128,
+      "output_tokens": 64,
+      "output_tokens_per_second": 1999.76,
+      "p95_ttft_ms": 679.45,
+      "p95_tpot_ms": 22.20,
+      "p95_e2e_ms": 2071.80
+    }
+  ],
+  "long_context": [
+    {
+      "concurrency": 1,
+      "input_tokens": 32768,
+      "output_tokens": 128,
+      "input_tokens_per_second": 10329.37,
+      "output_tokens_per_second": 40.35,
+      "p95_ttft_ms": 2056.13,
+      "p95_tpot_ms": 9.23,
+      "p95_e2e_ms": 3225.87
+    }
+  ],
+  "long_output": [
+    {
+      "concurrency": 1,
+      "input_tokens": 128,
+      "output_tokens": 1024,
+      "output_tokens_per_second": 123.43,
+      "p95_ttft_ms": 186.81,
+      "p95_tpot_ms": 7.93,
+      "p95_e2e_ms": 8295.50
+    },
+    {
+      "concurrency": 8,
+      "input_tokens": 128,
+      "output_tokens": 1024,
+      "output_tokens_per_second": 750.18,
+      "p95_ttft_ms": 353.24,
+      "p95_tpot_ms": 10.46,
+      "p95_e2e_ms": 11055.34
+    }
+  ],
+  "long_context_correctness": {
+    "method": "Exact tokenizer-counted synthetic single-needle retrieval at 250K tokens; cache flushed before every case; this is a correctness smoke test, not a quality benchmark.",
+    "needle_positions_percent": [10, 50, 90],
+    "cases": [
+      {
+        "input_tokens": 250000,
+        "passed": 3,
+        "total": 3,
+        "elapsed_seconds": [19.796, 19.763, 19.771]
+      }
+    ],
+    "total_passed": 3,
+    "total_cases": 3
+  },
+  "fp8_comparison": {
+    "reference": "h20-fp8-summary-20260827.json",
+    "startup": {
+      "fp8_weight_load_seconds": 88.11,
+      "bf16_weight_load_seconds": 149.24,
+      "fp8_weight_gib_per_rank": 32.20,
+      "bf16_weight_gib_per_rank": 60.44,
+      "fp8_max_total_tokens": 3680256,
+      "bf16_max_total_tokens": 2458432,
+      "fp8_max_running_requests": 587,
+      "bf16_max_running_requests": 392
+    },
+    "interpretation": "FP8 has a clear startup and capacity advantage. BF16 is 7-8% faster in several decode-heavy shapes, C8 short output is effectively tied, and FP8 is about 3.3% faster in the 32K prefill case. These short runs do not establish a universal throughput or quality ranking."
+  }
+}

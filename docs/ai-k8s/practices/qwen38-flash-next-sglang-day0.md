@@ -1,15 +1,15 @@
 ---
 title: Qwen3.8-Flash-Next Day 0 实战：4×H20 跑通原生 262K
-description: 用 SGLang Day-0 官方镜像和 FP8 权重，在 4×H20 上验证 Qwen4 预览架构、262K 长上下文、PLE、MTP、长短混部与框架支持边界
+description: 用 SGLang Day-0 官方镜像和 BF16/FP8 权重，在 4×H20 上验证 Qwen4 预览架构、精度与容量、262K 长上下文、PLE、MTP、长短混部与框架支持边界
 status: published
 last_reviewed: 2026-08-27
 ---
 
 # Qwen3.8-Flash-Next Day 0 实战：4×H20 跑通原生 262K
 
-2026 年 8 月 26 日，Qwen 发布 Qwen3.8-Flash-Next，并把它定位为 Qwen4 架构的实验性预览；SGLang 同日给出专用镜像和部署 Cookbook。一天之内，我在 Kubernetes 上完成了两条实测：官方 FP8 权重在 **4×141 GB H20** 上以 TP4/EP4 跑通原生 262,144 Token Context，Thinking、Tool Call 和图片输入均可用；官方镜像在 **8×48 GB L20** 上不能直接运行，只有替换 QSA Decode Kernel 的兼容补丁能够生成，而且性能不具备生产参考价值。
+2026 年 8 月 26 日，Qwen 发布 Qwen3.8-Flash-Next，并把它定位为 Qwen4 架构的实验性预览；SGLang 同日给出专用镜像和部署 Cookbook。一天之内，我在 Kubernetes 上完成了三条实测：官方 FP8 与 BF16 权重都在 **4×141 GB H20** 上以 TP4/EP4 跑通，原生 262,144 Token Context、Thinking、Tool Call 和图片输入均可用；官方镜像在 **8×48 GB L20** 上不能直接运行，只有替换 QSA Decode Kernel 的兼容补丁能够生成，而且性能不具备生产参考价值。
 
-H20 短请求输出吞吐从并发 1 的 90.32 tok/s 扩展到并发 64 的 1,860.09 tok/s；接近 262K 的单请求可完成，P95 TTFT 为 19.16 秒；4K 共享系统提示词场景得到 50.2% 的缓存命中率。这里的结论来自本地实测，不使用官方 H200/B200 数字代替。
+H20 FP8 短请求输出吞吐从并发 1 的 90.32 tok/s 扩展到并发 64 的 1,860.09 tok/s；接近 262K 的单请求可完成，P95 TTFT 为 19.16 秒；4K 共享系统提示词场景得到 50.2% 的缓存命中率。BF16 对照显示，FP8 的 Token Pool 多 49.7%、权重加载快 40.9%，但部分 Decode 工作负载反而是 BF16 快约 7%–8%。这里的结论来自本地实测，不使用官方 H200/B200 数字代替。
 
 框架支持也必须带时间戳看：**截至 2026 年 8 月 27 日，SGLang 已经提供 Qwen3.8-Flash-Next 的 Day-0 专用镜像、模型实现和官方启动配方；vLLM 稳定版与主分支尚不能直接部署，模型注册、PLE 和 Qwen4 融合 Kernel 仍在 Open PR 中。** 这不是说 vLLM 永远不支持，而是本文发布当天两者的可用状态不同。
 
@@ -276,13 +276,47 @@ AssertionError: initial_state must be float32, got torch.bfloat16
 
 参考：[SGLang Qwen3.8-Flash-Next 官方配置源码](https://github.com/sgl-project/sglang/blob/1c8f2b38cbb318cadb6e0b5cd7cc8ce6a3fc8209/docs/src/snippets/configs/Qwen/qwen3.8-flash-next.jsx)、[SGLang Mamba Server Arguments](https://github.com/sgl-project/sglang/blob/main/docs/advanced_features/server_arguments.md)。
 
-## 14. L20 为什么不能当作正式性能路径
+## 14. BF16 与 FP8：容量优势不等于吞吐全面领先
+
+在同一套 4×H20、SGLang、TP4/EP4、PLE On、MTP Off 配置下，我把官方 BF16 Checkpoint 作为唯一主要变量重新启动并复测。两条路径使用相同的 0.85 Static Memory Fraction，因此稳定态显存占用接近，只说明引擎会把余量继续分给缓存，不能据此得出两种精度容量相同。
+
+### 14.1 启动与容量
+
+| 指标 | FP8 | BF16 | 观察 |
+| --- | ---: | ---: | --- |
+| 权重加载 | 88.11 s | 149.24 s | FP8 快 40.9% |
+| Engine Ready | 234.88 s | 271.40 s | FP8 快 13.5% |
+| 每 Rank 权重 | 32.20 GiB | 60.44 GiB | FP8 少 28.24 GiB |
+| `max_total_num_tokens` | 3,680,256 | 2,458,432 | FP8 多 49.7% |
+| `max_running_requests` | 587 | 392 | FP8 多 49.7% |
+
+FP8 的确定性收益非常清楚：Checkpoint 约为 BF16 的一半，权重加载更快，并把更多显存留给 Mamba/KV State。即使两者稳定态都接近 0.85 的显存水位，FP8 能容纳的 Token Pool 仍多约 122 万。
+
+### 14.2 典型工作负载 A/B
+
+| 输入 / 输出 | 并发 | FP8 Output tok/s | BF16 Output tok/s | 观察 |
+| ---: | ---: | ---: | ---: | --- |
+| 128 / 64 | 1 | 90.32 | 97.16 | BF16 +7.6% |
+| 128 / 64 | 8 | 535.12 | 531.38 | 基本持平 |
+| 128 / 64 | 64 | 1,860.09 | 1,999.76 | BF16 +7.5% |
+| 128 / 1,024 | 1 | 114.11 | 123.43 | BF16 +8.2% |
+| 128 / 1,024 | 8 | 702.56 | 750.18 | BF16 +6.8% |
+
+32K 输入、128 输出、C1 的 Input Throughput 则是 FP8 10,668.22 tok/s、BF16 10,329.37 tok/s，FP8 高约 3.3%；BF16 P95 TTFT 为 2.06 秒，FP8 为 1.86 秒。250K 单针在 10%、50%、90% 三个位置，两种精度均为 3/3 通过；BF16 单次约 19.77 秒，FP8 约 18.90 秒。
+
+![BF16 与 FP8 的启动、容量和典型吞吐 A/B](../../assets/practices/qwen38-flash-next-sglang/qwen38-flash-next-h20-precision.png)
+
+这些是短时合成 A/B，不是输出质量评测；C8 的 FP8 使用稳定态复测值 535.12 tok/s，避免把另一轮 578.77 tok/s 的运行波动包装成精度差异。当前能下的结论是：**FP8 明确换来更高容量和更快启动，但在这套 H20 Kernel 路径上并没有全面赢过 BF16 的 Decode 吞吐。** 是否采用 FP8，应同时看单实例容量、TTFT SLO、真实输入/输出分布和质量评测，而不是只看精度名称。
+
+机器可读结果见 [`h20-bf16-summary-20260827.json`](https://github.com/runzhliu/aik8s/blob/main/examples/qwen38-flash-next-sglang/results/h20-bf16-summary-20260827.json)。
+
+## 15. L20 为什么不能当作正式性能路径
 
 官方 Day-0 镜像在 L20（SM89）上直接失败：FlashInfer GDN 要求 SM90+；改用 Triton GDN 后可以越过线性注意力，但 QSA 的 FA4/CuTe 路径继续报 `unable to compute crd2idx`。
 
 为了判断是权重还是 Kernel 问题，我做了一个兼容性补丁：QSA Decode 逐请求回退到 PyTorch SDPA，并关闭 CUDA Graph。8×L20、TP8/EP8、32K 可以正确生成，但 C1 128/64 只有 7.47 tok/s，P95 TPOT 131.77 ms；这是正确性证明，不是 SGLang 的正式 L20 性能。公开结果必须同时写出补丁和禁用项，不能只留下“L20 已支持”。
 
-## 15. SGLang 已支持，vLLM 还在适配
+## 16. SGLang 已支持，vLLM 还在适配
 
 截至 2026 年 8 月 27 日，框架状态可以归纳为：**SGLang 已经能用官方 Day-0 镜像和配方直接部署；vLLM 稳定版和主分支尚不能直接部署，社区适配正在进行，FP8 也还不能按正式支持使用。**
 
@@ -292,7 +326,7 @@ AssertionError: initial_state must be float32, got torch.bfloat16
 
 因此可以拉取 vLLM PR Commit 做实验，但那是维护自定义分支，不应注册成生产稳定模型。本文选择 SGLang，不是因为 vLLM 永远不能支持，而是 SGLang 在发布当天已经交付了可运行的模型实现、专用镜像、PLE、GDN/QSA Backend 和启动配方。这个判断只代表 2026 年 8 月 27 日的上游状态，后续应以 PR 合入和 Release Notes 为准。
 
-## 16. 接入 OpenWebUI
+## 17. 接入 OpenWebUI
 
 SGLang 暴露的是 OpenAI-compatible API，OpenWebUI 不需要理解 QSA、PLE 或 TP/EP。在管理员的 OpenAI-compatible Connections 中填写：
 
@@ -304,7 +338,7 @@ Model ID: qwen38-flash-next
 
 注册前应从 OpenWebUI 所在网络分别验证 `/v1/models` 和一次 Chat Completion。只验证浏览器能打开入口不够：模型服务可能 Ready，但跨网络路由、证书、超时或访问控制仍会使 UI 返回 502。
 
-## 17. 可以复用的 Day-0 检查表
+## 18. 可以复用的 Day-0 检查表
 
 1. 固定模型 Revision、镜像 Digest 和硬件架构，不只记 Tag；
 2. 用零 GPU Pod 验证精确模型目录和运行时模型注册；
