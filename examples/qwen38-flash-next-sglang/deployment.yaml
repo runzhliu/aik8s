@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen38-flash-next-sglang
+  namespace: qwen38-flash-next-lab
+  labels:
+    app.kubernetes.io/name: qwen38-flash-next-sglang
+    app.kubernetes.io/part-of: qwen38-flash-next-day0
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qwen38-flash-next-sglang
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qwen38-flash-next-sglang
+        app.kubernetes.io/part-of: qwen38-flash-next-day0
+        model.aibrix.ai/name: qwen38-flash-next
+        model.aibrix.ai/port: "30000"
+        model.aibrix.ai/engine: sglang
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "30000"
+        prometheus.io/path: /metrics
+    spec:
+      terminationGracePeriodSeconds: 180
+      # Replace this example label with a verified SM90+ large-memory GPU pool.
+      nodeSelector:
+        accelerator.example.com/model: h20-141gb
+      containers:
+        - name: sglang
+          image: lmsysorg/sglang@sha256:12d3392bdc8be8d35e9a95f191df6aef99c5114bdbefd41bfdc7e760e6d25ec1
+          imagePullPolicy: IfNotPresent
+          command: ["sglang", "serve"]
+          args:
+            - --model-path
+            - /models/Qwen3.8-Flash-Next-FP8
+            - --served-model-name
+            - qwen38-flash-next
+            - --host
+            - 0.0.0.0
+            - --port
+            - "30000"
+            - --tp-size
+            - "4"
+            - --ep-size
+            - "4"
+            - --mem-fraction-static
+            - "0.85"
+            - --max-running-requests
+            - "16"
+            - --chunked-prefill-size
+            - "8192"
+            - --ple-offload-embedding
+            - --linear-attn-prefill-backend
+            - flashinfer
+            - --linear-attn-decode-backend
+            - flashinfer
+            - --mamba-ssm-dtype
+            - bfloat16
+            - --reasoning-parser
+            - auto
+            - --tool-call-parser
+            - auto
+            - --enable-metrics
+          env:
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: NCCL_DEBUG
+              value: WARN
+          ports:
+            - name: http
+              containerPort: 30000
+          startupProbe:
+            # This Day-0 SGLang image executes a 64-token generation for
+            # GET /health. Use a socket probe so Kubernetes checks do not
+            # become hidden benchmark traffic.
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 540
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "64"
+              memory: 700Gi
+              ephemeral-storage: 16Gi
+              nvidia.com/gpu: "4"
+            limits:
+              cpu: "160"
+              memory: 1000Gi
+              ephemeral-storage: 64Gi
+              nvidia.com/gpu: "4"
+          securityContext:
+            capabilities:
+              add: ["IPC_LOCK"]
+          volumeMounts:
+            - name: model-corpus
+              mountPath: /models
+              readOnly: true
+            - name: dshm
+              mountPath: /dev/shm
+            - name: cache
+              mountPath: /root/.cache
+      volumes:
+        - name: model-corpus
+          persistentVolumeClaim:
+            claimName: qwen38-flash-next-models
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Gi
+        - name: cache
+          emptyDir:
+            sizeLimit: 32Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen38-flash-next-sglang
+  namespace: qwen38-flash-next-lab
+  labels:
+    app.kubernetes.io/name: qwen38-flash-next-sglang
+    app.kubernetes.io/part-of: qwen38-flash-next-day0
+    model.aibrix.ai/name: qwen38-flash-next
+    model.aibrix.ai/port: "30000"
+spec:
+  selector:
+    app.kubernetes.io/name: qwen38-flash-next-sglang
+  ports:
+    - name: http
+      port: 30000
+      targetPort: http

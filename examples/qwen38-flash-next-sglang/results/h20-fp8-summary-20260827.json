@@ -1,0 +1,77 @@
+{
+  "date": "2026-08-27",
+  "status": "experimental_day0",
+  "model": "Qwen/Qwen3.8-Flash-Next-FP8",
+  "model_revision": "bcd9f01ddc9cff2316eb84281bebcd5b058bddce",
+  "weight_bytes": 185502232570,
+  "weight_shards": 131,
+  "runtime": {
+    "engine": "SGLang",
+    "version": "0.0.0.dev1+gd91c3682b",
+    "pytorch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "gpu": "NVIDIA H20-3e 141GB",
+    "gpu_count": 4,
+    "tensor_parallel": 4,
+    "expert_parallel": 4,
+    "context_length": 262144,
+    "ple_offload_embedding": true,
+    "linear_attention_prefill_backend": "flashinfer",
+    "linear_attention_decode_backend": "flashinfer",
+    "mamba_ssm_dtype": "bfloat16"
+  },
+  "startup": {
+    "image_pull_seconds_first_node": 130.42,
+    "weight_load_seconds": 88.11,
+    "decode_cuda_graph_seconds": 105.15,
+    "engine_ready_seconds": 234.88,
+    "max_total_tokens": 3680256,
+    "gpu_memory_used_mib": [128070, 127760, 127760, 127280],
+    "gpu_memory_total_mib": 143771
+  },
+  "method": {
+    "backend": "sglang native token-id endpoint",
+    "dataset": "random-ids",
+    "exact_token_lengths": true,
+    "request_rate": "infinite",
+    "temperature": 0,
+    "cache_flushed_per_case": true,
+    "probe": "TCP socket; no hidden generation traffic"
+  },
+  "short_context": [
+    {"concurrency": 1, "input_tokens": 128, "output_tokens": 64, "requests": 16, "output_tokens_per_second": 90.32, "median_ttft_ms": 196.07, "p95_ttft_ms": 200.30, "p95_tpot_ms": 8.14, "p95_e2e_ms": 710.69},
+    {"concurrency": 4, "input_tokens": 128, "output_tokens": 64, "requests": 32, "run": "steady_state_r2", "output_tokens_per_second": 334.95, "median_ttft_ms": 181.84, "p95_ttft_ms": 385.01, "p95_tpot_ms": 8.86, "p95_e2e_ms": 942.41},
+    {"concurrency": 8, "input_tokens": 128, "output_tokens": 64, "requests": 64, "output_tokens_per_second": 578.77, "median_ttft_ms": 188.40, "p95_ttft_ms": 371.43, "p95_tpot_ms": 10.69, "p95_e2e_ms": 1020.89},
+    {"concurrency": 16, "input_tokens": 128, "output_tokens": 64, "requests": 64, "output_tokens_per_second": 864.16, "median_ttft_ms": 393.46, "p95_ttft_ms": 410.07, "p95_tpot_ms": 12.71, "p95_e2e_ms": 1183.96},
+    {"concurrency": 32, "input_tokens": 128, "output_tokens": 64, "requests": 128, "output_tokens_per_second": 1393.73, "median_ttft_ms": 440.42, "p95_ttft_ms": 452.25, "p95_tpot_ms": 16.61, "p95_e2e_ms": 1484.50},
+    {"concurrency": 64, "input_tokens": 128, "output_tokens": 64, "requests": 256, "output_tokens_per_second": 1860.09, "median_ttft_ms": 646.43, "p95_ttft_ms": 1323.93, "p95_tpot_ms": 28.77, "p95_e2e_ms": 2896.71}
+  ],
+  "long_context": [
+    {"concurrency": 1, "input_tokens": 4096, "output_tokens": 128, "requests": 4, "input_tokens_per_second": 2722.55, "output_tokens_per_second": 85.08, "median_ttft_ms": 253.29, "p95_ttft_ms": 253.72, "p95_tpot_ms": 9.83, "p95_e2e_ms": 1501.38},
+    {"concurrency": 4, "input_tokens": 4096, "output_tokens": 128, "requests": 16, "input_tokens_per_second": 7306.45, "output_tokens_per_second": 228.33, "median_ttft_ms": 870.40, "p95_ttft_ms": 970.22, "p95_tpot_ms": 11.11, "p95_e2e_ms": 2303.93},
+    {"concurrency": 1, "input_tokens": 32768, "output_tokens": 128, "requests": 4, "input_tokens_per_second": 10668.22, "output_tokens_per_second": 41.67, "median_ttft_ms": 1815.63, "p95_ttft_ms": 1862.45, "p95_tpot_ms": 9.88, "p95_e2e_ms": 3071.27},
+    {"concurrency": 4, "input_tokens": 32768, "output_tokens": 128, "requests": 8, "input_tokens_per_second": 15270.43, "output_tokens_per_second": 59.65, "median_ttft_ms": 5852.38, "p95_ttft_ms": 7243.03, "p95_tpot_ms": 49.80, "p95_e2e_ms": 8581.23},
+    {"concurrency": 1, "input_tokens": 65536, "output_tokens": 128, "requests": 4, "input_tokens_per_second": 13159.32, "output_tokens_per_second": 25.70, "median_ttft_ms": 3718.35, "p95_ttft_ms": 3721.86, "p95_tpot_ms": 9.92, "p95_e2e_ms": 4981.53},
+    {"concurrency": 4, "input_tokens": 65536, "output_tokens": 128, "requests": 4, "input_tokens_per_second": 16151.97, "output_tokens_per_second": 31.55, "median_ttft_ms": 9730.98, "p95_ttft_ms": 14350.04, "p95_tpot_ms": 90.40, "p95_e2e_ms": 16216.55},
+    {"concurrency": 1, "input_tokens": 131072, "output_tokens": 128, "requests": 2, "input_tokens_per_second": 14227.63, "output_tokens_per_second": 13.89, "median_ttft_ms": 7941.82, "p95_ttft_ms": 7947.65, "p95_tpot_ms": 9.95, "p95_e2e_ms": 9211.48},
+    {"concurrency": 2, "input_tokens": 131072, "output_tokens": 128, "requests": 2, "input_tokens_per_second": 15253.59, "output_tokens_per_second": 14.90, "median_ttft_ms": 15889.81, "p95_ttft_ms": 15893.00, "p95_tpot_ms": 10.08, "p95_e2e_ms": 17172.33},
+    {"concurrency": 1, "input_tokens": 261120, "output_tokens": 128, "requests": 1, "input_tokens_per_second": 12748.52, "output_tokens_per_second": 6.25, "median_ttft_ms": 19164.43, "p95_ttft_ms": 19164.43, "p95_tpot_ms": 10.27, "p95_e2e_ms": 20468.81}
+  ],
+  "long_output": [
+    {"concurrency": 1, "input_tokens": 128, "output_tokens": 1024, "requests": 4, "output_tokens_per_second": 114.11, "median_ttft_ms": 199.63, "p95_ttft_ms": 205.14, "p95_tpot_ms": 8.57, "p95_e2e_ms": 8974.44},
+    {"concurrency": 8, "input_tokens": 128, "output_tokens": 1024, "requests": 16, "output_tokens_per_second": 702.56, "median_ttft_ms": 382.66, "p95_ttft_ms": 385.49, "p95_tpot_ms": 11.19, "p95_e2e_ms": 11824.78}
+  ],
+  "shared_prefix": {
+    "comparison_note": "The shared-prefix workload has slightly more input tokens than the random baseline, so the result is directional rather than a perfectly token-identical A/B test.",
+    "random_baseline": {"concurrency": 8, "input_tokens_per_request": 4224, "output_tokens": 64, "requests": 32, "total_input_tokens": 135168, "duration_seconds": 11.10, "input_tokens_per_second": 12174.35, "output_tokens_per_second": 184.46, "median_ttft_ms": 1798.39, "p95_ttft_ms": 2284.69, "p95_e2e_ms": 3060.28},
+    "generated_shared_prefix": {"concurrency": 8, "groups": 4, "prompts_per_group": 8, "target_system_prompt_tokens": 4096, "target_question_tokens": 128, "output_tokens": 64, "total_input_tokens": 144808, "duration_seconds": 7.15, "input_tokens_per_second": 20243.86, "output_tokens_per_second": 286.31, "median_ttft_ms": 1063.45, "p95_ttft_ms": 1088.66, "p95_e2e_ms": 1815.92, "cache_hit_rate_percent": 50.2, "device_cached_tokens": 72640}
+  },
+  "correctness": {
+    "models_endpoint": "pass",
+    "chat_completion": "pass",
+    "reasoning_content": "pass",
+    "structured_tool_call": "pass",
+    "vision_data_url": "pass",
+    "cross_cluster_openai_compatible_access": "pass"
+  }
+}

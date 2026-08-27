@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">Qwen3.8-Flash-Next FP8 短请求输出吞吐</title>
+  <desc id="desc">四张 H20 上，并发从 1 增至 64，输出吞吐从 90.32 增至 1860.09 token 每秒。</desc>
+  <rect width="960" height="520" fill="#ffffff"/>
+  <text x="64" y="42" fill="#0f172a" font-family="sans-serif" font-size="24" font-weight="700">4×H20 FP8：短请求吞吐随并发提升</text>
+  <text x="64" y="70" fill="#64748b" font-family="sans-serif" font-size="14">128 输入 / 64 输出 · SGLang Day-0 官方镜像 · TCP 探针</text>
+  <g stroke="#e2e8f0" stroke-width="1">
+    <line x1="92" y1="430" x2="910" y2="430"/><line x1="92" y1="340" x2="910" y2="340"/>
+    <line x1="92" y1="250" x2="910" y2="250"/><line x1="92" y1="160" x2="910" y2="160"/>
+    <line x1="92" y1="70" x2="910" y2="70"/>
+  </g>
+  <g fill="#64748b" font-family="sans-serif" font-size="13" text-anchor="end">
+    <text x="82" y="435">0</text><text x="82" y="345">500</text><text x="82" y="255">1,000</text>
+    <text x="82" y="165">1,500</text><text x="82" y="75">2,000 tok/s</text>
+  </g>
+  <g fill="#2563eb">
+    <rect x="130" y="414" width="86" height="16" rx="5"/><rect x="264" y="370" width="86" height="60" rx="5"/>
+    <rect x="398" y="326" width="86" height="104" rx="5"/><rect x="532" y="274" width="86" height="156" rx="5"/>
+    <rect x="666" y="179" width="86" height="251" rx="5"/><rect x="800" y="95" width="86" height="335" rx="5"/>
+  </g>
+  <g fill="#0f172a" font-family="sans-serif" font-size="14" text-anchor="middle">
+    <text x="173" y="404">90</text><text x="307" y="360">335</text><text x="441" y="316">579</text>
+    <text x="575" y="264">864</text><text x="709" y="169">1,394</text><text x="843" y="85">1,860</text>
+  </g>
+  <g fill="#475569" font-family="sans-serif" font-size="14" text-anchor="middle">
+    <text x="173" y="458">C1</text><text x="307" y="458">C4</text><text x="441" y="458">C8</text>
+    <text x="575" y="458">C16</text><text x="709" y="458">C32</text><text x="843" y="458">C64</text>
+    <text x="500" y="493" fill="#64748b">最大并发</text>
+  </g>
+</svg>

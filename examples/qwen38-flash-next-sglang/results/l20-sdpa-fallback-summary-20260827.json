@@ -1,0 +1,34 @@
+{
+  "date": "2026-08-27",
+  "status": "compatibility_fallback_not_production",
+  "model": "Qwen/Qwen3.8-Flash-Next-FP8",
+  "runtime": {
+    "base_engine": "SGLang 0.0.0.dev1+gd91c3682b",
+    "gpu": "NVIDIA L20 48GB",
+    "gpu_count": 8,
+    "tensor_parallel": 8,
+    "expert_parallel": 8,
+    "context_length": 32768,
+    "qsa_decode": "per-request PyTorch SDPA compatibility patch",
+    "linear_attention": "Triton",
+    "cuda_graph": false
+  },
+  "warning": "The official image does not directly support this SM89 path. These numbers measure a correctness fallback and must not be used as official L20 performance.",
+  "resource_observation_per_rank": {
+    "weights_gib": 16.97,
+    "mamba_conv_state_gib": 0.36,
+    "mamba_ssm_state_gib": 9.18,
+    "kv_k_cache_gib": 4.99,
+    "kv_v_cache_gib": 4.99,
+    "remaining_gib": 6.44
+  },
+  "method": {
+    "backend": "sglang native token-id endpoint",
+    "dataset": "random-ids",
+    "probe": "TCP socket; clean rerun after discovering GET /health generated 64 tokens"
+  },
+  "short_context": [
+    {"concurrency": 1, "input_tokens": 128, "output_tokens": 64, "requests": 16, "output_tokens_per_second": 7.47, "median_ttft_ms": 309.07, "p95_ttft_ms": 346.52, "p95_tpot_ms": 131.77, "p95_e2e_ms": 8615.28},
+    {"concurrency": 4, "input_tokens": 128, "output_tokens": 64, "requests": 32, "output_tokens_per_second": 27.82, "median_ttft_ms": 500.20, "p95_ttft_ms": 785.05, "p95_tpot_ms": 141.18, "p95_e2e_ms": 9271.81}
+  ]
+}

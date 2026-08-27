@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: qwen38-flash-next-lab
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qwen38-flash-next-preflight
+  namespace: qwen38-flash-next-lab
+  labels:
+    app.kubernetes.io/name: qwen38-flash-next-preflight
+    app.kubernetes.io/part-of: qwen38-flash-next-day0
+spec:
+  restartPolicy: Never
+  containers:
+    - name: preflight
+      image: lmsysorg/sglang@sha256:12d3392bdc8be8d35e9a95f191df6aef99c5114bdbefd41bfdc7e760e6d25ec1
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/bash", "-lc"]
+      args:
+        - |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+          import sglang
+          import torch
+          import transformers
+
+          model = pathlib.Path(os.environ['MODEL_DIR'])
+          config_path = model / 'config.json'
+          index_path = model / 'model.safetensors.index.json'
+          assert config_path.is_file(), f'missing {config_path}'
+          assert index_path.is_file(), f'missing {index_path}'
+
+          config = json.loads(config_path.read_text(encoding='utf-8'))
+          index = json.loads(index_path.read_text(encoding='utf-8'))
+          assert config['architectures'] == ['Qwen4ExpForConditionalGeneration']
+          assert config['model_type'] == 'qwen4_exp'
+          assert index['metadata']['total_size'] == 185_502_232_570
+          for metadata_file in ('tokenizer.json', 'tokenizer_config.json'):
+              assert (model / metadata_file).is_file(), f'missing {model / metadata_file}'
+
+          shards = sorted(set(index['weight_map'].values()))
+          assert len(shards) == 131, len(shards)
+          missing = [name for name in shards if not (model / name).is_file()]
+          empty = [name for name in shards if (model / name).is_file() and (model / name).stat().st_size == 0]
+          assert not missing, f'missing shards: {missing[:5]}'
+          assert not empty, f'empty shards: {empty[:5]}'
+
+          package_root = pathlib.Path(sglang.__file__).resolve().parent
+          implementation = package_root / 'srt' / 'models' / 'qwen4_exp.py'
+          assert implementation.is_file(), f'missing {implementation}'
+          source = implementation.read_text(encoding='utf-8', errors='ignore')
+          assert 'class Qwen4ExpForConditionalGeneration' in source
+          assert 'class Qwen4ExpPinnedHostEmbedding' in source
+
+          print('sglang:', sglang.__version__)
+          print('torch:', torch.__version__)
+          print('torch CUDA:', torch.version.cuda)
+          print('transformers:', transformers.__version__)
+          print('model architecture:', config['architectures'][0])
+          print('model type:', config['model_type'])
+          print('weight shards:', len(shards))
+          print('weight bytes:', index['metadata']['total_size'])
+          print('implementation:', implementation)
+          PY
+          sglang serve --help | grep -E -- \
+            '--tp-size|--ep-size|--context-length|--ple-offload-embedding|--linear-attn-prefill-backend|--linear-attn-decode-backend|--mamba-ssm-dtype|--reasoning-parser|--tool-call-parser'
+          echo 'Qwen3.8-Flash-Next SGLang Day-0 preflight: PASS'
+      env:
+        - name: MODEL_DIR
+          value: /models/Qwen3.8-Flash-Next-FP8
+        - name: HF_HUB_OFFLINE
+          value: "1"
+        - name: TRANSFORMERS_OFFLINE
+          value: "1"
+      resources:
+        requests:
+          cpu: "4"
+          memory: 8Gi
+        limits:
+          cpu: "8"
+          memory: 16Gi
+      volumeMounts:
+        - name: model-corpus
+          mountPath: /models
+          readOnly: true
+  volumes:
+    - name: model-corpus
+      persistentVolumeClaim:
+        claimName: qwen38-flash-next-models
