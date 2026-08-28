@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: glm53-flash-preflight-sglang
+  namespace: glm53-flash-lab
+  labels:
+    app.kubernetes.io/part-of: glm53-flash-day1
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: glm53-flash-preflight-sglang
+        app.kubernetes.io/part-of: glm53-flash-day1
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: preflight
+          image: lmsysorg/sglang@sha256:0836f0160fa785e424e68d13ef88ddd548f87e6e11ad9f0e4de982e4f9188aaf
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/opt/preflight/preflight.py"]
+          env:
+            - name: ENGINE
+              value: sglang
+            - name: MODEL_PATH
+              value: /models/GLM-5.3-Flash
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+            limits:
+              cpu: "8"
+              memory: 16Gi
+          volumeMounts:
+            - name: model-corpus
+              mountPath: /models
+              readOnly: true
+            - name: preflight
+              mountPath: /opt/preflight
+              readOnly: true
+      volumes:
+        - name: model-corpus
+          persistentVolumeClaim:
+            claimName: glm53-flash-models
+        - name: preflight
+          configMap:
+            name: glm53-flash-preflight

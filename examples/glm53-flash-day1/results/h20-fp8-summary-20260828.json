@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "measured_at": "2026-08-28",
+  "model": {
+    "name": "GLM-5.3-Flash",
+    "architecture": "Glm5NextForConditionalGeneration",
+    "model_type": "glm5_next",
+    "checkpoint_format": "native-fp8",
+    "weight_shards": 62,
+    "weight_index_bytes": 328326771576,
+    "checkpoint_bytes_on_disk": 328337455672,
+    "declared_max_context_tokens": 1048576
+  },
+  "environment": {
+    "gpu": "NVIDIA H20 141GB",
+    "gpus_per_engine": 4,
+    "tensor_parallel_size": 4,
+    "kv_cache_dtype": "bfloat16",
+    "mtp_enabled": false,
+    "driver": "580.126.20",
+    "comparison_scope": "Two disjoint four-GPU slices on one eight-GPU host. This is a host-level Day-1 comparison, not a sequential same-GPU-UUID benchmark."
+  },
+  "runtimes": {
+    "sglang": {
+      "image_amd64_digest": "sha256:0836f0160fa785e424e68d13ef88ddd548f87e6e11ad9f0e4de982e4f9188aaf",
+      "package_version": "0.0.0.dev1+gf609d677b",
+      "tensor_parallel_size": 4,
+      "expert_parallel_size": 4,
+      "attention_backend": "dsa",
+      "dsa_prefill_backend": "tilelang",
+      "dsa_decode_backend": "tilelang",
+      "linear_attention_backend": "triton",
+      "moe_runner_backend": "deep_gemm",
+      "weight_load_seconds": 130.59,
+      "weight_memory_gib_per_gpu": 75.27,
+      "kv_cache_gib_per_gpu": 19.93,
+      "kv_cache_tokens": 1683136,
+      "ready_seconds_approx": 591,
+      "restarts_after_test": 0
+    },
+    "vllm": {
+      "image_amd64_digest": "sha256:2e771fa615452282cc331eb418b3ef21636fce355bea0491fca89e6d362ab703",
+      "package_version": "0.1.dev20051+g487ecf187",
+      "tensor_parallel_size": 4,
+      "attention_backend": "FLASH_ATTN_MLA_SPARSE",
+      "moe_kernel": "FlashInferFp8DeepGEMMDynamicBlockScaledKernel",
+      "weight_load_seconds_max_rank": 365.69,
+      "weight_memory_gib_per_gpu": 75.65,
+      "kv_cache_gib_per_gpu": 29.94,
+      "kv_cache_tokens": 2735415,
+      "deepgemm_warmup_kernels": 1102,
+      "cuda_graph_capture_seconds": 15,
+      "cuda_graph_memory_gib_per_gpu": 0.95,
+      "ready_seconds_approx": 720,
+      "restarts_after_test": 0,
+      "startup_warnings": [
+        "No MLA prefill backend supports this model; sparse MLA used the top-k MQA path.",
+        "No H20-specific FP8 MoE tuning file was present; the default configuration was used."
+      ]
+    }
+  },
+  "correctness": {
+    "sglang": {
+      "models_endpoint": "pass",
+      "reasoning_effort_low_high_max": "pass",
+      "reasoning_content_field": true,
+      "tool_call": "pass",
+      "image_input": "pass",
+      "video_input": "not_tested",
+      "openwebui_real_chat": "pass"
+    },
+    "vllm": {
+      "models_endpoint": "pass",
+      "reasoning_effort_low_high_max": "pass",
+      "reasoning_content_field": false,
+      "tool_call": "pass",
+      "image_input": "pass",
+      "video_input": "not_tested"
+    }
+  },
+  "short_128_64_three_run_medians": [
+    {"concurrency": 1, "sglang_output_tps": 74.69468, "sglang_p95_ttft_ms": 188.420924, "vllm_output_tps": 107.704103, "vllm_p95_ttft_ms": 182.571317},
+    {"concurrency": 4, "sglang_output_tps": 234.638014, "sglang_p95_ttft_ms": 340.105364, "vllm_output_tps": 225.945693, "vllm_p95_ttft_ms": 558.793698},
+    {"concurrency": 8, "sglang_output_tps": 392.380656, "sglang_p95_ttft_ms": 413.883962, "vllm_output_tps": 257.215531, "vllm_p95_ttft_ms": 11758.72163},
+    {"concurrency": 16, "sglang_output_tps": 572.240038, "sglang_p95_ttft_ms": 428.371124, "vllm_output_tps": 735.84941, "vllm_p95_ttft_ms": 565.475246},
+    {"concurrency": 32, "sglang_output_tps": 847.129209, "sglang_p95_ttft_ms": 1096.231771, "vllm_output_tps": 1156.878004, "vllm_p95_ttft_ms": 694.999044}
+  ],
+  "prefill_4096_128_concurrency_4": {
+    "sglang_three_run_output_tps": [143.763576, 143.251302, 143.636486],
+    "sglang_three_run_p95_ttft_ms": [1796.79876, 1796.256584, 1779.464868],
+    "vllm_three_run_output_tps": [116.87392, 172.12203, 172.780206],
+    "vllm_three_run_p95_ttft_ms": [7208.798233, 1797.557706, 1799.080337]
+  },
+  "decode_128_1024_three_run_medians": [
+    {"concurrency": 1, "sglang_output_tps": 92.311583, "sglang_p95_tpot_ms": 10.705267, "vllm_output_tps": 148.492896, "vllm_p95_tpot_ms": 6.560707},
+    {"concurrency": 8, "sglang_output_tps": 460.956389, "sglang_p95_tpot_ms": 17.194428, "vllm_output_tps": 684.997869, "vllm_p95_tpot_ms": 11.473828}
+  ],
+  "cold_long_context": [
+    {"input_tokens": 32768, "sglang_ttft_seconds": 3.60992, "vllm_ttft_seconds": 3.431584, "vllm_first_shape_ttft_seconds_excluded": 14.603649},
+    {"input_tokens": 65536, "sglang_ttft_seconds": 7.298461, "vllm_ttft_seconds": 8.287967},
+    {"input_tokens": 131072, "sglang_ttft_seconds": 14.977083, "vllm_ttft_seconds": 13.994296},
+    {"input_tokens": 263168, "sglang_ttft_seconds": 31.795776, "vllm_ttft_seconds": 29.570325},
+    {"input_tokens": 524288, "sglang_ttft_seconds": 70.017859, "vllm_ttft_seconds": 65.952638},
+    {"input_tokens": 1044480, "sglang_ttft_seconds": 167.685509, "vllm_ttft_seconds": 160.963643}
+  ],
+  "sglang_boundary_probe": [
+    {"input_tokens": 261120, "ttft_seconds": 31.467097, "request_succeeded": true},
+    {"input_tokens": 263168, "ttft_seconds": 31.795776, "request_succeeded": true},
+    {"input_tokens": 288768, "ttft_seconds": 35.161723, "request_succeeded": true}
+  ],
+  "needle_retrieval": {
+    "sglang": {"passed": 11, "total": 11, "maximum_tokens_passed": 1044480},
+    "vllm": {"passed": 8, "total": 8, "maximum_tokens_passed": 1044480},
+    "positions_percent": [10, 50, 90],
+    "note": "The 512K and near-1M runs used the 50% position only."
+  },
+  "prefix_cache": {
+    "sglang": {
+      "prompt_tokens": 4400,
+      "cold_ttft_ms": 456.664,
+      "warm_ttft_median_ms": 198.217,
+      "ttft_reduction_percent": 56.6,
+      "server_cache_hit_rate_after": 0.985507
+    },
+    "vllm": {
+      "prompt_tokens": 4400,
+      "cold_e2e_ms": 651.133,
+      "warm_e2e_median_ms": 296.529,
+      "query_token_delta": 26472,
+      "hit_token_delta": 17280,
+      "delta_hit_ratio": 0.65278,
+      "ttft_comparison_valid": false,
+      "note": "The preview API returned inconsistent visible streaming content, so only E2E and server metrics are published for this cache run."
+    }
+  },
+  "known_limits": [
+    "MTP was disabled and was not benchmarked.",
+    "Video input was not tested.",
+    "P/D separation and RDMA were not tested.",
+    "The runtimes were not benchmarked sequentially on the same GPU UUIDs.",
+    "Random-token throughput measures the serving path, not answer quality."
+  ]
+}

@@ -1,0 +1,21 @@
+case_id,stage,input_tokens,output_tokens,concurrency,num_prompts,repeats,description
+smoke-128-64-c1,smoke,128,64,1,4,1,API and result-format smoke
+short-128-64-c1,baseline,128,64,1,64,5,single-request latency baseline
+short-128-64-c4,baseline,128,64,4,128,5,moderate short-request batching
+short-128-64-c8,baseline,128,64,8,256,5,short-request throughput
+short-128-64-c16,baseline,128,64,16,256,5,higher short-request throughput
+short-128-64-c32,baseline,128,64,32,512,5,saturation probe
+prefill-4k-128-c4,baseline,4096,128,4,64,5,ordinary RAG prefill
+decode-128-1k-c1,decode,128,1024,1,4,3,long-output single request
+decode-128-1k-c8,decode,128,1024,8,24,3,long-output batching
+decode-128-4k-c1,decode,128,4096,1,2,2,agent-style long output
+decode-128-4k-c8,decode,128,4096,8,16,2,batched agent-style long output
+decode-128-16k-c1,decode,128,16384,1,1,1,extreme output length correctness
+ctx-32k-128-c1,long,32768,128,1,3,2,32K cold prefill
+ctx-64k-128-c1,long,65536,128,1,3,2,64K cold prefill
+ctx-128k-128-c1,long,131072,128,1,2,2,128K cold prefill
+ctx-255k-128-c1,boundary,261120,128,1,1,2,below reported 262K cold-prefill failure boundary
+ctx-257k-128-c1,boundary,263168,128,1,1,2,above reported 262K cold-prefill failure boundary
+ctx-282k-128-c1,boundary,288768,128,1,1,2,farther above reported boundary
+ctx-512k-128-c1,extreme,524288,128,1,1,1,512K native-context probe
+ctx-1m-128-c1,extreme,1044480,128,1,1,1,near-1M native-context probe
