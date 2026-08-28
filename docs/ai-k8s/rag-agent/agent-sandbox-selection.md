@@ -2,7 +2,7 @@
 title: Agent Sandbox 选型与架构分析
 description: 从威胁模型、生命周期控制面、gVisor、Kata、微虚机到托管沙箱的系统选型方法
 status: evolving
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-29
 ---
 
 # Agent Sandbox 选型与架构分析
@@ -13,6 +13,7 @@ Agent 能执行 Shell、运行用户代码、克隆仓库、打开网页或调�
 
 - 已经有成熟 Kubernetes 平台、需要数据留在自有环境，优先评估 **Kubernetes SIG Agent Sandbox + gVisor**；
 - 执行强对抗代码、租户互不信任或合规要求更高，优先评估 **Agent Sandbox + Kata Containers/独立 VM 节点池**；
+- 需要 E2B 兼容 API、自托管 KVM MicroVM、模板/快照和高密度执行，并且团队能维护宿主内核与 eBPF，可评估 **CubeSandbox**；
 - 产品仍在验证期、团队不想维护运行时和沙箱控制面，优先使用 **E2B、Modal、Daytona 等托管 API** 做小规模验证；
 - 本地 Coding Agent 保护开发机，可使用 **Docker Sandboxes** 一类本地微虚机工具，它不是服务端多租户控制面；
 - 普通 Pod、`seccomp`、非 Root 和 NetworkPolicy 是每种方案都需要的基线，但不能单独作为强对抗代码的充分隔离证明。
@@ -124,6 +125,7 @@ Sandbox API 与生命周期控制面
 | Agent Sandbox + Kata | 标准 CRD/SDK | 每 Pod 轻量 VM/Guest Kernel | 更强内核边界，仍通过 RuntimeClass 接入 | 节点、镜像、网络、存储和可观测更复杂 | L2/L3、高风险多租户 |
 | KubeVirt/自建 VM Factory | 自己或 VM API | 完整 VM | 完整 Linux/Windows 兼容和清晰 VM 边界 | 启动、密度、镜像和运维成本更高 | 需要 systemd、嵌套容器或完整 OS |
 | 直接集成 Firecracker | 大量自建 | microVM/KVM | 可深度优化启动、快照和密度 | Firecracker 是 VMM 构件，不是完整 Agent 平台 | 有专职虚拟化/平台团队的超大规模系统 |
+| CubeSandbox | 自带 E2B 兼容 API、调度、模板、快照和网络 | KVM MicroVM + 独立 Guest Kernel | 自托管、低延迟、高密度、控制面与数据面较完整 | K8s 交付仍是 Preview；需要 privileged/hostPID/hostPath、KVM/PVM、XFS、eBPF 和宿主机变更能力 | 有虚拟化/内核团队、需要自托管 MicroVM 平台 |
 
 ### 2. 托管或外部沙箱 API
 
@@ -135,6 +137,8 @@ Sandbox API 与生命周期控制面
 | Docker Sandboxes | 本地微虚机，每 Sandbox 独立 Docker daemon、文件系统和网络 | 保护开发机，适合 Coding Agent 本地工作流 | 不是服务端多租户调度或 Kubernetes API | 开发者桌面、本地仓库修改 |
 
 托管平台能力变化很快。表格只用于确定 PoC 候选，采购前必须以目标区域、套餐和合同中的安全/数据条款为准。
+
+CubeSandbox 与 Kubernetes SIG Agent Sandbox 不是同一个项目：前者是带 KVM Hypervisor、E2B 兼容 API、模板、快照、代理和 eBPF 网络的垂直平台；后者用 CRD/Controller 管理 Kubernetes 工作负载生命周期，并通过 RuntimeClass 组合 runc、gVisor 或 Kata。CubeSandbox `v0.7.0` 的 Kubernetes 前置条件、60ms 基准口径和生产阻塞项见 [CubeSandbox Kubernetes 部署条件与生产评估](cubesandbox-kubernetes.md)。
 
 ## 5. Kubernetes SIG Agent Sandbox 深入分析
 
@@ -680,9 +684,11 @@ Pool 数量
 - [Modal Sandboxes](https://modal.com/docs/guide/sandboxes)
 - [Daytona Sandboxes](https://www.daytona.io/docs/en/sandboxes/)
 - [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/)
+- [CubeSandbox](https://github.com/TencentCloud/CubeSandbox)
 
 ## 继续阅读
 
 - [AI Agent、沙箱与工具执行](../agentic-workloads.md)：工具授权、Prompt Injection、预算、审计和发布边界。
 - [AI 平台安全与治理](../security-governance.md)：集群身份、Pod Security、供应链和租户治理。
 - [生产参考架构](../guides/reference-architectures.md)：Agent 不可信工具执行的端到端部署位置。
+- [CubeSandbox Kubernetes 部署条件与生产评估](cubesandbox-kubernetes.md)：KVM/PVM、XFS、eBPF、Helm、60ms 基准口径和生产上线边界。

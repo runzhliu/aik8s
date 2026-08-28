@@ -128,6 +128,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - [2026 年 AI Agent 现状、实现原理与趋势](ai-k8s/rag-agent/agent-landscape-2026.md)
 - [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md)
 - [Agent Sandbox 选型与架构分析](ai-k8s/rag-agent/agent-sandbox-selection.md)
+- [CubeSandbox Kubernetes 部署条件与生产评估](ai-k8s/rag-agent/cubesandbox-kubernetes.md)
 - [OpenClaw 作为企业 Agent 平台底座](ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md)
 - [AI Agent、沙箱与工具执行](ai-k8s/agentic-workloads.md)
 - [GPU、训练与推理可观测性](ai-k8s/observability.md)
