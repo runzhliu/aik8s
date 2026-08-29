@@ -1,6 +1,6 @@
 ---
 title: 用 CubeSandbox 增强 OpenClaw 与 DSH：企业安全执行面实战
-description: 将 OpenClaw Gateway 或 DeepSeek Harness 作为长期控制面，把 Shell、文件、PTY 与代码执行下沉到 CubeSandbox MicroVM，并实测网络隔离、访问令牌、暂停恢复和状态连续性
+description: 用真实 OpenClaw 与 DeepSeek Harness 模型会话触发 CubeSandbox Skill，把 Agent 代码执行下沉到 MicroVM，并实测网络隔离、访问令牌、暂停恢复、快照克隆、自动清理与审计取证
 status: lab
 last_reviewed: 2026-08-29
 ---
@@ -14,7 +14,7 @@ OpenClaw 和 DeepSeek Harness（DSH）都不只是聊天页面。它们能读写
 - **OpenClaw Gateway / DSH Runtime** 负责消息、模型、会话、权限、审批和工具编排；
 - **CubeSandbox** 负责按会话创建 MicroVM，提供 Shell、文件、PTY、代码、网络和生命周期 API。
 
-这篇文章先说明这种拆分为什么能让企业 Agent 更安全、更快、更顺滑，再用一个已经部署在 Kubernetes 上的 CubeSandbox `v0.7.0` 集群跑通完整链路。部署前置条件与安装过程分别见：[CubeSandbox Kubernetes 部署评估](cubesandbox-kubernetes.md)和[部署实战](cubesandbox-kubernetes-practice.md)。
+这篇文章先说明这种拆分为什么能让企业 Agent 更安全、更快、更顺滑，再用一个已经部署在 Kubernetes 上的 CubeSandbox `v0.7.0` 集群跑通两条真实 Agent 链路：OpenClaw `2026.7.1` 和 DSH `0.1.1-rc.2` 都由模型识别 Skill、发起工具调用、创建 MicroVM、执行代码、验证断网并自动销毁。部署前置条件与安装过程分别见：[CubeSandbox Kubernetes 部署评估](cubesandbox-kubernetes.md)和[部署实战](cubesandbox-kubernetes-practice.md)。
 
 本次实测得到以下结果：
 
@@ -28,6 +28,8 @@ OpenClaw 和 DeepSeek Harness（DSH）都不只是聊天页面。它们能读写
 | Pause | 成功；本次样本约 2.18 s |
 | Resume | 成功；本次样本约 2.72 s |
 | 暂停后的文件和 Python 内存 | 都保留 |
+| OpenClaw → CubeSandbox | 成功；`openai/gpt-5.6-sol` 自动调用 Skill，沙箱创建 164 ms |
+| DSH → CubeSandbox | 成功；DeepSeek V4 Pro 自动调用 Skill，沙箱创建 123 ms |
 | 清理 | 沙箱销毁，集群沙箱数恢复为 0 |
 
 这些时间只是一台节点、一个模板、一次请求的功能样本，不是性能基准。生产决策要继续测并发下的 P50、P95、P99、失败率和长尾。
@@ -38,9 +40,10 @@ OpenClaw 和 DeepSeek Harness（DSH）都不只是聊天页面。它们能读写
 | --- | --- |
 | Cube SDK 创建、Shell、文件、Python、断网、traffic token、Pause / Resume、Snapshot、Rollback、Clone、Kill | 已实测 |
 | CubeSandbox WebUI 数字助手、运行中沙箱和可观测性页面 | 已用 Chrome 登录态验证 |
-| 官方 OpenClaw Skill 在真实 OpenClaw 会话中触发 | 未实测，给出可复现步骤 |
+| `cube-sandbox` Skill 在真实 OpenClaw 模型会话中触发 | 已实测；保留对话和工具活动截图 |
+| `cube-sandbox` Skill 在真实 DSH 模型会话中触发 | 已实测；保留对话和完整轨迹截图 |
 | 创建 Digital Assistant / OpenClaw 实例并调用模型 | 未实测，官方功能为 Preview |
-| DSH `shell/fs/pty` Provider | 未实现，给出正确接入边界和验收顺序 |
+| DSH 原生 `shell/fs/pty` Provider | 未实现；本文实测的是 Skill + 固定包装工具，另给出 Provider 接入边界 |
 | 浏览器 Agent、并发压测和跨节点恢复 | 未实测，列为下一阶段 |
 
 ## 1. 先确定边界：Agent 是控制面，Sandbox 是执行面
@@ -449,7 +452,7 @@ Agent Workspace
 
 下面不是功能清单，而是从十分钟 PoC 到企业 Adapter 的实际玩法。每一项都给出操作、提示词和验收点。
 
-### 8.1 OpenClaw 玩法一：安装官方 Skill，先让 Agent 学会“去沙箱执行”
+### 8.1 OpenClaw 实战：模型自动调用 Skill，在 MicroVM 内执行
 
 CubeSandbox 官方仓库已经提供 OpenClaw Skill。先把它安装到目标 OpenClaw workspace：
 
@@ -462,6 +465,8 @@ cp -R CubeSandbox/examples/openclaw-integration/skills/cube-sandbox \
 ```
 
 再把 CubeAPI、CubeProxy、Template 和 API Key 作为 OpenClaw 进程环境配置，不要写进 `SKILL.md` 或 Agent Prompt。官方示例使用 E2B 兼容环境变量；新项目也可以直接使用 `cubesandbox` SDK。
+
+本文还提供了一个只保留执行、断网验证和清理逻辑的[最小 OpenClaw Skill](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-openclaw-dsh/openclaw-skill/cube-sandbox)。它把用户代码写进远端 MicroVM，包装脚本本身只接收代码和平台预置策略，不允许模型自己拼装 CubeAPI 管理请求。
 
 给 OpenClaw 一个明确任务：
 
@@ -482,6 +487,38 @@ cp -R CubeSandbox/examples/openclaw-integration/skills/cube-sandbox \
 - 异常路径仍执行 Kill。
 
 这条路径适合十分钟 PoC。它通常仍需要 OpenClaw 在本地用 `exec` 启动 Python SDK，因此不能把“安装了 Skill”当成宿主执行已经关闭。企业版应继续封装 Plugin Tool。
+
+这次不是只验证包装脚本，而是启动了完整 OpenClaw Gateway 和 Control UI：
+
+- OpenClaw：`2026.7.1` 官方容器镜像；
+- 模型：`openai/gpt-5.6-sol`，通过官方支持的 ChatGPT / Codex 设备登录；
+- Skill：以 `openclaw-workspace` 来源加载，状态为 `eligible=true`、`modelVisible=true`；
+- Cube SDK：`cubesandbox==0.7.0`；
+- 模板 alias：`agent-code`；
+- 网络策略：禁止公网出站，禁止公开流量。
+
+在 Chrome 的 OpenClaw Control UI 中发送上面的任务后，模型先读取 `SKILL.md`，再调用包装脚本。页面中的 `Activity: 2 tools` 是真实工具活动，不是事后拼接的日志：
+
+![OpenClaw 调用 CubeSandbox Skill 后返回 MicroVM 执行、断网和清理结果](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/06-openclaw-cubesandbox-chat.jpg)
+
+展开工具活动可以看到两次 Bash 调用：第一次读取 Skill，第二次运行 `cube_agent_task.py`。用户 Python 代码没有在 Gateway 容器本机执行：
+
+![OpenClaw 工具活动中读取 cube-sandbox Skill 并运行 CubeSandbox 包装脚本](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/07-openclaw-cubesandbox-tools.jpg)
+
+本次 Agent 会话的实际结果为：
+
+```json
+{
+  "executor": "cubesandbox-microvm",
+  "stdout": "338350\n",
+  "exit_code": 0,
+  "internet_blocked": true,
+  "create_ms": 164,
+  "cleanup": "destroyed"
+}
+```
+
+任务完成后再次调用 `Sandbox.list()`，返回空列表。由此可以同时证明：OpenClaw 真的选择了 Skill、代码真的进入 MicroVM、断网策略生效、异常安全清理路径没有留下活动沙箱。
 
 ### 8.2 OpenClaw 玩法二：一会话一沙箱，隔天回来还能继续
 
@@ -540,7 +577,7 @@ CubeSandbox WebUI 的数字助手路线会把整个 OpenClaw Runtime 做成助�
 
 本次只在真实 WebUI 中验证了页面与准备步骤，没有配置模型 Key、没有创建 OpenClaw 实例。官方明确把 Digital Assistant 标为 Preview，这部分属于下一阶段实验，不列入本文“已通过”结果。
 
-### 8.4 DSH 玩法一：先用 Skill + 包装工具，不改 Runtime 核心
+### 8.4 DSH 实战：DeepSeek V4 Pro 自动加载 Skill 并调用包装工具
 
 DSH 同样可以先走轻集成：给它一个 Skill，要求遇到不可信 Shell、仓库或附件时调用固定的 `cube-run` 包装工具。包装工具内部使用 Cube SDK，DSH 只看到稳定参数：
 
@@ -566,6 +603,43 @@ cube-run destroy
 ```
 
 这一步改动小，适合先验证网络、文件语义和长命令输出。它的缺点是 DSH 内置的 Shell、文件工具与 `cube-run` 是两套表面，模型可能选错。要做到无感，下一步应写 Provider。
+
+本文的真实验证使用正在运行的 DSH `0.1.1-rc.2`，在 Chrome WebUI 新建会话并选择 DeepSeek V4 Pro。安装的[最小 DSH Skill](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-openclaw-dsh/dsh-skill/cube-sandbox)与 OpenClaw 版本遵守同一个结果契约。模型按以下顺序完成任务：
+
+1. 根据提示自动调用 `Skill cube-sandbox`；
+2. 读取包装脚本，确认参数和 `finally` 清理；
+3. 调用 Bash 运行脚本；
+4. 等待 CubeSandbox 返回结构化 JSON；
+5. 用中文整理执行器、结果、断网状态、创建耗时和清理结果。
+
+对话页同时保留 Skill、Read、Bash 三类活动和最终结果：
+
+![DSH DeepSeek V4 Pro 调用 cube-sandbox Skill 后返回隔离执行结果](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/04-dsh-cubesandbox-chat.jpg)
+
+DSH 的轨迹页能把 Input、Model、Tools 放在同一时间线上。工具行中可以看到 Skill 加载、脚本读取、Bash 调用以及返回给模型的 JSON：
+
+![DSH 轨迹页显示 Skill、Read、Bash 与 CubeSandbox JSON 结果](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/05-dsh-cubesandbox-trace.jpg)
+
+本次 DSH Agent 会话的实际结果为：
+
+```json
+{
+  "executor": "cubesandbox-microvm",
+  "stdout": "338350\n",
+  "exit_code": 0,
+  "internet_blocked": true,
+  "create_ms": 123,
+  "cleanup": "destroyed"
+}
+```
+
+为了避免只凭最终回答判断，又让 DSH 执行了一次 60 秒保持任务。轨迹中可以看到 Skill、脚本读取、Bash 工具结果和 `sandbox_ref=7fddceaa`；保持期间，CubeSandbox WebUI 同时出现前缀、后缀一致的运行中 Sandbox：
+
+![DSH 轨迹中调用包装脚本并返回 sandbox_ref、MicroVM 输出和清理状态](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/11-dsh-proof-result.jpg)
+
+![相同 DSH sandbox_ref 在保持期间出现在 CubeSandbox 实时运行列表](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/10-dsh-live-sandbox.jpg)
+
+这证明 DSH 可以先不改 Runtime 核心，通过 Skill 把一类高风险任务显式路由到 CubeSandbox。它仍是轻集成：若要让 Bash、编辑器和 Terminal 默认处于同一个远端工作区，需要继续实现下一节的原生 Provider。
 
 ### 8.5 DSH 玩法二：把 `shell/fs/pty` 换成 Cube Provider
 
@@ -661,7 +735,144 @@ OpenClaw 的远端 SSH/OpenShell backend 当前不提供完整的 sandbox browse
 - 孤儿 Sandbox、Volume、Snapshot 和 lease 自动回收；
 - 升级前后 traffic token、网络策略和快照兼容性。
 
-## 9. 生产上线检查表
+## 9. 企业审计：页面没有历史时去哪里看
+
+CubeSandbox WebUI 的“沙箱”页写的是“所有运行中微虚拟机的实时视图”。它不是历史执行列表：`kill()` 完成后，实例会从页面和 `Sandbox.list()` 中消失。因此，页面从 0 → 1 → 0 适合证明实时生命周期，却不能承担企业审计。
+
+完整证据要分层保存：
+
+| 层级 | 能回答的问题 | 原始来源 | 不能单独证明什么 |
+| --- | --- | --- | --- |
+| OpenClaw / DSH | 谁发起、模型是谁、选择了哪个 Skill / Tool、参数与审批、返回给用户的结果 | OpenClaw Activity、DSH Trajectory、Runtime 会话日志 | MicroVM 是否真的创建、网络策略是否真的执行 |
+| CubeMaster / CubeShim / VMM | 哪个 Sandbox 何时创建、启动、暂停、恢复、销毁，模板和资源是什么 | 控制面日志与节点 `/data/log/CubeShim`、`/data/log/CubeVmm` | Shell 命令正文和业务身份 |
+| CubeProxy | Sandbox 调用过文件、进程、PTY 等哪些数据面 API，状态码和耗时是什么 | 节点 `/data/log/cube-proxy/access.log` | `/process.Process/Start` 的请求体、命令正文、stdout / stderr |
+| CubeEgress | HTTP/HTTPS 出站被哪条规则放行或拒绝，目标、路径、状态和延迟是什么 | 节点 `/data/log/cube-egress/access.jsonl` | 未进入 L7 代理的普通 L3/L4 流量；完整命令输出 |
+| MySQL 实例记录 | 历史上有哪些实例、创建和删除时间是什么 | `t_cube_instance_info`、`t_cube_instance_userdata` | Agent 对话、具体命令和输出 |
+
+### 9.1 本次 OpenClaw 任务的真实交叉证据
+
+为了把 Agent 回答与 CubeSandbox 页面做现场联证，又让 OpenClaw 运行了一次 60 秒保持任务。OpenClaw 返回 `sandbox_ref=d9aafb40`，同一前缀同时出现在 WebUI 的运行中 Sandbox 行：
+
+![OpenClaw 返回 sandbox_ref、MicroVM 输出、断网结果与销毁状态](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/09-openclaw-proof-result.jpg)
+
+![相同 sandbox_ref 在保持期间出现在 CubeSandbox 实时运行列表](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/08-openclaw-live-sandbox.jpg)
+
+再使用完整 Sandbox ID 在节点日志中检索，得到一条可以互相对齐的时间线：
+
+| 相对时间 | 证据 |
+| --- | --- |
+| T+0 ms | CubeShim `create req start` |
+| T+40 ms | Guest agent ready，MicroVM 启动完成 |
+| T+约 200 ms | CubeProxy `POST /files`，写入 Agent 任务文件 |
+| T+约 300 / 500 ms | 两次 `POST /process.Process/Start`，分别运行任务和断网检查 |
+| T+60.6 s | CubeShim 收到 Kill，随后 `destroy sandbox finish` |
+
+这组证据比只看 Agent 的最终回答强：同一个 ID 同时出现在 OpenClaw 结果、CubeSandbox 实时列表、CubeProxy 和 CubeShim 中。但它仍不等于完整命令审计，因为 CubeProxy access log 不记录进程启动请求体和 stdout。命令、参数、输出、用户、模型和审批必须由 Agent Adapter 额外写结构化审计事件。
+
+### 9.2 直接查询节点日志
+
+先拿到运行目标节点上的 `cube-node` Pod，再用完整 Sandbox ID 检索。多节点环境要根据实例信息中的 Node 定位对应 DaemonSet Pod，不能默认只查第一个：
+
+```bash
+export SANDBOX_ID=<full-sandbox-id>
+export CUBE_NODE_POD=$(kubectl -n cube-system get pod \
+  -l app.kubernetes.io/component=cube-node \
+  -o jsonpath='{.items[0].metadata.name}')
+
+# MicroVM 创建、启动、Kill 和销毁
+kubectl -n cube-system exec "$CUBE_NODE_POD" -c cubelet -- \
+  grep "$SANDBOX_ID" /data/log/CubeShim/cube-shim-req.log
+
+# 文件、进程、PTY 等数据面 API；包含路径、状态码、耗时和 Sandbox ID
+kubectl -n cube-system exec "$CUBE_NODE_POD" -c cubelet -- \
+  grep "$SANDBOX_ID" /data/log/cube-proxy/access.log
+
+# L7 HTTP/HTTPS 出站放行、拒绝、注入和 TLS 事件
+kubectl -n cube-system exec "$CUBE_NODE_POD" -c cubelet -- \
+  tail -n 50 /data/log/cube-egress/access.jsonl
+
+# 控制面补充证据
+kubectl -n cube-system logs deployment/cube-api --since=1h
+kubectl -n cube-system logs deployment/cube-master --since=1h
+```
+
+实际集群还可能出现 `Cubelet-req.log`、`Cubelet-stat.log`、`cube-proxy/error.log` 等文件。它们更适合故障定位，不应代替业务审计事件。节点文件一旦轮转、Pod/节点被清理或磁盘损坏就可能丢失，生产环境不能等到出事后再临时 `grep`。
+
+### 9.3 CubeEgress 出网审计的边界
+
+创建 Sandbox 时，为 L7 Rule 设置 `action.audit`：
+
+- `none`：不落审计；
+- `metadata`：默认值，记录时间、Sandbox IP、目标 IP/端口、scheme、Host、method、path、状态、字节、延迟、TLS 和 upstream；
+- `full`：`v0.7.0` 仍等同 `metadata`，不能据此宣称已采集请求或响应 Body。
+
+只有进入 CubeEgress 的 HTTP/HTTPS L7 流量会写入 `access.jsonl`。例如 `allow_internet_access=false` 在 L3/L4 直接拦截一个原始 TCP 连接时，文件里不会自动出现对应 L7 记录。若企业要求“每一次出站尝试都有记录”，还要汇聚 eBPF、主机防火墙或 CNI Flow Log。
+
+本次实验还发现一个必须在上线验收中拦住的问题：虽然 `cube-node` Pod 最终显示 Running，`cube-egress-net` 的探针曾报告 `iptables ... nf_tables ... TRANSPROXY ... incompatible`，容器也持续出现 `rule reapply failed`，实际 `access.jsonl` 保持为空。也就是说，**Pod Running 不等于 L7 审计可用**。生产验收至少要创建一条 `audit=metadata` 的确定性 deny 规则，发起请求，并同时确认：
+
+1. 请求被 403 拒绝；
+2. `access.jsonl` 新增相同请求的 JSONL；
+3. `cube-egress-net` readiness 正常且没有规则重放错误；
+4. iptables legacy / nftables 后端与宿主机已有规则一致。
+
+这次 L3/L4 完全断网验证仍然成功，但不能拿它替代尚未通过的 L7 审计验收。
+
+### 9.4 为什么销毁后数据库也查不到
+
+CubeMaster 的 `common.disable_hard_delete` 默认为 `false`。默认删除路径会硬删除 `t_cube_instance_info`，所以 WebUI 和普通数据库查询都看不到已销毁实例。本次实验环境未配置该字段，并且在 Kill 后按完整 Sandbox ID 查询得到 0 行，行为与默认值一致。
+
+需要保留实例墓碑用于审计或恢复时，可以在 CubeMaster 配置中启用：
+
+```yaml
+common:
+  disable_hard_delete: true
+```
+
+`v0.7.0` 中，该设置会让实例信息改为软删除，并且其优先级高于 `soft_delete_purge`：`t_cube_instance_info` 和 `t_cube_instance_userdata` 不会被墓碑清理器删除。启用前要做容量、索引、访问控制、数据保留期和隐私评估。它只保留实例记录，并不会自动补齐命令、输出、用户和审批历史。
+
+### 9.5 推荐的企业审计事件
+
+Adapter 在每次调用 CubeSandbox 前后都应写一条追加式结构化事件，至少包含：
+
+```json
+{
+  "ts": "2026-08-29T09:47:36.182+08:00",
+  "tenant_id": "tenant-opaque",
+  "user_id": "user-opaque",
+  "session_id": "session-opaque",
+  "agent_runtime": "openclaw",
+  "model": "model-id",
+  "tool": "cube_exec",
+  "sandbox_id": "<full-sandbox-id>",
+  "trace_id": "<trace-id>",
+  "network_profile": "offline-code",
+  "approval_id": "<approval-id-or-null>",
+  "command_redacted": "python3 /workspace/task.py",
+  "command_sha256": "<digest>",
+  "exit_code": 0,
+  "stdout_sha256": "<digest>",
+  "stderr_sha256": "<digest>",
+  "latency_ms": 153,
+  "result": "success"
+}
+```
+
+不要把长期 Token、Cookie、Authorization Header、完整个人信息或无限量 stdout 直接写进日志。更合理的方式是：有限长度且经过脱敏的摘要进入检索系统，完整产物加密写入对象存储，审计事件只保存摘要和对象引用。
+
+推荐汇聚链路如下：
+
+```mermaid
+flowchart LR
+  A[OpenClaw / DSH Audit] --> C[Fluent Bit / Vector / OTel Collector]
+  B[CubeMaster / Shim / Proxy / Egress] --> C
+  C --> Q[Loki / OpenSearch / SIEM]
+  C --> W[WORM / Object Lock Archive]
+  Q --> R[RBAC 检索与告警]
+```
+
+还要统一 NTP 和时区、给日志加 `tenant_id + session_id + sandbox_id + trace_id`、限制审计检索权限、记录查询行为，并设置在线检索与归档的独立保留期。`v0.7.0` 的 CubeProxy 本地脚本按约 500 MiB 阈值轮转且只留少量归档；CubeEgress 的 `access.jsonl` 也不能被当作永久存储，因此日志采集必须在节点本地轮转或故障前完成。
+
+## 10. 生产上线检查表
 
 - [ ] OpenClaw / DSH 与 Sandbox 位于不同信任边界；
 - [ ] 每个租户或会话有独立 Sandbox lease；
@@ -674,10 +885,14 @@ OpenClaw 的远端 SSH/OpenShell backend 当前不提供完整的 sandbox browse
 - [ ] 资源、并发、TTL、快照和 Volume 都有租户配额；
 - [ ] Pause / Resume、Connect、Kill 与异常清理都是幂等操作；
 - [ ] Agent、Sandbox、网络代理和外部工具日志可以用 Trace ID 关联；
+- [ ] 已用真实 L7 allow / deny 请求验证 CubeEgress JSONL，而不只是检查 Pod Running；
+- [ ] 已明确命令正文、stdout / stderr 的脱敏、摘要、加密归档与保留期；
+- [ ] 已验证节点日志轮转前可被采集，审计索引与 WORM 归档均可查询；
+- [ ] 若要求保留已销毁实例，已评估并启用 `disable_hard_delete`；
 - [ ] 红队测试覆盖 Prompt Injection、数据外传、内网探测和跨会话访问；
 - [ ] 集群升级、Token 轮换、模板升级和快照不兼容都有回滚预案。
 
-## 10. 结论
+## 11. 结论
 
 CubeSandbox 对 OpenClaw / DSH 的最大价值，不是“又多一种部署方式”，而是让 Agent Runtime 不再直接等于执行环境。
 
