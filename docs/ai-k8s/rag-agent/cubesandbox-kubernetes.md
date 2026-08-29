@@ -7,6 +7,9 @@ last_reviewed: 2026-08-29
 
 # CubeSandbox Kubernetes 部署条件与生产评估
 
+!!! tip "想直接动手部署？"
+    本文侧重条件、风险与生产边界。完整的节点预检、单节点 values、Helm 安装、模板构建和第一个 MicroVM 沙箱验收，参见[CubeSandbox Kubernetes 实战：从节点预检到第一个 MicroVM 沙箱](cubesandbox-kubernetes-practice.md)。
+
 CubeSandbox 是腾讯云开源的 Agent 执行环境：它用 KVM MicroVM 提供独立 Guest Kernel，以 CubeMaster、CubeAPI、Cubelet、CubeProxy、CubeVS 和 CubeEgress 组成模板、调度、网络、快照和执行 API。项目兼容 E2B SDK，但它不是 Kubernetes SIG Apps 的 Agent Sandbox CRD，也不是一个只安装 Controller 就能使用任意 `RuntimeClass` 的通用生命周期层。
 
 截至 2026-08-29，官方最新稳定版为 [`v0.7.0`](https://github.com/TencentCloud/CubeSandbox/releases/tag/v0.7.0)，Helm Chart 的 `version` 和 `appVersion` 同为 `0.7.0`。本章按该版本核对；升级时应重新检查 Chart、节点引导脚本和发行说明。
