@@ -1,0 +1,145 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agent-runtime
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cube-adapter
+  namespace: agent-runtime
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cube-adapter
+  namespace: agent-runtime
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cube-adapter
+  template:
+    metadata:
+      labels:
+        app: cube-adapter
+    spec:
+      serviceAccountName: cube-adapter
+      containers:
+        - name: adapter
+          image: ghcr.io/example/cube-adapter:0.1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: CUBE_ADAPTER_BIND
+              value: 0.0.0.0
+            - name: CUBE_ADAPTER_PORT
+              value: "18080"
+            - name: CUBE_ADAPTER_AUDIT_LOG
+              value: /var/log/cube-adapter/audit.jsonl
+            - name: CUBE_ADAPTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cube-adapter-auth
+                  key: token
+            - name: CUBE_ADAPTER_HMAC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cube-adapter-auth
+                  key: hmac-key
+            - name: CUBE_TEMPLATE_ID
+              value: agent-code
+            - name: CUBE_API_URL
+              value: http://cube-api.cube-system.svc:3000
+            - name: CUBE_PROXY_NODE_IP
+              value: cube-proxy.cube-system.svc
+            - name: CUBE_PROXY_PORT_HTTP
+              value: "80"
+          ports:
+            - name: http
+              containerPort: 18080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - name: audit
+              mountPath: /var/log/cube-adapter
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: audit
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cube-adapter
+  namespace: agent-runtime
+spec:
+  selector:
+    app: cube-adapter
+  ports:
+    - name: http
+      port: 18080
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cube-adapter
+  namespace: agent-runtime
+spec:
+  podSelector:
+    matchLabels:
+      app: cube-adapter
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              cube-adapter-client: "true"
+      ports:
+        - protocol: TCP
+          port: 18080
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cube-system
+      ports:
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 80
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

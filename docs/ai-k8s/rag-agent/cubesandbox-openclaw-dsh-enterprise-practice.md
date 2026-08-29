@@ -1,6 +1,6 @@
 ---
 title: 用 CubeSandbox 增强 OpenClaw 与 DSH：企业安全执行面实战
-description: 用真实 OpenClaw 与 DeepSeek Harness 模型会话触发 CubeSandbox Skill，把 Agent 代码执行下沉到 MicroVM，并实测网络隔离、访问令牌、暂停恢复、快照克隆、自动清理与审计取证
+description: 用真实 OpenClaw 与 DeepSeek Harness 会话，经 Skill 和无需 Skill 的受控插件把 Agent 代码执行下沉到 CubeSandbox MicroVM，并实测策略、生命周期与脱敏审计
 status: lab
 last_reviewed: 2026-08-29
 ---
@@ -14,7 +14,7 @@ OpenClaw 和 DeepSeek Harness（DSH）都不只是聊天页面。它们能读写
 - **OpenClaw Gateway / DSH Runtime** 负责消息、模型、会话、权限、审批和工具编排；
 - **CubeSandbox** 负责按会话创建 MicroVM，提供 Shell、文件、PTY、代码、网络和生命周期 API。
 
-这篇文章先说明这种拆分为什么能让企业 Agent 更安全、更快、更顺滑，再用一个已经部署在 Kubernetes 上的 CubeSandbox `v0.7.0` 集群跑通两条真实 Agent 链路：OpenClaw `2026.7.1` 和 DSH `0.1.1-rc.2` 都由模型识别 Skill、发起工具调用、创建 MicroVM、执行代码、验证断网并自动销毁。部署前置条件与安装过程分别见：[CubeSandbox Kubernetes 部署评估](cubesandbox-kubernetes.md)和[部署实战](cubesandbox-kubernetes-practice.md)。
+这篇文章先说明这种拆分为什么能让企业 Agent 更安全、更快、更顺滑，再用一个已经部署在 Kubernetes 上的 CubeSandbox `v0.7.0` 集群跑通四条真实链路：OpenClaw `2026.7.1` 和 DSH `0.1.1-rc.2` 分别通过 Skill，以及不读取 Skill 的 Tool Plugin / Cordis Plugin，创建 MicroVM、执行代码并自动销毁。部署前置条件与安装过程分别见：[CubeSandbox Kubernetes 部署评估](cubesandbox-kubernetes.md)和[部署实战](cubesandbox-kubernetes-practice.md)。
 
 本次实测得到以下结果：
 
@@ -28,8 +28,11 @@ OpenClaw 和 DeepSeek Harness（DSH）都不只是聊天页面。它们能读写
 | Pause | 成功；本次样本约 2.18 s |
 | Resume | 成功；本次样本约 2.72 s |
 | 暂停后的文件和 Python 内存 | 都保留 |
-| OpenClaw → CubeSandbox | 成功；`openai/gpt-5.6-sol` 自动调用 Skill，沙箱创建 164 ms |
-| DSH → CubeSandbox | 成功；DeepSeek V4 Pro 自动调用 Skill，沙箱创建 123 ms |
+| OpenClaw Skill → CubeSandbox | 成功；`openai/gpt-5.6-sol` 自动调用 Skill，沙箱创建 164 ms |
+| DSH Skill → CubeSandbox | 成功；DeepSeek V4 Pro 自动调用 Skill，沙箱创建 123 ms |
+| OpenClaw → Adapter → CubeSandbox | 成功；模型只调用 `cube_exec` / `cube_release`，证据引用 `45a28df5` |
+| DSH → Adapter → CubeSandbox | 成功；宿主 Shell / FS 工具禁用，证据引用 `f795f7fc` |
+| Adapter 审计 | 成功；Agent、实时 Sandbox 和审计事件可按短引用交叉验证 |
 | 清理 | 沙箱销毁，集群沙箱数恢复为 0 |
 
 这些时间只是一台节点、一个模板、一次请求的功能样本，不是性能基准。生产决策要继续测并发下的 P50、P95、P99、失败率和长尾。
@@ -42,8 +45,11 @@ OpenClaw 和 DeepSeek Harness（DSH）都不只是聊天页面。它们能读写
 | CubeSandbox WebUI 数字助手、运行中沙箱和可观测性页面 | 已用 Chrome 登录态验证 |
 | `cube-sandbox` Skill 在真实 OpenClaw 模型会话中触发 | 已实测；保留对话和工具活动截图 |
 | `cube-sandbox` Skill 在真实 DSH 模型会话中触发 | 已实测；保留对话和完整轨迹截图 |
+| OpenClaw 官方 Tool Plugin → 受认证 Cube Adapter | 已实现并实测；四个 `cube_*` 工具按 `sessionKey` 复用租约 |
+| DSH Cordis Tool Plugin → 受认证 Cube Adapter | 已实现并实测；按 DSH Agent ID 复用租约，宿主执行插件可硬禁用 |
+| Adapter 策略、限额、HMAC 会话引用与 JSONL 脱敏审计 | 已实现为可运行参考代码；当前只开放 `offline-code` |
 | 创建 Digital Assistant / OpenClaw 实例并调用模型 | 未实测，官方功能为 Preview |
-| DSH 原生 `shell/fs/pty` Provider | 未实现；本文实测的是 Skill + 固定包装工具，另给出 Provider 接入边界 |
+| DSH 原生透明 `shell/fs/pty` Provider | 未实现；本文实现的是模型直连 Cordis Tool Plugin，另给出 Provider 接入边界 |
 | 浏览器 Agent、并发压测和跨节点恢复 | 未实测，列为下一阶段 |
 
 ## 1. 先确定边界：Agent 是控制面，Sandbox 是执行面
@@ -163,14 +169,14 @@ OpenClaw / DSH Runtime 的压力来自模型流、会话、渠道和插件；Cub
 | 路径 | 实现 | 优点 | 局限 | 建议 |
 | --- | --- | --- | --- | --- |
 | 官方 CubeSandbox Skill | Agent 按 Skill 指引调用 Cube SDK | 上手最快，已有官方示例 | 不是 OpenClaw 原生 backend；普通 `exec` 仍可能走其他执行面 | PoC |
-| 企业 Adapter / Plugin Tool | 注册受审计的 `cube_exec`、`cube_read`、`cube_write`、`cube_pty` | 参数和策略可控，容易加租户、审计和配额 | 需要维护少量适配代码 | 推荐起点 |
+| 企业 Adapter / Plugin Tool | 注册受审计的 `cube_exec`、`cube_read`、`cube_write`、`cube_release` | 参数和策略可控，容易加租户、审计和配额 | 需要维护少量适配代码；当前参考实现还没有 PTY | 推荐起点，本文已实测 |
 | 整个 OpenClaw 运行在 CubeSandbox | 用 Digital Assistant / AgentHub 从 OpenClaw 模板创建助手 | 助手可快照、回滚、克隆 | 当前是 Preview；Runtime、状态和执行边界容易重新混在一起 | Demo、个人助手和早期验证 |
 
-CubeSandbox 官方仓库已经提供 `examples/openclaw-integration` Skill，适合验证“Agent 能否主动把代码放进 MicroVM”。企业版本更适合把 SDK 调用封装成固定 Plugin Tool：模型只提供命令、文件和策略档位，不能自由拼接 CubeAPI 管理请求。
+CubeSandbox 官方仓库已经提供 `examples/openclaw-integration` Skill，适合验证“Agent 能否主动把代码放进 MicroVM”。企业版本更适合把 SDK 调用封装成固定 Plugin Tool：模型只提供命令、文件和策略档位，不能自由拼接 CubeAPI 管理请求。本文已经按 OpenClaw 官方 `defineToolPlugin` 接口实现并跑通这条路径，代码见 [`openclaw-plugin`](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-openclaw-dsh-direct/openclaw-plugin)。
 
 OpenClaw 当前公开文档列出的内置 Sandbox backend 主要是 Docker、SSH 和 OpenShell，不能把 CubeSandbox 当作已经原生支持的第四种 backend。若没有经过验证的 backend 接口，先注册独立 Cube 工具并对不可信会话禁用宿主 `exec`，比深度修改 Gateway 更容易跟随上游升级。
 
-### 3.2 DSH：替换 Shell / FS Provider，不是替换本地文件沙箱
+### 3.2 DSH：先用 Cordis Tool Plugin 硬路由，再演进到 Provider
 
 DSH 的可组合设计很适合接远端执行面，但接入位置要正确：
 
@@ -186,7 +192,9 @@ DSH 的可组合设计很适合接远端执行面，但接入位置要正确：
 
 DSH 的审批、`read-only` / `workspace-write` / `danger-full-access` 语义仍留在控制面。Provider 根据已批准策略决定要调用哪一个沙箱能力；CubeSandbox 再执行资源、网络和 MicroVM 隔离。
 
-不要只把 CubeSandbox 实现成 `ctx.sandbox`。DSH 官方明确把这个接口定义为 same-world confinement；远端 MicroVM 应替换环境一致的一组 Shell、文件和终端 Provider，否则同一轮工具可能一半在本机、一半在 VM，工作目录和权限语义会失真。
+本文先实现了一个可落地的中间层：Cordis Plugin 通过 `ctx.tools.register` 注册四个 Cube 工具，并用 Profile Patch 禁用 `tool-bash`、`tool-pwsh`、`tool-fs`、`tool-fs-search` 和 `tool-str-replace-editor`，强制模型的命令与文件操作只走 Adapter。代码见 [`dsh-plugin`](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-openclaw-dsh-direct/dsh-plugin)。它已经摆脱 Skill 和宿主包装脚本，但工具名仍是 `cube_*`，还不是对 DSH 原有 Bash / Editor / Terminal 的透明替换。
+
+不要只把 CubeSandbox 实现成 `ctx.sandbox`。DSH 官方明确把这个接口定义为 same-world confinement；最终的远端 MicroVM Provider 应替换环境一致的一组 Shell、文件和终端能力，否则同一轮工具可能一半在本机、一半在 VM，工作目录和权限语义会失真。
 
 ## 4. WebUI 中已经能看到 OpenClaw 方向
 
@@ -224,9 +232,10 @@ python3 -m venv .venv
 export CUBE_API_URL=http://127.0.0.1:13000
 export CUBE_PROXY_NODE_IP=127.0.0.1
 export CUBE_PROXY_PORT_HTTP=13080
-export CUBE_PROXY_SCHEME=http
 export CUBE_TEMPLATE_ID=<ready-template-alias>
 ```
+
+这里没有设置 `CUBE_PROXY_SCHEME`：`cubesandbox==0.7.0` 的 Python SDK 不读取这个变量。连接参数升级后也要回到对应版本 SDK 源码或官方说明核对，不能凭其他语言 SDK 的变量名推断。
 
 仓库中的完整脚本是 [`scripts/cubesandbox_openclaw_dsh_smoke.py`](https://github.com/runzhliu/aik8s/blob/main/scripts/cubesandbox_openclaw_dsh_smoke.py)。它不启动 OpenClaw 或 DSH，而是直接验证两者的 Adapter 必须依赖的执行面契约。
 
@@ -396,12 +405,32 @@ kubectl -n cube-system rollout status deployment/cube-master
 不要一开始就实现完整 IDE、浏览器和所有 E2B API。第一版只需覆盖 OpenClaw / DSH 最常用的五个操作：
 
 ```text
-acquire(session_key, template, policy) -> sandbox_ref
-exec(sandbox_ref, command, cwd, timeout) -> stdout/stderr/exit_code
-read/write(sandbox_ref, path, data)
-pty(sandbox_ref, cols, rows) -> stream
-release(sandbox_ref, action=pause|kill)
+acquire(session_key, policy_profile) -> opaque_lease, sandbox_ref
+exec(opaque_lease, command, cwd, timeout) -> stdout/stderr/exit_code
+read/write(opaque_lease, path, data)
+pty(opaque_lease, cols, rows) -> stream
+release(opaque_lease, action=pause|kill)
 ```
+
+这次已经把最小设计写成可运行参考实现：[`examples/cubesandbox-openclaw-dsh-direct`](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-openclaw-dsh-direct)。调用关系不是“Plugin 直接持有 Cube 管理权限”，而是：
+
+```text
+OpenClaw Tool Plugin ─┐
+                     ├─ Bearer / mTLS ─→ Cube Adapter ─→ Cube Python SDK ─→ MicroVM
+DSH Cordis Plugin ───┘                         │
+                                              └─ 脱敏 JSONL 审计
+```
+
+Adapter 当前实现了这些防线：
+
+- 模型只能请求平台预置的 `offline-code`，不能传模板 ID、CIDR、公开流量或生命周期配置；
+- 会话键只在 Runtime 与 Adapter 之间传递，落日志的是带密钥的 HMAC-SHA-256 摘要；
+- 文件限制在 `/workspace` 与 `/tmp`，拒绝路径穿越，并限制请求、命令、文件、输出和超时大小；
+- Cube API Key、traffic token和完整 Sandbox ID 只留在 Adapter；opaque lease 只在 Plugin 与 Adapter 的控制链路流转，模型结果只返回 8 字符 `sandbox_ref`；
+- 审计只记录 Runtime、动作、短引用、请求 ID、耗时、结果和命令/路径摘要，不记录命令正文、文件内容、stdout、stderr 或 Token；
+- `/audit` 演示页默认关闭，生产应把 JSONL 送进不可变审计管道。
+
+这仍是参考实现，不是现成的多租户控制面。租约目前保存在进程内，因此示例 Deployment 明确只运行 1 个副本；做高可用前必须把 lease、加密 traffic token 与 owner fencing 放进持久化服务，或让会话稳定路由到唯一 owner。当前也没有 PTY、流式输出、取消、租户配额、审批回调和跨进程恢复，不能仅凭一次实测就宣称已生产就绪。
 
 ### 7.1 策略档位
 
@@ -463,6 +492,8 @@ mkdir -p <openclaw-workspace>/skills
 cp -R CubeSandbox/examples/openclaw-integration/skills/cube-sandbox \
   <openclaw-workspace>/skills/
 ```
+
+Skill 本身不是一个远程执行协议，也不会自动改写 OpenClaw / DSH 的 Shell Provider。它的原理是：Runtime 把 `SKILL.md` 作为操作说明提供给模型，模型再调用宿主工具启动包装脚本；包装脚本使用 Cube SDK，SDK 根据 `CUBE_API_URL` 访问 CubeAPI，并通过 `CUBE_PROXY_NODE_IP` / `CUBE_PROXY_PORT_HTTP` 访问 Sandbox 数据面，最终由 CubeSandbox 调度 MicroVM 执行任务。因此，看到模型“读了 Skill”只能证明它选择了这套操作说明，还要用 Sandbox 实时实例、SDK 结果和清理状态证明任务确实进入 MicroVM。
 
 再把 CubeAPI、CubeProxy、Template 和 API Key 作为 OpenClaw 进程环境配置，不要写进 `SKILL.md` 或 Agent Prompt。官方示例使用 E2B 兼容环境变量；新项目也可以直接使用 `cubesandbox` SDK。
 
@@ -641,7 +672,94 @@ DSH 的轨迹页能把 Input、Model、Tools 放在同一时间线上。工具�
 
 这证明 DSH 可以先不改 Runtime 核心，通过 Skill 把一类高风险任务显式路由到 CubeSandbox。它仍是轻集成：若要让 Bash、编辑器和 Terminal 默认处于同一个远端工作区，需要继续实现下一节的原生 Provider。
 
-### 8.5 DSH 玩法二：把 `shell/fs/pty` 换成 Cube Provider
+### 8.5 不经过 Skill：OpenClaw / DSH 直接调用受控 Adapter
+
+Skill 路线证明了模型会主动选择 CubeSandbox，但它通常还需要宿主 Bash 启动包装脚本。为了证明“没有 Skill 也能真的创建 MicroVM”，这次实现了共享 Adapter 和两个 Runtime Plugin：
+
+- [`adapter`](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-openclaw-dsh-direct/adapter)：唯一持有 Cube SDK 配置、完整 Sandbox ID 和 traffic token；
+- [`openclaw-plugin`](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-openclaw-dsh-direct/openclaw-plugin)：使用 OpenClaw 官方 `defineToolPlugin`；
+- [`dsh-plugin`](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-openclaw-dsh-direct/dsh-plugin)：使用 Cordis `ctx.tools.register`，并附带禁用宿主工具的 Patch；
+- [`deploy/kubernetes.yaml`](https://github.com/runzhliu/aik8s/blob/main/examples/cubesandbox-openclaw-dsh-direct/deploy/kubernetes.yaml)：单副本、非 root、只读 rootfs、Secret 与 NetworkPolicy 的参考清单。
+
+Adapter 对 Runtime 暴露的是 HTTP API，内部再调用 `cubesandbox==0.7.0` SDK：
+
+```text
+POST /v1/leases/acquire
+POST /v1/leases/{opaque-lease}/exec
+POST /v1/leases/{opaque-lease}/read
+POST /v1/leases/{opaque-lease}/write
+POST /v1/leases/{opaque-lease}/release
+```
+
+所有写请求都要求 Bearer Token；生产应再通过 Service Mesh 或 Gateway 加 mTLS、工作负载身份、速率限制与授权。`acquire` 按 `(runtime, HMAC(session_key))` 幂等，因此同一会话的 `exec/read/write` 进入同一个 MicroVM。Plugin 需要内部 lease 才能调用下一步，但 lease、完整 Sandbox ID 和 traffic token 都不进入模型结果。
+
+启动 Adapter 的最小方式如下，Token 应来自 Secret Manager：
+
+```bash
+cd examples/cubesandbox-openclaw-dsh-direct
+python3 -m venv .venv
+.venv/bin/pip install -r adapter/requirements.txt
+
+export CUBE_API_URL=https://cube-api.example.internal
+export CUBE_PROXY_NODE_IP=cube-proxy.example.internal
+export CUBE_PROXY_PORT_HTTP=443
+export CUBE_TEMPLATE_ID=agent-code
+export CUBE_ADAPTER_TOKEN=<from-secret-manager>
+export CUBE_ADAPTER_HMAC_KEY=<independent-32-byte-secret>
+export CUBE_ADAPTER_AUDIT_LOG=/var/log/cube-adapter/audit.jsonl
+.venv/bin/python adapter/cube_adapter.py
+```
+
+`CUBE_ADAPTER_HMAC_KEY` 应与 Bearer Token 分开管理：前者保持审计关联稳定，后者可以常规轮换。两者都不应出现在插件配置、模型上下文或普通日志中。
+
+#### OpenClaw Tool Plugin 实测
+
+安装后要同时允许插件和它注册的工具：
+
+```bash
+openclaw plugins install ./openclaw-plugin
+openclaw plugins enable cube-adapter-tools
+openclaw config set tools.alsoAllow \
+  '["cube_exec","cube_read","cube_write","cube_release"]' --strict-json
+openclaw config validate
+```
+
+如果已有 `plugins.allow` 或 `tools.alsoAllow`，应合并现有受信项，不能照抄命令覆盖。实测中出现过一个很有迷惑性的状态：插件检查显示 `loaded`，但缺少 `tools.alsoAllow` 时模型完全看不到四个工具。Gateway 进程只需配置 `CUBE_ADAPTER_URL` 和 `CUBE_ADAPTER_TOKEN`，不需要 Cube API Key。
+
+给真实模型的提示明确要求“不读取 Skill、不使用宿主 exec，只调用 `cube_exec`，完成后 `cube_release(action=kill)`”。OpenClaw Activity 显示恰好两次工具调用，结果为 `openclaw-direct-ok`、退出码 0、短引用 `45a28df5`：
+
+![OpenClaw 不经过 Skill，直接调用 Cube Exec 与 Cube Release](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/17-openclaw-direct-result.jpg)
+
+这证明 Tool Plugin 路线可行，但 OpenClaw 当前稳定公开接口没有“任意第四种原生 Sandbox Backend”。参考实现没有伪装成 Docker / SSH / OpenShell backend；企业 Profile 还应显式拒绝宿主 `exec/read/write`，避免模型绕过 Cube 工具。
+
+#### DSH Cordis Plugin 实测
+
+安装插件并应用参考 Patch：
+
+```bash
+dsh plugin --profile web add ./dsh-plugin
+dsh web --patch ./dsh-plugin/cordis.patch.yml
+```
+
+Patch 禁用了模型侧的 Bash、PowerShell、FS、FS Search 与字符串编辑器，再注册同名的四个 Cube 工具。DSH 可从环境变量读 Token，也可从只读 Secret 文件读取；容器部署更适合 `tokenFile`。本地 `file:` 安装会把插件复制到 DSH 插件仓库，修改源码后必须重新执行 add/update，单纯重启不会刷新已安装副本。
+
+真实 DeepSeek V4 Pro 会话也被要求不读 Skill、不碰宿主工具。轨迹里只有 `cube_exec` 与 `cube_release`，执行输出 `DSH_DIRECT_V2=338350`、退出码 0、耗时 35127 ms，短引用为 `f795f7fc`：
+
+![DSH 轨迹只出现 Cube Exec 与 Cube Release，未调用 Skill 或宿主 Shell](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/16-dsh-direct-trace.jpg)
+
+在 `cube_exec` 保持运行的 35 秒内，CubeSandbox WebUI 同时出现 `f795f7…f099`。WebUI 显示的是同一完整 ID 的前后缀，Agent 与审计只公开前 8 字符：
+
+![DSH 执行期间，CubeSandbox 实时列表出现相同前缀的运行中 MicroVM](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/13-dsh-direct-cube-live.jpg)
+
+最后，Adapter 审计页同时出现 OpenClaw `45a28df5` 与 DSH `f795f7fc` 的 acquire、exec、release。每个 Tool 先幂等 acquire，所以同一引用可能出现多条 acquire；页面不含命令正文、输出、Token、原始 session key 或完整 Sandbox ID：
+
+![同一短引用贯穿 OpenClaw、DSH 与 Cube Adapter 脱敏审计](../../assets/rag-agent/cubesandbox-openclaw-dsh-enterprise/14-direct-adapter-audit.jpg)
+
+由此形成了可核验的三点联证：Agent 轨迹证明模型调用了什么工具，CubeSandbox 实时页证明 MicroVM 确实存在，Adapter 审计证明请求、Runtime、结果和耗时可关联。任务结束后 `Sandbox.list()` 再次为 0。
+
+这条 DSH 路线已经不依赖 Skill，也能硬禁用常见宿主工具；但模型仍看到 `cube_*`，因此它是“直接 Tool Plugin”，不是下一节所说的透明 Provider。
+
+### 8.6 DSH 玩法三：把 `shell/fs/pty` 换成 Cube Provider
 
 Provider 版让模型继续使用 DSH 原来的 Bash、编辑器和 Terminal，不需要学一组 `cube_*` 工具：
 
@@ -666,7 +784,7 @@ CubeSandbox SDK → per-session MicroVM
 
 测试重点不是“命令返回 0”，而是环境一致性：Bash 写出的文件必须立即能被 editor 读到；PTY 与一次性 Bash 要处于同一 Sandbox；`workspace-write` 不能意外写到 DSH 宿主机。
 
-### 8.6 两边都很好玩：两个 Agent 并行改同一问题
+### 8.7 两边都很好玩：两个 Agent 并行改同一问题
 
 Snapshot 与 Clone 很适合 OpenClaw 子 Agent或 DSH 多方案并行：
 
@@ -709,7 +827,7 @@ Snapshot 与 Clone 很适合 OpenClaw 子 Agent或 DSH 多方案并行：
 
 这只是两路功能样本，但已经证明了一个很有价值的 Agent 模式：不要让多个方案在同一工作区互相覆盖，用 Clone 形成真正独立的执行分支。
 
-### 8.7 浏览器 Agent 与红队玩法
+### 8.8 浏览器 Agent 与红队玩法
 
 可以构建带 Chromium 和 Playwright/CDP 的模板，让每个浏览器任务进入独立 MicroVM。适合测试：
 
@@ -722,7 +840,7 @@ Snapshot 与 Clone 很适合 OpenClaw 子 Agent或 DSH 多方案并行：
 
 OpenClaw 的远端 SSH/OpenShell backend 当前不提供完整的 sandbox browser 能力，因此不能从“Shell 能远端执行”推导出“浏览器也能无缝迁移”。
 
-### 8.8 性能与可靠性玩法
+### 8.9 性能与可靠性玩法
 
 最后再把功能实验升级为平台压测：
 
@@ -875,7 +993,11 @@ flowchart LR
 ## 10. 生产上线检查表
 
 - [ ] OpenClaw / DSH 与 Sandbox 位于不同信任边界；
+- [ ] 不可信 Agent Profile 已禁用宿主 Shell / FS / Editor，且模型工具列表中确实只剩受控远端工具；
+- [ ] OpenClaw 的 `plugins.allow`、`tools.alsoAllow` 与 DSH 最终合成 Profile 已在启动后验证；
 - [ ] 每个租户或会话有独立 Sandbox lease；
+- [ ] Adapter Bearer Token 来自 Secret Manager，服务间使用 mTLS / 工作负载身份并可轮换；
+- [ ] 多副本前已实现持久 lease、加密 traffic token、owner fencing 与 Runtime 重启恢复；
 - [ ] CubeAPI、CubeProxy、WebUI 和运维端点均有认证与 TLS；
 - [ ] 默认拒绝出站，只允许企业 Git、镜像、软件源和 Tool / Model Gateway；
 - [ ] traffic token 与 `sandbox_id` 一起加密保存；
@@ -899,12 +1021,12 @@ CubeSandbox 对 OpenClaw / DSH 的最大价值，不是“又多一种部署方�
 最推荐的企业路线是：
 
 1. OpenClaw / DSH 留在受管 Runtime Pool；
-2. 用薄 Adapter 把 Shell、文件、PTY 和代码路由到 CubeSandbox；
+2. 先用本文已实测的 Tool Plugin + 薄 Adapter，把命令与文件路由到 CubeSandbox；
 3. 按会话管理 MicroVM，空闲 Pause，过期 Kill；
 4. 用默认拒绝网络、traffic token 和代理注入保护数据与凭据；
-5. 最后再评估整个 OpenClaw 助手进入 CubeSandbox 的 Preview 路径。
+5. 再补齐 PTY、流式取消、持久租约和透明 DSH Provider，最后评估整个 OpenClaw 助手进入 CubeSandbox 的 Preview 路径。
 
-这样既保留 OpenClaw 的渠道与 Agent 生态、DSH 的可组合 Runtime，也把最危险的执行动作放进可观察、可回收、可快照的独立 MicroVM。
+这样既保留 OpenClaw 的渠道与 Agent 生态、DSH 的可组合 Runtime，也把最危险的执行动作放进可观察、可回收、可快照的独立 MicroVM。本文的 Adapter 与两个 Plugin 已作为通用参考代码公开，不含私有集群、镜像仓库或账号假设；后续可以拆成独立项目并向上游贡献示例，但原生 OpenClaw backend 与透明 DSH Provider 仍需要先与各自社区确认稳定扩展契约。
 
 ## 参考资料
 
@@ -915,6 +1037,9 @@ CubeSandbox 对 OpenClaw / DSH 的最大价值，不是“又多一种部署方�
 - [CubeSandbox Lifecycle](https://docs.cubesandbox.com/zh/guide/lifecycle)
 - [CubeSandbox Network Policy](https://docs.cubesandbox.com/zh/guide/network-policy)
 - [OpenClaw Sandboxing](https://docs.openclaw.ai/gateway/sandboxing)
+- [OpenClaw Building Plugins](https://docs.openclaw.ai/plugins/building-plugins)
+- [OpenClaw Tool Plugins](https://docs.openclaw.ai/plugins/tool-plugins)
 - [OpenClaw Security](https://docs.openclaw.ai/gateway/security/)
 - [DeepSeek Harness Sandbox Contract](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/sandbox/sandbox)
 - [DeepSeek Harness Shell Subsystem](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/shell.md)
+- [DeepSeek Harness E2B PoC](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/e2b)

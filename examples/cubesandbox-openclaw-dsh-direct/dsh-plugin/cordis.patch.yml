@@ -1,0 +1,22 @@
+- id: tool-bash
+  disabled: true
+
+- id: tool-fs
+  disabled: true
+
+- id: tool-fs-search
+  disabled: true
+
+- id: tool-str-replace-editor
+  disabled: true
+
+- id: tool-pwsh
+  disabled: true
+
+- insert:
+    - id: cube-adapter-tools
+      name: '@aik8s/dsh-cube-adapter'
+      config:
+        adapterUrl: http://host.docker.internal:18080
+        tokenFile: /var/run/secrets/cube-adapter/token
+        profile: offline-code
