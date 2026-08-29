@@ -15,6 +15,8 @@ OpenClaw 已经不只是一个聊天机器人：它把消息渠道、Agent Runti
 
 公开资料很难证明究竟有多少公司把 OpenClaw 用于生产，因为内部平台通常不会公开架构、规模和事故数据。GitHub 热度、演示案例和二次开发项目可以说明关注度，不能代替生产采用证据。本文因此分析产品边界，而不使用无法复核的“客户数量”作为结论依据。
 
+如果希望把 OpenClaw 的 Shell、文件、PTY 和代码执行下沉到独立 MicroVM，并验证断网、traffic token、Pause / Resume、Snapshot、Rollback 与 Clone，参见[用 CubeSandbox 增强 OpenClaw 与 DSH：企业安全执行面实战](cubesandbox-openclaw-dsh-enterprise-practice.md)。
+
 ## 1. OpenClaw 提供了什么
 
 OpenClaw 官方将其定义为连接聊天应用与 AI Agent 的自托管 Gateway。一个常驻 Gateway 负责渠道连接、会话、路由和节点控制；CLI、Web UI、桌面端和移动节点通过它工作。参考：[OpenClaw 官方文档](https://docs.openclaw.ai/)、[Gateway Architecture](https://docs.openclaw.ai/architecture)。

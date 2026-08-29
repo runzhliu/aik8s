@@ -9,7 +9,7 @@ last_reviewed: 2026-08-29
 
 这篇文章记录一次真实的 CubeSandbox Kubernetes 部署：不只让 Pod 变成 `Running`，还要让计算节点成功注册、模板完成构建、KVM MicroVM 真正启动、命令能够执行，最后把测试沙箱销毁干净。
 
-实验固定使用官方 [`v0.7.0`](https://github.com/TencentCloud/CubeSandbox/releases/tag/v0.7.0)。Kubernetes 交付在该版本仍标注 Preview，因此本文是可复现的 PoC 路径，不是直接复制到生产环境的标准答案。部署条件、宿主机权限、PVM 风险和生产阻塞项，参见[CubeSandbox Kubernetes 部署条件与生产评估](cubesandbox-kubernetes.md)。
+实验固定使用官方 [`v0.7.0`](https://github.com/TencentCloud/CubeSandbox/releases/tag/v0.7.0)。Kubernetes 交付在该版本仍标注 Preview，因此本文是可复现的 PoC 路径，不是直接复制到生产环境的标准答案。部署条件、宿主机权限、PVM 风险和生产阻塞项，参见[CubeSandbox Kubernetes 部署条件与生产评估](cubesandbox-kubernetes.md)；如果想继续把它作为 OpenClaw / DSH 的企业执行面，参见[用 CubeSandbox 增强 OpenClaw 与 DSH](cubesandbox-openclaw-dsh-enterprise-practice.md)。
 
 先给出最终结果：
 
