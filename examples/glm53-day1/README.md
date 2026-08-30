@@ -1,7 +1,20 @@
-# GLM-5.3 H20 部署与压测计划
+# GLM-5.3 H20 部署与基线压测
 
-这组材料用于 `zai-org/GLM-5.3` 权重同步完成后，在单节点 8×141GB H20 上验证
-SGLang 与 vLLM。当前状态是**镜像准备与测试计划**，不是实测结果。
+这组材料用于在单节点 8×141GB H20 上部署 `zai-org/GLM-5.3`，并公平比较 SGLang
+与 vLLM。2026-08-30 已完成 9 个 Target-only 基线 Case：两套引擎各 27 轮，共
+7,680 个完成请求、0 失败请求。
+
+## 已公开结果
+
+- SGLang 在 9 个 Case 的输出吞吐均更高，相对 vLLM 高 7.3%～57.4%；
+- 128/64 短请求中，SGLang 的 P50 TTFT 低 46.0%～75.4%；
+- 4K/16K 输入中，vLLM 的 P50 TTFT 更低，SGLang 的输出吞吐和 P50 E2E 更好；
+- 当前结论只覆盖关闭 MTP、Prefix Cache、HiCache 和 Context Parallelism 的 128K
+  Target-only 基线。
+
+完整口径、对比表与限制见
+[公开压测报告](../../docs/ai-k8s/practices/glm53-h20-sglang-vllm-test-plan.md)，机器可读数据见
+[`results/h20-fp8-baseline-median-20260830.csv`](results/h20-fp8-baseline-median-20260830.csv)。
 
 ## 官方支持边界
 
@@ -27,7 +40,7 @@ benchmark.sh              # 统一 Case 矩阵；默认只打印命令
 prefix_cache.py           # 4K/32K 精确重复前缀与流式 TTFT
 needle.py                 # 长上下文 10%/50%/90% Needle
 cases.csv                 # 短压、Decode、官方负载和长上下文 Case
-results/                  # 实测 JSON、JSONL、日志摘要和环境清单
+results/                  # 脱敏后的逐 Case 聚合指标
 ```
 
 ## Gate 0：零 GPU 预检
@@ -139,7 +152,7 @@ Target-only 数据稳定后分别做 A/B：
   DSA Prefill/Decode Kernel，不能只改 KV Dtype；
 - 每轮保存 Draft Tokens、Accept Length、Verify 开销、显存以及 P95/P99。
 
-完整设计见
+完整报告与后续设计见
 [`glm53-h20-sglang-vllm-test-plan.md`](../../docs/ai-k8s/practices/glm53-h20-sglang-vllm-test-plan.md)。
 
 参考：

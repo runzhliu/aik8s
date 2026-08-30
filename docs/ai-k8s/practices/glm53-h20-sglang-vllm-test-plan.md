@@ -1,22 +1,92 @@
 ---
-title: GLM-5.3 首日测试计划：8×H20 上的 SGLang 与 vLLM
+title: GLM-5.3 首日实测：8×H20 上的 SGLang 与 vLLM 基线压测
 date: 2026-08-30
 authors:
   - runzhliu
 categories:
   - 推理
   - 实战
-description: 面向 GLM-5.3 原生 FP8、DSA、MTP 和 1M 上下文能力，制定单节点 8×141GB H20 上可复现的 SGLang/vLLM 部署与压测计划。
+description: 在单节点 8×141GB H20 上对 GLM-5.3 原生 FP8 进行 SGLang/vLLM 同机基线压测，对比输出吞吐、TTFT、TPOT 与端到端延迟。
 ---
 
-# GLM-5.3 首日测试计划：8×H20 上的 SGLang 与 vLLM
+# GLM-5.3 首日实测：8×H20 上的 SGLang 与 vLLM 基线压测
 
-本文是测试计划，不是性能结论。只有权重、镜像、硬件、功能正确性和性能测试全部留下
-可复现证据后，才会补充“已验证”结论。
+2026-08-30，我在同一台 8×141GB NVIDIA H20-3e 节点上，用 SGLang 和 vLLM
+分别部署 GLM-5.3 原生 FP8 权重，完成了 9 个 Target-only 基线 Case。两个引擎都由
+同一个 `vllm bench serve` 客户端压测，每个 Case 跑 3 轮，本文使用三轮中位数。
 
 GLM-5.3 是约 743B 总参数、39B 激活参数的 MoE 文本模型，使用 DSA、256 个路由专家
 （每 Token 激活 8 个）、一层原生 MTP，并声明 1,048,576 Token 上下文。默认
 `zai-org/GLM-5.3` 是原生 FP8 Checkpoint；BF16 权重位于独立仓库。
+
+## 先说结论
+
+- 两套引擎各留下 27 份完整结果，共 54 份 JSON、7,680 个完成请求，失败请求为 0；
+- SGLang 在 9 个 Case 的输出吞吐都更高，相对 vLLM 高 7.3%～57.4%；
+- 128/64 短请求中，SGLang 的 P50 TTFT 低 46.0%～75.4%；
+- 4K/16K Prefill 中，vLLM 的 P50 TTFT 更低，但 SGLang 的输出吞吐和 P50 E2E 更好；
+- 这组结果只代表关闭 MTP、Prefix Cache、HiCache 和 Context Parallelism 的 128K
+  Target-only 基线，不代表开启各自最佳优化后的最终排名。
+
+## 测试环境与口径
+
+| 项目 | 配置 |
+| --- | --- |
+| 模型 | `zai-org/GLM-5.3`，Native FP8，141 个 Safetensors 分片 |
+| GPU | 单节点 8×NVIDIA H20-3e，单卡 141GB，TP8 |
+| Context | 131,072 Token |
+| SGLang | 固定 `linux/amd64` 镜像 Digest `sha256:bde16a…fd74bf`；归档的版本文件为空，因此不声明语义版本 |
+| vLLM | 0.28.0，固定 `linux/amd64` 镜像 Digest `sha256:2286e8…b06635` |
+| KV Cache | SGLang 使用 Hopper 默认 BF16；vLLM 使用 `auto` |
+| 优化开关 | MTP、Prefix Cache、HiCache、Context Parallelism 全部关闭 |
+| 客户端 | 两边统一使用 `vllm bench serve`、相同随机请求集合与参数 |
+| 统计 | 每个 Case 3 轮，表格取逐指标中位数；不摘最快一轮 |
+
+## 基线压测结果
+
+吞吐是 Output Token Throughput。TTFT 差值按
+`(SGLang / vLLM - 1) × 100%` 计算，负数代表 SGLang 首 Token 更快。
+
+| Case | SGLang 输出 tok/s | vLLM 输出 tok/s | 吞吐差值 | SGLang P50 TTFT | vLLM P50 TTFT | TTFT 差值 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128/64，C1 | 90.41 | 69.27 | +30.5% | 54.29ms | 210.45ms | -74.2% |
+| 128/64，C4 | 288.50 | 183.33 | +57.4% | 98.30ms | 400.31ms | -75.4% |
+| 128/64，C8 | 459.47 | 330.82 | +38.9% | 142.10ms | 392.56ms | -63.8% |
+| 128/64，C16 | 656.41 | 601.02 | +9.2% | 210.48ms | 439.92ms | -52.2% |
+| 128/64，C32 | 964.25 | 814.68 | +18.4% | 443.91ms | 821.37ms | -46.0% |
+| 4K/128，C4 | 100.07 | 93.31 | +7.3% | 3,446.90ms | 2,752.07ms | +25.2% |
+| 4K/128，C8 | 115.40 | 103.63 | +11.4% | 5,913.69ms | 1,902.32ms | +210.9% |
+| 16K/256，C4 | 53.57 | 49.76 | +7.6% | 12,429.06ms | 10,464.75ms | +18.8% |
+| 16K/256，C8 | 57.67 | 53.24 | +8.3% | 20,281.42ms | 12,540.84ms | +61.7% |
+
+### 短请求：SGLang 同时赢吞吐和首 Token
+
+在 128/64 Case 中，SGLang 从 C1 到 C32 都保持更高吞吐和更低 TTFT。C32 时输出吞吐
+达到 964.25 tok/s，vLLM 为 814.68 tok/s；P50 TTFT 则分别为 443.91ms 和
+821.37ms。对于聊天和短 Agent 调用，这组配置下 SGLang 的优势最明确。
+
+### 4K/16K Prefill：vLLM 更早出首 Token，SGLang 更早完成
+
+进入 4K 和 16K 输入后，vLLM 的 P50 TTFT 更低，尤其 4K/C8 是 1.90s 对 5.91s。
+但在固定输出长度下，SGLang 的 Decode 更快，四个 RAG Case 的 P50 E2E 仍比 vLLM
+低约 6.2%～10.6%。因此，首 Token 敏感的 RAG 交互与总完成时间/吞吐优先的批处理，
+可能得到不同的引擎选择。
+
+## 数据质量与结论边界
+
+- 54 份结果文件均可解析，所有 Case 都是 3 轮，`failed=0`，错误字符串为空；
+- SGLang 的 `short-128-64-c4` 第三轮与一个 OpenWebUI 请求重叠，吞吐低于另外两轮；
+  本文仍按预先约定取三轮中位数，前两轮分别为 288.93 和 288.50 tok/s；
+- SGLang 批处理首次执行中断，随后从剩余 Case 恢复；聚合只纳入写出完整 JSON 的
+  27 轮，不纳入未完成轮次；
+- 公开证据确认 `/v1/models`、OpenAI 兼容压测请求和 131,072 Context 服务窗口；
+  Reasoning Parser、Tool Call、多轮对话和错误输入仍保留为功能验收项，不在本报告中
+  写成已经公开举证的生产可用结论；
+- MTP、FP8 KV、Prefix Cache、32K～1M Needle、功耗和显存曲线尚未进入本次对比。
+
+逐请求原始 JSON 含随机 Prompt 与生成文本，不直接公开。仓库提供脱敏后的
+[逐 Case 聚合 CSV](https://github.com/runzhliu/aik8s/blob/main/examples/glm53-day1/results/h20-fp8-baseline-median-20260830.csv)，
+保留吞吐、P50/P95/P99 TTFT、TPOT、E2E 和请求计数，方便复算本文表格。
 
 ## 官方支持边界
 
@@ -28,7 +98,12 @@ GLM-5.3 是约 743B 总参数、39B 激活参数的 MoE 文本模型，使用 DS
 这与 Hy4-preview 的 MXFP8/SM100 限制不同。GLM-5.3 的默认 FP8 权重可以从单节点
 8×141GB H20 起步，不需要先准备 BF16 双机方案。
 
-## Gate 0：固定运行时镜像
+## 复现方法与后续测试计划
+
+下面保留本轮使用的 Gate 和后续单变量实验设计。公开清单与脚本位于
+[`examples/glm53-day1`](https://github.com/runzhliu/aik8s/tree/main/examples/glm53-day1)。
+
+### Gate 0：固定运行时镜像
 
 2026-08-30 解析到的 `linux/amd64` 上游 Manifest：
 
@@ -48,7 +123,7 @@ GLM-5.3 是约 743B 总参数、39B 激活参数的 MoE 文本模型，使用 DS
 - 两个镜像均包含 Hopper 上需要的 DeepGEMM/FlashMLA/DSA Kernel；
 - 启动 CLI 中计划使用的每个参数都真实存在。
 
-## Gate 1：权重同步完整性
+### Gate 1：权重同步完整性
 
 GPU Pod 启动前执行零 GPU 预检：
 
@@ -59,7 +134,7 @@ GPU Pod 启动前执行零 GPU 预检：
 - 排除 `.incomplete`、临时文件、不同 Revision 混放及只同步部分节点的情况；
 - 从最终挂载路径读取文件，不能只根据同步任务处于 `Running` 或 `Complete` 判断。
 
-## Gate 2：硬件与最小启动
+### Gate 2：硬件与最小启动
 
 最低起点是一台独占的 8×141GB H20：
 
@@ -72,7 +147,7 @@ GPU Pod 启动前执行零 GPU 预检：
 首轮采用 Target-only：关闭 MTP、Prefix Cache、HiCache 和 Context Parallelism。SGLang
 使用 Hopper 默认 BF16 KV；vLLM 也先使用同等 KV 精度，建立公平基线。
 
-## Gate 3：功能正确性
+### Gate 3：功能正确性
 
 至少覆盖以下用例：
 
@@ -86,21 +161,21 @@ GPU Pod 启动前执行零 GPU 预检：
 任一引擎若不能稳定完成 Tool Call 或 Reasoning Parser，本轮性能数据只标记为“引擎
 吞吐测试”，不能作为可用服务结论。
 
-## Gate 4：Target-only 性能基线
+### Gate 4：Target-only 性能基线
 
 关闭 MTP，固定 Revision、KV 精度、Context、采样参数和请求集合：
 
-| 场景 | 输入 / 输出 | 并发 | 目的 |
-| --- | --- | --- | --- |
-| 短对话 | 128 / 64 | 1、4、8、16、32 | 单请求延迟、动态批处理和饱和点 |
-| RAG/Agent | 4K / 128、16K / 256 | 4、8 | DSA Prefill 能力 |
-| 长输出 | 128 / 1K、128 / 4K | 1、8 | Decode 与 Agent 长任务 |
-| 官方参考负载 | 8K / 1K | 32 请求、10 req/s | 对照 vLLM Recipe |
-| 长上下文 | 32K、64K、128K、256K / 128 | 1 | TTFT、正确性和 KV 上限 |
+| 场景 | 输入 / 输出 | 并发 | 状态 | 目的 |
+| --- | --- | --- | --- | --- |
+| 短对话 | 128 / 64 | 1、4、8、16、32 | 已完成 | 单请求延迟、动态批处理和饱和点 |
+| RAG/Agent | 4K / 128、16K / 256 | 4、8 | 已完成 | DSA Prefill 能力 |
+| 长输出 | 128 / 1K、128 / 4K | 1、8 | 待补 | Decode 与 Agent 长任务 |
+| 官方参考负载 | 8K / 1K | 32 请求、10 req/s | 待补 | 对照 vLLM Recipe |
+| 长上下文 | 32K、64K、128K、256K / 128 | 1 | 待补 | TTFT、正确性和 KV 上限 |
 
 每个常规 Case 先 Warmup，再至少记录三轮。保留所有原始结果，不能只摘最快一轮。
 
-## Gate 5：MTP 单变量 A/B
+### Gate 5：MTP 单变量 A/B（待补）
 
 Target-only 稳定后，在同一引擎内只切换 MTP：
 
@@ -114,7 +189,7 @@ Target-only 稳定后，在同一引擎内只切换 MTP：
 跨引擎比较分成两张表：MTP 关闭的公平基线，以及各自官方推荐 MTP 的最佳实践结果，
 不能把二者混成一个排名。
 
-## Gate 6：FP8 KV、Prefix Cache 与长上下文
+### Gate 6：FP8 KV、Prefix Cache 与长上下文（待补）
 
 完成公平基线后，再验证官方优化路线：
 
@@ -127,7 +202,7 @@ Target-only 稳定后，在同一引擎内只切换 MTP：
 官方 vLLM Recipe 将 H20/H200 定位为单节点 FP8，而完整 1M Context 明确指向 8×B200。
 因此 H20 上不能把模型声明的 1M 窗口直接写成已具备的服务能力。
 
-## Gate 7：SGLang/vLLM 公平比较
+### Gate 7：SGLang/vLLM 公平比较
 
 两个引擎串行使用同一台节点。Checkpoint Revision、GPU、KV 精度、Context、MTP 状态、
 请求顺序、随机种子、采样参数、Warmup 和客户端必须一致。
@@ -141,7 +216,7 @@ Target-only 稳定后，在同一引擎内只切换 MTP：
 - 权重加载、CUDA Graph/JIT/Autotune 和首个请求耗时；
 - MTP Acceptance Length 与 Prefix Cache 命中指标。
 
-## 停止条件
+### 停止条件
 
 - 权重 Index、分片或 Revision 不一致；
 - GPU 不是 8×141GB H20，或者测试期间存在其他 GPU 工作负载；
@@ -151,11 +226,11 @@ Target-only 稳定后，在同一引擎内只切换 MTP：
 
 发生停止条件时保存日志、Events、节点拓扑和原始请求，不通过反复重启掩盖问题。
 
-## 产物
+## 公开产物
 
 可执行材料放在 `examples/glm53-day1/`：镜像基线、Case 矩阵、权重预检、功能 Smoke、
-Benchmark、Prefix Cache、Needle 和原始结果。实测开始后，先写机器可读 JSON/CSV，再更新
-本文结论。
+Benchmark、Prefix Cache 和 Needle。`results/` 提供脱敏聚合 CSV；包含随机 Prompt 和
+生成文本的逐请求原始结果只保留在内部审计归档中。
 
 ## 参考资料
 
