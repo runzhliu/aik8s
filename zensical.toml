@@ -88,6 +88,7 @@ nav = [
       {"GPU Pending 排障" = "ai-k8s/practices/gpu-pending.md"},
       {"GPU 利用率排障" = "ai-k8s/practices/low-gpu-utilization.md"},
       {"推理引擎同机实测" = "ai-k8s/practices/inference-engine-benchmark.md"},
+      {"GLM-5.3：8×H20 SGLang/vLLM 测试计划" = "ai-k8s/practices/glm53-h20-sglang-vllm-test-plan.md"},
       {"GLM-5.3-Flash Day 1：4×H20 部署与实测" = "ai-k8s/practices/glm53-flash-day1-h20.md"},
       {"Qwen3.8-Flash-Next Day 0 实战" = "ai-k8s/practices/qwen38-flash-next-sglang-day0.md"},
       {"SGLang 三版本单卡 L20 实测" = "ai-k8s/practices/sglang-0518-release-analysis.md"},

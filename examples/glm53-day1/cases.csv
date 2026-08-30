@@ -1,0 +1,21 @@
+case_id,stage,input_tokens,output_tokens,concurrency,num_prompts,request_rate,repeats,description
+smoke-128-64-c1,smoke,128,64,1,4,inf,1,API and output-format smoke
+short-128-64-c1,baseline,128,64,1,32,inf,3,single-request latency
+short-128-64-c4,baseline,128,64,4,64,inf,3,light batching
+short-128-64-c8,baseline,128,64,8,128,inf,3,moderate batching
+short-128-64-c16,baseline,128,64,16,256,inf,3,high concurrency
+short-128-64-c32,baseline,128,64,32,512,inf,3,saturation probe
+rag-4k-128-c4,baseline,4096,128,4,64,inf,3,ordinary RAG prefill
+rag-4k-128-c8,baseline,4096,128,8,128,inf,3,RAG throughput
+rag-16k-256-c4,baseline,16384,256,4,32,inf,3,long agent prefill
+rag-16k-256-c8,baseline,16384,256,8,64,inf,3,long agent throughput
+decode-128-1k-c1,decode,128,1024,1,6,inf,3,long-output latency
+decode-128-1k-c8,decode,128,1024,8,32,inf,3,long-output throughput
+decode-128-4k-c1,decode,128,4096,1,2,inf,2,agent-style extreme output
+official-8k-1k-r10,official,8000,1024,0,32,10,3,vLLM recipe reference load
+ctx-32k-128-c1,long,32768,128,1,3,inf,2,32K cold prefill
+ctx-64k-128-c1,long,65536,128,1,2,inf,2,64K cold prefill
+ctx-128k-128-c1,long,130816,128,1,1,inf,2,H20 starting context ceiling
+ctx-256k-128-c1,long,261888,128,1,1,inf,1,capability probe
+ctx-512k-128-c1,extreme,524160,128,1,1,inf,1,capability only
+ctx-near-1m-256-c1,extreme,1048064,256,1,1,inf,1,native-window capability only

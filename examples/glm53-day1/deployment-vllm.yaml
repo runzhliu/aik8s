@@ -1,0 +1,140 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: glm53-vllm-day1
+  namespace: glm53-lab
+  labels:
+    app.kubernetes.io/name: glm53-vllm-day1
+    app.kubernetes.io/part-of: glm53-day1
+spec:
+  replicas: 1
+  progressDeadlineSeconds: 7200
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: glm53-vllm-day1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: glm53-vllm-day1
+        app.kubernetes.io/part-of: glm53-day1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      terminationGracePeriodSeconds: 180
+      # Replace with a verified Hopper large-memory GPU pool label.
+      nodeSelector:
+        accelerator.example.com/model: hopper-large-memory
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635
+          imagePullPolicy: IfNotPresent
+          command: ["vllm", "serve"]
+          args:
+            - /models/GLM-5.3/v1
+            - --served-model-name
+            - glm-5.3
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+            - --tensor-parallel-size
+            - "8"
+            - --kv-cache-dtype
+            - auto
+            - --gpu-memory-utilization
+            - "0.82"
+            - --max-model-len
+            - "131072"
+            - --max-num-seqs
+            - "32"
+            - --no-enable-prefix-caching
+            - --enable-auto-tool-choice
+            - --tool-call-parser
+            - glm47
+            - --reasoning-parser
+            - glm45
+          env:
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: NCCL_DEBUG
+              value: WARN
+            - name: VLLM_SERVER_DEV_MODE
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 8000
+          startupProbe:
+            httpGet:
+              path: /v1/models
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 720
+          readinessProbe:
+            httpGet:
+              path: /v1/models
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "120"
+              memory: 700Gi
+              ephemeral-storage: 32Gi
+              nvidia.com/gpu: "8"
+            limits:
+              cpu: "240"
+              memory: 1500Gi
+              ephemeral-storage: 96Gi
+              nvidia.com/gpu: "8"
+          securityContext:
+            capabilities:
+              add: ["IPC_LOCK"]
+          volumeMounts:
+            - name: model-corpus
+              mountPath: /models
+              readOnly: true
+            - name: dshm
+              mountPath: /dev/shm
+            - name: cache
+              mountPath: /root/.cache
+      volumes:
+        - name: model-corpus
+          persistentVolumeClaim:
+            claimName: glm53-models
+            readOnly: true
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Gi
+        - name: cache
+          emptyDir:
+            sizeLimit: 64Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: glm53-vllm-day1
+  namespace: glm53-lab
+spec:
+  selector:
+    app.kubernetes.io/name: glm53-vllm-day1
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

@@ -19,6 +19,7 @@ last_reviewed: 2026-08-14
 
 ## 性能、成本与容量
 
+- [GLM-5.3 首日测试计划：8×H20 上的 SGLang 与 vLLM](glm53-h20-sglang-vllm-test-plan.md)
 - [Qwen3.8-Flash-Next Day 0 实战：4×H20 跑通原生 262K](qwen38-flash-next-sglang-day0.md)
 - [SGLang v0.5.16 / v0.5.17 / v0.5.18 单卡 L20 实测：升级真的更快吗](sglang-0518-release-analysis.md)
 - [DeepSeek V4 Flash 的分布式 KV Cache：从 P/D 直传到全局缓存池](distributed-kv-cache-deepseek-v4.md)

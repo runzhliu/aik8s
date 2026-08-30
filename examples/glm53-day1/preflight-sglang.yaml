@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: glm53-preflight-sglang
+  namespace: glm53-lab
+  labels:
+    app.kubernetes.io/part-of: glm53-day1
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: glm53-preflight-sglang
+        app.kubernetes.io/part-of: glm53-day1
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: preflight
+          image: lmsysorg/sglang@sha256:bde16a8447b19e89056b9eea06c72be6c02801dc89d528c9ea90c53368fd74bf
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/opt/preflight/preflight.py"]
+          env:
+            - name: ENGINE
+              value: sglang
+            - name: MODEL_PATH
+              value: /models/GLM-5.3/v1
+            - name: EXPECTED_SHARDS
+              value: "141"
+            - name: EXPECTED_INDEX_BYTES
+              value: "755617140416"
+            - name: EXPECTED_DISK_BYTES
+              value: "755632050320"
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+            limits:
+              cpu: "8"
+              memory: 16Gi
+          volumeMounts:
+            - name: model-corpus
+              mountPath: /models
+              readOnly: true
+            - name: preflight
+              mountPath: /opt/preflight
+              readOnly: true
+      volumes:
+        - name: model-corpus
+          persistentVolumeClaim:
+            claimName: glm53-models
+            readOnly: true
+        - name: preflight
+          configMap:
+            name: glm53-preflight
