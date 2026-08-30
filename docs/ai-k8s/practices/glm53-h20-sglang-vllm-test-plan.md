@@ -61,11 +61,17 @@ GLM-5.3 是约 743B 总参数、39B 激活参数的 MoE 文本模型，使用 DS
 
 ### 短请求：SGLang 同时赢吞吐和首 Token
 
+![128/64 短请求输出吞吐](../../assets/practices/glm53-day1/short-throughput-median.png)
+
 在 128/64 Case 中，SGLang 从 C1 到 C32 都保持更高吞吐和更低 TTFT。C32 时输出吞吐
 达到 964.25 tok/s，vLLM 为 814.68 tok/s；P50 TTFT 则分别为 443.91ms 和
 821.37ms。对于聊天和短 Agent 调用，这组配置下 SGLang 的优势最明确。
 
+![128/64 短请求 P50 TTFT](../../assets/practices/glm53-day1/short-ttft-median.png)
+
 ### 4K/16K Prefill：vLLM 更早出首 Token，SGLang 更早完成
+
+![RAG 场景的 P50 TTFT 与 P50 E2E 权衡](../../assets/practices/glm53-day1/rag-latency-tradeoff.png)
 
 进入 4K 和 16K 输入后，vLLM 的 P50 TTFT 更低，尤其 4K/C8 是 1.90s 对 5.91s。
 但在固定输出长度下，SGLang 的 Decode 更快，四个 RAG Case 的 P50 E2E 仍比 vLLM
@@ -230,7 +236,8 @@ Target-only 稳定后，在同一引擎内只切换 MTP：
 
 可执行材料放在 `examples/glm53-day1/`：镜像基线、Case 矩阵、权重预检、功能 Smoke、
 Benchmark、Prefix Cache 和 Needle。`results/` 提供脱敏聚合 CSV；包含随机 Prompt 和
-生成文本的逐请求原始结果只保留在内部审计归档中。
+生成文本的逐请求原始结果只保留在内部审计归档中。本文三张图由
+`scripts/generate_glm53_day1_assets.py` 直接读取公开聚合 CSV 生成。
 
 ## 参考资料
 
