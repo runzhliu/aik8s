@@ -70,6 +70,7 @@ nav = [
       {"CubeSandbox Kubernetes 部署实战" = "ai-k8s/rag-agent/cubesandbox-kubernetes-practice.md"},
       {"CubeSandbox 增强 OpenClaw 与 DSH 实战" = "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"},
       {"OpenClaw 企业 Agent 平台分析" = "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md"},
+      {"OpenClaw 2.0 实测与迁移风险" = "ai-k8s/rag-agent/openclaw-2-real-world-review.md"},
       {"企业内部 AI 应用发布与共享" = "ai-k8s/rag-agent/internal-agent-app-publishing.md"},
       {"AI Agent 与沙箱" = "ai-k8s/agentic-workloads.md"},
       {"边缘 AI 与云边协同" = "ai-k8s/edge-ai.md"},

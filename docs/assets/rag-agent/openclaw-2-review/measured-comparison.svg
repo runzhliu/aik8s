@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860" role="img" aria-labelledby="title desc">
+  <title id="title">OpenClaw 2026.7.1 与 2026.8.1 实测对比</title>
+  <desc id="desc">安装体积、文件数、CLI 启动、Gateway 内存、默认插件和 doctor 结果对比。</desc>
+  <style>
+    .bg{fill:#fbfaf6}.card{fill:#fff;stroke:#ded8cc;stroke-width:2}.v1{fill:#8b8177}.v2{fill:#c75b43}
+    .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#24211e}
+    .sub{font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#6f675f}
+    .label{font:700 22px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#302c28}
+    .num{font:700 36px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#24211e}
+    .small{font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#6f675f}
+    .tag{font:700 15px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#fff}
+    .delta{font:700 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#a34330}
+  </style>
+  <rect class="bg" width="1500" height="860"/>
+  <text class="title" x="70" y="65">OpenClaw 1.x vs 2.0：本机隔离实测</text>
+  <text class="sub" x="70" y="100">macOS arm64 · Node v24.15.0 · npm 安装 · 2026.7.1 / 2026.8.1 · 数据仅用于版本相对比较</text>
+  <rect x="1130" y="42" rx="12" width="110" height="32" class="v1"/><text class="tag" x="1152" y="64">2026.7.1</text>
+  <rect x="1255" y="42" rx="12" width="110" height="32" class="v2"/><text class="tag" x="1277" y="64">2026.8.1</text>
+
+  <rect class="card" x="70" y="145" rx="22" width="425" height="255"/>
+  <text class="label" x="100" y="184">npm 安装目录</text>
+  <text class="num" x="100" y="242">391.9 MiB</text><rect class="v1" x="100" y="263" rx="8" width="160" height="18"/>
+  <text class="num" x="100" y="330">896.5 MiB</text><rect class="v2" x="100" y="351" rx="8" width="365" height="18"/>
+  <text class="delta" x="310" y="242">+128.8%</text>
+  <text class="small" x="100" y="387">2.0 的 provider、设备与操作面显著扩大</text>
+
+  <rect class="card" x="535" y="145" rx="22" width="425" height="255"/>
+  <text class="label" x="565" y="184">安装文件数</text>
+  <text class="num" x="565" y="242">32,030</text><rect class="v1" x="565" y="263" rx="8" width="280" height="18"/>
+  <text class="num" x="565" y="330">35,902</text><rect class="v2" x="565" y="351" rx="8" width="314" height="18"/>
+  <text class="delta" x="795" y="242">+12.1%</text>
+  <text class="small" x="565" y="387">体积增长远大于文件数增长：单文件/依赖更重</text>
+
+  <rect class="card" x="1000" y="145" rx="22" width="425" height="255"/>
+  <text class="label" x="1030" y="184">CLI 版本查询（热启动中位数）</text>
+  <text class="num" x="1030" y="242">46.9 ms</text><rect class="v1" x="1030" y="263" rx="8" width="330" height="18"/>
+  <text class="num" x="1030" y="330">44.4 ms</text><rect class="v2" x="1030" y="351" rx="8" width="312" height="18"/>
+  <text class="delta" x="1282" y="330">≈ 持平</text>
+  <text class="small" x="1030" y="387">12 次运行；差异在本机噪声范围内</text>
+
+  <rect class="card" x="70" y="445" rx="22" width="425" height="255"/>
+  <text class="label" x="100" y="484">Gateway RSS（5 次稳定态快照中位数）</text>
+  <text class="num" x="100" y="542">38.3 MiB</text><rect class="v1" x="100" y="563" rx="8" width="195" height="18"/>
+  <text class="num" x="100" y="630">53.9 MiB</text><rect class="v2" x="100" y="651" rx="8" width="275" height="18"/>
+  <text class="delta" x="330" y="542">+40.7%</text>
+  <text class="small" x="100" y="687">空载、loopback、无鉴权；仅作相对参考</text>
+
+  <rect class="card" x="535" y="445" rx="22" width="425" height="255"/>
+  <text class="label" x="565" y="484">Gateway 默认加载插件</text>
+  <text class="num" x="565" y="542">9</text><rect class="v1" x="565" y="563" rx="8" width="180" height="18"/>
+  <text class="num" x="565" y="630">14</text><rect class="v2" x="565" y="651" rx="8" width="280" height="18"/>
+  <text class="delta" x="760" y="630">+5</text>
+  <text class="small" x="565" y="687">2.0 新增 OpenAI/Anthropic/xAI、设备与 CUA 等</text>
+
+  <rect class="card" x="1000" y="445" rx="22" width="425" height="255"/>
+  <text class="label" x="1030" y="484">doctor --lint --json</text>
+  <text class="num" x="1030" y="542">36 findings</text><rect class="v1" x="1030" y="563" rx="8" width="330" height="18"/>
+  <text class="num" x="1030" y="630">2 findings</text><rect class="v2" x="1030" y="651" rx="8" width="42" height="18"/>
+  <text class="delta" x="1240" y="630">更聚焦</text>
+  <text class="small" x="1030" y="679">同一测试机；2.0 不再把 35 个缺依赖 Skill</text>
+  <text class="small" x="1030" y="700">全部作为默认告警，不能解读为“风险少 94%”</text>
+
+  <rect x="70" y="748" rx="18" width="1355" height="67" fill="#2d2925"/>
+  <text x="747" y="779" text-anchor="middle" style="font:700 19px Arial,'PingFang SC','Microsoft YaHei',sans-serif;fill:#fff">
+    结论：2.0 的 CLI 启动没有变慢，但安装体积、常驻能力和迁移复杂度都明显上升
+  </text>
+  <text x="747" y="802" text-anchor="middle" style="font:400 15px Arial,'PingFang SC','Microsoft YaHei',sans-serif;fill:#d9d2ca">
+    数据来自一次隔离实验，不代表所有 OS、包管理器、插件组合和真实业务负载
+  </text>
+</svg>

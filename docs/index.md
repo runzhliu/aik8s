@@ -130,6 +130,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - [Agent Sandbox 选型与架构分析](ai-k8s/rag-agent/agent-sandbox-selection.md)
 - [CubeSandbox Kubernetes 部署条件与生产评估](ai-k8s/rag-agent/cubesandbox-kubernetes.md)
 - [OpenClaw 作为企业 Agent 平台底座](ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md)
+- [OpenClaw 2.0 实测：与 1.x 的架构、功能、性能和迁移风险对比](ai-k8s/rag-agent/openclaw-2-real-world-review.md)
 - [AI Agent、沙箱与工具执行](ai-k8s/agentic-workloads.md)
 - [GPU、训练与推理可观测性](ai-k8s/observability.md)
 - [AI 平台安全与治理](ai-k8s/security-governance.md)
