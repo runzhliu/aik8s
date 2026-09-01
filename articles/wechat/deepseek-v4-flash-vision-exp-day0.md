@@ -158,7 +158,7 @@ vllm bench serve --backend openai-chat
 ## 如果准备上线，我会先做这七件事
 
 1. 固定 Preview commit 和镜像 Digest，不使用会漂移的 latest；
-2. CFS 只做模型源，NVMe 做 Serving 热路径；
+2. 共享文件存储只做模型源，NVMe 做 Serving 热路径；
 3. 至少预留 15 分钟冷启动预算，并持久化编译与 Autotune Cache；
 4. 按图片数和分辨率做 Admission Control；
 5. Cold/Warm 分开建容量基线；
