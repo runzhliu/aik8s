@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render Markdown for WeChat and optionally create an Official Account draft."""
+"""Render Markdown and create, update, or inspect a WeChat Official Account draft."""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 
 API_BASE = "https://api.weixin.qq.com/cgi-bin"
 DEFAULT_OUTPUT = Path(".wechat-output")
+WECHAT_AUTHOR = "runzhliu"
 
 STYLES = {
     "section": (
@@ -129,6 +130,15 @@ def inline_styles(fragment: str) -> BeautifulSoup:
             existing = tag.get("style", "")
             tag["style"] = style + existing
 
+    # Match the metadata emitted by the WeChat rich-text editor. Plain
+    # <a href> tags can be removed when a draft is saved through the API.
+    for anchor in section.find_all("a", href=True):
+        anchor["target"] = "_blank"
+        anchor["linktype"] = "text"
+        anchor["textvalue"] = anchor.get_text(" ", strip=True)
+        anchor["tab"] = "outerlink"
+        anchor["data-linktype"] = "2"
+
     for code in section.find_all("code"):
         if code.parent and code.parent.name == "pre":
             raw_code = code.get_text().rstrip("\n")
@@ -192,7 +202,12 @@ def full_preview(title: str, content: str) -> str:
 
 def check_response(response: requests.Response, action: str) -> dict[str, Any]:
     response.raise_for_status()
-    payload = response.json()
+    try:
+        # Some WeChat endpoints omit a UTF-8 charset and requests otherwise
+        # decodes Chinese response fields as ISO-8859-1.
+        payload = json.loads(response.content.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise WeChatAPIError(f"{action} returned invalid UTF-8 JSON") from error
     if payload.get("errcode", 0) != 0:
         raise WeChatAPIError(
             f"{action} failed: errcode={payload.get('errcode')} errmsg={payload.get('errmsg')}"
@@ -367,6 +382,30 @@ def update_draft(
     check_response(response, "update draft")
 
 
+def get_draft(token: str, media_id: str) -> dict[str, Any]:
+    response = requests.post(
+        f"{API_BASE}/draft/get",
+        params={"access_token": token},
+        data=json.dumps({"media_id": media_id}).encode("utf-8"),
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        timeout=60,
+    )
+    return check_response(response, "get draft")
+
+
+def list_drafts(token: str, *, offset: int = 0, count: int = 20) -> dict[str, Any]:
+    response = requests.post(
+        f"{API_BASE}/draft/batchget",
+        params={"access_token": token},
+        data=json.dumps(
+            {"offset": offset, "count": count, "no_content": 1}
+        ).encode("utf-8"),
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        timeout=60,
+    )
+    return check_response(response, "list drafts")
+
+
 def command_render(args: argparse.Namespace) -> None:
     title, content, _ = render_markdown(args.article)
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -385,7 +424,7 @@ def command_draft(args: argparse.Namespace) -> None:
     load_env_file(args.env_file)
     app_id = required_env("WECHAT_APP_ID")
     app_secret = required_env("WECHAT_APP_SECRET")
-    author = os.environ.get("WECHAT_AUTHOR", "AI-K8S技术工程").strip()
+    author = WECHAT_AUTHOR
     source_url = (
         args.source_url.strip()
         if args.source_url is not None
@@ -419,7 +458,7 @@ def command_update(args: argparse.Namespace) -> None:
     load_env_file(args.env_file)
     app_id = required_env("WECHAT_APP_ID")
     app_secret = required_env("WECHAT_APP_SECRET")
-    author = os.environ.get("WECHAT_AUTHOR", "AI-K8S技术工程").strip()
+    author = WECHAT_AUTHOR
     source_url = (
         args.source_url.strip()
         if args.source_url is not None
@@ -435,7 +474,13 @@ def command_update(args: argparse.Namespace) -> None:
     else:
         thumb_media_id = os.environ.get("WECHAT_THUMB_MEDIA_ID", "").strip()
         if not thumb_media_id:
-            raise ValueError("set WECHAT_THUMB_MEDIA_ID or pass --cover")
+            existing = get_draft(token, args.media_id)
+            articles = existing.get("news_item", [])
+            if not articles:
+                raise WeChatAPIError("get draft returned no articles")
+            thumb_media_id = str(articles[0].get("thumb_media_id", "")).strip()
+            if not thumb_media_id:
+                raise ValueError("existing draft has no cover; pass --cover")
 
     update_draft(
         token,
@@ -448,6 +493,79 @@ def command_update(args: argparse.Namespace) -> None:
         thumb_media_id=thumb_media_id,
     )
     print(f"draft updated: media_id={args.media_id}")
+
+
+def command_inspect(args: argparse.Namespace) -> None:
+    """Read back a draft without printing credentials or the full article body."""
+    load_env_file(args.env_file)
+    token = get_access_token(
+        required_env("WECHAT_APP_ID"),
+        required_env("WECHAT_APP_SECRET"),
+    )
+    payload = get_draft(token, args.media_id)
+    articles = payload.get("news_item", [])
+    if not articles:
+        raise WeChatAPIError("get draft returned no articles")
+
+    article = articles[0]
+    content = str(article.get("content", ""))
+    soup = BeautifulSoup(content, "html.parser")
+    print(f"title: {article.get('title', '')}")
+    print(f"author: {article.get('author', '')}")
+    print(f"source_url: {article.get('content_source_url', '')}")
+    image_sources = [
+        str(image.get("data-src") or image.get("src") or "").strip()
+        for image in soup.find_all("img")
+    ]
+    remote_images = []
+    for source in image_sources:
+        parsed_source = urlparse(source)
+        if parsed_source.scheme in {"http", "https"} or bool(parsed_source.netloc):
+            remote_images.append(source)
+    print(
+        f"content_images: {len(image_sources)} "
+        f"(remote={len(remote_images)}, local={len(image_sources) - len(remote_images)})"
+    )
+    print(f"cover: {'present' if article.get('thumb_media_id') else 'missing'}")
+    paragraphs = [
+        paragraph.get_text(" ", strip=True)
+        for paragraph in soup.find_all("p")
+        if paragraph.get_text(" ", strip=True)
+    ]
+    for index, paragraph in enumerate(paragraphs[:2], start=1):
+        print(f"intro_{index}: {paragraph}")
+    visible_text = soup.get_text(" ", strip=True)
+    visible_urls = list(
+        dict.fromkeys(re.findall(r"https?://[^\s，。；、）)]+", visible_text))
+    )
+    print(f"visible_urls: {len(visible_urls)}")
+    for url in visible_urls:
+        print(f"- {url}")
+    anchors = soup.find_all("a")
+    print(f"anchors: {len(anchors)}")
+    for anchor in anchors:
+        label = anchor.get_text(" ", strip=True)
+        print(f"- {label} -> {anchor.get('href', '')}")
+
+
+def command_list(args: argparse.Namespace) -> None:
+    """List recent drafts without printing credentials or article bodies."""
+    load_env_file(args.env_file)
+    token = get_access_token(
+        required_env("WECHAT_APP_ID"),
+        required_env("WECHAT_APP_SECRET"),
+    )
+    payload = list_drafts(token, count=args.count)
+    for item in payload.get("item", []):
+        articles = item.get("content", {}).get("news_item", [])
+        if not articles:
+            continue
+        article = articles[0]
+        print(
+            f"{item.get('media_id', '')}\t"
+            f"{article.get('title', '')}\t"
+            f"{article.get('author', '')}"
+        )
 
 
 def parse_args() -> argparse.Namespace:
@@ -473,6 +591,20 @@ def parse_args() -> argparse.Namespace:
     update.add_argument("--cover", type=Path)
     update.add_argument("--source-url")
     update.set_defaults(func=command_update)
+
+    inspect = subparsers.add_parser(
+        "inspect", help="read back a draft title, source URL, and links"
+    )
+    inspect.add_argument("--media-id", required=True)
+    inspect.add_argument("--env-file", type=Path, default=Path(".deploy-secrets/wechat.env"))
+    inspect.set_defaults(func=command_inspect)
+
+    list_parser = subparsers.add_parser("list", help="list recent drafts")
+    list_parser.add_argument("--count", type=int, default=20, choices=range(1, 21))
+    list_parser.add_argument(
+        "--env-file", type=Path, default=Path(".deploy-secrets/wechat.env")
+    )
+    list_parser.set_defaults(func=command_list)
 
     return parser.parse_args()
 

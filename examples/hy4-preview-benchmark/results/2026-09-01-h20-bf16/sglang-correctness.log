@@ -1,0 +1,12 @@
+TOKEN_CALIBRATION {"base_tokens": 98, "sample_records": 200, "sample_tokens": 4298, "tokens_per_record": 21.0}
+NIAH_RESULT {"target_tokens": 32768, "input_tokens": 32507, "depth_percent": 10, "records": 1543, "needle": "HY4-SGLANG-32768-10-NIAH", "response": "HY4-SGLANG-32768-10-NIAH", "elapsed_seconds": 10.611, "status": "PASS"}
+NIAH_RESULT {"target_tokens": 32768, "input_tokens": 32507, "depth_percent": 50, "records": 1543, "needle": "HY4-SGLANG-32768-50-NIAH", "response": "HY4-SGLANG-32768-50-NIAH", "elapsed_seconds": 10.212, "status": "PASS"}
+NIAH_RESULT {"target_tokens": 32768, "input_tokens": 32507, "depth_percent": 90, "records": 1543, "needle": "HY4-SGLANG-32768-90-NIAH", "response": "HY4-SGLANG-32768-90-NIAH", "elapsed_seconds": 10.216, "status": "PASS"}
+NIAH_RESULT {"target_tokens": 65536, "input_tokens": 65267, "depth_percent": 10, "records": 3103, "needle": "HY4-SGLANG-65536-10-NIAH", "response": "HY4-SGLANG-65536-10-NIAH", "elapsed_seconds": 21.118, "status": "PASS"}
+NIAH_RESULT {"target_tokens": 65536, "input_tokens": 65267, "depth_percent": 50, "records": 3103, "needle": "HY4-SGLANG-65536-50-NIAH", "response": "HY4-SGLANG-65536-50-NIAH", "elapsed_seconds": 20.966, "status": "PASS"}
+NIAH_RESULT {"target_tokens": 65536, "input_tokens": 65267, "depth_percent": 90, "records": 3103, "needle": "HY4-SGLANG-65536-90-NIAH", "response": "HY4-SGLANG-65536-90-NIAH", "elapsed_seconds": 20.984, "status": "PASS"}
+NIAH_RESULT {"target_tokens": 126000, "input_tokens": 125747, "depth_percent": 10, "records": 5983, "needle": "HY4-SGLANG-126000-10-NIAH", "response": "HY4-SGLANG-126000-10-NIAH", "elapsed_seconds": 42.925, "status": "PASS"}
+NIAH_RESULT {"target_tokens": 126000, "input_tokens": 125747, "depth_percent": 50, "records": 5983, "needle": "HY4-SGLANG-126000-50-NIAH", "response": "HY4-SGLANG-126000-50-NIAH", "elapsed_seconds": 42.86, "status": "PASS"}
+NIAH_RESULT {"target_tokens": 126000, "input_tokens": 125747, "depth_percent": 90, "records": 5983, "needle": "HY4-SGLANG-126000-90-NIAH", "response": "HY4-SGLANG-126000-90-NIAH", "elapsed_seconds": 42.857, "status": "PASS"}
+AGENT_RESULT {"status": "PASS", "steps": ["lookup_inventory", "calculate_shipping", "reserve_inventory", "summary"], "summary": "最终摘要如下：\n\n- **SKU**：HY4-NVME-A\n- **数量**：3 个\n- **客户**：north-lab（北京）\n- **剩余库存**：7 - 3 = 4 个（预留后可用库存）\n- **运费**：42 元\n- **到货天数**：2 天\n- **预留单号**：RSV-HY4-20260901（状态：reserved）"}
+CORRECTNESS_SUMMARY {"engine": "sglang", "status": "PASS", "needle_passed": 9, "needle_total": 9, "agent_status": "PASS", "elapsed_seconds": 233.764}

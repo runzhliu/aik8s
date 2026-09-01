@@ -1,0 +1,66 @@
+Captured: 2026-09-01 00:43 UTC
+Engine: SGLang, BF16, TP16, 2 x 8-GPU H20-3e
+Workload: decode-128-4k-c1, repeat 1
+Columns: node_role,gpu_index,gpu_util_pct,memory_util_pct,memory_used_mib,memory_total_mib,power_w
+head,0,98,8,122768,143771,206.77
+head,1,98,8,122768,143771,205.42
+head,2,98,8,122768,143771,197.69
+head,3,99,8,122768,143771,199.49
+head,4,99,8,122768,143771,212.51
+head,5,99,8,122768,143771,217.57
+head,6,99,8,122768,143771,196.63
+head,7,99,8,122768,143771,200.32
+worker,0,98,8,122768,143771,204.33
+worker,1,98,8,122768,143771,204.54
+worker,2,98,8,122768,143771,200.10
+worker,3,99,8,122768,143771,203.07
+worker,4,99,8,122768,143771,208.65
+worker,5,99,8,122768,143771,205.30
+worker,6,99,8,122768,143771,197.49
+worker,7,99,8,122768,143771,200.50
+
+RDMA transmit counter sample during the same decode workload:
+interval_s=10
+mlx5_bond_0_delta_words=153273019
+mlx5_bond_1_delta_words=153300903
+mlx5_bond_2_delta_words=153339440
+mlx5_bond_3_delta_words=13193455
+mlx5_bond_4_delta_words=13208694
+mlx5_bond_5_delta_words=13207122
+mlx5_bond_6_delta_words=10172414
+mlx5_bond_7_delta_words=6664877
+all_rails_delta_bytes=2065439696
+all_rails_throughput_gbps=1.652
+
+Captured: 2026-09-01 00:58 UTC
+Workload: ctx-127k-1k-c1, repeat 1
+Columns: node_role,gpu_index,gpu_util_pct,memory_used_mib,power_w
+head,0,100,128322,357.77
+head,1,100,128322,359.28
+head,2,100,128322,349.55
+head,3,100,128322,353.95
+head,4,100,128322,368.64
+head,5,100,128322,373.26
+head,6,100,128322,340.69
+head,7,100,128322,352.32
+worker,0,100,130388,352.20
+worker,1,100,130388,347.73
+worker,2,100,130388,355.03
+worker,3,100,130388,352.79
+worker,4,100,130388,364.59
+worker,5,100,130388,348.47
+worker,6,100,130388,342.21
+worker,7,100,130388,350.88
+
+RDMA transmit counter sample during 130K prefill:
+interval_s=10
+mlx5_bond_0_delta_words=1964198825
+mlx5_bond_1_delta_words=1963859157
+mlx5_bond_2_delta_words=1963911601
+mlx5_bond_3_delta_words=1964181241
+mlx5_bond_4_delta_words=1963918651
+mlx5_bond_5_delta_words=1963743609
+mlx5_bond_6_delta_words=1964228458
+mlx5_bond_7_delta_words=1963705975
+all_rails_delta_bytes=62846990068
+all_rails_throughput_gbps=50.278

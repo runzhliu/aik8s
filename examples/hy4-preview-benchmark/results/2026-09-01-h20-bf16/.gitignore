@@ -1,0 +1,6 @@
+# Raw per-request outputs and runtime compiler caches stay in the execution archive.
+sglang-cache-head/
+sglang-cache-worker/
+sglang-rdma/
+sglang-tcp-baseline/
+vllm-rdma/

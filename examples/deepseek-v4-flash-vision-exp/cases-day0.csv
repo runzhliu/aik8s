@@ -1,0 +1,8 @@
+case_id,dataset_relpath,output_tokens,num_prompts,concurrencies,cache_mode,description
+v1-360p,perf/v1-360p,64,64,1;4;8;16,cold,one 640x360 image
+v2-720p,perf/v2-720p,64,64,1;4;8;16,cold,one 1280x720 image
+v3-1080p,perf/v3-1080p,64,32,1;4;8,cold,one 1920x1080 image
+v4-2x720p,perf/v4-2x720p,64,32,1;4;8,cold,two interleaved 1280x720 images
+v5-4x720p,perf/v5-4x720p,64,16,1;4,cold,four interleaved 1280x720 images
+v1-360p-warm,perf-warm/v1-360p,64,64,1;4;8;16,warm,reused 640x360 image
+v2-720p-warm,perf-warm/v2-720p,64,64,1;4;8;16,warm,reused 1280x720 image

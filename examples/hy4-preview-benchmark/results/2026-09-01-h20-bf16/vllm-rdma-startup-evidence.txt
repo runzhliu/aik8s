@@ -1,0 +1,72 @@
+Hy4-preview BF16 / vLLM / H20 startup evidence (public-safe summary)
+Date: 2026-09-01
+
+Topology
+- 2 nodes x 8 H20 141 GiB (16 GPUs total)
+- vLLM native multiprocessing: TP=8, PP=2, nnodes=2
+- BF16, max model length 131072, max sequences 16
+- gpu-memory-utilization=0.82, max-num-batched-tokens=16384
+- FLASHMLA_SPARSE, chunked prefill, MTP off
+- Model loaded read-only from host NVMe at /models-nvme/Hy4-preview/v1
+
+Pinned runtime
+- vLLM version: 0.1.dev20485+g0fd2e8d50
+- linux/amd64 image manifest: sha256:81c930ae2dd9948050fcc3a73d2101d89ebd685d6458f5f250c8a7e8977886db
+- NCCL: 2.30.7+cuda13.3
+
+Startup and memory
+- Container start to API ready: approximately 171 seconds
+- Checkpoint filesystem: XFS (local NVMe)
+- Checkpoint size reported by loader: 1452.85 GiB, 131 shards
+- Weight read time: 20.46 seconds
+- Per-rank model load: 22.41-33.42 seconds, 90.48 GiB/GPU
+- Available KV cache: 9.65 GiB/GPU
+- GPU KV cache capacity: 193152 tokens
+- Reported maximum concurrency at 131072 tokens/request: 1.47x
+- Auto-prefetch disabled: local XFS is not treated as a network filesystem, and the
+  checkpoint is larger than 90% of available host RAM
+
+H20 compatibility path
+- H20 reports compute capability 9.0 (SM90)
+- Blackwell-only HPC gated MLA and HPC iHC paths were disabled by capability gates
+- Runtime selected the sink-capable FLASHMLA_SPARSE implementation
+- Unquantized MoE selected TritonExperts
+- The first uncovered fused MoE shape caused a JIT warning; baseline/decode warmups
+  and all recorded repeats remain in the raw result set
+
+Prefix-cache correction
+- The first full matrix exposed that this vLLM dev image defaults
+  enable_prefix_caching=True even when the CLI flag is omitted
+- The original long-context files and a unique-seed diagnostic rerun observed cache
+  hits and are excluded from the formal aggregate
+- The service was restarted with --no-enable-prefix-caching; runtime metrics then
+  reported enable_prefix_caching=False
+- Formal 32K/64K/130K results use new seeds and num_warmups=0; all first-shape
+  effects are retained
+
+Cross-node transport
+- NCCL enumerated 8 RoCE rails and printed "Using network IB"
+- Cross-node channels were reported as NET/IB/.../GDRDMA with GDR enabled
+- During a c16 load sample, all 8 rail transmit counters increased; aggregate sampled
+  transmit rate was 0.363 Gbit/s for this short-request phase
+
+Live c16 GPU sample
+- Head stage: all 8 GPUs at 100% utilization, 109029-109031 MiB used
+- Worker stage: all 8 GPUs at 100% utilization, 112023-112033 MiB used
+
+Live 16K prefill sample
+- Head stage: all 8 GPUs at 100% utilization, 122383 MiB used
+- Worker stage: all 8 GPUs at 100% utilization, 125839-125843 MiB used
+- All 8 rail transmit counters increased; aggregate sampled transmit rate was
+  1.309 Gbit/s
+- Instantaneous power differed by pipeline stage (approximately 371-396 W on the
+  head stage and 118-124 W on the worker stage); this sample is retained as evidence
+  of PP-stage asymmetry, not averaged into the client throughput result
+
+Live no-prefix 130K sample
+- During a decode-phase snapshot, all 16 GPUs were at 100% utilization
+- Head stage: 117711 MiB/GPU; worker stage: 120445-120447 MiB/GPU
+- During the next request's prefill window, all 8 rail transmit counters increased;
+  aggregate sampled transmit rate was 1.309 Gbit/s
+
+Internal node names, Pod names, addresses, registry hosts, and credentials are omitted.

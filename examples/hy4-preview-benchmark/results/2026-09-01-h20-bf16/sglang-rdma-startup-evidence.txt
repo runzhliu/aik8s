@@ -1,0 +1,19 @@
+Hy4-preview BF16 SGLang startup and NCCL evidence
+Captured from the final two-node H20-3e run before scale-down.
+
+[2026-08-31 23:36:38 TP2] Load weight end. elapsed=52.34 s, type=HYV4ForCausalLM, avail mem=45.10 GB, mem usage=93.31 GB.
+[2026-08-31 23:38:18 TP0] Capture target prefill CUDA graph end. elapsed=93.78 s, mem usage=3.77 GB, avail mem=20.95 GB.
+[2026-08-31 23:38:32 TP0] Capture target decode CUDA graph end. elapsed=13.85 s, mem usage=0.30 GB, avail mem=20.65 GB.
+[2026-08-31 23:38:32 TP0] max_total_num_tokens=233920, chunked_prefill_size=16384, max_prefill_tokens=16384, max_running_requests=16, context_len=131072, available_gpu_mem=20.65 GB
+[2026-08-31 23:38:33] INFO: Uvicorn running on http://0.0.0.0:30000
+
+NCCL INFO Using network IB
+NCCL INFO Channel 00/0 cross-node receive via NET/IB/0/GDRDMA
+NCCL INFO Channel 01/0 cross-node send via NET/IB/1/GDRDMA
+NCCL INFO Channel 02/0 cross-node send via NET/IB/2/GDRDMA
+NCCL INFO Channel 03/0 cross-node send via NET/IB/3/GDRDMA
+NCCL INFO Channel 04/0 cross-node send via NET/IB/4/GDRDMA
+NCCL INFO Channel 05/0 cross-node send via NET/IB/5/GDRDMA
+NCCL INFO Channel 06/0 cross-node send via NET/IB/6/GDRDMA
+NCCL INFO Channel 07/0 cross-node send via NET/IB/7/GDRDMA
+NCCL INFO Connected all rings, use ring PXN 1 GDR 1

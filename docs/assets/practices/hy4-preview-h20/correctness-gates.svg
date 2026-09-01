@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860" role="img" aria-labelledby="title desc">
+  <title id="title">Hy4-preview BF16 长上下文正确性 Gate</title>
+  <desc id="desc">SGLang 与 vLLM 在 32K、64K、126K 三档上下文和三个 Needle 深度均通过，并通过多轮 Agent 工具链；1M 因运行时容量不足未进入请求阶段。</desc>
+  <style>
+    .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .sub{font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .axis{font:400 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .value{font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .legend{font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .note{font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+  </style>
+  <rect width="1500" height="860" fill="#fbfcfe"/>
+  <text class="title" x="72" y="68">长上下文正确性：两引擎 9/9 PASS</text>
+  <text class="sub" x="72" y="104">Hy4-preview BF16 · 2×8 H20 · Needle 深度 10% / 50% / 90% · 服务端 Token 校准</text>
+  <rect x="1060" y="110" width="24" height="24" rx="5" fill="#2563eb"/>
+  <text class="legend" x="1096" y="128">SGLang · TP16</text>
+  <rect x="1265" y="110" width="24" height="24" rx="5" fill="#e4572e"/>
+  <text class="legend" x="1301" y="128">vLLM · TP8×PP2</text>
+  <rect x="72" y="164" width="150" height="124" rx="18" fill="#172033"/>
+  <text x="147.0" y="222" text-anchor="middle" style='font:700 30px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>32K</text>
+  <text x="147.0" y="252" text-anchor="middle" style='font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#d7dfeb'>Context</text>
+  <rect x="244" y="164" width="565" height="124" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="282" cy="202" r="17" fill="#2563eb"/>
+  <text x="282" y="209" text-anchor="middle" style='font:700 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text x="314" y="209" style='font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033'>3 / 3 PASS</text>
+  <text class="sub" x="282" y="246">10% 10.61s · 50% 10.21s · 90% 10.22s</text>
+  <text class="note" x="282" y="272">中位耗时 10.22s</text>
+  <rect x="831" y="164" width="565" height="124" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="869" cy="202" r="17" fill="#e4572e"/>
+  <text x="869" y="209" text-anchor="middle" style='font:700 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text x="901" y="209" style='font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033'>3 / 3 PASS</text>
+  <text class="sub" x="869" y="246">10% 12.52s · 50% 11.46s · 90% 11.46s</text>
+  <text class="note" x="869" y="272">中位耗时 11.46s</text>
+  <rect x="72" y="310" width="150" height="124" rx="18" fill="#172033"/>
+  <text x="147.0" y="368" text-anchor="middle" style='font:700 30px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>64K</text>
+  <text x="147.0" y="398" text-anchor="middle" style='font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#d7dfeb'>Context</text>
+  <rect x="244" y="310" width="565" height="124" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="282" cy="348" r="17" fill="#2563eb"/>
+  <text x="282" y="355" text-anchor="middle" style='font:700 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text x="314" y="355" style='font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033'>3 / 3 PASS</text>
+  <text class="sub" x="282" y="392">10% 21.12s · 50% 20.97s · 90% 20.98s</text>
+  <text class="note" x="282" y="418">中位耗时 20.98s</text>
+  <rect x="831" y="310" width="565" height="124" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="869" cy="348" r="17" fill="#e4572e"/>
+  <text x="869" y="355" text-anchor="middle" style='font:700 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text x="901" y="355" style='font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033'>3 / 3 PASS</text>
+  <text class="sub" x="869" y="392">10% 19.55s · 50% 19.55s · 90% 19.55s</text>
+  <text class="note" x="869" y="418">中位耗时 19.55s</text>
+  <rect x="72" y="456" width="150" height="124" rx="18" fill="#172033"/>
+  <text x="147.0" y="514" text-anchor="middle" style='font:700 30px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>126K</text>
+  <text x="147.0" y="544" text-anchor="middle" style='font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#d7dfeb'>Context</text>
+  <rect x="244" y="456" width="565" height="124" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="282" cy="494" r="17" fill="#2563eb"/>
+  <text x="282" y="501" text-anchor="middle" style='font:700 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text x="314" y="501" style='font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033'>3 / 3 PASS</text>
+  <text class="sub" x="282" y="538">10% 42.92s · 50% 42.86s · 90% 42.86s</text>
+  <text class="note" x="282" y="564">中位耗时 42.86s</text>
+  <rect x="831" y="456" width="565" height="124" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="869" cy="494" r="17" fill="#e4572e"/>
+  <text x="869" y="501" text-anchor="middle" style='font:700 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text x="901" y="501" style='font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033'>3 / 3 PASS</text>
+  <text class="sub" x="869" y="538">10% 35.70s · 50% 35.70s · 90% 35.70s</text>
+  <text class="note" x="869" y="564">中位耗时 35.70s</text>
+  <rect x="72" y="610" width="1356" height="86" rx="18" fill="#eef3f9"/>
+  <text x="102" y="644" style='font:700 22px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033'>Agent 工具链</text>
+  <text x="102" y="674" style='font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579'>查询库存  →  计算运费  →  预留库存  →  汇总</text>
+  <rect x="1040" y="628" width="168" height="50" rx="25" fill="#2563eb"/>
+  <text x="1124" y="660" text-anchor="middle" style='font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>SGLang PASS</text>
+  <rect x="1224" y="628" width="168" height="50" rx="25" fill="#e4572e"/>
+  <text x="1308" y="660" text-anchor="middle" style='font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>vLLM PASS</text>
+  <rect x="72" y="724" width="1356" height="84" rx="18" fill="#fff4e8" stroke="#ffc98c"/>
+  <text x="102" y="758" style='font:700 22px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#9a4b00'>1M Capacity Gate 未通过</text>
+  <text x="102" y="790" style='font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#754314'>Runtime 容量：SGLang 233,920 · vLLM 193,152 · 模型声明 1,048,576 Token</text>
+  <text class="note" x="1428" y="840" text-anchor="end">数据源：2026-09-01 两引擎 correctness 原始日志</text>
+</svg>

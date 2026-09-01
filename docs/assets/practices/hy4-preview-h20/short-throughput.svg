@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860" role="img" aria-labelledby="title desc">
+  <title id="title">Hy4-preview BF16 短请求输出吞吐</title>
+  <desc id="desc">两台八卡 H20 上，SGLang TP16 和 vLLM TP8 乘 PP2 的 128 输入 64 输出吞吐中位数对比。</desc>
+  <style>
+    .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .sub{font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .axis{font:400 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .value{font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .legend{font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .note{font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+  </style>
+  <rect width="1500" height="860" fill="#fbfcfe"/>
+  <text class="title" x="72" y="68">短请求：SGLang 在全部并发档位领先</text>
+  <text class="sub" x="72" y="104">Hy4-preview BF16 · 2×8 H20 · 128 输入 / 64 输出 · MTP Off · 三轮中位数</text>
+  <rect x="1060" y="110" width="24" height="24" rx="5" fill="#2563eb"/>
+  <text class="legend" x="1096" y="128">SGLang · TP16</text>
+  <rect x="1265" y="110" width="24" height="24" rx="5" fill="#e4572e"/>
+  <text class="legend" x="1301" y="128">vLLM · TP8×PP2</text>
+  <line x1="118" y1="690.0" x2="1420" y2="690.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="696.0" text-anchor="end">0</text>
+  <line x1="118" y1="562.5" x2="1420" y2="562.5" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="568.5" text-anchor="end">100</text>
+  <line x1="118" y1="435.0" x2="1420" y2="435.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="441.0" text-anchor="end">200</text>
+  <line x1="118" y1="307.5" x2="1420" y2="307.5" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="313.5" text-anchor="end">300</text>
+  <line x1="118" y1="180.0" x2="1420" y2="180.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="186.0" text-anchor="end">400</text>
+  <rect x="157.2" y="635.8" width="82" height="54.2" rx="8" fill="#2563eb"/>
+  <text class="value" x="198.2" y="623.8" text-anchor="middle">42.5</text>
+  <rect x="257.2" y="642.2" width="82" height="47.8" rx="8" fill="#e4572e"/>
+  <text class="value" x="298.2" y="630.2" text-anchor="middle">37.5</text>
+  <text class="axis" x="248.2" y="728" text-anchor="middle">C1</text>
+  <rect x="417.6" y="511.6" width="82" height="178.4" rx="8" fill="#2563eb"/>
+  <text class="value" x="458.6" y="499.6" text-anchor="middle">139.9</text>
+  <rect x="517.6" y="549.7" width="82" height="140.3" rx="8" fill="#e4572e"/>
+  <text class="value" x="558.6" y="537.7" text-anchor="middle">110.0</text>
+  <text class="axis" x="508.6" y="728" text-anchor="middle">C4</text>
+  <rect x="678.0" y="384.8" width="82" height="305.2" rx="8" fill="#2563eb"/>
+  <text class="value" x="719.0" y="372.8" text-anchor="middle">239.4</text>
+  <rect x="778.0" y="480.2" width="82" height="209.8" rx="8" fill="#e4572e"/>
+  <text class="value" x="819.0" y="468.2" text-anchor="middle">164.6</text>
+  <text class="axis" x="769.0" y="728" text-anchor="middle">C8</text>
+  <rect x="938.4" y="209.9" width="82" height="480.1" rx="8" fill="#2563eb"/>
+  <text class="value" x="979.4" y="197.9" text-anchor="middle">376.6</text>
+  <rect x="1038.4" y="339.9" width="82" height="350.1" rx="8" fill="#e4572e"/>
+  <text class="value" x="1079.4" y="327.9" text-anchor="middle">274.6</text>
+  <text class="axis" x="1029.4" y="728" text-anchor="middle">C16</text>
+  <rect x="1198.8" y="208.9" width="82" height="481.1" rx="8" fill="#2563eb"/>
+  <text class="value" x="1239.8" y="196.9" text-anchor="middle">377.3</text>
+  <rect x="1298.8" y="334.3" width="82" height="355.7" rx="8" fill="#e4572e"/>
+  <text class="value" x="1339.8" y="322.3" text-anchor="middle">279.0</text>
+  <text class="axis" x="1289.8" y="728" text-anchor="middle">C32</text>
+  <text class="axis" x="38" y="445" transform="rotate(-90 38 445)" text-anchor="middle">输出吞吐（token/s）</text>
+  <text class="axis" x="770" y="770" text-anchor="middle">最大并发</text>
+  <rect x="72" y="796" width="1356" height="42" rx="12" fill="#eef3f9"/>
+  <text class="note" x="750" y="823" text-anchor="middle">同一 vLLM bench serve 客户端、请求集合与参数；并行拓扑不同，因此这是部署配方对比，不是纯引擎微基准</text>
+</svg>

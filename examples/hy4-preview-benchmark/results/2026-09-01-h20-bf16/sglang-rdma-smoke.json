@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "model": "hy4-preview",
+  "models_endpoint": "PASS",
+  "reasoning_high": {
+    "has_reasoning_content": true,
+    "has_content": true,
+    "content": "37 × 19 = 703"
+  },
+  "no_think": {
+    "has_content": true,
+    "has_reasoning_content": false,
+    "content": "Kubernetes 是一个开源的容器编排平台，用于自动化部署、扩展和管理容器化应用。"
+  },
+  "streaming": {
+    "status": "PASS",
+    "chunks": 5,
+    "saw_done": true,
+    "content": "STREAM_OK"
+  },
+  "tool_call": {
+    "status": "PASS",
+    "calls": [
+      {
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "arguments": "{\"city\": \"北京\", \"unit\": \"celsius\"}"
+        }
+      }
+    ]
+  },
+  "image_input_rejection": {
+    "status": "PASS",
+    "http_status": 400,
+    "message": "Model only supports text input; received unsupported content type 'image_url'."
+  }
+}

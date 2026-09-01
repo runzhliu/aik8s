@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "model": "hy4-preview",
+  "models_endpoint": "PASS",
+  "reasoning_high": {
+    "has_reasoning_content": true,
+    "reasoning_field": "reasoning",
+    "has_content": true,
+    "reasoning_preview": "用户要求计算 37×19，并且最终只需给出算式与答案。\n计算过程：\n37 × 19 = 37 × (20 - 1) = 37 × 20 - 37 × 1 = 740 - 37 = 703。\n或者直接计算：\n  37\n× 19\n----\n 333 (37×9)\n 37  (37×10)\n----\n 703\n\n最终只需给出算式与答案，即：\n37×19=703",
+    "content": "37×19=703"
+  },
+  "no_think": {
+    "has_content": true,
+    "has_reasoning_content": false,
+    "content": "Kubernetes 是一个开源的容器编排平台，用于自动化部署、扩展和管理容器化应用。"
+  },
+  "streaming": {
+    "status": "PASS",
+    "chunks": 5,
+    "saw_done": true,
+    "content": "STREAM_OK"
+  },
+  "tool_call": {
+    "status": "PASS",
+    "calls": [
+      {
+        "id": "chatcmpl-tool-ba33c92788cf754d",
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "arguments": "{\"city\": \"北京\", \"unit\": \"celsius\"}"
+        }
+      }
+    ]
+  },
+  "image_input_rejection": {
+    "status": "PASS",
+    "http_status": 400,
+    "body": "{\"error\":{\"message\":\"hy4-preview is not a multimodal model\",\"type\":\"BadRequestError\",\"param\":null,\"code\":400}}"
+  }
+}
