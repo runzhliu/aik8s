@@ -1,0 +1,19 @@
+case_id,stage,input_tokens,output_tokens,concurrency,num_prompts,repeats,description
+smoke-128-64-c1,smoke,128,64,1,4,1,API and result-format smoke
+short-128-64-c1,baseline,128,64,1,32,3,single-request latency
+short-128-64-c4,baseline,128,64,4,64,3,light batching
+short-128-64-c8,baseline,128,64,8,128,3,moderate batching
+short-128-64-c16,baseline,128,64,16,256,3,high concurrency
+short-128-64-c32,saturation,128,64,32,512,3,saturation probe only after C16 is stable
+rag-4k-128-c4,baseline,4096,128,4,64,3,ordinary RAG prefill
+rag-4k-128-c8,baseline,4096,128,8,128,3,ordinary RAG throughput
+rag-16k-256-c4,baseline,16384,256,4,32,3,longer agent or RAG prefill
+rag-16k-256-c8,baseline,16384,256,8,64,3,longer agent or RAG throughput
+decode-128-1k-c1,decode,128,1024,1,4,3,long output latency
+decode-128-1k-c8,decode,128,1024,8,24,3,long output throughput
+ctx-32k-128-c1,long,32640,128,1,3,2,32K total-context cold prefill
+ctx-64k-128-c1,long,65536,128,1,2,2,64K cold prefill
+ctx-128k-256-c1,long,130816,256,1,1,2,128K capability and correctness
+ctx-256k-128-c1,extreme,261888,128,1,1,1,capability only and disabled for vLLM by default
+ctx-512k-128-c1,extreme,524160,128,1,1,1,capability only
+ctx-near-1m-256-c1,extreme,1048064,256,1,1,1,near-native 1M capability only

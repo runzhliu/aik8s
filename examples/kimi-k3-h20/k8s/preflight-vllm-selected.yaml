@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-vllm-preflight-242
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-vllm-preflight
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 3600
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-vllm-preflight
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.4.242
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: preflight
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-vllm:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/opt/aik8s/preflight.py"]
+          env:
+            - name: MODEL_PATH
+              value: /models-nvme/Kimi-K3/v1
+            - name: ENGINE
+              value: vllm
+            - name: CHECK_RUNTIME
+              value: "1"
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+          resources:
+            requests:
+              cpu: "4"
+              memory: 8Gi
+            limits:
+              cpu: "16"
+              memory: 32Gi
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models-nvme
+              readOnly: true
+            - name: preflight-assets
+              mountPath: /opt/aik8s
+              readOnly: true
+      volumes:
+        - name: model-cache
+          hostPath:
+            path: /apps/dat/model-cache
+            type: Directory
+        - name: preflight-assets
+          configMap:
+            name: kimi-k3-preflight-assets

@@ -1,0 +1,245 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kimi-k3-nvme-prewarm
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-nvme-prewarm
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kimi-k3-nvme-prewarm
+  updateStrategy:
+    type: OnDelete
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-nvme-prewarm
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      nodeSelector:
+        label-group: gpu-training-H20
+        machine-type: A9-1
+        node.kubernetes.io/instance-type: HCCPNV6s.96XLARGE2304-ne
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: prewarm
+          image: vip-gd-harbor.tencentcloudcr.com/vip/ubuntu-sshd:18.04
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+
+              source_dir="/models/Kimi-K3/v1"
+              target_dir="/host-cache/Kimi-K3/v1"
+              marker="${target_dir}/.aik8s-complete"
+              expected_shards=96
+              expected_weight_bytes=1560936091448
+              free_headroom_bytes=200000000000
+              batch_interval_seconds=3600
+
+              log() {
+                printf '%s node=%s %s\n' "$(date -u +%FT%TZ)" "${NODE_NAME}" "$*"
+              }
+
+              finish_and_wait() {
+                log "$*"
+                exec sleep infinity
+              }
+
+              marker_is_valid() {
+                [ -f "${marker}" ] &&
+                  grep -qx "shards=${expected_shards}" "${marker}" &&
+                  grep -qx "weight_bytes=${expected_weight_bytes}" "${marker}"
+              }
+
+              if marker_is_valid; then
+                finish_and_wait "cache already complete at ${target_dir}"
+              fi
+
+              case "${NODE_NAME}" in
+                # Frozen 2026-08-31 H20-3e node list: 8 + 8 + 8. The first
+                # wave includes the two nodes reserved for initial Kimi K3
+                # TP16 deployment tests.
+                10.91.0.106|10.91.0.125|10.91.0.128|10.91.0.141|10.91.0.165|10.91.0.22|10.91.0.23|10.91.0.28) batch=0 ;;
+                10.91.0.35|10.91.0.38|10.91.0.50|10.91.0.59|10.91.0.6|10.91.0.61|10.91.0.7|10.91.0.76) batch=1 ;;
+                10.91.0.88|10.91.0.98|10.91.2.177|10.91.2.247|10.91.2.89|10.91.3.218|10.91.3.54|10.91.4.242) batch=2 ;;
+                *)
+                  log "node is not in the frozen 2026-08-31 H20-3e prewarm list"
+                  exit 64
+                  ;;
+              esac
+
+              [ -d "${source_dir}" ] || {
+                log "source directory is missing: ${source_dir}"
+                exit 65
+              }
+              [ -f "${source_dir}/model.safetensors.index.json" ] || {
+                log "weight index is missing"
+                exit 66
+              }
+
+              source_shards="$(find "${source_dir}" -maxdepth 1 -type f -name '*.safetensors' | wc -l | tr -d ' ')"
+              source_weight_bytes="$(find "${source_dir}" -maxdepth 1 -type f -name '*.safetensors' -printf '%s\n' | awk '{sum += $1} END {printf "%.0f", sum}')"
+              [ "${source_shards}" = "${expected_shards}" ] || {
+                log "unexpected source shard count: ${source_shards}"
+                exit 67
+              }
+              [ "${source_weight_bytes}" = "${expected_weight_bytes}" ] || {
+                log "unexpected source weight bytes: ${source_weight_bytes}"
+                exit 68
+              }
+
+              delay_seconds=$((batch * batch_interval_seconds))
+              if [ "${delay_seconds}" -gt 0 ]; then
+                log "waiting ${delay_seconds}s for throttled batch ${batch}"
+                sleep "${delay_seconds}"
+              fi
+
+              mkdir -p "${target_dir}"
+              exec 9>"${target_dir}/.aik8s-prewarm.lock"
+              if command -v flock >/dev/null 2>&1; then
+                flock -x 9
+              fi
+              if marker_is_valid; then
+                finish_and_wait "cache completed while waiting for lock"
+              fi
+
+              remaining_bytes=0
+              while IFS= read -r -d '' source_file; do
+                relative="${source_file#${source_dir}/}"
+                target_file="${target_dir}/${relative}"
+                source_size="$(stat -c %s "${source_file}")"
+                target_size=""
+                if [ -f "${target_file}" ]; then
+                  target_size="$(stat -c %s "${target_file}")"
+                fi
+                if [ "${source_size}" != "${target_size}" ]; then
+                  remaining_bytes=$((remaining_bytes + source_size))
+                fi
+              done < <(find "${source_dir}" -type f ! -name '*.tmp' -print0)
+
+              available_bytes="$(df -PB1 "${target_dir}" | awk 'NR == 2 {print $4}')"
+              required_free_bytes=$((remaining_bytes + free_headroom_bytes))
+              if [ -z "${available_bytes}" ] || [ "${available_bytes}" -lt "${required_free_bytes}" ]; then
+                log "insufficient local NVMe space: available=${available_bytes:-unknown}, required=${required_free_bytes}, remaining=${remaining_bytes}"
+                exit 69
+              fi
+
+              log "copy started from CFS to local NVMe batch=${batch} remaining_bytes=${remaining_bytes}"
+
+              while IFS= read -r -d '' directory; do
+                relative="${directory#${source_dir}/}"
+                if [ "${directory}" = "${source_dir}" ]; then
+                  relative=""
+                fi
+                mkdir -p "${target_dir}/${relative}"
+              done < <(find "${source_dir}" -type d -print0)
+
+              while IFS= read -r -d '' source_file; do
+                relative="${source_file#${source_dir}/}"
+                target_file="${target_dir}/${relative}"
+                source_size="$(stat -c %s "${source_file}")"
+                target_size=""
+                if [ -f "${target_file}" ]; then
+                  target_size="$(stat -c %s "${target_file}")"
+                fi
+                if [ "${source_size}" = "${target_size}" ]; then
+                  continue
+                fi
+
+                mkdir -p "$(dirname "${target_file}")"
+                partial_file="${target_file}.part"
+                log "copying ${relative} bytes=${source_size}"
+                nice -n 10 cp -f "${source_file}" "${partial_file}"
+                partial_size="$(stat -c %s "${partial_file}")"
+                [ "${partial_size}" = "${source_size}" ] || {
+                  log "size mismatch after copy: ${relative} source=${source_size} target=${partial_size}"
+                  exit 70
+                }
+                touch -r "${source_file}" "${partial_file}"
+                mv -f "${partial_file}" "${target_file}"
+              done < <(find "${source_dir}" -type f ! -name '*.tmp' -print0)
+
+              while IFS= read -r -d '' source_link; do
+                relative="${source_link#${source_dir}/}"
+                target_link="${target_dir}/${relative}"
+                mkdir -p "$(dirname "${target_link}")"
+                rm -f "${target_link}"
+                cp -a "${source_link}" "${target_link}"
+              done < <(find "${source_dir}" -type l -print0)
+
+              mismatches=0
+              while IFS= read -r -d '' source_file; do
+                relative="${source_file#${source_dir}/}"
+                target_file="${target_dir}/${relative}"
+                if [ ! -f "${target_file}" ] ||
+                  [ "$(stat -c %s "${source_file}")" != "$(stat -c %s "${target_file}" 2>/dev/null || true)" ]; then
+                  log "missing or size mismatch: ${relative}"
+                  mismatches=$((mismatches + 1))
+                fi
+              done < <(find "${source_dir}" -type f ! -name '*.tmp' -print0)
+              [ "${mismatches}" -eq 0 ] || exit 71
+
+              shard_count="$(find "${target_dir}" -maxdepth 1 -type f -name '*.safetensors' | wc -l | tr -d ' ')"
+              weight_bytes="$(find "${target_dir}" -maxdepth 1 -type f -name '*.safetensors' -printf '%s\n' | awk '{sum += $1} END {printf "%.0f", sum}')"
+              [ "${shard_count}" = "${expected_shards}" ] || {
+                log "unexpected target shard count: ${shard_count}"
+                exit 72
+              }
+              [ "${weight_bytes}" = "${expected_weight_bytes}" ] || {
+                log "unexpected target weight bytes: ${weight_bytes}"
+                exit 73
+              }
+
+              marker_tmp="${marker}.tmp"
+              {
+                printf 'node=%s\n' "${NODE_NAME}"
+                printf 'source=%s\n' "${source_dir}"
+                printf 'target=%s\n' "${target_dir}"
+                printf 'shards=%s\n' "${shard_count}"
+                printf 'weight_bytes=%s\n' "${weight_bytes}"
+                printf 'excluded_source_tmp_files=3\n'
+                printf 'completed_at=%s\n' "$(date -u +%FT%TZ)"
+              } > "${marker_tmp}"
+              sync "${target_dir}"
+              mv -f "${marker_tmp}" "${marker}"
+              finish_and_wait "copy complete shards=${shard_count} weight_bytes=${weight_bytes}"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          volumeMounts:
+            - name: model-corpus
+              mountPath: /models
+              readOnly: true
+            - name: host-cache
+              mountPath: /host-cache
+      volumes:
+        - name: model-corpus
+          persistentVolumeClaim:
+            claimName: model-readonly-dsv4-20260824
+            readOnly: true
+        - name: host-cache
+          hostPath:
+            path: /apps/dat/model-cache
+            type: DirectoryOrCreate

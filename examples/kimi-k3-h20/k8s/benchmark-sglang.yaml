@@ -1,0 +1,108 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-sglang-benchmark
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-sglang-benchmark
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 10800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-sglang-benchmark
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.4.242
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      initContainers:
+        - name: verify-client-and-model
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-vllm:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              vllm bench serve --help >/dev/null
+              test -f /models-nvme/Kimi-K3/v1/.aik8s-complete
+              test -f /models-nvme/Kimi-K3/v1/tokenizer.json || \
+                test -f /models-nvme/Kimi-K3/v1/tokenizer.model || \
+                test -f /models-nvme/Kimi-K3/v1/tiktoken.model
+              echo "BENCH_CLIENT_PREFLIGHT=PASS"
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models-nvme
+              readOnly: true
+      containers:
+        - name: benchmark
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-vllm:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              export RESULTS_DIR="${RESULT_ROOT}"
+              for stage in smoke baseline decode long; do
+                echo "STAGE_START engine=sglang stage=${stage} utc=$(date -u +%FT%TZ)"
+                STAGE="${stage}" EXECUTE=1 bash /opt/aik8s/benchmark.sh
+                echo "STAGE_DONE engine=sglang stage=${stage} utc=$(date -u +%FT%TZ)"
+              done
+              date -u +%FT%TZ > "${RESULT_ROOT}/.completed-at"
+              echo "BENCHMARK_RESULTS_READY result_root=${RESULT_ROOT}"
+          env:
+            - name: ENGINE
+              value: sglang
+            - name: BENCH_CLIENT
+              value: vllm
+            - name: BASE_URL
+              value: http://kimi-k3-sglang.aik8s-ms.svc.cluster.local:30000
+            - name: MODEL
+              value: kimi-k3
+            - name: TOKENIZER
+              value: /models-nvme/Kimi-K3/v1
+            - name: CASES_FILE
+              value: /opt/aik8s/cases.csv
+            - name: RESULT_ROOT
+              value: /models-nvme/aik8s-results/kimi-k3-20260901/sglang-tp16-ep16
+            - name: RUN_LABEL
+              value: kimi-k3-h20-sglang-tp16-ep16
+            - name: MAX_CONTEXT
+              value: "32768"
+            - name: FLUSH_CACHE
+              value: "1"
+            - name: VLLM_BENCH_FORCE_PYTHON
+              value: "1"
+          resources:
+            requests:
+              cpu: "16"
+              memory: 32Gi
+            limits:
+              cpu: "64"
+              memory: 128Gi
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models-nvme
+            - name: benchmark-assets
+              mountPath: /opt/aik8s
+              readOnly: true
+      volumes:
+        - name: model-cache
+          hostPath:
+            path: /apps/dat/model-cache
+            type: Directory
+        - name: benchmark-assets
+          configMap:
+            name: kimi-k3-benchmark-assets

@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-vllm-image-prewarm-289
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-vllm-image-prewarm
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 3600
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-vllm-image-prewarm
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.2.89
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: verify
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-vllm:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "-c"]
+          args:
+            - |
+              import importlib.metadata, json, platform
+              print(json.dumps({
+                  "status": "PASS",
+                  "engine": "vllm",
+                  "version": importlib.metadata.version("vllm"),
+                  "architecture": platform.machine(),
+              }))
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              cpu: "4"
+              memory: 4Gi

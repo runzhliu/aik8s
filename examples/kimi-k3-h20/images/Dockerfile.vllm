@@ -1,0 +1,2 @@
+# syntax=docker/dockerfile:1
+FROM vllm/vllm-openai@sha256:fb16b180bd9727600067e16fcd6a6de43fb4db1baf4298ef20b4dbdf6bfa5a0e

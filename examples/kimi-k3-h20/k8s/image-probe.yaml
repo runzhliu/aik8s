@@ -1,0 +1,103 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-image-probe-sglang
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 20
+  activeDeadlineSeconds: 3600
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-image-probe
+        app.kubernetes.io/component: sglang
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.0.106
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: Always
+          command: ["python3", "-c"]
+          args:
+            - |
+              import importlib.metadata, json, platform
+              print(json.dumps({
+                  "status": "PASS",
+                  "engine": "sglang",
+                  "version": importlib.metadata.version("sglang"),
+                  "architecture": platform.machine(),
+              }))
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              cpu: "4"
+              memory: 4Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-image-probe-vllm
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 20
+  activeDeadlineSeconds: 3600
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-image-probe
+        app.kubernetes.io/component: vllm
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.0.128
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-vllm:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: Always
+          command: ["python3", "-c"]
+          args:
+            - |
+              import importlib.metadata, json, platform
+              print(json.dumps({
+                  "status": "PASS",
+                  "engine": "vllm",
+                  "version": importlib.metadata.version("vllm"),
+                  "architecture": platform.machine(),
+              }))
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              cpu: "4"
+              memory: 4Gi

@@ -1,0 +1,129 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-node-probe-106
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-node-probe
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.0.106
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: Always
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              echo "NODE=${NODE_NAME} POD_IP=${POD_IP}"
+              nvidia-smi --query-gpu=index,name,memory.total,driver_version,pci.bus_id --format=csv,noheader
+              python3 - <<'PY'
+              import json, torch
+              print(json.dumps({"torch": torch.__version__, "cuda": torch.version.cuda,
+                                "device": torch.cuda.get_device_name(0),
+                                "capability": torch.cuda.get_device_capability(0)}))
+              PY
+              ip -br addr || true
+              ls -l /dev/infiniband || true
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "8"
+              memory: 16Gi
+              nvidia.com/gpu: "1"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-node-probe-128
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-node-probe
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.0.128
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: Always
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              echo "NODE=${NODE_NAME} POD_IP=${POD_IP}"
+              nvidia-smi --query-gpu=index,name,memory.total,driver_version,pci.bus_id --format=csv,noheader
+              python3 - <<'PY'
+              import json, torch
+              print(json.dumps({"torch": torch.__version__, "cuda": torch.version.cuda,
+                                "device": torch.cuda.get_device_name(0),
+                                "capability": torch.cuda.get_device_capability(0)}))
+              PY
+              ip -br addr || true
+              ls -l /dev/infiniband || true
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "8"
+              memory: 16Gi
+              nvidia.com/gpu: "1"

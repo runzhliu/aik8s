@@ -1,0 +1,213 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-nccl-allreduce-242
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-nccl-allreduce
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-nccl-allreduce
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.4.242
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["IPC_LOCK"]
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              snapshot() {
+                for hca in /sys/class/infiniband/mlx5_bond_*; do
+                  name="$(basename "${hca}")"
+                  xmit="$(cat "${hca}/ports/1/counters/port_xmit_data")"
+                  recv="$(cat "${hca}/ports/1/counters/port_rcv_data")"
+                  echo "${1} ${name} xmit_words=${xmit} recv_words=${recv}"
+                done
+              }
+              snapshot BEFORE
+              python3 -c 'from pathlib import Path; Path("/tmp/nccl_probe.py").write_text("""import os\nimport time\nfrom datetime import timedelta\nimport torch\nimport torch.distributed as dist\nlocal_rank = int(os.environ[\"LOCAL_RANK\"])\ntorch.cuda.set_device(local_rank)\ndist.init_process_group(\"nccl\", timeout=timedelta(seconds=300))\nx = torch.ones(16 * 1024 * 1024, device=\"cuda\", dtype=torch.float32)\nfor _ in range(4):\n    x.fill_(1)\n    dist.all_reduce(x)\ntorch.cuda.synchronize()\ndist.barrier()\nstart = time.perf_counter()\nfor _ in range(20):\n    x.fill_(1)\n    dist.all_reduce(x)\ntorch.cuda.synchronize()\nelapsed = time.perf_counter() - start\nworld = dist.get_world_size()\nrank = dist.get_rank()\nif x[0].item() != world:\n    raise RuntimeError(f\"all_reduce mismatch: {x[0].item()} != {world}\")\nif rank == 0:\n    payload = x.numel() * x.element_size()\n    alg_gbps = payload * 20 / elapsed / 1e9\n    bus_gbps = alg_gbps * 2 * (world - 1) / world\n    print(f\"NCCL_ALLREDUCE_PASS world={world} bytes={payload} loops=20 elapsed_s={elapsed:.4f} alg_GBps={alg_gbps:.2f} bus_GBps={bus_gbps:.2f}\")\ndist.barrier()\ndist.destroy_process_group()\n""")'
+              torchrun \
+                --nnodes=2 \
+                --nproc-per-node=8 \
+                --node-rank=0 \
+                --master-addr=10.91.4.242 \
+                --master-port=29600 \
+                /tmp/nccl_probe.py
+              snapshot AFTER
+          env: &nccl-env
+            - name: GLOO_SOCKET_IFNAME
+              value: eth0
+            - name: NCCL_SOCKET_IFNAME
+              value: eth0
+            - name: NCCL_IB_DISABLE
+              value: "0"
+            - name: NCCL_IB_HCA
+              value: mlx5_bond_0,mlx5_bond_1,mlx5_bond_2,mlx5_bond_3,mlx5_bond_4,mlx5_bond_5,mlx5_bond_6,mlx5_bond_7
+            - name: NCCL_IB_GID_INDEX
+              value: "3"
+            - name: NCCL_NET_GDR_LEVEL
+              value: SYS
+            - name: NCCL_MNNVL_ENABLE
+              value: "1"
+            - name: NCCL_CUMEM_ENABLE
+              value: "1"
+            - name: NCCL_DEBUG
+              value: INFO
+            - name: NCCL_DEBUG_SUBSYS
+              value: INIT,NET
+          resources: &probe-resources
+            requests:
+              cpu: "32"
+              memory: 64Gi
+              nvidia.com/gpu: "8"
+            limits:
+              cpu: "64"
+              memory: 128Gi
+              nvidia.com/gpu: "8"
+          volumeMounts: &probe-mounts
+            - name: dshm
+              mountPath: /dev/shm
+            - name: infiniband-devices
+              mountPath: /dev/infiniband
+      volumes: &probe-volumes
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 32Gi
+        - name: infiniband-devices
+          hostPath:
+            path: /dev/infiniband
+            type: Directory
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-nccl-allreduce-289
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-nccl-allreduce
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-nccl-allreduce
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.2.89
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["IPC_LOCK"]
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              snapshot() {
+                for hca in /sys/class/infiniband/mlx5_bond_*; do
+                  name="$(basename "${hca}")"
+                  xmit="$(cat "${hca}/ports/1/counters/port_xmit_data")"
+                  recv="$(cat "${hca}/ports/1/counters/port_rcv_data")"
+                  echo "${1} ${name} xmit_words=${xmit} recv_words=${recv}"
+                done
+              }
+              snapshot BEFORE
+              python3 -c 'from pathlib import Path; Path("/tmp/nccl_probe.py").write_text("""import os\nimport time\nfrom datetime import timedelta\nimport torch\nimport torch.distributed as dist\nlocal_rank = int(os.environ[\"LOCAL_RANK\"])\ntorch.cuda.set_device(local_rank)\ndist.init_process_group(\"nccl\", timeout=timedelta(seconds=300))\nx = torch.ones(16 * 1024 * 1024, device=\"cuda\", dtype=torch.float32)\nfor _ in range(4):\n    x.fill_(1)\n    dist.all_reduce(x)\ntorch.cuda.synchronize()\ndist.barrier()\nstart = time.perf_counter()\nfor _ in range(20):\n    x.fill_(1)\n    dist.all_reduce(x)\ntorch.cuda.synchronize()\nelapsed = time.perf_counter() - start\nworld = dist.get_world_size()\nrank = dist.get_rank()\nif x[0].item() != world:\n    raise RuntimeError(f\"all_reduce mismatch: {x[0].item()} != {world}\")\nif rank == 0:\n    payload = x.numel() * x.element_size()\n    alg_gbps = payload * 20 / elapsed / 1e9\n    bus_gbps = alg_gbps * 2 * (world - 1) / world\n    print(f\"NCCL_ALLREDUCE_PASS world={world} bytes={payload} loops=20 elapsed_s={elapsed:.4f} alg_GBps={alg_gbps:.2f} bus_GBps={bus_gbps:.2f}\")\ndist.barrier()\ndist.destroy_process_group()\n""")'
+              torchrun \
+                --nnodes=2 \
+                --nproc-per-node=8 \
+                --node-rank=1 \
+                --master-addr=10.91.4.242 \
+                --master-port=29600 \
+                /tmp/nccl_probe.py
+              snapshot AFTER
+          env:
+            - name: GLOO_SOCKET_IFNAME
+              value: eth0
+            - name: NCCL_SOCKET_IFNAME
+              value: eth0
+            - name: NCCL_IB_DISABLE
+              value: "0"
+            - name: NCCL_IB_HCA
+              value: mlx5_bond_0,mlx5_bond_1,mlx5_bond_2,mlx5_bond_3,mlx5_bond_4,mlx5_bond_5,mlx5_bond_6,mlx5_bond_7
+            - name: NCCL_IB_GID_INDEX
+              value: "3"
+            - name: NCCL_NET_GDR_LEVEL
+              value: SYS
+            - name: NCCL_MNNVL_ENABLE
+              value: "1"
+            - name: NCCL_CUMEM_ENABLE
+              value: "1"
+            - name: NCCL_DEBUG
+              value: INFO
+            - name: NCCL_DEBUG_SUBSYS
+              value: INIT,NET
+          resources:
+            requests:
+              cpu: "32"
+              memory: 64Gi
+              nvidia.com/gpu: "8"
+            limits:
+              cpu: "64"
+              memory: 128Gi
+              nvidia.com/gpu: "8"
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+            - name: infiniband-devices
+              mountPath: /dev/infiniband
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 32Gi
+        - name: infiniband-devices
+          hostPath:
+            path: /dev/infiniband
+            type: Directory

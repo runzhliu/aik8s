@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-sglang-smoke
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-sglang-smoke
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 7200
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-sglang-smoke
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.4.242
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: smoke
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/opt/aik8s/smoke.py"]
+          env:
+            - name: BASE_URL
+              value: http://kimi-k3-sglang.aik8s-ms.svc.cluster.local:30000/v1
+            - name: MODEL
+              value: kimi-k3
+            - name: TIMEOUT
+              value: "1800"
+            - name: REQUIRE_REASONING_CONTENT
+              value: "1"
+            - name: REQUIRE_VISION
+              value: "1"
+            - name: IMAGE_FILE
+              value: /opt/aik8s/test-image.png
+            - name: IMAGE_QUESTION
+              value: 请只用一句中文描述图标的主要形状和颜色。
+            - name: IMAGE_EXPECTED_KEYWORD
+              value: 蓝
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+            limits:
+              cpu: "8"
+              memory: 16Gi
+          volumeMounts:
+            - name: smoke-assets
+              mountPath: /opt/aik8s
+              readOnly: true
+      volumes:
+        - name: smoke-assets
+          configMap:
+            name: kimi-k3-smoke-assets

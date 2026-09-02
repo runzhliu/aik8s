@@ -1,0 +1,283 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-storage-rdma-probe-165
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-storage-rdma-probe
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-storage-rdma-probe
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.0.165
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/ubuntu-sshd:18.04
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              model=/models-nvme/Kimi-K3/v1
+              echo "NODE=${NODE_NAME}"
+              findmnt -T "${model}" -o TARGET,SOURCE,FSTYPE,OPTIONS
+              lsblk -o NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT
+              test -f "${model}/.aik8s-complete"
+              python3 - "${model}" <<'PY'
+              import json, pathlib, sys
+              root = pathlib.Path(sys.argv[1])
+              index = json.loads((root / "model.safetensors.index.json").read_text())
+              shards = sorted(set(index["weight_map"].values()))
+              missing = [name for name in shards if not (root / name).is_file()]
+              empty = [name for name in shards if (root / name).is_file() and (root / name).stat().st_size == 0]
+              total = sum((root / name).stat().st_size for name in shards if (root / name).is_file())
+              print(json.dumps({"shards": len(shards), "missing": len(missing), "empty": len(empty), "bytes": total}))
+              if len(shards) != 96 or missing or empty or total != 1560936091448:
+                  raise SystemExit(1)
+              PY
+              echo "RDMA_DEVICES"
+              ls -l /host-infiniband
+              test -e /host-infiniband/rdma_cm
+              echo "PROBE=PASS"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              cpu: "4"
+              memory: 8Gi
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models-nvme
+              readOnly: true
+            - name: infiniband
+              mountPath: /host-infiniband
+              readOnly: true
+      volumes:
+        - name: model-cache
+          hostPath:
+            path: /apps/dat/model-cache
+            type: Directory
+        - name: infiniband
+          hostPath:
+            path: /dev/infiniband
+            type: Directory
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-storage-rdma-probe-242
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-storage-rdma-probe
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-storage-rdma-probe
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.4.242
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/ubuntu-sshd:18.04
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              model=/models-nvme/Kimi-K3/v1
+              echo "NODE=${NODE_NAME}"
+              findmnt -T "${model}" -o TARGET,SOURCE,FSTYPE,OPTIONS
+              lsblk -o NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT
+              test -f "${model}/.aik8s-complete"
+              grep -qx 'shards=96' "${model}/.aik8s-complete"
+              grep -qx 'weight_bytes=1560936091448' "${model}/.aik8s-complete"
+              python3 - "${model}" <<'PY'
+              import json, pathlib, sys
+              root = pathlib.Path(sys.argv[1])
+              index = json.loads((root / "model.safetensors.index.json").read_text())
+              shards = sorted(set(index["weight_map"].values()))
+              missing = [name for name in shards if not (root / name).is_file()]
+              empty = [name for name in shards if (root / name).is_file() and (root / name).stat().st_size == 0]
+              total = sum((root / name).stat().st_size for name in shards if (root / name).is_file())
+              print(json.dumps({"shards": len(shards), "missing": len(missing), "empty": len(empty), "bytes": total}))
+              if len(shards) != 96 or missing or empty or total != 1560936091448:
+                  raise SystemExit(1)
+              PY
+              echo "HOST_IPS"
+              hostname -I
+              cat /proc/net/route
+              echo "RDMA_GIDS"
+              for hca in /sys/class/infiniband/*; do
+                name="$(basename "${hca}")"
+                netdev="$(find "${hca}/device/net" -mindepth 1 -maxdepth 1 -printf '%f ' 2>/dev/null || true)"
+                gid="$(cat "${hca}/ports/1/gids/3" 2>/dev/null || true)"
+                echo "HCA=${name} NETDEV=${netdev} GID3=${gid}"
+              done
+              ls -l /host-infiniband
+              test -e /host-infiniband/rdma_cm
+              echo "PROBE=PASS"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              cpu: "4"
+              memory: 8Gi
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models-nvme
+              readOnly: true
+            - name: infiniband
+              mountPath: /host-infiniband
+              readOnly: true
+      volumes:
+        - name: model-cache
+          hostPath:
+            path: /apps/dat/model-cache
+            type: Directory
+        - name: infiniband
+          hostPath:
+            path: /dev/infiniband
+            type: Directory
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-storage-rdma-probe-289
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-storage-rdma-probe
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-storage-rdma-probe
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.2.89
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: probe
+          image: vip-gd-harbor.tencentcloudcr.com/vip/ubuntu-sshd:18.04
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              model=/models-nvme/Kimi-K3/v1
+              echo "NODE=${NODE_NAME}"
+              findmnt -T "${model}" -o TARGET,SOURCE,FSTYPE,OPTIONS
+              lsblk -o NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT
+              test -f "${model}/.aik8s-complete"
+              python3 - "${model}" <<'PY'
+              import json, pathlib, sys
+              root = pathlib.Path(sys.argv[1])
+              index = json.loads((root / "model.safetensors.index.json").read_text())
+              shards = sorted(set(index["weight_map"].values()))
+              missing = [name for name in shards if not (root / name).is_file()]
+              empty = [name for name in shards if (root / name).is_file() and (root / name).stat().st_size == 0]
+              total = sum((root / name).stat().st_size for name in shards if (root / name).is_file())
+              print(json.dumps({"shards": len(shards), "missing": len(missing), "empty": len(empty), "bytes": total}))
+              if len(shards) != 96 or missing or empty or total != 1560936091448:
+                  raise SystemExit(1)
+              PY
+              echo "RDMA_DEVICES"
+              ls -l /host-infiniband
+              test -e /host-infiniband/rdma_cm
+              echo "PROBE=PASS"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              cpu: "4"
+              memory: 8Gi
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models-nvme
+              readOnly: true
+            - name: infiniband
+              mountPath: /host-infiniband
+              readOnly: true
+      volumes:
+        - name: model-cache
+          hostPath:
+            path: /apps/dat/model-cache
+            type: Directory
+        - name: infiniband
+          hostPath:
+            path: /dev/infiniband
+            type: Directory

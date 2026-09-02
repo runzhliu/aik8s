@@ -1,0 +1,97 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-discover-model
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-discover-model
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.0.106
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: discover
+          image: vip-gd-harbor.tencentcloudcr.com/aiplatform/loki_tf_cuda@sha256:73a36cd4831523c8800b76bb6439c767e5060df19633338eba9902df3a9a3115
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "-c"]
+          args:
+            - |
+              import json
+              from pathlib import Path
+
+              matches = []
+              name_candidates = set()
+              for pattern in ("*", "*/*", "*/*/*", "*/*/*/*"):
+                  for path in Path("/models").glob(pattern):
+                      lowered = str(path).lower()
+                      if "kimi" in lowered or "moonshot" in lowered or "k3" in lowered:
+                          name_candidates.add(str(path))
+              for config_path in Path("/models").glob("**/config.json"):
+                  if len(config_path.relative_to("/models").parts) > 5:
+                      continue
+                  try:
+                      config = json.loads(config_path.read_text(encoding="utf-8"))
+                  except (OSError, json.JSONDecodeError):
+                      continue
+                  outer = config.get("architectures") or []
+                  inner = (config.get("text_config") or {}).get("architectures") or []
+                  if "KimiK3ForConditionalGeneration" not in outer and "KimiLinearForCausalLM" not in inner:
+                      continue
+                  model_dir = config_path.parent
+                  index_path = model_dir / "model.safetensors.index.json"
+                  summary = {
+                      "model_path": str(model_dir),
+                      "outer_architectures": outer,
+                      "text_architectures": inner,
+                      "index_exists": index_path.is_file(),
+                  }
+                  if index_path.is_file():
+                      index = json.loads(index_path.read_text(encoding="utf-8"))
+                      shards = sorted(set((index.get("weight_map") or {}).values()))
+                      summary["indexed_shards"] = len(shards)
+                      summary["existing_shards"] = sum((model_dir / name).is_file() for name in shards)
+                      summary["nonempty_shards"] = sum(
+                          (model_dir / name).is_file() and (model_dir / name).stat().st_size > 0
+                          for name in shards
+                      )
+                      summary["index_total_size"] = (index.get("metadata") or {}).get("total_size")
+                  matches.append(summary)
+              print(json.dumps({
+                  "name_candidates": sorted(name_candidates),
+                  "config_matches": matches,
+              }, ensure_ascii=False, indent=2))
+              if not matches:
+                  raise SystemExit("Kimi K3 config.json not found under /models")
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              cpu: "4"
+              memory: 4Gi
+          volumeMounts:
+            - name: model-corpus
+              mountPath: /models
+              readOnly: true
+      volumes:
+        - name: model-corpus
+          persistentVolumeClaim:
+            claimName: model-readonly-dsv4-20260824
+            readOnly: true

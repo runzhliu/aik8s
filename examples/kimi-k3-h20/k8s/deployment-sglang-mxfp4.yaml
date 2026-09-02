@@ -1,0 +1,402 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kimi-k3-sglang-head
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-sglang
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: kimi-k3-sglang
+    app.kubernetes.io/role: head
+  ports:
+    - name: dist
+      port: 29500
+      targetPort: dist
+    - name: http
+      port: 30000
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kimi-k3-sglang
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-sglang
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  selector:
+    app.kubernetes.io/name: kimi-k3-sglang
+    app.kubernetes.io/role: head
+  ports:
+    - name: http
+      port: 30000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kimi-k3-sglang-head
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-sglang
+    app.kubernetes.io/part-of: kimi-k3-h20
+    app.kubernetes.io/role: head
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kimi-k3-sglang
+      app.kubernetes.io/role: head
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-sglang
+        app.kubernetes.io/part-of: kimi-k3-h20
+        app.kubernetes.io/role: head
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "30000"
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.4.242
+      terminationGracePeriodSeconds: 300
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      initContainers:
+        - name: verify-nvme-model-cache
+          image: vip-gd-harbor.tencentcloudcr.com/vip/ubuntu-sshd:18.04
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              marker=/models-nvme/Kimi-K3/v1/.aik8s-complete
+              test -f "${marker}"
+              grep -qx 'shards=96' "${marker}"
+              grep -qx 'weight_bytes=1560936091448' "${marker}"
+              test -f /models-nvme/Kimi-K3/v1/model.safetensors.index.json
+          volumeMounts:
+            - name: model-cache-nvme
+              mountPath: /models-nvme
+              readOnly: true
+      containers:
+        - name: sglang
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              exec sglang serve \
+                --trust-remote-code \
+                --model-path "${MODEL_PATH}" \
+                --served-model-name kimi-k3 \
+                --host 0.0.0.0 \
+                --port 30000 \
+                --tp-size 16 \
+                --ep-size 16 \
+                --nnodes 2 \
+                --node-rank 0 \
+                --dist-init-addr kimi-k3-sglang-head.aik8s-ms.svc.cluster.local:29500 \
+                --context-length 32768 \
+                --max-running-requests 16 \
+                --moe-runner-backend marlin \
+                --decode-attention-backend flashmla \
+                --enable-symm-mem \
+                --mem-fraction-static 0.85 \
+                --reasoning-parser kimi_k3 \
+                --tool-call-parser kimi_k3 \
+                --disable-radix-cache \
+                --enable-metrics
+          env:
+            - name: MODEL_PATH
+              value: /models-nvme/Kimi-K3/v1
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: SGLANG_HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: SGLANG_ENABLE_TP_MEMORY_INBALANCE_CHECK
+              value: "0"
+            - name: GLOO_SOCKET_IFNAME
+              value: eth0
+            - name: NCCL_SOCKET_IFNAME
+              value: eth0
+            - name: NCCL_IB_DISABLE
+              value: "0"
+            - name: NCCL_IB_HCA
+              value: mlx5_bond_0,mlx5_bond_1,mlx5_bond_2,mlx5_bond_3,mlx5_bond_4,mlx5_bond_5,mlx5_bond_6,mlx5_bond_7
+            - name: NCCL_IB_GID_INDEX
+              value: "3"
+            - name: NCCL_NET_GDR_LEVEL
+              value: SYS
+            - name: NCCL_MNNVL_ENABLE
+              value: "1"
+            - name: NCCL_CUMEM_ENABLE
+              value: "1"
+            - name: NCCL_DEBUG
+              value: INFO
+            - name: NCCL_DEBUG_SUBSYS
+              value: INIT,NET
+          ports:
+            - name: http
+              containerPort: 30000
+            - name: dist
+              containerPort: 29500
+          startupProbe:
+            httpGet:
+              path: /v1/models
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 900
+          readinessProbe:
+            httpGet:
+              path: /v1/models
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "120"
+              memory: 700Gi
+              nvidia.com/gpu: "8"
+            limits:
+              cpu: "240"
+              memory: 1500Gi
+              nvidia.com/gpu: "8"
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["IPC_LOCK"]
+          volumeMounts:
+            - name: model-cache-nvme
+              mountPath: /models-nvme
+              readOnly: true
+            - name: dshm
+              mountPath: /dev/shm
+            - name: cache
+              mountPath: /root/.cache
+            - name: infiniband-devices
+              mountPath: /dev/infiniband
+      volumes:
+        - name: model-cache-nvme
+          hostPath:
+            path: /apps/dat/model-cache
+            type: Directory
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Gi
+        - name: cache
+          emptyDir:
+            sizeLimit: 96Gi
+        - name: infiniband-devices
+          hostPath:
+            path: /dev/infiniband
+            type: Directory
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kimi-k3-sglang-worker
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-sglang
+    app.kubernetes.io/part-of: kimi-k3-h20
+    app.kubernetes.io/role: worker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kimi-k3-sglang
+      app.kubernetes.io/role: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-sglang
+        app.kubernetes.io/part-of: kimi-k3-h20
+        app.kubernetes.io/role: worker
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.2.89
+      terminationGracePeriodSeconds: 300
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      initContainers:
+        - name: verify-nvme-model-cache
+          image: vip-gd-harbor.tencentcloudcr.com/vip/ubuntu-sshd:18.04
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              marker=/models-nvme/Kimi-K3/v1/.aik8s-complete
+              test -f "${marker}"
+              grep -qx 'shards=96' "${marker}"
+              grep -qx 'weight_bytes=1560936091448' "${marker}"
+              test -f /models-nvme/Kimi-K3/v1/model.safetensors.index.json
+          volumeMounts:
+            - name: model-cache-nvme
+              mountPath: /models-nvme
+              readOnly: true
+      containers:
+        - name: sglang
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              exec sglang serve \
+                --trust-remote-code \
+                --model-path "${MODEL_PATH}" \
+                --served-model-name kimi-k3 \
+                --host 0.0.0.0 \
+                --port 30000 \
+                --tp-size 16 \
+                --ep-size 16 \
+                --nnodes 2 \
+                --node-rank 1 \
+                --dist-init-addr kimi-k3-sglang-head.aik8s-ms.svc.cluster.local:29500 \
+                --context-length 32768 \
+                --max-running-requests 16 \
+                --moe-runner-backend marlin \
+                --decode-attention-backend flashmla \
+                --enable-symm-mem \
+                --mem-fraction-static 0.85 \
+                --reasoning-parser kimi_k3 \
+                --tool-call-parser kimi_k3 \
+                --disable-radix-cache \
+                --enable-metrics
+          env:
+            - name: MODEL_PATH
+              value: /models-nvme/Kimi-K3/v1
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: SGLANG_HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: SGLANG_ENABLE_TP_MEMORY_INBALANCE_CHECK
+              value: "0"
+            - name: GLOO_SOCKET_IFNAME
+              value: eth0
+            - name: NCCL_SOCKET_IFNAME
+              value: eth0
+            - name: NCCL_IB_DISABLE
+              value: "0"
+            - name: NCCL_IB_HCA
+              value: mlx5_bond_0,mlx5_bond_1,mlx5_bond_2,mlx5_bond_3,mlx5_bond_4,mlx5_bond_5,mlx5_bond_6,mlx5_bond_7
+            - name: NCCL_IB_GID_INDEX
+              value: "3"
+            - name: NCCL_NET_GDR_LEVEL
+              value: SYS
+            - name: NCCL_MNNVL_ENABLE
+              value: "1"
+            - name: NCCL_CUMEM_ENABLE
+              value: "1"
+            - name: NCCL_DEBUG
+              value: INFO
+            - name: NCCL_DEBUG_SUBSYS
+              value: INIT,NET
+          ports:
+            - name: http
+              containerPort: 30000
+            - name: dist
+              containerPort: 29500
+          startupProbe:
+            exec:
+              command:
+                - bash
+                - -lc
+                - curl -fsS http://kimi-k3-sglang-head.aik8s-ms.svc.cluster.local:30000/v1/models >/dev/null
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 900
+          readinessProbe:
+            exec:
+              command:
+                - bash
+                - -lc
+                - curl -fsS http://kimi-k3-sglang-head.aik8s-ms.svc.cluster.local:30000/v1/models >/dev/null
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "120"
+              memory: 700Gi
+              nvidia.com/gpu: "8"
+            limits:
+              cpu: "240"
+              memory: 1500Gi
+              nvidia.com/gpu: "8"
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["IPC_LOCK"]
+          volumeMounts:
+            - name: model-cache-nvme
+              mountPath: /models-nvme
+              readOnly: true
+            - name: dshm
+              mountPath: /dev/shm
+            - name: cache
+              mountPath: /root/.cache
+            - name: infiniband-devices
+              mountPath: /dev/infiniband
+      volumes:
+        - name: model-cache-nvme
+          hostPath:
+            path: /apps/dat/model-cache
+            type: Directory
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Gi
+        - name: cache
+          emptyDir:
+            sizeLimit: 96Gi
+        - name: infiniband-devices
+          hostPath:
+            path: /dev/infiniband
+            type: Directory

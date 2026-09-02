@@ -1,0 +1,213 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-sglang-runtime-preflight-165
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-sglang-runtime-preflight
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-sglang-runtime-preflight
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.0.165
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: preflight
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["IPC_LOCK"]
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              echo "NODE=${NODE_NAME} HOST_IP=${HOST_IP}"
+              nvidia-smi --query-gpu=index,name,memory.total,driver_version,pci.bus_id --format=csv,noheader
+              echo "DEFAULT_ROUTE"
+              if command -v ip >/dev/null; then ip -4 route show default; else cat /proc/net/route; fi
+              echo "IP_LINKS"
+              if command -v ip >/dev/null; then ip -br -4 address; else hostname -I; ls -1 /sys/class/net; fi
+              echo "RDMA_LINKS"
+              command -v ibdev2netdev >/dev/null && ibdev2netdev || true
+              command -v rdma >/dev/null && rdma link show || true
+              for hca in /sys/class/infiniband/*; do
+                echo "HCA=$(basename "${hca}") NETDEV=$(find "${hca}/device/net" -mindepth 1 -maxdepth 1 -printf '%f ' 2>/dev/null || true)"
+              done
+              python3 - <<'PY'
+              import importlib.metadata
+              import torch
+
+              print("torch=", importlib.metadata.version("torch"))
+              print("sglang=", importlib.metadata.version("sglang"))
+              print("transformers=", importlib.metadata.version("transformers"))
+              print("cuda=", torch.version.cuda)
+              print("device=", torch.cuda.get_device_name(0))
+              print("capability=", torch.cuda.get_device_capability(0))
+              assert torch.cuda.get_device_capability(0)[0] == 9
+              PY
+              python3 -m sglang.launch_server --help > /tmp/sglang-help.txt
+              for flag in \
+                --tp-size --ep-size --nnodes --node-rank --dist-init-addr \
+                --moe-runner-backend --decode-attention-backend --enable-symm-mem \
+                --reasoning-parser --tool-call-parser --model-loader-extra-config; do
+                grep -q -- "${flag}" /tmp/sglang-help.txt || { echo "MISSING_FLAG=${flag}"; exit 1; }
+              done
+              echo "RUNTIME_PREFLIGHT=PASS"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+          resources:
+            requests:
+              cpu: "8"
+              memory: 32Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "16"
+              memory: 64Gi
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: infiniband
+              mountPath: /dev/infiniband
+      volumes:
+        - name: infiniband
+          hostPath:
+            path: /dev/infiniband
+            type: Directory
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kimi-k3-sglang-runtime-preflight-289
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3-sglang-runtime-preflight
+    app.kubernetes.io/part-of: kimi-k3-h20
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kimi-k3-sglang-runtime-preflight
+        app.kubernetes.io/part-of: kimi-k3-h20
+    spec:
+      restartPolicy: Never
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: 10.91.2.89
+      tolerations:
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoSchedule
+        - key: quarantine-room
+          operator: Equal
+          value: gpu-training-H20
+          effect: NoExecute
+      containers:
+        - name: preflight
+          image: vip-gd-harbor.tencentcloudcr.com/vip/llm-serving-sglang:kimi-k3-cu130-amd64-20260831
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["IPC_LOCK"]
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              echo "NODE=${NODE_NAME} HOST_IP=${HOST_IP}"
+              nvidia-smi --query-gpu=index,name,memory.total,driver_version,pci.bus_id --format=csv,noheader
+              echo "DEFAULT_ROUTE"
+              if command -v ip >/dev/null; then ip -4 route show default; else cat /proc/net/route; fi
+              echo "IP_LINKS"
+              if command -v ip >/dev/null; then ip -br -4 address; else hostname -I; ls -1 /sys/class/net; fi
+              echo "RDMA_LINKS"
+              command -v ibdev2netdev >/dev/null && ibdev2netdev || true
+              command -v rdma >/dev/null && rdma link show || true
+              for hca in /sys/class/infiniband/*; do
+                echo "HCA=$(basename "${hca}") NETDEV=$(find "${hca}/device/net" -mindepth 1 -maxdepth 1 -printf '%f ' 2>/dev/null || true)"
+              done
+              python3 - <<'PY'
+              import importlib.metadata
+              import torch
+
+              print("torch=", importlib.metadata.version("torch"))
+              print("sglang=", importlib.metadata.version("sglang"))
+              print("transformers=", importlib.metadata.version("transformers"))
+              print("cuda=", torch.version.cuda)
+              print("device=", torch.cuda.get_device_name(0))
+              print("capability=", torch.cuda.get_device_capability(0))
+              assert torch.cuda.get_device_capability(0)[0] == 9
+              PY
+              python3 -m sglang.launch_server --help > /tmp/sglang-help.txt
+              for flag in \
+                --tp-size --ep-size --nnodes --node-rank --dist-init-addr \
+                --moe-runner-backend --decode-attention-backend --enable-symm-mem \
+                --reasoning-parser --tool-call-parser --model-loader-extra-config; do
+                grep -q -- "${flag}" /tmp/sglang-help.txt || { echo "MISSING_FLAG=${flag}"; exit 1; }
+              done
+              echo "RUNTIME_PREFLIGHT=PASS"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+          resources:
+            requests:
+              cpu: "8"
+              memory: 32Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "16"
+              memory: 64Gi
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: infiniband
+              mountPath: /dev/infiniband
+      volumes:
+        - name: infiniband
+          hostPath:
+            path: /dev/infiniband
+            type: Directory

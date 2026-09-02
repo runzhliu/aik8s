@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kimi-k3-openwebui
+  namespace: aik8s-ms
+  labels:
+    app.kubernetes.io/name: kimi-k3
+    app.kubernetes.io/part-of: kimi-k3-h20
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /kimi-k3(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: kimi-k3-vllm
+                port:
+                  name: http
