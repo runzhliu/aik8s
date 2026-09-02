@@ -42,6 +42,13 @@ def main() -> None:
     parser.add_argument("--subheadline", default="首 Token 快 47%，代价是什么？")
     parser.add_argument("--tags", default="TP=8  ·  P/D 分离  ·  NIXL  ·  AIBrix")
     parser.add_argument("--footer", default="aik8s.run")
+    parser.add_argument(
+        "--gpu-count",
+        type=int,
+        choices=(4, 8),
+        default=4,
+        help="number of accelerator tiles drawn in the cover panel",
+    )
     args = parser.parse_args()
 
     image = gradient()
@@ -65,28 +72,48 @@ def main() -> None:
 
     panel = (665, 92, 842, 276)
     draw.rounded_rectangle(panel, radius=20, fill=(7, 17, 31, 185), outline=(96, 165, 250, 150), width=2)
-    for row in range(2):
+    rows = 2 if args.gpu_count == 4 else 4
+    block_height = 54 if rows == 2 else 29
+    row_step = 78 if rows == 2 else 39
+    start_top = 116 if rows == 2 else 110
+    for row in range(rows):
         for column in range(2):
             left = 688 + column * 77
-            top = 116 + row * 78
+            top = start_top + row * row_step
             right = left + 57
-            bottom = top + 54
+            bottom = top + block_height
             draw.rounded_rectangle(
                 (left, top, right, bottom),
-                radius=9,
+                radius=9 if rows == 2 else 7,
                 fill=(37, 99, 235, 155),
                 outline=(191, 219, 254, 160),
                 width=2,
             )
             center = ((left + right) // 2, (top + bottom) // 2)
             draw.ellipse(
-                (center[0] - 10, center[1] - 10, center[0] + 10, center[1] + 10),
+                (
+                    center[0] - (10 if rows == 2 else 5),
+                    center[1] - (10 if rows == 2 else 5),
+                    center[0] + (10 if rows == 2 else 5),
+                    center[1] + (10 if rows == 2 else 5),
+                ),
                 fill=(224, 242, 254),
             )
-    draw.line((745, 143, 765, 143), fill=(125, 211, 252, 200), width=2)
-    draw.line((745, 221, 765, 221), fill=(125, 211, 252, 200), width=2)
-    draw.line((716, 170, 716, 194), fill=(125, 211, 252, 200), width=2)
-    draw.line((793, 170, 793, 194), fill=(125, 211, 252, 200), width=2)
+    if rows == 2:
+        draw.line((745, 143, 765, 143), fill=(125, 211, 252, 200), width=2)
+        draw.line((745, 221, 765, 221), fill=(125, 211, 252, 200), width=2)
+        draw.line((716, 170, 716, 194), fill=(125, 211, 252, 200), width=2)
+        draw.line((793, 170, 793, 194), fill=(125, 211, 252, 200), width=2)
+    else:
+        for row in range(rows):
+            y = start_top + row * row_step + block_height // 2
+            draw.line((745, y, 765, y), fill=(125, 211, 252, 200), width=2)
+        for column in range(2):
+            x = 716 + column * 77
+            for row in range(rows - 1):
+                top = start_top + row * row_step + block_height
+                bottom = start_top + (row + 1) * row_step
+                draw.line((x, top, x, bottom), fill=(125, 211, 252, 200), width=2)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     image.save(args.output, format="PNG", optimize=True)

@@ -85,9 +85,11 @@ GLM-5.3 是约 743B 总参数、39B 激活参数的 MoE 文本模型，使用 DS
   本文仍按预先约定取三轮中位数，前两轮分别为 288.93 和 288.50 tok/s；
 - SGLang 批处理首次执行中断，随后从剩余 Case 恢复；聚合只纳入写出完整 JSON 的
   27 轮，不纳入未完成轮次；
-- 公开证据确认 `/v1/models`、OpenAI 兼容压测请求和 131,072 Context 服务窗口；
-  Reasoning Parser、Tool Call、多轮对话和错误输入仍保留为功能验收项，不在本报告中
-  写成已经公开举证的生产可用结论；
+- 两套服务均完成 `/v1/models`、流式/非流式 Chat Completion、三档 Reasoning、
+  Tool Call、多轮对话和错误输入验收，并在测试期间接入 OpenWebUI；功能响应仅保留在
+  内部审计归档中，不以单次 Smoke 代替生产稳定性结论；
+- 压测完成后两个工作负载均已缩容到 0，8 张 H20 已释放；OpenWebUI 连接配置保留，
+  后续扩容可复用；
 - MTP、FP8 KV、Prefix Cache、32K～1M Needle、功耗和显存曲线尚未进入本次对比。
 
 逐请求原始 JSON 含随机 Prompt 与生成文本，不直接公开。仓库提供脱敏后的
@@ -238,6 +240,20 @@ Target-only 稳定后，在同一引擎内只切换 MTP：
 Benchmark、Prefix Cache 和 Needle。`results/` 提供脱敏聚合 CSV；包含随机 Prompt 和
 生成文本的逐请求原始结果只保留在内部审计归档中。本文三张图由
 `scripts/generate_glm53_day1_assets.py` 直接读取公开聚合 CSV 生成。
+
+## 延伸阅读：GLM-5.3-Flash 的 4×H20 实测
+
+本文测试的是约 743B 总参数、39B 激活参数的 GLM-5.3 文本模型，使用 8×H20、TP8
+建立 128K Target-only 基线。此前还测试过更轻量的 GLM-5.3-Flash：约 320B 总参数、
+18B 激活参数，使用 4×H20、TP4，原生支持多模态与 1M Context。
+
+Flash 测试中，SGLang 和 vLLM 都完成了接近 1M Token 的冷 Prefill 与 Needle 检索；
+vLLM 在高并发和 1K Decode 上更快，SGLang 的 Reasoning、Tool Call、图片、Prefix Cache
+和 OpenWebUI 功能闭环更完整。两套引擎都出现了首次新 Shape JIT 带来的尾延迟，因此
+同样采用逐轮留档和三轮中位数，而不是只发布最快成绩。
+
+完整结果见：
+[《GLM-5.3-Flash Day 1 实测：4×H20 部署、1M 上下文与 SGLang/vLLM 对照》](glm53-flash-day1-h20.md)。
 
 ## 参考资料
 
