@@ -1,9 +1,5 @@
 # Kimi K3 实测：16 张 H20，SGLang 还是 vLLM？
 
-作者：runzhliu
-
-![Kimi K3 双引擎实测封面](./assets/kimi-k3-h20-cover.png)
-
 2026 年 7 月 27 日，Moonshot AI 公开了 Kimi K3 的模型权重与技术报告。它不是在上一代模型上做一次小幅扩容，而是一套面向原生多模态、超长上下文和 Agent 场景重新设计的 2.8T MoE：总参数约 2.8T，每个 Token 激活约 104B 参数，包含 93 层 Transformer、69 层 KDA 与 24 层 Gated MLA、896 个专家并激活其中 16 个；权重采用原生 MXFP4，激活使用 MXFP8，声明支持 1M Context。
 
 如此规模也让部署门槛变得很直观：这次测试使用两台 8×141GB H20，一共 16 张卡。模型先放到两台宿主机的本地 NVMe，再分别用 SGLang TP16/EP16 和 vLLM TP16 跨节点拉起服务。正式压测前，16 卡 NCCL AllReduce 已通过，两个运行时也都在日志中确认使用 `NET/IB`，没有回退到 Socket。
