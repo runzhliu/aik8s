@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8faff"/>
+      <stop offset="1" stop-color="#eef3ff"/>
+    </linearGradient>
+    <linearGradient id="adapter" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3f63e9"/>
+      <stop offset="1" stop-color="#724bd8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#243b7a" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7890c9"/>
+    </marker>
+    <style>
+      .font { font-family: "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; }
+      .title { font-size: 38px; font-weight: 700; fill: #15213f; }
+      .subtitle { font-size: 18px; fill: #5f6b85; }
+      .section { font-size: 19px; font-weight: 650; fill: #41506f; }
+      .agent { font-size: 21px; font-weight: 700; fill: #20304f; }
+      .small { font-size: 16px; fill: #66728c; }
+      .adapter-title { font-size: 21px; font-weight: 750; fill: white; }
+      .adapter-line { font-size: 17px; fill: #f4f6ff; }
+      .vm { font-size: 18px; font-weight: 650; fill: #20443d; }
+      .vm-small { font-size: 15px; fill: #52716b; }
+      .foot { font-size: 17px; font-weight: 650; fill: #33425f; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <circle cx="1110" cy="80" r="120" fill="#dce6ff" opacity="0.55"/>
+  <circle cx="80" cy="640" r="150" fill="#e9dcff" opacity="0.4"/>
+
+  <text x="60" y="70" class="font title">多种 Agent，共用一个受控的 CubeSandbox 执行面</text>
+  <text x="60" y="105" class="font subtitle">Runtime 负责会话与工具编排；Adapter 统一身份、策略、租约和审计；MicroVM 执行不可信任务</text>
+
+  <text x="92" y="158" class="font section">家里的 Agent Runtime</text>
+  <g filter="url(#shadow)">
+    <rect x="60" y="180" width="315" height="105" rx="18" fill="#ffffff" stroke="#d8e0f3"/>
+    <rect x="60" y="305" width="315" height="105" rx="18" fill="#ffffff" stroke="#d8e0f3"/>
+    <rect x="60" y="430" width="315" height="105" rx="18" fill="#ffffff" stroke="#d8e0f3"/>
+  </g>
+  <circle cx="105" cy="232" r="24" fill="#f25f5c"/>
+  <text x="145" y="225" class="font agent">OpenClaw</text>
+  <text x="145" y="252" class="font small">Tool Plugin</text>
+  <circle cx="105" cy="357" r="24" fill="#6877e8"/>
+  <text x="145" y="350" class="font agent">DeepSeek Harness</text>
+  <text x="145" y="377" class="font small">Cordis Plugin</text>
+  <circle cx="105" cy="482" r="24" fill="#19a889"/>
+  <text x="145" y="475" class="font agent">Hermes Agent</text>
+  <text x="145" y="502" class="font small">Native Tool Plugin</text>
+
+  <line x1="375" y1="232" x2="435" y2="270" stroke="#7890c9" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="375" y1="357" x2="435" y2="357" stroke="#7890c9" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="375" y1="482" x2="435" y2="444" stroke="#7890c9" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="380" y="204" class="font small">认证 HTTP</text>
+
+  <g filter="url(#shadow)">
+    <rect x="440" y="180" width="340" height="355" rx="26" fill="url(#adapter)"/>
+  </g>
+  <text x="475" y="230" class="font adapter-title">CubeSandbox Agent Adapter</text>
+  <line x1="480" y1="252" x2="740" y2="252" stroke="#ffffff" stroke-opacity="0.35"/>
+  <text x="480" y="292" class="font adapter-line">✓ Bearer 认证与 Runtime 身份</text>
+  <text x="480" y="332" class="font adapter-line">✓ 不透明 lease_ref 与会话复用</text>
+  <text x="480" y="372" class="font adapter-line">✓ 固定模板、网络、路径与超时策略</text>
+  <text x="480" y="412" class="font adapter-line">✓ 完整 Sandbox ID 与 Token 不下发</text>
+  <text x="480" y="452" class="font adapter-line">✓ 追加式、默认脱敏的执行审计</text>
+  <rect x="480" y="478" width="260" height="34" rx="17" fill="#ffffff" fill-opacity="0.16"/>
+  <text x="500" y="501" class="font adapter-line">策略示例：offline-code</text>
+
+  <line x1="780" y1="357" x2="865" y2="357" stroke="#7890c9" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="787" y="334" class="font small">Cube SDK</text>
+
+  <text x="895" y="158" class="font section">CubeSandbox 执行面</text>
+  <g filter="url(#shadow)">
+    <rect x="865" y="180" width="275" height="355" rx="24" fill="#ffffff" stroke="#cfe2dc"/>
+  </g>
+  <rect x="885" y="210" width="235" height="54" rx="14" fill="#e8f5f1"/>
+  <text x="1002.5" y="244" text-anchor="middle" class="font vm">CubeAPI / 调度</text>
+  <line x1="1002" y1="264" x2="1002" y2="300" stroke="#79a89e" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="885" y="308" width="235" height="58" rx="15" fill="#f0faf7" stroke="#b9ddd4"/>
+  <text x="1002.5" y="334" text-anchor="middle" class="font vm">Session A MicroVM</text>
+  <text x="1002.5" y="354" text-anchor="middle" class="font vm-small">独立内核 · 独立生命周期</text>
+  <rect x="885" y="382" width="235" height="58" rx="15" fill="#f0faf7" stroke="#b9ddd4"/>
+  <text x="1002.5" y="408" text-anchor="middle" class="font vm">Session B MicroVM</text>
+  <text x="1002.5" y="428" text-anchor="middle" class="font vm-small">独立文件 · 受控网络</text>
+  <rect x="885" y="456" width="235" height="58" rx="15" fill="#f0faf7" stroke="#b9ddd4"/>
+  <text x="1002.5" y="482" text-anchor="middle" class="font vm">Session N MicroVM</text>
+  <text x="1002.5" y="502" text-anchor="middle" class="font vm-small">任务结束自动回收</text>
+
+  <rect x="60" y="580" width="1080" height="55" rx="18" fill="#ffffff" stroke="#d8e0f3"/>
+  <text x="90" y="614" class="font foot">同一条证据链：</text>
+  <text x="240" y="614" class="font small">Agent 工具结果中的 sandbox_ref</text>
+  <text x="500" y="614" class="font foot">＝</text>
+  <text x="535" y="614" class="font small">CubeSandbox 实时 MicroVM</text>
+  <text x="775" y="614" class="font foot">＝</text>
+  <text x="810" y="614" class="font small">Adapter 脱敏审计事件</text>
+</svg>
