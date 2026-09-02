@@ -1,4 +1,4 @@
-name: Deploy documentation
+name: Publish production artifact
 
 on:
   push:
@@ -10,30 +10,23 @@ permissions:
   contents: read
 
 concurrency:
-  group: production
+  group: production-artifact
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Build and deploy
+  build:
+    name: Build and package
     runs-on: ubuntu-latest
-    environment: production
     timeout-minutes: 15
-
-    env:
-      PROD_HOST: ${{ vars.PROD_HOST }}
-      PROD_PORT: ${{ vars.PROD_PORT }}
-      PROD_USER: ${{ vars.PROD_USER }}
-      DEPLOY_ROOT: /srv/aik8s
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.13"
           cache: pip
@@ -64,49 +57,80 @@ jobs:
           --site-dir site
           --token "$CLOUDFLARE_WEB_ANALYTICS_TOKEN"
 
-      - name: Validate deployment configuration
+      - name: Package deployment artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          tar --dereference --directory site --create --gzip \
+            --file dist/aik8s-site.tar.gz .
+          (
+            cd dist
+            sha256sum aik8s-site.tar.gz > aik8s-site.tar.gz.sha256
+          )
+          printf '%s\n' "$GITHUB_SHA" > dist/revision.txt
+          checksum="$(cut -d ' ' -f 1 dist/aik8s-site.tar.gz.sha256)"
+          jq --null-input \
+            --arg revision "$GITHUB_SHA" \
+            --arg sha256 "$checksum" \
+            --arg generated_at "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            '{schema_version: 1, revision: $revision, sha256: $sha256, generated_at: $generated_at}' \
+            > dist/manifest.json
+
+      - name: Upload packaged site for the publish job
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: production-site
+          path: dist/
+          if-no-files-found: error
+          retention-days: 3
+
+  publish:
+    name: Publish rolling release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged site
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: production-site
+          path: dist
+
+      - name: Publish production release assets
         shell: bash
         env:
-          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
-          PROD_KNOWN_HOSTS: ${{ secrets.PROD_KNOWN_HOSTS }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: site-production
         run: |
           set -euo pipefail
-          test -n "$PROD_HOST"
-          test -n "$PROD_PORT"
-          test -n "$PROD_USER"
-          test -n "$PROD_SSH_KEY"
-          test -n "$PROD_KNOWN_HOSTS"
+          test -s dist/aik8s-site.tar.gz
+          test -s dist/aik8s-site.tar.gz.sha256
+          test -s dist/manifest.json
+          test -s dist/revision.txt
 
-      - name: Configure SSH
-        shell: bash
-        env:
-          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
-          PROD_KNOWN_HOSTS: ${{ secrets.PROD_KNOWN_HOSTS }}
-        run: |
-          set -euo pipefail
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$PROD_SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          printf '%s\n' "$PROD_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "aik8s.run production artifact" \
+              --notes "Rolling deployment artifact. The server pulls and verifies these assets before activation." \
+              --prerelease
+          else
+            gh release edit "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --notes "Rolling deployment artifact for revision $GITHUB_SHA."
+          fi
 
-      - name: Upload release
-        shell: bash
-        run: |
-          set -euo pipefail
-          release_dir="$DEPLOY_ROOT/releases/$GITHUB_SHA"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            -p "$PROD_PORT" "$PROD_USER@$PROD_HOST" \
-            "mkdir -p '$release_dir'"
-          rsync --archive --compress --delete \
-            -e "ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -p $PROD_PORT" \
-            site/ "$PROD_USER@$PROD_HOST:$release_dir/"
-
-      - name: Activate release
-        shell: bash
-        run: |
-          set -euo pipefail
-          release_dir="$DEPLOY_ROOT/releases/$GITHUB_SHA"
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            -p "$PROD_PORT" "$PROD_USER@$PROD_HOST" \
-            "ln -sfn '$release_dir' '$DEPLOY_ROOT/.current-next' && mv -Tf '$DEPLOY_ROOT/.current-next' '$DEPLOY_ROOT/current'"
+          # revision.txt is the commit marker and must be replaced last. The
+          # server will not fetch the other assets until it observes this SHA.
+          gh release upload "$RELEASE_TAG" \
+            dist/aik8s-site.tar.gz \
+            dist/aik8s-site.tar.gz.sha256 \
+            dist/manifest.json \
+            --clobber
+          gh release upload "$RELEASE_TAG" dist/revision.txt --clobber

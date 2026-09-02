@@ -1,0 +1,12 @@
+[Unit]
+Description=Check GitHub for a new aik8s.run artifact every two minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+RandomizedDelaySec=15s
+Persistent=true
+Unit=aik8s-pull-deploy.service
+
+[Install]
+WantedBy=timers.target

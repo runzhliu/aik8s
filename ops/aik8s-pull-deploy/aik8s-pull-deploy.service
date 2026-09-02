@@ -1,0 +1,35 @@
+[Unit]
+Description=Pull and activate the latest aik8s.run production artifact
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+User=aik8s-deploy
+Group=aik8s-deploy
+Environment=DEPLOY_ROOT=/srv/aik8s
+Environment=RELEASE_BASE_URL=https://github.com/runzhliu/aik8s/releases/download/site-production
+ExecStart=/usr/local/sbin/aik8s-pull-deploy
+UMask=0022
+
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ReadWritePaths=/srv/aik8s
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target
