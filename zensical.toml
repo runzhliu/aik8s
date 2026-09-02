@@ -89,6 +89,7 @@ nav = [
       {"GPU Pending 排障" = "ai-k8s/practices/gpu-pending.md"},
       {"GPU 利用率排障" = "ai-k8s/practices/low-gpu-utilization.md"},
       {"推理引擎同机实测" = "ai-k8s/practices/inference-engine-benchmark.md"},
+      {"Kubernetes 1.37 的 AI/LLM 价值" = "ai-k8s/practices/kubernetes-137-ai-workloads.md"},
       {"DeepSeek-V4-Flash-Vision-Exp Day 0" = "ai-k8s/practices/deepseek-v4-flash-vision-exp-day0-h20.md"},
       {"Hy4-preview BF16：双机 H20 SGLang/vLLM 实测" = "ai-k8s/practices/hy4-preview-hardware-benchmark-plan.md"},
       {"GLM-5.3：8×H20 SGLang/vLLM 基线压测" = "ai-k8s/practices/glm53-h20-sglang-vllm-test-plan.md"},
