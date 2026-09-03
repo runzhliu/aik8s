@@ -1,32 +1,30 @@
-# Kata + Firecracker RuntimeClass test
+# Kata + Firecracker RuntimeClass 测试
 
-This guide turns an ordinary Kubernetes Pod into a Firecracker-backed Kata
-sandbox. It reproduces the verified lab path while keeping node names,
-registries, bastions, and cluster-specific CNI controls out of the document.
+本指南将普通 Kubernetes Pod 转换为由 Firecracker 承载的 Kata 沙箱。它复现已经验证的实验
+链路，同时不在文档中出现节点名、镜像仓库、跳板机和集群特有的 CNI 控制信息。
 
-The procedure restarts containerd and creates a device-mapper thin pool. Run it
-only on a dedicated, cordoned worker with a tested rollback path. The loopback
-thin pool below is suitable for a lab, not production.
+此流程会重启 containerd 并创建 device-mapper Thin Pool。只能在已 cordon 的专用 Worker
+上执行，而且必须具备经过验证的回滚路径。下文的 Loopback Thin Pool 只适合实验环境，不能
+用于生产。
 
-## 1. Tested component set
+## 1. 已测试组件组合
 
-| Component | Tested value |
+| 组件 | 测试版本或配置 |
 | --- | --- |
 | Kubernetes | 1.30.4 |
 | containerd | 1.7.14 |
-| Kata Containers | 4.1.0 static amd64, runtime-rs |
+| Kata Containers | 4.1.0 静态 amd64 包，runtime-rs |
 | Firecracker | 1.16.1 |
-| Host | x86_64 bare metal, KVM, cgroup v1 |
-| Rootfs snapshotter | containerd built-in devmapper plugin |
+| 宿主机 | x86_64 裸金属、KVM、cgroup v1 |
+| Rootfs snapshotter | containerd 内置 devmapper 插件 |
 
-Kata's official `kata-static` archive includes the runtime-rs shim, guest
-kernel, and guest image. It does not include the Firecracker or jailer binaries,
-so install a pinned matching pair separately as described in
-[deployment.md](deployment.md).
+Kata 官方 `kata-static` 归档包含 runtime-rs shim、Guest 内核和 Guest 镜像，但不包含
+Firecracker 或 jailer 二进制。因此，需要按照[宿主机部署指南](deployment.md)单独安装一组
+固定且相互匹配的版本。
 
-## 2. Download and transfer offline
+## 2. 离线下载与传输
 
-On a connected workstation:
+在可联网工作站上执行：
 
 ```bash
 KATA_VERSION=4.1.0
@@ -40,24 +38,22 @@ curl -fL --retry 10 --retry-all-errors --continue-at - \
 sha256sum "${WORK_DIR}/kata-static-${KATA_VERSION}-${KATA_ARCH}.tar.zst"
 ```
 
-The tested archive hash was:
+本次测试归档的哈希值为：
 
 ```text
 3dc6b69c4acb787b967b04b64599a20d02a8beb1a8eaab3084110df9d0b08c96
 ```
 
-This is a transfer-integrity observation, not a substitute for verifying a
-publisher checksum or GitHub artifact attestation. Record the digest before and
-after transfer and require an exact match.
+这只是传输完整性观测，不能替代发布方校验和或 GitHub 制品证明。传输前后都应记录 Digest，
+并要求完全一致。
 
-Transfer the compressed file through the approved bastion, an offline medium,
-or a short-lived hostPath Pod like
-[`manifests/artifact-transfer.yaml`](manifests/artifact-transfer.yaml). Do not
-put credentials or internal registry configuration in the archive.
+通过经过批准的跳板机、离线介质，或类似
+[`manifests/artifact-transfer.yaml`](manifests/artifact-transfer.yaml) 的短生命周期
+hostPath Pod 传输压缩文件。不要把凭据或内网镜像仓库配置放进归档。
 
-## 3. Install Kata without changing containerd
+## 3. 在不修改 containerd 的前提下安装 Kata
 
-On the worker, after verifying the transferred hash:
+在 Worker 上验证传输后的哈希值，再执行：
 
 ```bash
 sudo mkdir -p /opt/kata-staging
@@ -71,13 +67,13 @@ sudo ln -s /opt/kata/runtime-rs/bin/containerd-shim-kata-v2 \
   /usr/local/bin/containerd-shim-kata-fc-v2
 ```
 
-The runtime type `io.containerd.kata-fc.v2` resolves to
-`containerd-shim-kata-fc-v2` in containerd's service `PATH`. The shim's
-`ConfigPath` selects the Firecracker runtime-rs configuration.
+Runtime 类型 `io.containerd.kata-fc.v2` 会解析到 containerd 服务 `PATH` 中的
+`containerd-shim-kata-fc-v2`。shim 的 `ConfigPath` 用于选择 Firecracker runtime-rs
+配置。
 
-## 4. Bound the released Firecracker configuration
+## 4. 限定发布版 Firecracker 配置
 
-Make a lab-specific copy rather than editing the packaged default:
+复制一份实验专用配置，不要直接编辑软件包默认值：
 
 ```bash
 KATA_CONFIG_DIR=/opt/kata/share/defaults/kata-containers/runtime-rs
@@ -91,22 +87,21 @@ sudo sed -i \
   "${KATA_CONFIG_DIR}/configuration-rs-fc-lab.toml"
 ```
 
-Both changes were required in this lab:
+本实验必须进行以下两处修改：
 
-- `default_maxvcpus = 0` expanded to all 56 host CPUs and Firecracker rejected
-  the resulting VM. A value of `2` bounds the experimental sandbox.
-- Kata 4.1.0 shipped `dial_timeout_ms = 45000` without a compatible
-  `reconnect_timeout_ms`. The runtime rejected the configuration. The
-  `2000/60000` values are the workaround documented in upstream
-  [issue #13484](https://github.com/kata-containers/kata-containers/issues/13484).
+- `default_maxvcpus = 0` 会展开为宿主机全部 56 个 CPU，导致 Firecracker 拒绝创建 VM。
+  设置为 `2` 可以限制实验沙箱规模。
+- Kata 4.1.0 提供了 `dial_timeout_ms = 45000`，却没有兼容的
+  `reconnect_timeout_ms`，Runtime 因此拒绝配置。`2000/60000` 是上游
+  [Issue #13484](https://github.com/kata-containers/kata-containers/issues/13484)
+  记录的临时解决方案。
 
-Re-check the pinned release before carrying this workaround forward; remove it
-when the upstream configuration is fixed and verified.
+在后续版本中沿用此临时方案前，应重新核对固定的发布版本；上游配置修复并完成验证后应移除它。
 
-## 5. Create a lab-only devmapper pool
+## 5. 创建仅供实验使用的 devmapper Pool
 
-First verify that the names, files, and loop devices below do not already exist.
-Never reuse an unknown disk or an existing LVM volume group for this recipe.
+首先确认下列名称、文件和 Loop 设备均不存在。绝不要为此配方复用来源不明的磁盘或现有 LVM
+卷组。
 
 ```bash
 DM_ROOT=/var/lib/containerd/devmapper-firecracker-lab
@@ -127,15 +122,13 @@ sudo dmsetup table "${DM_POOL}"
 sudo dmsetup status "${DM_POOL}"
 ```
 
-Sparse loopback files simplify rollback but have poor failure and performance
-characteristics. Production should use dedicated block devices, persistent
-activation, monitoring, capacity thresholds, and recovery procedures. Follow
-the official [containerd devmapper snapshotter guide](https://github.com/containerd/containerd/blob/main/docs/snapshotters/devmapper.md).
+稀疏 Loopback 文件能简化回滚，但故障特性和性能都不理想。生产环境应使用专用块设备、持久化
+激活、监控、容量阈值和恢复流程。参见官方
+[containerd devmapper snapshotter 指南](https://github.com/containerd/containerd/blob/main/docs/snapshotters/devmapper.md)。
 
-### Persist the lab pool across service and host restarts
+### 让实验 Pool 跨服务和宿主机重启保持可用
 
-Loop devices are not restored automatically after a host reboot. Install the
-provided lifecycle unit and make containerd depend on it:
+宿主机重启后，Loop 设备不会自动恢复。安装随附的生命周期 Unit，并让 containerd 依赖它：
 
 ```bash
 sudo install -m 0755 scripts/firecracker-devmapper-lab \
@@ -150,13 +143,10 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now firecracker-devmapper-lab.service
 ```
 
-The service preserves existing data and metadata files, validates their exact
-sizes, attaches whichever free loop devices are available, and creates
-`fc-devpool`. The containerd drop-in requires that service and orders
-containerd after it.
+该服务会保留现有数据和元数据文件、验证其精确大小、绑定任意可用的 Loop 设备，并创建
+`fc-devpool`。containerd 的 Drop-in 配置要求该服务成功，并将 containerd 排在它之后启动。
 
-Before trusting the setup, test the dependency while no devmapper-backed Pod is
-running:
+正式依赖该配置前，应在没有 devmapper Pod 运行时测试服务依赖：
 
 ```bash
 sudo systemctl stop containerd
@@ -167,18 +157,16 @@ sudo systemctl is-active containerd firecracker-devmapper-lab.service
 sudo dmsetup status fc-devpool
 ```
 
-Starting containerd must automatically reactivate the thin pool and leave the
-devmapper plugin in `ok` state. A real host-reboot test should be scheduled as a
-separate maintenance operation.
+启动 containerd 时必须自动重新激活 Thin Pool，并使 devmapper 插件保持 `ok` 状态。真实的
+宿主机重启测试应作为独立维护操作安排。
 
-## 6. Merge containerd configuration
+## 6. 合并 containerd 配置
 
-Back up the exact file, then merge the reference settings from
-[`configs/containerd-kata-fc.toml`](configs/containerd-kata-fc.toml). Do not
-blindly append a second devmapper table if the generated containerd config
-already contains an empty one.
+先备份原始文件，再合并
+[`configs/containerd-kata-fc.toml`](configs/containerd-kata-fc.toml) 中的参考配置。
+如果生成的 containerd 配置已经包含空的 devmapper 表，不要盲目追加第二份。
 
-The effective settings are:
+最终生效的配置如下：
 
 ```toml
 [plugins."io.containerd.snapshotter.v1.devmapper"]
@@ -199,7 +187,7 @@ The effective settings are:
     ConfigPath = "/opt/kata/share/defaults/kata-containers/runtime-rs/configuration-rs-fc-lab.toml"
 ```
 
-Validate before restarting:
+重启前先验证配置：
 
 ```bash
 sudo containerd --config /etc/containerd/config.toml config dump >/dev/null
@@ -208,11 +196,11 @@ sudo systemctl is-active containerd kubelet
 sudo ctr plugins ls | grep devmapper
 ```
 
-The devmapper row must report `ok`, and CRI must remain healthy.
+devmapper 行必须报告 `ok`，同时 CRI 必须保持健康。
 
-## 7. Enable only the dedicated node
+## 7. 只启用专用节点
 
-Give the node a dedicated label and taint before uncordoning it:
+uncordon 节点前，先添加专用 Label 和 Taint：
 
 ```bash
 NODE_NAME=worker-firecracker
@@ -223,8 +211,8 @@ kubectl taint node "${NODE_NAME}" \
   sandbox.aik8s.run/kata-fc=true:NoSchedule --overwrite
 ```
 
-Ensure the cluster CNI is running and ready on the node. Offline clusters must
-also preload or mirror the smoke image. Then uncordon and apply the examples:
+确认集群 CNI 已在该节点运行并 Ready。离线集群还必须预热或同步冒烟测试镜像。然后 uncordon
+节点并应用示例：
 
 ```bash
 kubectl uncordon "${NODE_NAME}"
@@ -234,7 +222,7 @@ kubectl wait -n default --for=condition=Ready \
   pod/kata-fc-smoke --timeout=180s
 ```
 
-For an interactive sandbox that remains available, apply the workbench instead:
+如需保留一个可交互沙箱，请改为应用 Workbench：
 
 ```bash
 kubectl apply -f manifests/kata-fc-workbench.yaml
@@ -243,13 +231,12 @@ kubectl wait -n firecracker-lab --for=condition=Ready \
 kubectl exec -n firecracker-lab -it kata-fc-workbench -- /bin/sh
 ```
 
-The workbench has an `emptyDir` mounted at `/work`. It is intentionally small
-and long-running; replace the image through the organization's normal mirroring
-and supply-chain process when the node has no public-registry access.
+Workbench 在 `/work` 挂载 `emptyDir`。它被特意配置成小规格、长时间运行；节点无法访问
+公共镜像仓库时，应通过组织的常规镜像同步和供应链流程替换镜像。
 
-## 8. Verify the microVM boundary
+## 8. 验证 microVM 边界
 
-Collect evidence from both sides:
+从 Guest 和宿主机两侧收集证据：
 
 ```bash
 kubectl get -n default pod kata-fc-smoke -o wide
@@ -262,45 +249,37 @@ sudo dmsetup status fc-devpool
 sudo ctr -n k8s.io snapshots --snapshotter devmapper ls
 ```
 
-In the verified run, the Pod became Ready four seconds after creation, received
-a CNI address, and supported `kubectl exec`. The guest reported Linux `6.18.35`
-while the host reported `5.10.134`. A separate Firecracker process used about
-129 MiB RSS at the observation point, and the Pod rootfs appeared in devmapper.
+在已验证的运行中，Pod 创建四秒后 Ready，获得 CNI 地址，并支持 `kubectl exec`。Guest
+报告 Linux `6.18.35`，宿主机则报告 `5.10.134`。采样时，独立 Firecracker 进程使用约
+129 MiB RSS，Pod rootfs 也已出现在 devmapper 中。
 
-Treat one startup time and one memory sample as smoke observations, not a
-benchmark. `kubectl top` showed only the payload container's view, so collect
-shim/VMM cgroup metrics separately for capacity studies.
+单次启动时间和内存采样只能视为冒烟观测，不能作为基准结果。`kubectl top` 只展示 Payload
+容器视角，因此容量研究还需单独采集 shim/VMM cgroup 指标。
 
-The retained workbench also survived a live containerd restart: its Pod UID and
-Firecracker PID were unchanged, restart count stayed at zero, guest uptime kept
-increasing, and a file written under `/work` remained readable.
+保留的 Workbench 也通过了 containerd 在线重启测试：Pod UID 和 Firecracker PID 未变化，
+重启次数仍为 0，Guest Uptime 持续增加，写入 `/work` 的文件仍可读取。
 
-### Agent workload compatibility notes
+### Agent 工作负载兼容性说明
 
-Four agent images were subsequently exercised through the same RuntimeClass.
-All four Pods became Ready with zero restarts. Two integration limitations were
-observed:
+随后使用同一个 RuntimeClass 测试了四个 Agent 镜像。四个 Pod 均 Ready，重启次数为 0。
+同时发现两项集成限制：
 
-- the tested Kata TAP path could reach Pod addresses but not the cluster's
-  normal Service VIP path, so CNI/service routing requires cluster-specific
-  remediation before production use;
-- replacing certain application state directories with `emptyDir` triggered an
-  ownership-mode (`fchmod`) failure; mount only verified paths and test the
-  image's startup ownership changes.
+- 测试中的 Kata TAP 链路可以访问 Pod 地址，却无法访问集群常规 Service VIP，因此生产使用前
+  必须针对具体集群修复 CNI/Service 路由；
+- 用 `emptyDir` 替换某些应用状态目录时触发了属主模式（`fchmod`）失败；只应挂载经过验证的
+  路径，并测试镜像启动时的属主变更行为。
 
-These limitations do not affect the base workbench smoke but they matter for
-real applications. See [Agent workloads](agent-workloads.md) and the sanitized
-[`kata-fc-agents.yaml`](manifests/kata-fc-agents.yaml).
+这些限制不影响基础 Workbench 冒烟测试，但会影响真实应用。参见 [Agent 工作负载](agent-workloads.md)
+和已经脱敏的 [`kata-fc-agents.yaml`](manifests/kata-fc-agents.yaml)。
 
-### Recreating a deliberately destroyed devmapper pool
+### 重建被有意销毁的 devmapper Pool
 
-Do not delete the snapshotter root while containerd still records images as
-unpacked by devmapper. If a lab reset deliberately destroys the complete pool
-and snapshot metadata, stale `containerd.io/gc.ref.snapshot.devmapper` content
-labels can cause `snapshot does not exist` on the next sandbox.
+当 containerd 仍记录镜像已由 devmapper 解包时，不要删除 snapshotter 根目录。如果实验
+重置有意销毁整个 Pool 和快照元数据，残留的 `containerd.io/gc.ref.snapshot.devmapper`
+内容 Label 可能导致下一个沙箱报错 `snapshot does not exist`。
 
-Only when `ctr ... snapshots ls` is empty and no devmapper-backed Pod exists,
-clear those stale labels and restart containerd before retrying:
+只有在 `ctr ... snapshots ls` 为空且不存在 devmapper Pod 时，才能清除这些残留 Label，
+重启 containerd 后再重试：
 
 ```bash
 STALE_DIGESTS=$(sudo ctr -n k8s.io content ls 2>/dev/null | \
@@ -312,12 +291,11 @@ done
 sudo systemctl restart containerd
 ```
 
-This is pool-recreation repair, not routine garbage collection. Clearing a
-live snapshot reference can corrupt active workloads.
+这是 Pool 重建修复，不是常规垃圾回收。清除仍在使用的快照引用可能损坏活跃工作负载。
 
-## 9. Roll back
+## 9. 回滚
 
-Delete the workload first and confirm the VMM is gone:
+先删除工作负载并确认 VMM 已退出：
 
 ```bash
 kubectl cordon "${NODE_NAME}"
@@ -327,8 +305,7 @@ kubectl delete -f manifests/kata-fc-runtimeclass.yaml
 pgrep -a firecracker || true
 ```
 
-Stop containerd, restore the backed-up config, and remove only the pool and loop
-devices created by this lab:
+停止 containerd，恢复备份配置，并且只删除本实验创建的 Pool 和 Loop 设备：
 
 ```bash
 sudo systemctl stop containerd
@@ -344,12 +321,10 @@ sudo systemctl daemon-reload
 sudo systemctl start containerd
 ```
 
-Finally remove the temporary node label and taint, then restore every original
-label, taint, CNI selector, and scheduling state exactly as recorded before the
-test. Verify CRI, kubelet, `dmsetup ls`, loop devices, running Pods, and the
-containerd configuration hash.
+最后删除临时节点 Label 和 Taint，再严格按照测试前的记录恢复全部原始 Label、Taint、CNI
+Selector 和调度状态。检查 CRI、kubelet、`dmsetup ls`、Loop 设备、运行中的 Pod，以及
+containerd 配置哈希。
 
-The rollback path was verified once. The evaluated worker was then re-enabled
-as a retained test node: the lifecycle service, thin pool, Kata handler,
-RuntimeClass, CNI, and long-running workbench remain active behind the dedicated
-node taint.
+回滚链路已验证一次。随后，被测 Worker 重新启用并作为保留测试节点：生命周期服务、Thin
+Pool、Kata Handler、RuntimeClass、CNI 和长时间运行的 Workbench 均保留在专用节点 Taint
+之后。
