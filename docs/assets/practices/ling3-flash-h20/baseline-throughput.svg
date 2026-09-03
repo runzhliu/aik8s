@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1040" viewBox="0 0 1500 1040" role="img" aria-labelledby="title desc">
+  <title id="title">Ling-3.0-flash BF16 基线吞吐</title>
+  <desc id="desc">单台四卡 H20 上 SGLang 与 vLLM 的在线负载和长上下文输出吞吐中位数。</desc>
+  <style>
+    .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .sub{font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .axis{font:400 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .value{font:700 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .legend{font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .panel{font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .note{font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+  </style>
+  <rect width="1500" height="1040" fill="#fbfcfe"/>
+  <text class="title" x="72" y="66">基线：常规负载偏 SGLang，超长上下文转向 vLLM</text>
+  <text class="sub" x="72" y="103">Ling-3.0-flash · BF16 · 单节点 4×H20 141GB · TP4 · Speculative Off · 每轮清 Prefix Cache</text>
+  <rect x="1060" y="108" width="24" height="24" rx="5" fill="#2563eb"/>
+  <text class="legend" x="1096" y="126">SGLang</text>
+  <rect x="1245" y="108" width="24" height="24" rx="5" fill="#e4572e"/>
+  <text class="legend" x="1281" y="126">vLLM</text>
+  <text class="panel" x="72" y="175">常规在线负载（输出 token/s）</text>
+  <line x1="118" y1="545.0" x2="1420" y2="545.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="551.0" text-anchor="end">0</text>
+  <line x1="118" y1="490.0" x2="1420" y2="490.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="496.0" text-anchor="end">300</text>
+  <line x1="118" y1="435.0" x2="1420" y2="435.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="441.0" text-anchor="end">600</text>
+  <line x1="118" y1="380.0" x2="1420" y2="380.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="386.0" text-anchor="end">900</text>
+  <line x1="118" y1="325.0" x2="1420" y2="325.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="331.0" text-anchor="end">1200</text>
+  <line x1="118" y1="270.0" x2="1420" y2="270.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="276.0" text-anchor="end">1500</text>
+  <line x1="118" y1="215.0" x2="1420" y2="215.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="221.0" text-anchor="end">1800</text>
+  <rect x="201.8" y="257.8" width="72.0" height="287.2" rx="7" fill="#2563eb"/>
+  <text class="value" x="237.8" y="247.8" text-anchor="middle">1566.5</text>
+  <rect x="287.8" y="318.2" width="72.0" height="226.8" rx="7" fill="#e4572e"/>
+  <text class="value" x="323.8" y="308.2" text-anchor="middle">1237.0</text>
+  <text class="axis" x="280.8" y="575" text-anchor="middle">Short C16</text>
+  <rect x="527.2" y="434.5" width="72.0" height="110.5" rx="7" fill="#2563eb"/>
+  <text class="value" x="563.2" y="424.5" text-anchor="middle">603.0</text>
+  <rect x="613.2" y="458.8" width="72.0" height="86.2" rx="7" fill="#e4572e"/>
+  <text class="value" x="649.2" y="448.8" text-anchor="middle">470.3</text>
+  <text class="axis" x="606.2" y="575" text-anchor="middle">RAG 4K C8</text>
+  <rect x="852.8" y="478.0" width="72.0" height="67.0" rx="7" fill="#2563eb"/>
+  <text class="value" x="888.8" y="468.0" text-anchor="middle">365.3</text>
+  <rect x="938.8" y="491.2" width="72.0" height="53.8" rx="7" fill="#e4572e"/>
+  <text class="value" x="974.8" y="481.2" text-anchor="middle">293.4</text>
+  <text class="axis" x="931.8" y="575" text-anchor="middle">Long 16K C8</text>
+  <rect x="1178.2" y="307.1" width="72.0" height="237.9" rx="7" fill="#2563eb"/>
+  <text class="value" x="1214.2" y="297.1" text-anchor="middle">1297.6</text>
+  <rect x="1264.2" y="354.6" width="72.0" height="190.4" rx="7" fill="#e4572e"/>
+  <text class="value" x="1300.2" y="344.6" text-anchor="middle">1038.3</text>
+  <text class="axis" x="1257.2" y="575" text-anchor="middle">Decode 1K C8</text>
+  <text class="panel" x="72" y="625">单请求长上下文（输出 token/s；独立纵轴）</text>
+  <line x1="118" y1="895.0" x2="1420" y2="895.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="901.0" text-anchor="end">0</text>
+  <line x1="118" y1="849.0" x2="1420" y2="849.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="855.0" text-anchor="end">20</text>
+  <line x1="118" y1="803.0" x2="1420" y2="803.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="809.0" text-anchor="end">40</text>
+  <line x1="118" y1="757.0" x2="1420" y2="757.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="763.0" text-anchor="end">60</text>
+  <line x1="118" y1="711.0" x2="1420" y2="711.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="717.0" text-anchor="end">80</text>
+  <line x1="118" y1="665.0" x2="1420" y2="665.0" stroke="#dfe5ee"/>
+  <text class="axis" x="102" y="671.0" text-anchor="end">100</text>
+  <rect x="201.8" y="684.2" width="72.0" height="210.8" rx="7" fill="#2563eb"/>
+  <text class="value" x="237.8" y="674.2" text-anchor="middle">91.6</text>
+  <rect x="287.8" y="719.5" width="72.0" height="175.5" rx="7" fill="#e4572e"/>
+  <text class="value" x="323.8" y="709.5" text-anchor="middle">76.3</text>
+  <text class="axis" x="280.8" y="925" text-anchor="middle">32K</text>
+  <rect x="527.2" y="757.8" width="72.0" height="137.2" rx="7" fill="#2563eb"/>
+  <text class="value" x="563.2" y="747.8" text-anchor="middle">59.6</text>
+  <rect x="613.2" y="774.3" width="72.0" height="120.7" rx="7" fill="#e4572e"/>
+  <text class="value" x="649.2" y="764.3" text-anchor="middle">52.5</text>
+  <text class="axis" x="606.2" y="925" text-anchor="middle">64K</text>
+  <rect x="852.8" y="707.6" width="72.0" height="187.4" rx="7" fill="#2563eb"/>
+  <text class="value" x="888.8" y="697.6" text-anchor="middle">81.5</text>
+  <rect x="938.8" y="688.4" width="72.0" height="206.6" rx="7" fill="#e4572e"/>
+  <text class="value" x="974.8" y="678.4" text-anchor="middle">89.8</text>
+  <text class="axis" x="931.8" y="925" text-anchor="middle">128K</text>
+  <rect x="1178.2" y="779.1" width="72.0" height="115.9" rx="7" fill="#2563eb"/>
+  <text class="value" x="1214.2" y="769.1" text-anchor="middle">50.4</text>
+  <rect x="1264.2" y="764.6" width="72.0" height="130.4" rx="7" fill="#e4572e"/>
+  <text class="value" x="1300.2" y="754.6" text-anchor="middle">56.7</text>
+  <text class="axis" x="1257.2" y="925" text-anchor="middle">256K</text>
+  <rect x="72" y="958" width="1356" height="52" rx="12" fill="#eef3f9"/>
+  <text class="note" x="750" y="980" text-anchor="middle">上图与下图使用独立纵轴；同一客户端、Checkpoint、GPU、TP、Context、请求集合与三轮中位数</text>
+  <text class="note" x="750" y="1002" text-anchor="middle">256K 为单次能力探针；其余 Case 每轮前调用服务端缓存重置接口</text>
+</svg>

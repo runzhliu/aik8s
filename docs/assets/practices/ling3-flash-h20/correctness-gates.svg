@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860" role="img" aria-labelledby="title desc">
+  <title id="title">Ling-3.0-flash 长上下文正确性 Gate</title>
+  <desc id="desc">SGLang 与 vLLM 在 32K、64K、128K、256K 的三个 Needle 深度均通过。</desc>
+  <style>
+    .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .sub{font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .axis{font:400 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .value{font:700 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .legend{font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .panel{font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .note{font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+  </style>
+  <rect width="1500" height="860" fill="#fbfcfe"/>
+  <text class="title" x="72" y="66">长上下文正确性：两引擎均为 12 / 12 PASS</text>
+  <text class="sub" x="72" y="103">32K / 64K / 128K / 256K · Needle 深度 10% / 50% / 90% · 唯一字符串精确匹配</text>
+  <rect x="1060" y="108" width="24" height="24" rx="5" fill="#2563eb"/>
+  <text class="legend" x="1096" y="126">SGLang</text>
+  <rect x="1245" y="108" width="24" height="24" rx="5" fill="#e4572e"/>
+  <text class="legend" x="1281" y="126">vLLM</text>
+  <rect x="72" y="160" width="150" height="100" rx="18" fill="#172033"/>
+  <text x="147" y="221" text-anchor="middle" style='font:700 30px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>32K</text>
+  <rect x="248" y="160" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="292" cy="200" r="18" fill="#2563eb"/>
+  <text x="292" y="207" text-anchor="middle" style='font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text class="panel" x="328" y="207">3 / 3 PASS</text>
+  <text class="note" x="292" y="238">三位置中位耗时 1.16s（仅作执行证据）</text>
+  <rect x="838" y="160" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="882" cy="200" r="18" fill="#e4572e"/>
+  <text x="882" y="207" text-anchor="middle" style='font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text class="panel" x="918" y="207">3 / 3 PASS</text>
+  <text class="note" x="882" y="238">三位置中位耗时 1.42s（仅作执行证据）</text>
+  <rect x="72" y="285" width="150" height="100" rx="18" fill="#172033"/>
+  <text x="147" y="346" text-anchor="middle" style='font:700 30px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>64K</text>
+  <rect x="248" y="285" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="292" cy="325" r="18" fill="#2563eb"/>
+  <text x="292" y="332" text-anchor="middle" style='font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text class="panel" x="328" y="332">3 / 3 PASS</text>
+  <text class="note" x="292" y="363">三位置中位耗时 1.72s（仅作执行证据）</text>
+  <rect x="838" y="285" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="882" cy="325" r="18" fill="#e4572e"/>
+  <text x="882" y="332" text-anchor="middle" style='font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text class="panel" x="918" y="332">3 / 3 PASS</text>
+  <text class="note" x="882" y="363">三位置中位耗时 2.50s（仅作执行证据）</text>
+  <rect x="72" y="410" width="150" height="100" rx="18" fill="#172033"/>
+  <text x="147" y="471" text-anchor="middle" style='font:700 30px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>128K</text>
+  <rect x="248" y="410" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="292" cy="450" r="18" fill="#2563eb"/>
+  <text x="292" y="457" text-anchor="middle" style='font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text class="panel" x="328" y="457">3 / 3 PASS</text>
+  <text class="note" x="292" y="488">三位置中位耗时 4.49s（仅作执行证据）</text>
+  <rect x="838" y="410" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="882" cy="450" r="18" fill="#e4572e"/>
+  <text x="882" y="457" text-anchor="middle" style='font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text class="panel" x="918" y="457">3 / 3 PASS</text>
+  <text class="note" x="882" y="488">三位置中位耗时 6.06s（仅作执行证据）</text>
+  <rect x="72" y="535" width="150" height="100" rx="18" fill="#172033"/>
+  <text x="147" y="596" text-anchor="middle" style='font:700 30px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>256K</text>
+  <rect x="248" y="535" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="292" cy="575" r="18" fill="#2563eb"/>
+  <text x="292" y="582" text-anchor="middle" style='font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text class="panel" x="328" y="582">3 / 3 PASS</text>
+  <text class="note" x="292" y="613">三位置中位耗时 12.58s（仅作执行证据）</text>
+  <rect x="838" y="535" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="882" cy="575" r="18" fill="#e4572e"/>
+  <text x="882" y="582" text-anchor="middle" style='font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#ffffff'>✓</text>
+  <text class="panel" x="918" y="582">3 / 3 PASS</text>
+  <text class="note" x="882" y="613">三位置中位耗时 16.71s（仅作执行证据）</text>
+  <rect x="72" y="690" width="1356" height="105" rx="18" fill="#eef3f9"/>
+  <text class="panel" x="104" y="728">OpenAI 兼容功能 Smoke</text>
+  <text class="sub" x="104" y="762">Models · Thinking On/Off · Streaming · Multi-turn · Tool Call：SGLang PASS / vLLM PASS</text>
+  <text class="note" x="1428" y="830" text-anchor="end">Needle 耗时包含顺序执行状态，不用于引擎性能排名</text>
+</svg>

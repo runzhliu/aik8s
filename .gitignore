@@ -9,7 +9,6 @@ __pycache__/
 
 # Local execution material containing real cluster, registry, node, or storage
 # identifiers. Publish a separately reviewed and sanitized template instead.
-/docs/ai-k8s/practices/ling3-flash-h20-deployment-benchmark-plan.md
 /examples/deepseek-v4-flash-vision-exp/k8s/
 /examples/deepseek-v4-flash-vision-exp/results/20260901-day0-run.md
 /examples/glm53-day1/*.yaml
@@ -19,7 +18,13 @@ __pycache__/
 /examples/glm53-day1/results/vllm-baseline-20260830/
 /examples/hy4-preview-benchmark/k8s/
 /examples/hy4-preview-benchmark/results/2026-09-01-h20-bf16/sglang-smoke.json
-/examples/ling3-flash-h20/
+/examples/ling3-flash-h20/*
+!/examples/ling3-flash-h20/README.md
+!/examples/ling3-flash-h20/make_report_charts.py
+!/examples/ling3-flash-h20/results/
+/examples/ling3-flash-h20/results/*
+!/examples/ling3-flash-h20/results/2026-09-03-h20-bf16/
+!/examples/ling3-flash-h20/results/2026-09-03-h20-bf16/**
 /examples/minimax-music3-images/
 # Private local notes
 vip/

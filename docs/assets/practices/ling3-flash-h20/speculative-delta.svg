@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1080" viewBox="0 0 1500 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Ling-3.0-flash Speculative Decoding 吞吐变化</title>
+  <desc id="desc">SGLang NEXTN 和 vLLM MTP 相对各自关闭 speculative decoding 基线的输出吞吐变化。</desc>
+  <style>
+    .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .sub{font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .axis{font:400 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+    .value{font:700 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .legend{font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .panel{font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+    .note{font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+  </style>
+  <rect width="1500" height="1080" fill="#fbfcfe"/>
+  <text class="title" x="72" y="66">Speculative Decoding：低并发 Decode 获益，高并发并非总是更快</text>
+  <text class="sub" x="72" y="103">相对各自 Off 基线的输出吞吐变化 · SGLang NEXTN / vLLM MTP（3 tokens）· 三轮中位数</text>
+  <rect x="1060" y="108" width="24" height="24" rx="5" fill="#2563eb"/>
+  <text class="legend" x="1096" y="126">SGLang</text>
+  <rect x="1245" y="108" width="24" height="24" rx="5" fill="#e4572e"/>
+  <text class="legend" x="1281" y="126">vLLM</text>
+  <line x1="402.4" y1="165" x2="402.4" y2="925" stroke="#dfe5ee"/>
+  <text class="axis" x="402.4" y="954" text-anchor="middle">-60%</text>
+  <line x1="572.0" y1="165" x2="572.0" y2="925" stroke="#dfe5ee"/>
+  <text class="axis" x="572.0" y="954" text-anchor="middle">-40%</text>
+  <line x1="741.6" y1="165" x2="741.6" y2="925" stroke="#dfe5ee"/>
+  <text class="axis" x="741.6" y="954" text-anchor="middle">-20%</text>
+  <line x1="911.2" y1="165" x2="911.2" y2="925" stroke="#dfe5ee"/>
+  <text class="axis" x="911.2" y="954" text-anchor="middle">+0%</text>
+  <line x1="1080.8" y1="165" x2="1080.8" y2="925" stroke="#dfe5ee"/>
+  <text class="axis" x="1080.8" y="954" text-anchor="middle">+20%</text>
+  <line x1="1250.4" y1="165" x2="1250.4" y2="925" stroke="#dfe5ee"/>
+  <text class="axis" x="1250.4" y="954" text-anchor="middle">+40%</text>
+  <line x1="1420.0" y1="165" x2="1420.0" y2="925" stroke="#dfe5ee"/>
+  <text class="axis" x="1420.0" y="954" text-anchor="middle">+60%</text>
+  <line x1="911.2" y1="150" x2="911.2" y2="932" stroke="#596579" stroke-width="2"/>
+  <text class="axis" x="330" y="208" text-anchor="end">Short 128→64 C1</text>
+  <rect x="911.2" y="182.0" width="166.7" height="20" rx="5" fill="#2563eb"/>
+  <text class="value" x="1085.9" y="198.0" text-anchor="start">+19.7%</text>
+  <rect x="911.2" y="208.0" width="252.5" height="20" rx="5" fill="#e4572e"/>
+  <text class="value" x="1171.7" y="224.0" text-anchor="start">+29.8%</text>
+  <text class="axis" x="330" y="299" text-anchor="end">Short 128→64 C4</text>
+  <rect x="753.6" y="273.0" width="157.6" height="20" rx="5" fill="#2563eb"/>
+  <text class="value" x="745.6" y="289.0" text-anchor="end">-18.6%</text>
+  <rect x="911.2" y="299.0" width="59.4" height="20" rx="5" fill="#e4572e"/>
+  <text class="value" x="978.6" y="315.0" text-anchor="start">+7.0%</text>
+  <text class="axis" x="330" y="390" text-anchor="end">Short 128→64 C8</text>
+  <rect x="568.5" y="364.0" width="342.7" height="20" rx="5" fill="#2563eb"/>
+  <text class="value" x="560.5" y="380.0" text-anchor="end">-40.4%</text>
+  <rect x="836.6" y="390.0" width="74.6" height="20" rx="5" fill="#e4572e"/>
+  <text class="value" x="828.6" y="406.0" text-anchor="end">-8.8%</text>
+  <text class="axis" x="330" y="481" text-anchor="end">Short 128→64 C16</text>
+  <rect x="416.5" y="455.0" width="494.7" height="20" rx="5" fill="#2563eb"/>
+  <text class="value" x="408.5" y="471.0" text-anchor="end">-58.3%</text>
+  <rect x="691.7" y="481.0" width="219.5" height="20" rx="5" fill="#e4572e"/>
+  <text class="value" x="683.7" y="497.0" text-anchor="end">-25.9%</text>
+  <text class="axis" x="330" y="572" text-anchor="end">RAG 4K→128 C4</text>
+  <rect x="911.2" y="546.0" width="48.3" height="20" rx="5" fill="#2563eb"/>
+  <text class="value" x="967.5" y="562.0" text-anchor="start">+5.7%</text>
+  <rect x="747.9" y="572.0" width="163.3" height="20" rx="5" fill="#e4572e"/>
+  <text class="value" x="739.9" y="588.0" text-anchor="end">-19.3%</text>
+  <text class="axis" x="330" y="663" text-anchor="end">RAG 4K→128 C8</text>
+  <rect x="908.6" y="637.0" width="2.6" height="20" rx="5" fill="#2563eb"/>
+  <text class="value" x="900.6" y="653.0" text-anchor="end">-0.3%</text>
+  <rect x="704.7" y="663.0" width="206.5" height="20" rx="5" fill="#e4572e"/>
+  <text class="value" x="696.7" y="679.0" text-anchor="end">-24.4%</text>
+  <text class="axis" x="330" y="754" text-anchor="end">Decode 128→1K C1</text>
+  <rect x="911.2" y="728.0" width="448.0" height="20" rx="5" fill="#2563eb"/>
+  <text class="value" x="1367.2" y="744.0" text-anchor="start">+52.8%</text>
+  <rect x="911.2" y="754.0" width="439.6" height="20" rx="5" fill="#e4572e"/>
+  <text class="value" x="1358.8" y="770.0" text-anchor="start">+51.8%</text>
+  <text class="axis" x="330" y="845" text-anchor="end">Decode 128→1K C8</text>
+  <rect x="911.2" y="819.0" width="184.9" height="20" rx="5" fill="#2563eb"/>
+  <text class="value" x="1104.1" y="835.0" text-anchor="start">+21.8%</text>
+  <rect x="911.2" y="845.0" width="314.2" height="20" rx="5" fill="#e4572e"/>
+  <text class="value" x="1233.4" y="861.0" text-anchor="start">+37.1%</text>
+  <rect x="72" y="988" width="1356" height="58" rx="12" fill="#eef3f9"/>
+  <text class="note" x="750" y="1012" text-anchor="middle">正值表示 speculative 更快；负值表示更慢。NEXTN/MTP 不是“开启即加速”，收益取决于请求长度与并发。</text>
+  <text class="note" x="750" y="1036" text-anchor="middle">未记录 acceptance length，因此本文只报告端到端吞吐结果，不把变化归因于单一 Kernel 或接受率。</text>
+</svg>

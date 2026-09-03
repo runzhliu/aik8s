@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "model": "ling-3.0-flash",
+  "models_endpoint": "PASS",
+  "thinking_default": true,
+  "thinking_off_content": "703",
+  "multi_turn": "PASS",
+  "tool_call": {
+    "id": "chatcmpl-tool-94b9696ac9a72720",
+    "type": "function",
+    "function": {
+      "name": "get_weather",
+      "arguments": "{\"city\": \"北京\", \"unit\": \"celsius\"}"
+    }
+  },
+  "stream_content_chars": 45,
+  "stream_reasoning_chars": 98
+}

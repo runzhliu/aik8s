@@ -104,6 +104,7 @@ nav = [
       {"Kubernetes 1.37 的 AI/LLM 价值" = "ai-k8s/practices/kubernetes-137-ai-workloads.md"},
       {"DeepSeek-V4-Flash-Vision-Exp Day 0" = "ai-k8s/practices/deepseek-v4-flash-vision-exp-day0-h20.md"},
       {"Hy4-preview BF16：双机 H20 SGLang/vLLM 实测" = "ai-k8s/practices/hy4-preview-hardware-benchmark-plan.md"},
+      {"Ling-3.0-flash BF16：单机 4×H20 实测" = "ai-k8s/practices/ling3-flash-h20-deployment-benchmark-plan.md"},
       {"GLM-5.3：8×H20 SGLang/vLLM 基线压测" = "ai-k8s/practices/glm53-h20-sglang-vllm-test-plan.md"},
       {"GLM-5.3-Flash Day 1：4×H20 部署与实测" = "ai-k8s/practices/glm53-flash-day1-h20.md"},
       {"Qwen3.8-Flash-Next Day 0 实战" = "ai-k8s/practices/qwen38-flash-next-sglang-day0.md"},
