@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DM_ROOT=/var/lib/containerd/devmapper-firecracker-lab
+DM_POOL=fc-devpool
+DATA_FILE=${DM_ROOT}/data
+META_FILE=${DM_ROOT}/meta
+DATA_BYTES=21474836480
+META_BYTES=2147483648
+
+find_loop() {
+    losetup -j "$1" | awk -F: 'NR == 1 { print $1 }'
+}
+
+start_pool() {
+    modprobe dm_thin_pool
+    install -d -m 0700 "$DM_ROOT"
+
+    if [[ ! -e "$DATA_FILE" ]]; then
+        truncate -s "$DATA_BYTES" "$DATA_FILE"
+    fi
+    if [[ ! -e "$META_FILE" ]]; then
+        truncate -s "$META_BYTES" "$META_FILE"
+    fi
+
+    [[ $(stat -c %s "$DATA_FILE") -eq $DATA_BYTES ]]
+    [[ $(stat -c %s "$META_FILE") -eq $META_BYTES ]]
+
+    if dmsetup info "$DM_POOL" >/dev/null 2>&1; then
+        exit 0
+    fi
+
+    local data_loop meta_loop data_sectors
+    data_loop=$(find_loop "$DATA_FILE")
+    meta_loop=$(find_loop "$META_FILE")
+    [[ -n "$data_loop" ]] || data_loop=$(losetup --find --show "$DATA_FILE")
+    [[ -n "$meta_loop" ]] || meta_loop=$(losetup --find --show "$META_FILE")
+    data_sectors=$(blockdev --getsz "$data_loop")
+
+    dmsetup create "$DM_POOL" --table \
+        "0 ${data_sectors} thin-pool ${meta_loop} ${data_loop} 128 32768"
+}
+
+stop_pool() {
+    local loop_device
+
+    if dmsetup info "$DM_POOL" >/dev/null 2>&1; then
+        dmsetup remove "$DM_POOL"
+    fi
+
+    for backing_file in "$DATA_FILE" "$META_FILE"; do
+        loop_device=$(find_loop "$backing_file")
+        if [[ -n "$loop_device" ]]; then
+            losetup -d "$loop_device"
+        fi
+    done
+}
+
+case "${1:-}" in
+    start)
+        start_pool
+        ;;
+    stop)
+        stop_pool
+        ;;
+    *)
+        echo "usage: $0 {start|stop}" >&2
+        exit 2
+        ;;
+esac

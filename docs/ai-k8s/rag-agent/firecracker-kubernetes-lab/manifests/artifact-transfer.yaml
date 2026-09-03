@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: firecracker-artifact-transfer
+  namespace: kube-system
+spec:
+  # Replace this safe placeholder before applying the manifest. Direct binding
+  # is useful while a lab node remains cordoned.
+  nodeName: worker-firecracker
+  hostNetwork: true
+  restartPolicy: Never
+  tolerations:
+    - operator: Exists
+  containers:
+    - name: transfer
+      image: alpine:3.22
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/sh", "-c", "sleep 7200"]
+      volumeMounts:
+        - name: host-lab
+          mountPath: /host-lab
+  volumes:
+    - name: host-lab
+      hostPath:
+        path: /opt/firecracker-lab
+        type: DirectoryOrCreate

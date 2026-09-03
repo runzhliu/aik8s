@@ -1,0 +1,19 @@
+# Reference fragment. Merge these tables into the node's existing containerd
+# config; do not append a duplicate devmapper table.
+
+[plugins."io.containerd.snapshotter.v1.devmapper"]
+  async_remove = true
+  base_image_size = "4GB"
+  discard_blocks = true
+  fs_type = "ext4"
+  pool_name = "fc-devpool"
+  root_path = "/var/lib/containerd/devmapper-firecracker-lab"
+
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata-fc]
+  privileged_without_host_devices = true
+  runtime_type = "io.containerd.kata-fc.v2"
+  snapshotter = "devmapper"
+  pod_annotations = ["io.katacontainers.*"]
+
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata-fc.options]
+    ConfigPath = "/opt/kata/share/defaults/kata-containers/runtime-rs/configuration-rs-fc-lab.toml"

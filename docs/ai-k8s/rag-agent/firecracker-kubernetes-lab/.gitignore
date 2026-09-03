@@ -1,0 +1,23 @@
+# Keep the publishable guide free of machine images, binaries, logs, and secrets.
+*.ext4
+*.img
+*.log
+*.socket
+*.fifo
+*.tar
+*.tar.*
+*.tgz
+*.zst
+firecracker
+jailer
+vmlinux*
+vmstate*
+memory*
+snapshot-*/
+id_rsa*
+*.key
+*.pem
+kubeconfig*
+*credentials*
+.env
+.env.*

@@ -1,0 +1,16 @@
+[Unit]
+Description=Firecracker lab device-mapper thin pool
+After=local-fs.target
+Before=containerd.service
+RequiresMountsFor=/var/lib/containerd
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/firecracker-devmapper-lab start
+ExecStop=/usr/local/sbin/firecracker-devmapper-lab stop
+TimeoutStartSec=120
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

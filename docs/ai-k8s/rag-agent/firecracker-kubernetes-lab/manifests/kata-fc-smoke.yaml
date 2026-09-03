@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kata-fc-smoke
+  labels:
+    app.kubernetes.io/name: kata-fc-smoke
+spec:
+  runtimeClassName: kata-fc-lab
+  restartPolicy: Never
+  containers:
+    - name: smoke
+      image: docker.io/library/nginx:1.20.1-alpine
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - |
+          echo "runtimeclass=kata-fc-lab"
+          echo "guest-kernel=$(uname -r)"
+          echo "guest-machine=$(uname -m)"
+          echo "guest-hostname=$(hostname)"
+          grep -m1 '^model name' /proc/cpuinfo || true
+          ip address
+          sleep 600
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+        limits:
+          cpu: "1"
+          memory: 256Mi

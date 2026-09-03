@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: firecracker-k8s-smoke
+  namespace: default
+  labels:
+    app.kubernetes.io/name: firecracker-k8s-smoke
+spec:
+  hostNetwork: true
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 10
+  nodeSelector:
+    sandbox.aik8s.run/firecracker: "true"
+  tolerations:
+    - key: sandbox.aik8s.run/firecracker
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+  containers:
+    - name: firecracker
+      image: alpine:3.22
+      imagePullPolicy: IfNotPresent
+      command:
+        - /lab/bin/firecracker
+        - --no-api
+        - --config-file
+        - /lab/run/k8s-config.json
+      securityContext:
+        privileged: true
+      resources:
+        requests:
+          cpu: "2"
+          memory: 768Mi
+        limits:
+          cpu: "2"
+          memory: 1Gi
+      volumeMounts:
+        - name: lab
+          mountPath: /lab
+        - name: kvm
+          mountPath: /dev/kvm
+  volumes:
+    - name: lab
+      hostPath:
+        path: /opt/firecracker-lab
+        type: Directory
+    - name: kvm
+      hostPath:
+        path: /dev/kvm
+        type: CharDevice
