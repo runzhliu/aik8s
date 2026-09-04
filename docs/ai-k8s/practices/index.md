@@ -20,6 +20,7 @@ last_reviewed: 2026-08-14
 ## 性能、成本与容量
 
 - [DeepSeek-V4-Flash-Vision-Exp Day 0：4×H20 多模态部署与压测](deepseek-v4-flash-vision-exp-day0-h20.md)
+- [Qwen3.8-2.4T-A95B-FP8：32×H20 部署测试与压测计划](qwen38-a95b-fp8-h20-deployment-benchmark-plan.md)
 - [GLM-5.3 首日实测：8×H20 上的 SGLang 与 vLLM 基线压测](glm53-h20-sglang-vllm-test-plan.md)
 - [Hy4-preview BF16 双机 H20 实测：SGLang 与 vLLM 怎么选](hy4-preview-hardware-benchmark-plan.md)
 - [Ling-3.0-flash BF16 单机 4×H20 实测：SGLang、vLLM 与 MTP 怎么选](ling3-flash-h20-deployment-benchmark-plan.md)

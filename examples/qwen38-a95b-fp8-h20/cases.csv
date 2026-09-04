@@ -1,0 +1,26 @@
+case_id,stage,input_tokens,output_tokens,concurrency,num_prompts,repeats,description
+smoke-128-128-c1,smoke,128,128,1,4,1,API and output-format smoke
+short-128-128-c1,baseline,128,128,1,16,3,single-request latency
+short-128-128-c4,baseline,128,128,4,64,3,light batching
+short-128-128-c8,baseline,128,128,8,128,3,moderate batching
+short-128-128-c16,baseline,128,128,16,256,3,high concurrency
+agent-8k-1k-c1,baseline,8192,1024,1,4,3,agentic single-user workload
+agent-8k-1k-c4,baseline,8192,1024,4,16,3,agentic batched workload
+agent-8k-1k-c8,baseline,8192,1024,8,32,3,agentic throughput workload
+rag-4k-256-c4,baseline,4096,256,4,64,3,ordinary RAG prefill
+rag-4k-256-c8,baseline,4096,256,8,128,3,ordinary RAG throughput
+rag-4k-256-c16,baseline,4096,256,16,256,3,RAG high concurrency
+rag-16k-256-c1,prefill,16384,256,1,4,3,long document latency
+rag-16k-256-c4,prefill,16384,256,4,16,3,long document batching
+rag-16k-256-c8,prefill,16384,256,8,32,3,long document throughput
+decode-128-2k-c1,decode,128,2048,1,4,3,long output latency
+decode-128-2k-c4,decode,128,2048,4,16,3,long output batching
+decode-128-2k-c8,decode,128,2048,8,24,3,long output throughput
+short-128-128-c32,saturation,128,128,32,512,3,only after C16 is stable
+short-128-128-c64,saturation,128,128,64,1024,3,only after C32 is stable
+ctx-32k-128-c1,long,32640,128,1,3,2,32K cold-prefill probe
+ctx-64k-128-c1,long,65408,128,1,3,2,64K cold-prefill probe
+ctx-128k-256-c1,long,130816,256,1,2,2,128K cold-prefill probe
+ctx-262k-256-c1,long,261888,256,1,1,1,native-context capability probe
+ctx-512k-256-c1,extreme,523776,256,1,1,1,experimental extended-context probe
+ctx-1m-256-c1,extreme,1009744,256,1,1,1,experimental near-1M probe
