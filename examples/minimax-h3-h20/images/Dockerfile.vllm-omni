@@ -1,0 +1,26 @@
+FROM vllm/vllm-omni@sha256:e930db8e225162d01e17a49dddc43fd0e844208908d8356a028e5c4e7357696e
+ARG OMNI_REVISION=48298030d4b3c320b858dd98934c01babdd320ce
+LABEL org.opencontainers.image.title="MiniMax H3 vLLM-Omni offline candidate"
+LABEL org.opencontainers.image.revision="${OMNI_REVISION}"
+# The pinned H3 image already ships these media tools; verify instead of
+# re-installing them from a mutable apt repository.
+RUN command -v git ffmpeg ffprobe && python3 -c "import soundfile"
+RUN git init /opt/h3-vllm-omni && cd /opt/h3-vllm-omni && \
+    git remote add origin https://github.com/vllm-project/vllm-omni.git && \
+    git fetch --depth 1 origin ${OMNI_REVISION} && git checkout --detach FETCH_HEAD
+# Follow the official recipe's source-overlay approach without runtime git clone.
+# Compatibility with the base core-vLLM package remains a release gate.
+ENV PYTHONPATH=/opt/h3-vllm-omni
+# H3 does not use the system GTK bindings or repository-management helpers.
+# Remove their incomplete Python-3.10 dependency chain from the Python-3.12
+# serving image; retain CUDA-13 NIXL, without the stale meta-package.
+RUN apt-get remove -y python3-gi python3-software-properties software-properties-common && \
+    python3 -m pip uninstall -y nixl decord && \
+    python3 -m pip check
+# The inherited Decord wheel has a CPython-3.6-only WHEEL tag. H3's
+# load_video_frames explicitly supports PyAV when Decord is absent.
+RUN python3 -c "import vllm, vllm_omni, soundfile; print(vllm.__version__); print(vllm_omni.__file__)" && \
+    ffmpeg -version && ffprobe -version
+ENV HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 VLLM_WORKER_MULTIPROC_METHOD=spawn VLLM_OMNI_VIDEO_SYNC_TIMEOUT=7200
+ENTRYPOINT []
+CMD ["bash"]

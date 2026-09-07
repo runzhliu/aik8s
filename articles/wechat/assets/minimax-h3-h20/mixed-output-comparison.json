@@ -1,0 +1,28 @@
+{
+  "title": "混合参考：图片、动作与声音输入",
+  "seed": 3106,
+  "samples": [
+    {
+      "engine": "SGLang",
+      "sample": "r0-c0",
+      "sha256": "31fa13204d4e8cbe56876f441cd21d3565de059304c153b2354f0f303fd7813b",
+      "frames": [
+        0,
+        61,
+        123
+      ],
+      "e2e_s": 1341.2015535486862
+    },
+    {
+      "engine": "vLLM-Omni",
+      "sample": "r0-c0",
+      "sha256": "d1899f71557a52b0585c4ac9aa06ea186606c2ba2c68bdf2c8bd09a4c568c02a",
+      "frames": [
+        0,
+        61,
+        123
+      ],
+      "e2e_s": 1371.5311934980564
+    }
+  ]
+}

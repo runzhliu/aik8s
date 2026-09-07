@@ -1,0 +1,97 @@
+{
+  "id": "h3-20260906-audio-context-rpc-errors-v1",
+  "patches": [
+    {
+      "engine": "sglang",
+      "path": "pipelines_core/stages/model_specific_stages/minimax_h3/stages/audio_encoding.py",
+      "before_sha256": "d50ee17293a1ac07e253ad259cc728f023c77ef56aac45289d4be057247f373f",
+      "after_sha256": "a3017c74aa7bd22b3e4fdc0477f5947d2d6f574039fb9c8da73bb34b6d5bffbf",
+      "replacements": [
+        {
+          "old": "import torch\n\n",
+          "new": "import torch\n\nfrom sglang.multimodal_gen.runtime.managers.forward_context import set_forward_context\n\n",
+          "count": 1
+        },
+        {
+          "old": "        try:\n            return self._forward(batch, server_args)\n        finally:\n",
+          "new": "        try:\n            with set_forward_context(current_timestep=0, attn_metadata=None, forward_batch=batch):\n                return self._forward(batch, server_args)\n        finally:\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "engine": "vllm",
+      "path": "vllm_omni/diffusion/data.py",
+      "before_sha256": "745d1cdcb39694cee4d73cf8d7d5f4881ee39b013ad5f4dd1221d77408ac1e7e",
+      "after_sha256": "c15dd4caa5381d69be70425b88583c750089d0333af7656e21d32fc1edffecde",
+      "replacements": [
+        {
+          "old": "    error: str | None = None\n\n",
+          "new": "    error: str | None = None\n    error_status_code: int | None = None\n    error_type: str | None = None\n\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "engine": "vllm",
+      "path": "vllm_omni/diffusion/executor/multiproc_executor.py",
+      "before_sha256": "4fb2ba51ad3516229f4cecc28bced1eda49ea94766b8bc45e58a20e617cd0973",
+      "after_sha256": "8634405f5ea9ddb292c15bf400b426d83416516f946ac4a8e20a3806984572bf",
+      "replacements": [
+        {
+          "old": "\nfrom vllm_omni.diffusion.data import SHUTDOWN_MESSAGE, AsyncDiffusionOutput, AsyncOutputKind, DiffusionOutput\n",
+          "new": "\nfrom vllm_omni.errors import client_error_from_metadata, is_client_error_status\nfrom vllm_omni.diffusion.data import SHUTDOWN_MESSAGE, AsyncDiffusionOutput, AsyncOutputKind, DiffusionOutput\n",
+          "count": 1
+        },
+        {
+          "old": "                            finished=True,\n                            result=DiffusionOutput(error=str(exc)),\n                        )\n",
+          "new": "                            finished=True,\n                            result=DiffusionOutput.from_exception(exc),\n                        )\n",
+          "count": 1
+        },
+        {
+          "old": "                        finished=True,\n                        result=DiffusionOutput(error=str(exc)),\n                    )\n",
+          "new": "                        finished=True,\n                        result=DiffusionOutput.from_exception(exc),\n                    )\n",
+          "count": 1
+        },
+        {
+          "old": "                    if msg.error:\n                        fut.set_exception(RuntimeError(msg.error))\n                    else:\n",
+          "new": "                    if msg.error:\n                        fut.set_exception(\n                            client_error_from_metadata(msg.error, status_code=msg.error_status_code, error_type=msg.error_type)\n                            if is_client_error_status(msg.error_status_code) else RuntimeError(msg.error)\n                        )\n                    else:\n",
+          "count": 1
+        },
+        {
+          "old": "                        elif msg.error:\n                            per_req_result = DiffusionOutput(error=msg.error)\n                        else:\n",
+          "new": "                        elif msg.error:\n                            per_req_result = DiffusionOutput(error=msg.error, error_status_code=msg.error_status_code, error_type=msg.error_type)\n                        else:\n",
+          "count": 1
+        },
+        {
+          "old": "                    if fut is not None and not fut.done():\n                        if msg.error:\n                            fut.set_exception(RuntimeError(msg.error))\n                        else:\n                            try:\n",
+          "new": "                    if fut is not None and not fut.done():\n                        if msg.error:\n                            fut.set_exception(\n                            client_error_from_metadata(msg.error, status_code=msg.error_status_code, error_type=msg.error_type)\n                            if is_client_error_status(msg.error_status_code) else RuntimeError(msg.error)\n                        )\n                        else:\n                            try:\n",
+          "count": 1
+        },
+        {
+          "old": "                        fut = concurrent.futures.Future()\n                        if msg.error:\n                            fut.set_exception(RuntimeError(msg.error))\n                        else:\n                            try:\n",
+          "new": "                        fut = concurrent.futures.Future()\n                        if msg.error:\n                            fut.set_exception(\n                            client_error_from_metadata(msg.error, status_code=msg.error_status_code, error_type=msg.error_type)\n                            if is_client_error_status(msg.error_status_code) else RuntimeError(msg.error)\n                        )\n                        else:\n                            try:\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "engine": "vllm",
+      "path": "vllm_omni/diffusion/worker/diffusion_worker.py",
+      "before_sha256": "c418ba95bb28e08f66b0c5d07d737ae45b6fb2e4fb7dccb3ac13f76ba10ccb6c",
+      "after_sha256": "128da0912e5b99ec32db5f33c2e46846663e675dbf488d707cace215ebf3215a",
+      "replacements": [
+        {
+          "old": "from vllm_omni.diffusion.worker.utils import BaseRunnerOutput, BatchRunnerOutput\nfrom vllm_omni.engine.stage_init_utils import set_death_signal\n",
+          "new": "from vllm_omni.diffusion.worker.utils import BaseRunnerOutput, BatchRunnerOutput\nfrom vllm_omni.errors import client_error_metadata\nfrom vllm_omni.engine.stage_init_utils import set_death_signal\n",
+          "count": 1
+        },
+        {
+          "old": "                                    error=str(e),\n                                )\n",
+          "new": "                                    error=str(e),\n                                    error_status_code=client_error_metadata(e)[0],\n                                    error_type=client_error_metadata(e)[1],\n                                )\n",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

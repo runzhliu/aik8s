@@ -1,0 +1,17 @@
+FROM lmsysorg/sglang@sha256:9e148f5ac788e856a06166bd6347a831831eb9fcfab4d1770874823a7c29a1a1
+ARG SGLANG_REVISION=71de97b264b04dcd514cf904003028aefe9775c8
+LABEL org.opencontainers.image.title="MiniMax H3 SGLang Diffusion offline candidate"
+LABEL org.opencontainers.image.revision="71de97b264b04dcd514cf904003028aefe9775c8"
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg git libsndfile1 && rm -rf /var/lib/apt/lists/*
+RUN git init /opt/h3-sglang && cd /opt/h3-sglang && \
+    git remote add origin https://github.com/sgl-project/sglang.git && \
+    git fetch --depth 1 origin ${SGLANG_REVISION} && git checkout --detach FETCH_HEAD && \
+    python3 -m pip install './python[diffusion]'
+# The base contains a nixl meta-package requiring BOTH cu12 and cu13 wheels.
+# Retain its CUDA-13 implementation, remove only the unused meta-package.
+RUN python3 -m pip uninstall -y nixl && python3 -m pip check
+RUN python3 -c "import sglang, av, soundfile; import sglang.multimodal_gen; print(sglang.__version__)" && \
+    ffmpeg -version && ffprobe -version
+ENV HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+ENTRYPOINT []
+CMD ["bash"]

@@ -1,0 +1,229 @@
+[
+  {
+    "id": "t2va-5s",
+    "task": "t2va",
+    "prompt": "A small red toy car rolls across a wooden table and stops beside a blue cube. The wheels rattle softly, then the room becomes quiet.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 1101,
+    "steps": 50
+  },
+  {
+    "id": "t2va-10s",
+    "task": "t2va",
+    "prompt": "A wide fixed camera watches gentle rain fall on a garden pond. Ripples expand around each raindrop, with steady rain ambience and occasional bird calls.",
+    "seconds": 10,
+    "width": 1344,
+    "height": 768,
+    "seed": 1102,
+    "steps": 50
+  },
+  {
+    "id": "t2va-15s",
+    "task": "t2va",
+    "prompt": "A paper sailboat drifts slowly across a quiet pond at sunset. Keep the boat consistent throughout the shot, with gentle water sounds.",
+    "seconds": 15,
+    "width": 1344,
+    "height": 768,
+    "seed": 1103,
+    "steps": 50
+  },
+  {
+    "id": "t2va-zh-5s",
+    "task": "t2va",
+    "prompt": "固定镜头，一辆红色玩具小汽车缓慢驶过木桌，停在蓝色方块旁。车轮发出轻微的咔嗒声，停下后房间恢复安静。保持小汽车外形一致，不切换镜头。",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 1104,
+    "steps": 50
+  },
+  {
+    "id": "fl2va-first",
+    "task": "fl2va",
+    "prompt": "A red toy car rolls slowly to the right across the wooden table and stops beside the blue cube. Keep the camera fixed and the simple illustrated style. Soft wheel rattling, then silence.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 2101,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "image",
+        "uri": "file:///fixtures/first.png",
+        "role": "keyframe",
+        "frame_index": 0
+      }
+    ]
+  },
+  {
+    "id": "fl2va-last",
+    "task": "fl2va",
+    "prompt": "A red toy car rolls slowly to the right across the wooden table and stops beside the blue cube. Keep the camera fixed and the simple illustrated style. Soft wheel rattling, then silence.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 2102,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "image",
+        "uri": "file:///fixtures/last.png",
+        "role": "keyframe",
+        "frame_index": -1
+      }
+    ]
+  },
+  {
+    "id": "fl2va-both",
+    "task": "fl2va",
+    "prompt": "A red toy car rolls slowly to the right across the wooden table and stops beside the blue cube. Keep the camera fixed and the simple illustrated style. Soft wheel rattling, then silence.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 2103,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "image",
+        "uri": "file:///fixtures/first.png",
+        "role": "keyframe",
+        "frame_index": 0
+      },
+      {
+        "type": "image",
+        "uri": "file:///fixtures/last.png",
+        "role": "keyframe",
+        "frame_index": -1
+      }
+    ]
+  },
+  {
+    "id": "ref2va-image",
+    "task": "ref2va",
+    "prompt": "Use <Picture 1> as the visual subject. A red toy car rolls slowly across a wooden table beside a blue cube, with soft wheel sounds and a fixed camera.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 3101,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "image",
+        "uri": "file:///fixtures/reference-car.png",
+        "role": "reference"
+      }
+    ]
+  },
+  {
+    "id": "ref2va-images",
+    "task": "ref2va",
+    "prompt": "Use the red car in <Picture 1>, the blue cube in <Picture 2>, and the paper boat in <Picture 3>. They sit together on a wooden table, with gentle camera motion and quiet room ambience.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 3102,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "image",
+        "uri": "file:///fixtures/reference-car.png",
+        "role": "reference"
+      },
+      {
+        "type": "image",
+        "uri": "file:///fixtures/reference-cube.png",
+        "role": "reference"
+      },
+      {
+        "type": "image",
+        "uri": "file:///fixtures/reference-boat.png",
+        "role": "reference"
+      }
+    ]
+  },
+  {
+    "id": "ref2va-video-silent",
+    "task": "ref2va",
+    "prompt": "Use <Video 1> as a motion reference. A red toy car rolls across a wooden table toward a blue cube, with gentle wheel sounds.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 3103,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "video",
+        "uri": "file:///fixtures/reference-silent.mp4",
+        "role": "reference"
+      }
+    ]
+  },
+  {
+    "id": "ref2va-video-sound",
+    "task": "ref2va",
+    "prompt": "Use <Video 1> as the visual and sound reference. Keep the red toy car consistent as it rolls across a wooden table with soft rhythmic tones.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 3104,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "video",
+        "uri": "file:///fixtures/reference-sound.mp4",
+        "role": "reference"
+      }
+    ]
+  },
+  {
+    "id": "ref2va-image-audio",
+    "task": "ref2va",
+    "prompt": "Use <Picture 1> as the visual subject and <Audio 1> as the sound reference. A red toy car rolls to the right across a wooden table with soft rhythmic tones.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 3105,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "image",
+        "uri": "file:///fixtures/reference-car.png",
+        "role": "reference"
+      },
+      {
+        "type": "audio",
+        "uri": "file:///fixtures/reference-audio.wav",
+        "role": "reference"
+      }
+    ]
+  },
+  {
+    "id": "ref2va-mixed",
+    "task": "ref2va",
+    "prompt": "Use <Picture 1> as the subject, <Video 1> as the motion reference, and <Audio 1> as the sound reference. The red toy car rolls to the right across the wooden table with soft rhythmic tones.",
+    "seconds": 5,
+    "width": 1344,
+    "height": 768,
+    "seed": 3106,
+    "steps": 50,
+    "conditions": [
+      {
+        "type": "image",
+        "uri": "file:///fixtures/reference-car.png",
+        "role": "reference"
+      },
+      {
+        "type": "video",
+        "uri": "file:///fixtures/reference-silent.mp4",
+        "role": "reference"
+      },
+      {
+        "type": "audio",
+        "uri": "file:///fixtures/reference-audio.wav",
+        "role": "reference"
+      }
+    ]
+  }
+]
