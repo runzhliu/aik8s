@@ -357,23 +357,99 @@ spec:
 
 HPA/KEDA 等扩缩容机制应接入能反映瓶颈的指标，例如等待 Token 数、排队时间、活跃流和 TTFT，而不只看 CPU 或 GPU 利用率。缓存命中提高后，相同请求数对应的计算量也会改变，扩容规则需要考虑这一点。
 
-## 9. 主流组件分别解决哪一层问题
+## 9. 当前社区值得关注的 KV Cache 项目
 
-这些项目处于不同层次，不能仅按“是否支持 KV Cache”打勾选型。下面归纳官方公开实现的职责；具体组合仍应锁定版本和模型支持范围。
+社区的 KV Cache 生态已经覆盖引擎本地复用、独立缓存管理、分布式存储、高速传输和 Kubernetes 请求调度。选型时先确定自己缺少哪一层，再寻找对应组件。
 
-| 组件 | 主要职责 | 与 Kubernetes 结合的方式 |
+### 9.1 项目地图与社区关注度
+
+下面按职责列出主要项目。GitHub Star 为 **2026-09-08 查询官方仓库 API 的近似快照**，用于辅助了解关注度，不代表生产装机量、性能或稳定性排名。SGLang、vLLM、Dynamo 等数值属于整个项目，不能当作其中 KV 功能的独立热度。
+
+| 项目与官方仓库 | 主要层次 | 关注度快照 | 优先关注的问题 |
+| --- | --- | ---: | --- |
+| [vLLM](https://github.com/vllm-project/vllm) | 推理引擎、本地 KV 管理 | 91.2k | Paged KV、APC、引擎与外部 Connector 的接口 |
+| [SGLang / HiCache](https://github.com/sgl-project/sglang) | 推理引擎、分层缓存 | 35.6k | Radix 前缀复用及 GPU—主机—存储层管理 |
+| [LMCache](https://github.com/LMCache/LMCache) | 独立 KV 缓存管理层 | 11.7k | KV 保存、检索、回载及多种存储后端 |
+| [NVIDIA Dynamo / KVBM](https://github.com/ai-dynamo/dynamo) | 推理框架、分层块管理 | 8.0k | 路由、P/D 与受支持的缓存后端组合 |
+| [Mooncake](https://github.com/kvcache-ai/Mooncake) | 分布式缓存与传输 | 6.5k | 跨节点内存/存储池和高效 KV 搬运 |
+| [AIBrix](https://github.com/vllm-project/aibrix) | Kubernetes 推理基础设施 | 5.1k | 路由、扩缩容、运行时及分布式 KV 集成 |
+| [llm-d](https://github.com/llm-d/llm-d) | Kubernetes 分布式推理 | 4.5k | EPP、缓存事件索引、路由与分离式推理 |
+| [NIXL](https://github.com/ai-dynamo/nixl) | 推理数据传输库 | 1.2k | CPU/GPU/存储之间的数据传输抽象 |
+| [FlexKV](https://github.com/taco-project/FlexKV) | 多级 KV 管理与分布式存储 | 339 | CPU/SSD 分层、GDS 和引擎适配 |
+| [InfiniStore](https://github.com/bytedance/InfiniStore) | 分布式 KV 存储后端 | 436 | RDMA 缓存池、跨节点复用和 P/D 交接 |
+
+前八项可以作为了解主流推理生态的主要入口。FlexKV 和 InfiniStore 的社区体量较小，但具有明确的 KV 存储与集成价值，适合作为补充候选。查询时上述仓库均未归档；InfiniStore 的仓库最近推送时间停留在 2025 年 11 月，采用前尤其需要复核当前依赖兼容性。维护状态应结合发布记录、问题响应和上游集成一起判断。
+
+### 9.2 LMCache：给推理引擎增加独立缓存管理层
+
+LMCache 聚焦 KV 的保存、检索、回载和复用，通过 Connector 接入引擎，再连接本地或远端后端。对于已经运行 vLLM、希望延长长前缀保留时间，或让多个实例访问外部 KV 的团队，它是值得优先了解的独立缓存项目。
+
+其 MP（多进程）模式把缓存管理放到独立进程中，使推理进程和缓存进程可以具有不同生命周期。部署在 Kubernetes 时，需要同时考虑两者的内存预算、通信与存储；如果仍放在同一个 Pod，删除 Pod 依然可能让它们一起退出。独立进程本身不等于跨节点持久化。入口见 [LMCache 项目说明](https://github.com/LMCache/LMCache) 和 [Quickstart](https://docs.lmcache.ai/getting_started/quickstart.html)。
+
+LMCache 生态还包含 CacheBlend 方向：对非完整前缀匹配的检索片段，结合局部重计算处理上下文变化。它与普通 APC 的精确前缀复用不同，需要按模型、位置处理和质量要求单独验证，不能把“支持 RAG”理解为任意片段都可以直接拼接 KV。参见 [LMCache Blending](https://docs.lmcache.ai/kv_cache_optimizations/blending.html)。
+
+### 9.3 Mooncake：区分 Transfer Engine 与 Store
+
+Mooncake 起源于 Moonshot/Kimi 的 KV Cache 中心化推理架构。理解它时，要分清两项能力：
+
+| 子组件 | 主要职责 | 单独启用后的边界 |
 | --- | --- | --- |
-| vLLM APC / Paged KV | 引擎内的 KV 分配与前缀复用 | GPU Pod 中启用，向上提供负载及缓存信号 |
-| SGLang Radix Cache / HiCache | 前缀树及 GPU、主机、存储层之间的缓存管理 | 配置实例本地容量，并按需接入共享后端 |
-| LMCache | KV 的保存、检索、回载和多种后端接入 | 通过兼容 Connector 与推理进程结合，按模式部署服务与存储 |
-| Mooncake | KV 数据传输及分布式缓存存储能力 | 组织内存/存储资源池，配置网络和引擎集成 |
-| llm-d | Kubernetes 推理路由、缓存索引与分离式推理等组件组合 | Gateway、EPP、模型实例和 KV 事件协作 |
-| NVIDIA Dynamo / KVBM | 推理编排、缓存感知路由与分层块管理等能力 | 结合 Dynamo 工作负载配置和受支持的引擎 Connector |
-| AIBrix | 面向推理的路由、扩缩容和分布式 KV 等基础设施组件 | 与模型服务和缓存后端组合，接入集群控制面 |
+| Transfer Engine | 在设备或节点间高效搬运数据，支持 RDMA 等路径 | 完成一次传输，不代表数据会长期保留或可被下一请求发现 |
+| Mooncake Store | 对缓存对象进行存放、查找和管理，组织分布式资源 | 还需要引擎侧的键映射、布局适配与回载逻辑 |
 
-对应实现入口：[LMCache Quickstart](https://docs.lmcache.ai/getting_started/quickstart.html)、[Mooncake](https://github.com/kvcache-ai/Mooncake)、[llm-d KV 管理](https://llm-d.ai/docs/dev/architecture/advanced/kv-management)、[Dynamo KV Offloading](https://docs.nvidia.com/dynamo/latest/kubernetes/kv-cache-offloading/overview)、[AIBrix](https://github.com/vllm-project/aibrix)。引擎自身的 APC 与 HiCache 入口见前文。
+因此，“P/D 使用 Mooncake 传输”与“接入 Mooncake 共享缓存池”是两种配置目标。它可以服务 SGLang 的缓存后端，也可以与 LMCache 组合；两者不是必须二选一。官方已有 [Mooncake 与 LMCache 集成说明](https://github.com/kvcache-ai/Mooncake/blob/main/docs/source/deployment/integrations/lmcache/index.md)，Store 设计见 [Mooncake Store](https://github.com/kvcache-ai/Mooncake/blob/main/docs/source/design/store/mooncake-store.md)。
 
-例如，llm-d 的路由索引可以帮助选择已有缓存的实例，但实际 KV 保存和搬运仍由所选引擎及后端完成。Dynamo 的整体引擎支持范围，也不能直接视为 KVBM 的支持矩阵。不要把多个项目都具有某项能力，理解为任意版本之间可以直接拼接。
+在 Kubernetes 上，采用共享池时应显式规划缓存服务、元数据和推理 Pod 的关系，以及节点内存、网卡、网络可达性和故障域。部署成本取决于所选 Store 模式和传输路径，不只是安装一个 Python 包。
+
+### 9.4 SGLang HiCache：沿引擎原生前缀管理扩展层级
+
+如果已采用 SGLang，HiCache 是理解分层 KV 的自然入口。它在 Radix 前缀管理基础上，把 GPU、本地主机内存和存储后端组织起来，并提供预取、回写等策略。跨实例共享取决于存储层的配置；本地 DRAM 层不会自动合并成全集群内存池。参见 [HiCache 设计与后端说明](https://docs.sglang.io/docs/advanced_features/hicache_design)。
+
+HiCache 属于 SGLang 的引擎能力，不是一个让所有推理引擎通用访问的独立缓存服务。Kubernetes 侧主要负责提供所需内存、卷和后端服务，再由引擎参数接通数据路径。
+
+### 9.5 Dynamo、KVBM 与 NIXL：框架、块管理和传输各有职责
+
+这三个名字经常一起出现，但对应的层次不同：
+
+| 名称 | 角色 | 选型时重点核对 |
+| --- | --- | --- |
+| Dynamo | 分布式推理框架，组合路由、执行与数据路径 | 引擎、部署模式、P/D 与平台运维方式 |
+| KVBM | Dynamo 生态中的 KV Block 管理组件 | 受支持引擎、缓存层级、回载路径和模型格式 |
+| NIXL | 面向推理的通信与数据传输库 | Backend、内存注册、网络和存储插件 |
+
+NIXL 为 CPU/GPU 内存及文件、块、对象存储等提供可扩展的传输抽象。它可以被上层缓存或推理系统使用，**单独部署 NIXL 不会自动获得前缀索引、租户配额和缓存感知路由**。参见 [NIXL 官方说明](https://github.com/ai-dynamo/nixl)。
+
+Dynamo 的 KV Offloading 文档还列出 LMCache、FlexKV、HiCache 等接入路线。应根据引擎支持矩阵选择一条相应的缓存管理路径，再配置其后端；不应把这些名字都当成 L1/L2/L3 依次堆叠。尤其不能从“Dynamo 支持某引擎”推导出“KVBM 也支持该引擎”。参见 [Dynamo KV Offloading](https://docs.nvidia.com/dynamo/latest/kubernetes/kv-cache-offloading/overview) 与 [官方后端选择说明](https://github.com/ai-dynamo/dynamo/blob/main/docs/fern/pages/cli/kv-cache-offloading/overview.mdx)。
+
+### 9.6 llm-d 与 AIBrix：把缓存能力接入 Kubernetes 服务链路
+
+llm-d 更适合从“多副本请求应该去哪里”这个问题切入。其 KV 相关组件覆盖前缀感知路由、事件索引、Offload 集成，以及特定配置下的 P2P 复用。EPP 和索引掌握位置与负载信息，实际张量保存、搬运和恢复由模型服务与 Connector 完成。它不要求所有缓存数据都先集中到一个中央存储。参见 [llm-d KV Cache Management](https://llm-d.ai/docs/dev/architecture/advanced/kv-management)。
+
+AIBrix 则把 KV Cache 放在更广的推理基础设施中，与 Gateway、LLM 专用扩缩容、运行时 Sidecar 和分布式服务能力结合。已有 AIBrix 控制面的团队，可以优先评估其缓存集成与现有路由、指标的协作。公开能力列表见 [AIBrix](https://github.com/vllm-project/aibrix)，集群接入示例见站内 [AIBrix 实战](../practices/aibrix-existing-cluster.md)。
+
+两者的关注点都超出了独立 KV 存储。平台选型应考虑已有 Gateway、控制器和观测体系；同一请求路径上的路由策略、缓存目录和扩缩容决策需要明确由谁负责。
+
+### 9.7 FlexKV 与 InfiniStore：值得补充评估的专用项目
+
+**FlexKV** 由腾讯云 TACO 团队与社区共同开发，面向多级 KV 管理与分布式推理。公开实现包含 CPU/SSD 层、GDS、Mooncake Transfer Engine 集成，并提供 vLLM、TensorRT-LLM 和 Dynamo 等适配说明。它适合关注分层容量、SSD 数据路径和既有 TACO/Dynamo 体系的团队。GDS、共享存储和特定引擎布局均有环境条件，应按实际适配文档配置。参见 [FlexKV](https://github.com/taco-project/FlexKV)。
+
+**InfiniStore** 是字节跳动开源的 KV 存储项目，面向推理节点间传输、扩展缓存池和跨节点复用。其 README 给出的 vLLM 路线经由 LMCache 集成，因此更适合按“缓存后端候选”来评估。部署时需要检查 RDMA 环境和当前 LMCache 接口；README 中标为推进中的引擎集成，不能当作已完成支持。参见 [InfiniStore](https://github.com/bytedance/InfiniStore)。
+
+### 9.8 项目怎样组合
+
+以下是依据官方接口关系整理的选型入口，不是所有模型都已验证的兼容清单：
+
+| 已有环境或需求 | 可以优先了解的组合 | 需要承担的额外工作 |
+| --- | --- | --- |
+| 单个 vLLM 实例，希望复用系统前缀 | vLLM APC | 控制上下文与容量，观察命中收益 |
+| vLLM 需要外部缓存 | vLLM + LMCache，或所支持的原生 Offload 路径 | Connector 版本、主机内存/存储和回载正确性 |
+| SGLang 需要扩大缓存层级 | SGLang HiCache；共享时按需接 Mooncake 等后端 | 回写/预取策略、后端部署和共享域 |
+| 已有 LMCache，需要分布式缓存池 | LMCache + Mooncake Store；按支持范围评估其他后端 | 元数据、网络、容量、淘汰与可用性 |
+| Kubernetes 多副本缓存命中不稳定 | llm-d 或已有 AIBrix 路由体系 + 引擎缓存信号 | Gateway/EPP 集成、索引时效与队列平衡 |
+| 希望统一规划路由、P/D 与缓存 | Dynamo + 与引擎匹配的缓存路径 | 支持矩阵、网络、控制面和可观测性 |
+| 自研 KV 数据面，需要高效传输 | NIXL 或 Mooncake Transfer Engine | 上层索引、生命周期、隔离和调度仍需实现 |
+
+理解这些项目时，最有用的四个问题是：**谁判断前缀相同，谁知道缓存位置，谁搬运张量，谁决定请求去向。** 能回答这四个问题，才容易识别组件之间的真实依赖，也能避免重复部署功能重叠的系统。
 
 ## 10. 如何判断优化是否真正有效
 
