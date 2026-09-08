@@ -104,6 +104,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [推理引擎选型](inference/engines.md)：vLLM、SGLang、TensorRT-LLM、Triton、llama.cpp 等运行时的边界。
 - [LLM Serving 与 AI 微服务框架](inference/serving-frameworks.md)：vLLM、KServe、AIBrix、Ray Serve、BentoML、NVIDIA NIM 与应用层框架。
 - [LLM 推理性能优化](inference/optimization.md)：TTFT、TPOT、批处理、KV Cache、量化、并行和推测解码。
+- [KV Cache 原理、应用与 Kubernetes](inference/kv-cache-overview.md)：Attention 原理、显存算例、前缀复用、分层缓存，以及请求路由、NUMA 和扩缩容。
 - [AI Gateway 与智能路由](inference/gateway-routing.md)：Gateway API Inference Extension、前缀感知、负载感知和流控。
 - [Higress AI Gateway 实战](inference/higress-ai-gateway.md)：隔离安装、AI Proxy、Token 治理、可观测性，以及与 AIBrix 同集群和跨集群接入。
 - [分布式与 Prefill/Decode 分离推理](inference/distributed-serving.md)：模型并行、LeaderWorkerSet、llm-d、Dynamo 和 KV 传输。

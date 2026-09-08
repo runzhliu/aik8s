@@ -50,6 +50,8 @@ Goodput 比峰值吞吐更接近生产价值。
 
 ## 3. KV Cache 容量
 
+关于计算原理、容量公式、跨请求复用和 Kubernetes 部署，参见 [KV Cache 综述](kv-cache-overview.md)。
+
 KV Cache 随层数、KV Head、Head Dimension、精度和上下文增长。简化理解：
 
 ```text
