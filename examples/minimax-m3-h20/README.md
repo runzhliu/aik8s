@@ -3,7 +3,6 @@
 两套引擎已在同一台八卡 H20-3e 上串行完成 BF16 TP8、32K/C32 主矩阵：各 33 轮、3,954 请求，合计 66 轮、7,908 请求且无请求失败；各 12 项基础功能通过。扩展测试保留纯色图片、特定数学提示词和原始检索的失败，以及独立复测；SGLang 损坏媒体返回 500 的问题尚未修复。vLLM 额外观察已按要求结束，保留约 30 分钟、903 请求、零失败的数据，不与 SGLang 比较。
 
 - [实测报告](../../docs/ai-k8s/practices/minimax-m3-h20-benchmark.md)
-- [完整测试计划](../../docs/ai-k8s/practices/minimax-m3-h20-sglang-vllm-test-plan.md)
 - [镜像记录](images/README.md) / [不可变镜像清单](images/images.lock.json)
 - `launch.sh`：BF16 TP8、32K 启动参数，默认只打印；实际参数须在固定镜像内通过 CLI 检查。
 - `benchmark.sh`、`cases.csv`：同一 vLLM 客户端、11 个主 Case、每个 3 轮；默认只打印。

@@ -203,21 +203,7 @@ curl -sS http://AIBRIX_GATEWAY/v1/chat/completions \
 
 初次打通不启用 DSpark。P/D、NIXL 和输出正确性稳定后，再单独增加 speculative decoding 做 A/B，避免一次引入多项变量。
 
-## 8. 压测计划
-
-正确性通过后，使用相同输入集、输出长度、并发度和采样参数，对 Combined TP=8 与 P/D 2×TP=8 做对比。至少记录：
-
-- 请求成功率和错误类型；
-- req/s、输入/输出 tok/s；
-- p50/p95/p99 TTFT；
-- p50/p95/p99 TPOT 和 ITL；
-- Prefill、Decode 各自 GPU 利用率、显存、KV Cache、队列长度；
-- NIXL 传输时延与网卡/RDMA 吞吐；
-- 每种方案占用的 GPU 数。
-
-建议覆盖短请求 `128 in / 64 out` 与长请求 `4096 in / 128 out`，并发至少包含 C=1、4、8。由于 P/D 使用 16 张 GPU，而 Combined TP=8 只使用 8 张，结论必须同时比较绝对吞吐和每 GPU 吞吐，不能只看总 tok/s。
-
-## 9. 双机实测与下一轮 A/B
+## 8. 双机实测
 
 一次 2×TP=8 实验把 Prefill 和 Decode 分别调度到两台 8×H20 96 GB 节点。两个 Engine 都完成 DeepSeek V4 Flash 权重加载、Marlin 权重准备、NIXL 1.3.2 与 UCX 初始化，RBG 最终为 Ready。首次冷启动中，较慢节点拉取两个大镜像约 2 分钟，约 157 GiB 模型同步和 Marlin/JIT 又占用了主要等待时间；单侧 Marlin 权重准备约 295 秒。大型模型的发布超时不能只覆盖容器启动。
 

@@ -2,7 +2,6 @@
 
 状态：测试完成。两套引擎分别完成 15 类配置，每套汇总 55 个有效正式样本；音频参考与接口错误传播问题已修复并通过对应 GPU 复测。通过标准是请求与媒体结构验收，语义质量边界见实测文档。见 [运行时修复记录](RUNTIME_FIXES.md)。
 
-- [部署与压测计划](../../docs/ai-k8s/practices/minimax-h3-h20-deployment-benchmark-plan.md)
 - [实际执行记录](../../docs/ai-k8s/practices/minimax-h3-h20-benchmark.md)
 - `images/`：固定上游基础镜像和源码的离线构建文件；交付状态另见镜像记录。
 - `launch.sh`：单节点 4×141GB H20-3e 实测启动命令，默认 dry-run；两引擎都只加载一个 DiT 分区。

@@ -4,9 +4,9 @@
 OpenAI-compatible 性能压测。2026-09-01 已在单节点 4×141GB H20 上通过 SGLang Vision
 Preview 完成 Day 0 实测；vLLM 暂无 Vision-Exp 端到端实现，因此没有伪造框架 A/B 数据。
 
-完整结论、卡型矩阵、Gate 和标准多模态测试方法见：
+已完成的部署、功能验收与性能结果见：
 
-[`docs/ai-k8s/practices/deepseek-v4-flash-vision-exp-deployment-benchmark-plan.md`](../../docs/ai-k8s/practices/deepseek-v4-flash-vision-exp-deployment-benchmark-plan.md)
+[Day 0 实测报告](../../docs/ai-k8s/practices/deepseek-v4-flash-vision-exp-day0-h20.md)
 
 ## 文件
 

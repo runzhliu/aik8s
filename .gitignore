@@ -30,3 +30,8 @@ __pycache__/
 /examples/minimax-h3-h20/k8s/
 # Private local notes
 vip/
+
+# Test plans are local working notes, never public documentation.
+/.local/test-plans/
+**/*test-plan.md
+**/*benchmark-plan.md

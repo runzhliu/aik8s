@@ -33,7 +33,7 @@
 
 ## 修复过程
 
-公开测试文档的[镜像修复章节](../../../docs/ai-k8s/practices/minimax-m3-h20-sglang-vllm-test-plan.md#镜像准备中的问题修复与验证)记录了报错、定位、失败尝试与最终验证。这里列出实施要点。
+公开修复记录的[镜像修复章节](../../../docs/ai-k8s/practices/minimax-m3-h20-deployment-fixes.md#镜像准备中的问题修复与验证)记录了报错、定位、失败尝试与最终验证。这里列出实施要点。
 
 ### SGLang：保留 NIXL 入口，补齐依赖
 

@@ -10,9 +10,6 @@
 实际分片文件合计 `1,560,936,091,448` 字节。源目录中的 3 个残留 `*.tmp` 文件不属于
 索引引用分片，NVMe 预热时明确排除。
 
-完整 Gate、停止条件和当前运行时风险见
-[`docs/ai-k8s/practices/kimi-k3-h20-deployment-benchmark-plan.md`](../../docs/ai-k8s/practices/kimi-k3-h20-deployment-benchmark-plan.md)。
-
 ## 资源边界
 
 - 单台 8×141GB H20 不足以容纳约 1,680GB Checkpoint；

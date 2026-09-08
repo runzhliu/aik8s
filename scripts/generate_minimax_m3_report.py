@@ -184,7 +184,7 @@ vLLM 的权重加载耗时 1006.92 秒，图捕获约 12 秒，但首个真实�
 
 无人值守客户端还修复过 ConfigMap 路径问题：解析符号链接后固定到了已经被回收的旧版本目录。保留稳定挂载入口后，在新 attempt 重跑客户端，并通过版本切换回归检查；模型服务不需要重载。
 
-更完整的错误信息、失败尝试、CFS 挂载与优先级准入排查，以及最终参数见[部署测试计划与修复记录](minimax-m3-h20-sglang-vllm-test-plan.md)。'''
+镜像依赖、CFS 挂载、优先级准入、启动初始化和客户端路径问题的实际处理过程见[部署故障与修复记录](minimax-m3-h20-deployment-fixes.md)。'''
     webui_path=ASSETS/'webui-verification.json'
     webui_text='OpenWebUI 接入验收记录尚未归档。'
     if webui_path.exists():
