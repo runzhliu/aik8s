@@ -1,0 +1,6 @@
+# Official M3 image; remove unused desktop package-management bindings.
+FROM vllm/vllm-openai@sha256:a8c89303e467d08ef77ab5fac1ab20910a09b47d10787474b4ee70dfb6bee148
+ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+RUN apt-get remove -y python3-gi python3-software-properties software-properties-common && \
+    python3 -m pip install --no-cache-dir av==16.1.0 && \
+    python3 -m pip check

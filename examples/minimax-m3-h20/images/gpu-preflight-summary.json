@@ -1,0 +1,80 @@
+{
+  "sglang": {
+    "image_manifest": "sha256:cef47b57312b61bb4d8873873fa12dab377707a63d74b3bf51e556f09722d403",
+    "checks": [
+      {
+        "check": "all_reduce",
+        "size_mib": 1,
+        "ranks": 8,
+        "max_rank_latency_ms": 0.14803899102844298,
+        "algorithm_GBps": 7.083106907953293,
+        "correctness": "PASS"
+      },
+      {
+        "check": "all_reduce",
+        "size_mib": 16,
+        "ranks": 8,
+        "max_rank_latency_ms": 0.11814308527391404,
+        "algorithm_GBps": 142.0076000309466,
+        "correctness": "PASS"
+      },
+      {
+        "check": "all_reduce",
+        "size_mib": 128,
+        "ranks": 8,
+        "max_rank_latency_ms": 0.5690003745257854,
+        "algorithm_GBps": 235.8833737356664,
+        "correctness": "PASS"
+      },
+      {
+        "status": "GPU_PREFLIGHT_PASS",
+        "torch": "2.11.0+cu130",
+        "cuda": "13.0",
+        "gpus": 8,
+        "model_validation": "not_run"
+      }
+    ],
+    "scope": "8-GPU BF16 matmul and NCCL smoke; not engine/model benchmark; single short run",
+    "nccl_version": "2.28.9",
+    "repeatability_note": "Single short preflight, not a controlled engine performance comparison; concurrent CPU checksum work was present during SGLang preflight."
+  },
+  "vllm": {
+    "image_manifest": "sha256:8a1060d311c177346721f4714f9d448630a69354bda07852f6e161964de98818",
+    "checks": [
+      {
+        "check": "all_reduce",
+        "size_mib": 1,
+        "ranks": 8,
+        "max_rank_latency_ms": 0.02937640601885505,
+        "algorithm_GBps": 35.69449575713852,
+        "correctness": "PASS"
+      },
+      {
+        "check": "all_reduce",
+        "size_mib": 16,
+        "ranks": 8,
+        "max_rank_latency_ms": 0.11866309068864211,
+        "algorithm_GBps": 141.38529430369738,
+        "correctness": "PASS"
+      },
+      {
+        "check": "all_reduce",
+        "size_mib": 128,
+        "ranks": 8,
+        "max_rank_latency_ms": 0.5696078296750784,
+        "algorithm_GBps": 235.63181720406104,
+        "correctness": "PASS"
+      },
+      {
+        "status": "GPU_PREFLIGHT_PASS",
+        "torch": "2.11.0+cu130",
+        "cuda": "13.0",
+        "gpus": 8,
+        "model_validation": "not_run"
+      }
+    ],
+    "scope": "8-GPU BF16 matmul and NCCL smoke; not engine/model benchmark; single short run",
+    "nccl_version": "2.28.9",
+    "repeatability_note": "Single short preflight, not a controlled engine performance comparison; concurrent CPU checksum work was present during SGLang preflight."
+  }
+}

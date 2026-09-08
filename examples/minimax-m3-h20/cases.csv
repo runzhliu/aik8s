@@ -1,0 +1,13 @@
+case_id,stage,input_tokens,output_tokens,concurrency,num_prompts,request_rate,repeats,description
+smoke-128-64-c1,smoke,128,64,1,4,inf,1,API and output-format smoke
+short-128-64-c1,baseline,128,64,1,32,inf,3,single-request latency
+short-128-64-c4,baseline,128,64,4,64,inf,3,light batching
+short-128-64-c8,baseline,128,64,8,128,inf,3,moderate batching
+short-128-64-c16,baseline,128,64,16,256,inf,3,high concurrency
+short-128-64-c32,baseline,128,64,32,512,inf,3,saturation probe
+rag-4k-128-c4,baseline,4096,128,4,64,inf,3,ordinary RAG prefill
+rag-4k-128-c8,baseline,4096,128,8,128,inf,3,RAG throughput
+rag-16k-256-c4,baseline,16384,256,4,32,inf,3,long agent prefill
+rag-16k-256-c8,baseline,16384,256,8,64,inf,3,long agent throughput
+decode-128-1k-c1,baseline,128,1024,1,6,inf,3,long-output latency
+decode-128-1k-c8,baseline,128,1024,8,32,inf,3,long-output throughput

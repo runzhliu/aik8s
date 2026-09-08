@@ -1,0 +1,260 @@
+{
+  "scope": "CPU-only image checks; no model weights loaded and no GPU tests or benchmarks run",
+  "gpu_validation": "not_run",
+  "reports": {
+    "sglang_cu12_source": {
+      "status": "CPU_CHECK_INCOMPLETE",
+      "versions": {
+        "sglang": "0.0.0.dev1+g56e290315",
+        "torch": "2.11.0+cu129",
+        "transformers": "5.8.1",
+        "flashinfer-python": "0.6.12",
+        "av": "16.1.0",
+        "decord": null
+      },
+      "gpu_validation": "not_run",
+      "missing_cli_flags": [],
+      "location": "target_cluster",
+      "checks": {
+        "dependencies": {
+          "returncode": 1,
+          "stdout": "nixl 1.2.0 requires nixl-cu13, which is not installed.\nsglang 0.0.0.dev1+g56e290315 has requirement cuda-python>=13.0, but you have cuda-python 12.9.0.\ncupy-cuda12x 14.1.1 has requirement cuda-pathfinder==1.*,>=1.3.4, but you have cuda-pathfinder 1.2.2.\ncuda-core 1.0.1 has requirement cuda-pathfinder>=1.4.2, but you have cuda-pathfinder 1.2.2.\nmistral-common 1.11.3 has requirement numpy<2.4,>=1.25; python_version <= \"3.12\", but you have numpy 2.4.4.\nmoviepy 2.2.1 has requirement pillow<12.0,>=9.2.0, but you have pillow 12.2.0.\nnvidia-modelopt 0.44.0 has requirement setuptools>=80, but you have setuptools 70.2.0.\n"
+        },
+        "torch": {
+          "returncode": 0,
+          "stdout": "2.11.0+cu129 12.9 False\n"
+        },
+        "cli": {
+          "returncode": 0
+        }
+      },
+      "model_source_files": [
+        "jit_kernel/tests/test_minimax_m3_mxfp8.py",
+        "jit_kernel/tests/test_minimax_m3_rmsnorm.py",
+        "srt/function_call/minimax_m3.py",
+        "srt/models/minimax_m3.py",
+        "srt/models/minimax_m3_vl.py",
+        "srt/multimodal/processors/minimax_m3_vl.py"
+      ]
+    },
+    "sglang_cu13_source": {
+      "status": "CPU_CHECK_INCOMPLETE",
+      "versions": {
+        "sglang": "0.0.0.dev1+g56e290315",
+        "torch": "2.11.0+cu130",
+        "transformers": "5.8.1",
+        "flashinfer-python": "0.6.12",
+        "av": "16.1.0",
+        "decord": null,
+        "nixl": "1.2.0",
+        "nixl-cu12": null,
+        "cuda-python": "13.2.0",
+        "cuda-bindings": "13.2.0",
+        "cuda-pathfinder": "1.5.5",
+        "numpy": "2.3.5",
+        "pillow": "12.2.0",
+        "setuptools": "81.0.0"
+      },
+      "gpu_validation": "not_run",
+      "missing_cli_flags": [],
+      "missing_benchmark_flags": [],
+      "location": "relay",
+      "checks": {
+        "dependencies": {
+          "returncode": 1,
+          "stdout": "nixl 1.2.0 requires nixl-cu12, which is not installed.\nmoviepy 2.2.1 has requirement pillow<12.0,>=9.2.0, but you have pillow 12.2.0.\n"
+        },
+        "torch": {
+          "returncode": 0,
+          "stdout": "2.11.0+cu130 13.0 False\n"
+        },
+        "cli": {
+          "returncode": 0
+        },
+        "video_av_roundtrip": {
+          "returncode": 0,
+          "stdout": "AV_ROUNDTRIP_PASS 8\n"
+        }
+      },
+      "model_source_files": [
+        "jit_kernel/tests/test_minimax_m3_mxfp8.py",
+        "jit_kernel/tests/test_minimax_m3_rmsnorm.py",
+        "srt/function_call/minimax_m3.py",
+        "srt/models/minimax_m3.py",
+        "srt/models/minimax_m3_vl.py",
+        "srt/multimodal/processors/minimax_m3_vl.py"
+      ]
+    },
+    "sglang_prepared": {
+      "status": "CPU_PASS",
+      "versions": {
+        "sglang": "0.0.0.dev1+g56e290315",
+        "torch": "2.11.0+cu130",
+        "transformers": "5.8.1",
+        "flashinfer-python": "0.6.12",
+        "av": "16.1.0",
+        "decord": null,
+        "nixl": "1.2.0",
+        "nixl-cu12": "1.2.0",
+        "nixl-cu13": "1.2.0",
+        "cuda-python": "13.2.0",
+        "cuda-bindings": "13.2.0",
+        "cuda-pathfinder": "1.5.5",
+        "numpy": "2.3.5",
+        "pillow": "11.3.0",
+        "setuptools": "81.0.0"
+      },
+      "gpu_validation": "not_run",
+      "missing_cli_flags": [],
+      "missing_benchmark_flags": [],
+      "location": "relay",
+      "checks": {
+        "dependencies": {
+          "returncode": 0,
+          "stdout": "No broken requirements found.\n"
+        },
+        "torch": {
+          "returncode": 0,
+          "stdout": "2.11.0+cu130 13.0 False sm_75 sm_80 sm_86 sm_90 sm_100 sm_120\n"
+        },
+        "cli": {
+          "returncode": 0
+        },
+        "video_av_roundtrip": {
+          "returncode": 0,
+          "stdout": "AV_ROUNDTRIP_PASS 8\n"
+        }
+      },
+      "model_source_files": [
+        "jit_kernel/tests/test_minimax_m3_mxfp8.py",
+        "jit_kernel/tests/test_minimax_m3_rmsnorm.py",
+        "srt/function_call/minimax_m3.py",
+        "srt/models/minimax_m3.py",
+        "srt/models/minimax_m3_vl.py",
+        "srt/multimodal/processors/minimax_m3_vl.py"
+      ]
+    },
+    "vllm_prepared": {
+      "status": "CPU_PASS_GPU_CLI_DEFERRED",
+      "versions": {
+        "vllm": "0.1.dev17492+g454b47db8",
+        "torch": "2.11.0+cu130",
+        "transformers": "5.11.0",
+        "flashinfer-python": "0.6.12",
+        "av": "16.1.0",
+        "decord": null,
+        "nixl": "1.2.0",
+        "nixl-cu12": "1.2.0",
+        "nixl-cu13": "1.2.0",
+        "cuda-python": "13.3.1",
+        "cuda-bindings": "13.3.1",
+        "cuda-pathfinder": "1.5.5",
+        "numpy": "2.2.6",
+        "pillow": "12.2.0",
+        "setuptools": "80.10.2"
+      },
+      "gpu_validation": "not_run",
+      "missing_cli_flags": [],
+      "missing_benchmark_flags": [],
+      "cli_scope": "CPU argument parsing only; GPU CLI startup remains deferred",
+      "location": "target_cluster",
+      "checks": {
+        "dependencies": {
+          "returncode": 0,
+          "stdout": "No broken requirements found.\n"
+        },
+        "torch": {
+          "returncode": 0,
+          "stdout": "2.11.0+cu130 13.0 False sm_75 sm_80 sm_86 sm_90 sm_100 sm_120\n"
+        },
+        "cli": {
+          "returncode": 1,
+          "error_excerpt": "Failed to infer device type"
+        },
+        "cli_cpu_parse_only": {
+          "returncode": 0
+        },
+        "video_av_roundtrip": {
+          "returncode": 0,
+          "stdout": "AV_ROUNDTRIP_PASS 8\n"
+        },
+        "benchmark_cli": {
+          "returncode": 0
+        }
+      },
+      "model_source_files": [
+        "model_executor/warmup/minimax_m3_msa_warmup.py",
+        "reasoning/minimax_m3_reasoning_parser.py",
+        "tool_parsers/minimax_m3_tool_parser.py",
+        "transformers_utils/configs/minimax_m3.py",
+        "transformers_utils/processors/minimax_m3.py"
+      ],
+      "target_manifest_digest": "sha256:8a1060d311c177346721f4714f9d448630a69354bda07852f6e161964de98818"
+    },
+    "sglang_target": {
+      "status": "CPU_PASS",
+      "versions": {
+        "sglang": "0.0.0.dev1+g56e290315",
+        "torch": "2.11.0+cu130",
+        "transformers": "5.8.1",
+        "flashinfer-python": "0.6.12",
+        "av": "16.1.0",
+        "decord": null,
+        "nixl": "1.2.0",
+        "nixl-cu12": "1.2.0",
+        "nixl-cu13": "1.2.0",
+        "cuda-python": "13.2.0",
+        "cuda-bindings": "13.2.0",
+        "cuda-pathfinder": "1.5.5",
+        "numpy": "2.3.5",
+        "pillow": "11.3.0",
+        "setuptools": "81.0.0"
+      },
+      "gpu_validation": "not_run",
+      "missing_cli_flags": [],
+      "missing_benchmark_flags": [],
+      "model_source_files": [
+        "jit_kernel/tests/test_minimax_m3_mxfp8.py",
+        "jit_kernel/tests/test_minimax_m3_rmsnorm.py",
+        "srt/function_call/minimax_m3.py",
+        "srt/models/minimax_m3.py",
+        "srt/models/minimax_m3_vl.py",
+        "srt/multimodal/processors/minimax_m3_vl.py"
+      ],
+      "location": "target_cluster",
+      "checks": {
+        "dependencies": {
+          "returncode": 0,
+          "stdout": "No broken requirements found.\n"
+        },
+        "torch": {
+          "returncode": 0,
+          "stdout": "2.11.0+cu130 13.0 False sm_75 sm_80 sm_86 sm_90 sm_100 sm_120\n"
+        },
+        "cli": {
+          "returncode": 0
+        },
+        "video_av_roundtrip": {
+          "returncode": 0,
+          "stdout": "AV_ROUNDTRIP_PASS 8\n"
+        }
+      },
+      "target_manifest_digest": "sha256:cef47b57312b61bb4d8873873fa12dab377707a63d74b3bf51e556f09722d403"
+    }
+  },
+  "base_content_verification": {
+    "status": "PASS",
+    "config_digest": "sha256:a238d3da9bf518ff54bd356b5946177521856ee49fc1fe19d84391619a391625",
+    "uncompressed_layers": 63,
+    "diff_ids_match": true,
+    "compressed_layer_digests_equal": false,
+    "note": "Same config and decompressed layer identities; compressed representations differ."
+  },
+  "rejected_fix": {
+    "attempt": "Remove nixl distribution",
+    "pip_check_exit_code": 0,
+    "module_entry_assertion": "importlib.util.find_spec(nixl) was None",
+    "build_result": "AssertionError, build rejected before publishing",
+    "final_fix": "Keep nixl; install nixl-cu12==1.2.0 and pillow==11.3.0"
+  }
+}

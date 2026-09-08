@@ -1,0 +1,47 @@
+{
+  "scope": "Read-only /proc status snapshot of eight SGLang scheduler workers; allowed CPU/memory-node sets do not prove actual memory residency.",
+  "engine": "sglang",
+  "workers": [
+    {
+      "pid": 58,
+      "cpus_allowed_list": "0-191",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 59,
+      "cpus_allowed_list": "0-191",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 60,
+      "cpus_allowed_list": "0-191",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 61,
+      "cpus_allowed_list": "0-191",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 62,
+      "cpus_allowed_list": "192-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 63,
+      "cpus_allowed_list": "192-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 64,
+      "cpus_allowed_list": "192-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 65,
+      "cpus_allowed_list": "192-383",
+      "mems_allowed_list": "0-1"
+    }
+  ],
+  "manual_numa_binding": false
+}

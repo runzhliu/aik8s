@@ -1,0 +1,89 @@
+{
+  "scope": "SGLang 8K/C4 initial functional acceptance; separate from planned 32K/C32 baseline",
+  "status": "PASS",
+  "cases": [
+    {
+      "case": "models",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.0054658991284668446
+    },
+    {
+      "case": "math-disabled",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.6047926200553775
+    },
+    {
+      "case": "math-enabled",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 2.079023805912584
+    },
+    {
+      "case": "math-adaptive",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.3443473782390356
+    },
+    {
+      "case": "multi-turn",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.18185177678242326
+    },
+    {
+      "case": "stream",
+      "status": "PASS",
+      "elapsed_s": 0.16479933494701982
+    },
+    {
+      "case": "tool-call",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.32175401924178004
+    },
+    {
+      "case": "tool-result",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.3618698096834123
+    },
+    {
+      "case": "image-ocr",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 1.1090889926999807
+    },
+    {
+      "case": "video-order",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.32348919520154595
+    },
+    {
+      "case": "invalid-max-tokens",
+      "status": "PASS",
+      "http_status": 400,
+      "elapsed_s": 0.0054860967211425304
+    },
+    {
+      "case": "recovery",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.1301343529485166
+    }
+  ],
+  "fixtures": [
+    {
+      "file": "quarter-chart.png",
+      "bytes": 11602,
+      "sha256": "9a0577cc53bc9348e092e4ffe7a25f94d2ff142475dd6a3306f380e5e4d9f6f2"
+    },
+    {
+      "file": "color-order.mp4",
+      "bytes": 6410,
+      "sha256": "89e69f9839f781b8062d719db4c02a2b8a02cf7f2596d32b542c90f02303a524"
+    }
+  ]
+}

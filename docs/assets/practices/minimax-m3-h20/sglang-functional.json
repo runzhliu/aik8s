@@ -1,0 +1,89 @@
+{
+  "status": "PASS",
+  "model": "minimax-m3-sglang",
+  "cases": [
+    {
+      "case": "models",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.00596329802647233
+    },
+    {
+      "case": "math-disabled",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.6046871319413185
+    },
+    {
+      "case": "math-enabled",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 1.5401092120446265
+    },
+    {
+      "case": "math-adaptive",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.35313286213204265
+    },
+    {
+      "case": "multi-turn",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.18487801728770137
+    },
+    {
+      "case": "stream",
+      "status": "PASS",
+      "elapsed_s": 0.16712281806394458
+    },
+    {
+      "case": "tool-call",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.3241008734330535
+    },
+    {
+      "case": "tool-result",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.4109842241741717
+    },
+    {
+      "case": "image-ocr",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 1.1124290470033884
+    },
+    {
+      "case": "video-order",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.3285105531103909
+    },
+    {
+      "case": "invalid-max-tokens",
+      "status": "PASS",
+      "http_status": 400,
+      "elapsed_s": 0.006151844747364521
+    },
+    {
+      "case": "recovery",
+      "status": "PASS",
+      "http_status": 200,
+      "elapsed_s": 0.13227746728807688
+    }
+  ],
+  "fixtures": [
+    {
+      "file": "quarter-chart.png",
+      "bytes": 11602,
+      "sha256": "9a0577cc53bc9348e092e4ffe7a25f94d2ff142475dd6a3306f380e5e4d9f6f2"
+    },
+    {
+      "file": "color-order.mp4",
+      "bytes": 6410,
+      "sha256": "89e69f9839f781b8062d719db4c02a2b8a02cf7f2596d32b542c90f02303a524"
+    }
+  ]
+}

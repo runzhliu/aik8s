@@ -1,0 +1,127 @@
+[
+  {
+    "engine": "sglang",
+    "case": "纯色红图预热",
+    "answer": "1. 黑色",
+    "usage": {
+      "prompt_tokens": 502,
+      "total_tokens": 507,
+      "completion_tokens": 5,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    },
+    "source_sha256": "0541858a23f9775c6560d7aa5f8d6e31856b99ce09f2f1394380d2f0836f2d30"
+  },
+  {
+    "engine": "sglang",
+    "case": "带边框红图预热",
+    "answer": "红色",
+    "usage": {
+      "prompt_tokens": 505,
+      "total_tokens": 507,
+      "completion_tokens": 2,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    },
+    "source_sha256": "9980922be45968c44b2b1c0804b6ef0b632bc15a3acd331bbb15dc178f7503bd"
+  },
+  {
+    "engine": "sglang",
+    "case": "只输出整数 / disabled",
+    "answer": "264",
+    "usage": {
+      "prompt_tokens": 189,
+      "total_tokens": 191,
+      "completion_tokens": 2,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    },
+    "source_sha256": "9774b7c3185ebaee650312c68e5b917a5897b6bb20c85d8b2cf1abadfc351dee"
+  },
+  {
+    "engine": "sglang",
+    "case": "原始长文本检索",
+    "answer": "NOT_FOUND",
+    "usage": {
+      "prompt_tokens": 31957,
+      "total_tokens": 31960,
+      "completion_tokens": 3,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    },
+    "source_sha256": "01676e7d91c336b3237fd5904b193d50033f45b4270e4f357f4ce39d4989cda8"
+  },
+  {
+    "engine": "sglang",
+    "case": "显式字段提取复测",
+    "answer": "jade-50-1-259920",
+    "usage": {
+      "prompt_tokens": 31958,
+      "total_tokens": 31968,
+      "completion_tokens": 10,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    },
+    "source_sha256": "73b4930926fff460a5bf75860e0d870cca97be8d2f10160938eb4f3e7fc2ce10"
+  },
+  {
+    "engine": "vllm",
+    "case": "纯色红图预热",
+    "answer": "1. 黑色",
+    "usage": {
+      "prompt_tokens": 502,
+      "total_tokens": 507,
+      "completion_tokens": 5,
+      "prompt_tokens_details": null
+    },
+    "source_sha256": "8fb56a28c590c320cba5664ddda78112652eb2c9641fff8ad1517b98d285cfff"
+  },
+  {
+    "engine": "vllm",
+    "case": "带边框红图预热",
+    "answer": "红色",
+    "usage": {
+      "prompt_tokens": 505,
+      "total_tokens": 507,
+      "completion_tokens": 2,
+      "prompt_tokens_details": null
+    },
+    "source_sha256": "a9b41b41bd711bf57fd5fabec3ed967ec26173551afdf030ef2e73a89c32b261"
+  },
+  {
+    "engine": "vllm",
+    "case": "只输出整数 / disabled",
+    "answer": "264",
+    "usage": {
+      "prompt_tokens": 189,
+      "total_tokens": 191,
+      "completion_tokens": 2,
+      "prompt_tokens_details": null
+    },
+    "source_sha256": "4456d0c4ca36cad2ca65f4b4e8fa087c49c003f1f4c3625cb4d78c5caad56e16"
+  },
+  {
+    "engine": "vllm",
+    "case": "原始长文本检索",
+    "answer": "NOT_FOUND",
+    "usage": {
+      "prompt_tokens": 31957,
+      "total_tokens": 31960,
+      "completion_tokens": 3,
+      "prompt_tokens_details": null
+    },
+    "source_sha256": "3f8c32f418bb199ab553f7484365ef39f71665ea1135f9eb9d4253f4c5c4171b"
+  },
+  {
+    "engine": "vllm",
+    "case": "显式字段提取复测",
+    "answer": "jade-50-1-259920",
+    "usage": {
+      "prompt_tokens": 31958,
+      "total_tokens": 31968,
+      "completion_tokens": 10,
+      "prompt_tokens_details": null
+    },
+    "source_sha256": "2923d7dd833e65883702fafb571aec9a2081f368ebf2118ea849e3a291802e5e"
+  }
+]

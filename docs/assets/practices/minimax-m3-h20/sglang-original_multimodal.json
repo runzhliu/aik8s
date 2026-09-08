@@ -1,0 +1,138 @@
+{
+  "model": "minimax-m3-sglang",
+  "fixture_variant": "plain",
+  "status": "CHECK_FAILURES",
+  "rounds": [
+    {
+      "case": "image-512",
+      "concurrency": 1,
+      "status": "WARMUP_FAILED"
+    },
+    {
+      "case": "image-512",
+      "concurrency": 4,
+      "status": "WARMUP_FAILED"
+    },
+    {
+      "case": "image-1024",
+      "concurrency": 1,
+      "status": "WARMUP_FAILED"
+    },
+    {
+      "case": "image-1024",
+      "concurrency": 4,
+      "status": "WARMUP_FAILED"
+    },
+    {
+      "case": "two-images-512",
+      "concurrency": 1,
+      "status": "WARMUP_FAILED"
+    },
+    {
+      "case": "two-images-512",
+      "concurrency": 4,
+      "status": "WARMUP_FAILED"
+    },
+    {
+      "case": "video-16frames",
+      "concurrency": 1,
+      "repeat": 1,
+      "requests": 16,
+      "passed": 16,
+      "status": "PASS",
+      "duration_s": 5.808970766607672,
+      "request_throughput": 2.7543605645210874,
+      "total_output_tokens": 400,
+      "output_throughput": 68.85901411302719,
+      "median_e2el_ms": 320.35794691182673
+    },
+    {
+      "case": "video-16frames",
+      "concurrency": 1,
+      "repeat": 2,
+      "requests": 16,
+      "passed": 16,
+      "status": "PASS",
+      "duration_s": 5.196246953681111,
+      "request_throughput": 3.0791454183418523,
+      "total_output_tokens": 400,
+      "output_throughput": 76.97863545854631,
+      "median_e2el_ms": 319.6735305245966
+    },
+    {
+      "case": "video-16frames",
+      "concurrency": 1,
+      "repeat": 3,
+      "requests": 16,
+      "passed": 16,
+      "status": "PASS",
+      "duration_s": 5.1183500667102635,
+      "request_throughput": 3.126007363987071,
+      "total_output_tokens": 400,
+      "output_throughput": 78.15018409967678,
+      "median_e2el_ms": 319.55077848397195
+    },
+    {
+      "case": "video-16frames",
+      "concurrency": 2,
+      "repeat": 1,
+      "requests": 16,
+      "passed": 16,
+      "status": "PASS",
+      "duration_s": 3.710163947660476,
+      "request_throughput": 4.312477892005054,
+      "total_output_tokens": 400,
+      "output_throughput": 107.81194730012636,
+      "median_e2el_ms": 452.38994690589607
+    },
+    {
+      "case": "video-16frames",
+      "concurrency": 2,
+      "repeat": 2,
+      "requests": 16,
+      "passed": 16,
+      "status": "PASS",
+      "duration_s": 3.608631561975926,
+      "request_throughput": 4.433813683999126,
+      "total_output_tokens": 400,
+      "output_throughput": 110.84534209997814,
+      "median_e2el_ms": 450.80499444156885
+    },
+    {
+      "case": "video-16frames",
+      "concurrency": 2,
+      "repeat": 3,
+      "requests": 16,
+      "passed": 16,
+      "status": "PASS",
+      "duration_s": 3.6148644061759114,
+      "request_throughput": 4.4261687859340935,
+      "total_output_tokens": 400,
+      "output_throughput": 110.65421964835232,
+      "median_e2el_ms": 452.0828982349485
+    }
+  ],
+  "fixtures": [
+    {
+      "file": "red-512.png",
+      "bytes": 1877,
+      "sha256": "564ef8f904ca49ea7df2545bd7b28b533eba1a6545fc6421e20568ad26c2ca7b"
+    },
+    {
+      "file": "red-1024.png",
+      "bytes": 5333,
+      "sha256": "c8a35d93722b2bf0936726afd05dd4c5a4c2eb637379706e4990dbea9a658240"
+    },
+    {
+      "file": "blue-512.png",
+      "bytes": 1878,
+      "sha256": "9541e6514d2f1a429ac95af125254c46a619283a94695e3b02757b0235da3807"
+    },
+    {
+      "file": "red-green-blue-16frames.mp4",
+      "bytes": 4762,
+      "sha256": "f943f771ddf44fb3a71b31b0455deacee4eedf35bcd100d1d931736c6a21a2ca"
+    }
+  ],
+  "scope": "Repeated media, variable output length, engine-default preprocessing/cache; 16 source video frames do not imply equal sampled frames or visual tokens."
+}

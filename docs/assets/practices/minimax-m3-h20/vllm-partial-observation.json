@@ -1,0 +1,15 @@
+{
+  "model": "minimax-m3-vllm",
+  "status": "STOPPED_BY_USER",
+  "observation_result": "NO_FAILURES_OBSERVED",
+  "duration_s": 1804.121197938919,
+  "completed": 903,
+  "failed": 0,
+  "observation_start_at": 1788845330.5279362,
+  "last_request_completed_at": 1788847134.6491342,
+  "stop_requested_at": 1788847136.4540615,
+  "scheduled_request_interval_s": 2,
+  "median_e2el_ms": 120.80851709470153,
+  "max_e2el_ms": 225.6220388226211,
+  "scope": "User-ended observation only; approximately 30 minutes, 80% text / 20% repeated image, 0.5 req/s. Not a completed one-hour soak and not compared with SGLang."
+}

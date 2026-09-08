@@ -19,6 +19,8 @@ last_reviewed: 2026-08-14
 
 ## 性能、成本与容量
 
+- [MiniMax-M3：八卡 H20 上的 SGLang 与 vLLM 实测](minimax-m3-h20-benchmark.md)
+- [MiniMax-M3：H20 上的 SGLang 与 vLLM 部署及测试压测计划](minimax-m3-h20-sglang-vllm-test-plan.md)
 - [MiniMax H3：H20 音视频生成部署、测试与压测计划](minimax-h3-h20-deployment-benchmark-plan.md)
 - [MiniMax H3 H20-3e 实测：完整音视频生成、双引擎与持久化验收](minimax-h3-h20-benchmark.md)
 - [DeepSeek-V4-Flash-Vision-Exp Day 0：4×H20 多模态部署与压测](deepseek-v4-flash-vision-exp-day0-h20.md)

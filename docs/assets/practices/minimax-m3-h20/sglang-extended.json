@@ -1,0 +1,370 @@
+{
+  "model": "minimax-m3-sglang",
+  "status": "CHECK_FAILURES",
+  "cases": [
+    {
+      "case": "parallel-tools",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 410,
+        "total_tokens": 468,
+        "completion_tokens": 58,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.5329560148529708
+    },
+    {
+      "case": "nested-tool",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 498,
+        "total_tokens": 592,
+        "completion_tokens": 94,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.7696337616071105
+    },
+    {
+      "case": "json-output",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 183,
+        "total_tokens": 200,
+        "completion_tokens": 17,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.47032033186405897
+    },
+    {
+      "case": "code-sandbox",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 196,
+        "total_tokens": 212,
+        "completion_tokens": 16,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.25604345090687275
+    },
+    {
+      "case": "bad-image",
+      "status": "FAIL",
+      "http_status": 500,
+      "usage": null,
+      "elapsed_s": 0.02663586800917983
+    },
+    {
+      "case": "bad-video",
+      "status": "FAIL",
+      "http_status": 500,
+      "usage": null,
+      "elapsed_s": 0.006471989210695028
+    },
+    {
+      "case": "same-prompt-disabled-r1",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 189,
+        "total_tokens": 191,
+        "completion_tokens": 2,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.13474943907931447,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-disabled-r2",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 189,
+        "total_tokens": 191,
+        "completion_tokens": 2,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.13230506796389818,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-disabled-r3",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 189,
+        "total_tokens": 191,
+        "completion_tokens": 2,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.13245712500065565,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-adaptive-r1",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 202,
+        "total_tokens": 239,
+        "completion_tokens": 37,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.37652568984776735,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-adaptive-r2",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 202,
+        "total_tokens": 239,
+        "completion_tokens": 37,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.3731309790164232,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-adaptive-r3",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 202,
+        "total_tokens": 239,
+        "completion_tokens": 37,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.3731874078512192,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-enabled-r1",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 199,
+        "total_tokens": 267,
+        "completion_tokens": 68,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 66
+      },
+      "elapsed_s": 0.5867484626360238,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-enabled-r2",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 199,
+        "total_tokens": 267,
+        "completion_tokens": 68,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 66
+      },
+      "elapsed_s": 0.5867190440185368,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-enabled-r3",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 199,
+        "total_tokens": 267,
+        "completion_tokens": 68,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 66
+      },
+      "elapsed_s": 0.5891894036903977,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "needle-32768-p10-r1",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.722279194742441,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p10-r2",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.720114608295262,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p10-r3",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.7194938617758453,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p50-r1",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.721564609091729,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p50-r2",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.7220488297753036,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p50-r3",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.7231861958280206,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p90-r1",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31956,
+        "total_tokens": 31959,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.7262793825939298,
+      "input_text_tokens_without_template": 31793
+    },
+    {
+      "case": "needle-32768-p90-r2",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31956,
+        "total_tokens": 31959,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.7263043532148004,
+      "input_text_tokens_without_template": 31793
+    },
+    {
+      "case": "needle-32768-p90-r3",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31956,
+        "total_tokens": 31959,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.7277171136811376,
+      "input_text_tokens_without_template": 31793
+    },
+    {
+      "case": "needle-32768-absent",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31944,
+        "total_tokens": 31947,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 3.7242368748411536
+    },
+    {
+      "case": "over-context",
+      "status": "PASS",
+      "http_status": 400,
+      "usage": null,
+      "elapsed_s": 0.18211458483710885
+    },
+    {
+      "case": "client-disconnect",
+      "status": "PASS",
+      "scope": "Client closed stream; server abort and resource recovery require server telemetry."
+    },
+    {
+      "case": "recovery-after-errors",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 171,
+        "total_tokens": 173,
+        "completion_tokens": 2,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+      },
+      "elapsed_s": 0.14103883085772395
+    }
+  ],
+  "context_window": 32768,
+  "scope": "Small functional samples; does not establish benchmark accuracy or capacity beyond configured window."
+}

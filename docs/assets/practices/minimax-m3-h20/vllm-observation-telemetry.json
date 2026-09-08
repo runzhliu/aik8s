@@ -1,0 +1,27 @@
+{
+  "samples": 60,
+  "sampling_interval_s": 30,
+  "first_gpu_memory_mib": [
+    120603.0,
+    120589.0,
+    120593.0,
+    120603.0,
+    120603.0,
+    120591.0,
+    120603.0,
+    120603.0
+  ],
+  "last_gpu_memory_mib": [
+    120603.0,
+    120589.0,
+    120593.0,
+    120603.0,
+    120603.0,
+    120591.0,
+    120603.0,
+    120603.0
+  ],
+  "sampled_min_gpu_memory_mib": 120589.0,
+  "sampled_max_gpu_memory_mib": 120603.0,
+  "scope": "vLLM user-ended observation only; discrete sampling does not establish continuous peaks or long-term leak freedom."
+}

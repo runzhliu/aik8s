@@ -1,0 +1,108 @@
+[
+  {
+    "case": "math-disabled",
+    "prompt": "一个仓库有 240 件货物，先发走 15%，又入库 36 件，现在有多少件？只给结论并简要说明。",
+    "mode": {
+      "thinking_mode": "disabled"
+    },
+    "answer": "**现在有 240 件货物。**\n\n简要说明：先发走 15%，即 240 × 15% = 36 件，剩余 240 - 36 = 204 件；再入库 36 件，204 + 36 = 240 件。发走的和入库的数量相同，所以最终货物数量不变。",
+    "tool_calls": null,
+    "usage": {
+      "prompt_tokens": 192,
+      "total_tokens": 261,
+      "completion_tokens": 69,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    }
+  },
+  {
+    "case": "math-enabled",
+    "prompt": "计算 17 加 28，并简述计算过程。",
+    "mode": {
+      "thinking_mode": "enabled"
+    },
+    "answer": "# 计算 17 + 28\n\n## 结果\n**17 + 28 = 45**\n\n## 计算过程\n\n**方法一：直接相加**\n```\n  17\n+ 28\n────\n  45\n```\n- 个位：7 + 8 = 15，写 5 进 1\n- 十位：1 + 2 + 1（进位）= 4\n- 结果：45\n\n**方法二：拆分法**\n- 17 + 28\n- = 17 + 20 + 8\n- = 37 + 8\n- = 45\n\n**方法三：凑整法**\n- 17 + 28\n- = (17 + 3) + (28 - 3)\n- = 20 + 25\n- = 45\n\n三种方法都能得到相同的结果 **45**。",
+    "tool_calls": null,
+    "usage": {
+      "prompt_tokens": 185,
+      "total_tokens": 420,
+      "completion_tokens": 235,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 54
+    }
+  },
+  {
+    "case": "image-ocr",
+    "prompt": "读出图中 Q1、Q2、Q3 的数值，指出哪个季度比上季度下降。",
+    "mode": {
+      "thinking_mode": "disabled"
+    },
+    "answer": "# 图表数据读取\n\n**各季度数值：**\n- **Q1：120**\n- **Q2：90**\n- **Q3：150**\n\n# 季度对比分析\n\n| 对比 | 变化 | 数值差 |\n|------|------|--------|\n| Q1 → Q2 | 📉 下降 | 120 → 90（减少 30） |\n| Q2 → Q3 | 📈 上升 | 90 → 150（增加 60） |\n\n# 结论\n\n**Q2 比上季度（Q1）下降**，从 120 降至 90，减少了 30。",
+    "tool_calls": null,
+    "usage": {
+      "prompt_tokens": 508,
+      "total_tokens": 639,
+      "completion_tokens": 131,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    }
+  },
+  {
+    "case": "video-order",
+    "prompt": "按出现顺序列出视频中背景的三种颜色。",
+    "mode": {
+      "thinking_mode": "disabled"
+    },
+    "answer": "视频中背景按出现顺序的三种颜色是：红色、绿色、蓝色。",
+    "tool_calls": null,
+    "usage": {
+      "prompt_tokens": 504,
+      "total_tokens": 521,
+      "completion_tokens": 17,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    }
+  },
+  {
+    "case": "tool-call",
+    "prompt": "请调用 get_weather 查询广州天气，获取结果后用中文回答。",
+    "mode": {
+      "thinking_mode": "disabled"
+    },
+    "answer": "",
+    "tool_calls": [
+      {
+        "id": "call_b2929c4428a74d2caf5a67db",
+        "index": 0,
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "arguments": "{\"city\": \"广州\"}"
+        }
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 416,
+      "total_tokens": 444,
+      "completion_tokens": 28,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    }
+  },
+  {
+    "case": "tool-result",
+    "prompt": "请调用 get_weather 查询广州天气，获取结果后用中文回答。",
+    "mode": {
+      "thinking_mode": "disabled"
+    },
+    "answer": "广州今天的天气情况如下：\n\n- **温度**：24°C\n- **天气状况**：晴\n\n今天广州天气晴朗，温度适宜，是个不错的天气！☀️",
+    "tool_calls": null,
+    "usage": {
+      "prompt_tokens": 241,
+      "total_tokens": 275,
+      "completion_tokens": 34,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0
+    }
+  }
+]

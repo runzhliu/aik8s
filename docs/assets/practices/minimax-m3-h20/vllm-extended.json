@@ -1,0 +1,346 @@
+{
+  "model": "minimax-m3-vllm",
+  "status": "CHECK_FAILURES",
+  "cases": [
+    {
+      "case": "parallel-tools",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 405,
+        "total_tokens": 464,
+        "completion_tokens": 59,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.5193644431419671
+    },
+    {
+      "case": "nested-tool",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 493,
+        "total_tokens": 587,
+        "completion_tokens": 94,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.7588988719508052
+    },
+    {
+      "case": "json-output",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 183,
+        "total_tokens": 200,
+        "completion_tokens": 17,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.8941898080520332
+    },
+    {
+      "case": "code-sandbox",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 196,
+        "total_tokens": 212,
+        "completion_tokens": 16,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.24196389084681869
+    },
+    {
+      "case": "bad-image",
+      "status": "PASS",
+      "http_status": 400,
+      "usage": null,
+      "elapsed_s": 0.07968068309128284
+    },
+    {
+      "case": "bad-video",
+      "status": "PASS",
+      "http_status": 400,
+      "usage": null,
+      "elapsed_s": 0.005503788124769926
+    },
+    {
+      "case": "same-prompt-disabled-r1",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 189,
+        "total_tokens": 191,
+        "completion_tokens": 2,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.12065269192680717,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-disabled-r2",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 189,
+        "total_tokens": 191,
+        "completion_tokens": 2,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.11678990023210645,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-disabled-r3",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 189,
+        "total_tokens": 191,
+        "completion_tokens": 2,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.11624107137322426,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-adaptive-r1",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 202,
+        "total_tokens": 239,
+        "completion_tokens": 37,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.3655540640465915,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-adaptive-r2",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 202,
+        "total_tokens": 239,
+        "completion_tokens": 37,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.3604018478654325,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-adaptive-r3",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 202,
+        "total_tokens": 239,
+        "completion_tokens": 37,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.36087869806215167,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-enabled-r1",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 199,
+        "total_tokens": 267,
+        "completion_tokens": 68,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.577793656848371,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-enabled-r2",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 199,
+        "total_tokens": 267,
+        "completion_tokens": 68,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.579309836961329,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "same-prompt-enabled-r3",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 199,
+        "total_tokens": 267,
+        "completion_tokens": 68,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.5767749077640474,
+      "has_reasoning": true,
+      "scope": "Three real chat samples per mode, includes first-use effects; not the fixed-length performance baseline."
+    },
+    {
+      "case": "needle-32768-p10-r1",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3751135328784585,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p10-r2",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3793867849744856,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p10-r3",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.382156009785831,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p50-r1",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.381259588059038,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p50-r2",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3853575149551034,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p50-r3",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31960,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3837007977999747,
+      "input_text_tokens_without_template": 31794
+    },
+    {
+      "case": "needle-32768-p90-r1",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31956,
+        "total_tokens": 31959,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3843152560293674,
+      "input_text_tokens_without_template": 31793
+    },
+    {
+      "case": "needle-32768-p90-r2",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31956,
+        "total_tokens": 31959,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3815004429779947,
+      "input_text_tokens_without_template": 31793
+    },
+    {
+      "case": "needle-32768-p90-r3",
+      "status": "FAIL",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31956,
+        "total_tokens": 31959,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3835663008503616,
+      "input_text_tokens_without_template": 31793
+    },
+    {
+      "case": "needle-32768-absent",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 31944,
+        "total_tokens": 31947,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3838125062175095
+    },
+    {
+      "case": "over-context",
+      "status": "PASS",
+      "http_status": 400,
+      "usage": null,
+      "elapsed_s": 0.07616019388660789
+    },
+    {
+      "case": "client-disconnect",
+      "status": "PASS",
+      "scope": "Client closed stream; server abort and resource recovery require server telemetry."
+    },
+    {
+      "case": "recovery-after-errors",
+      "status": "PASS",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 171,
+        "total_tokens": 173,
+        "completion_tokens": 2,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 0.12271784013137221
+    }
+  ],
+  "context_window": 32768,
+  "scope": "Small functional samples; does not establish benchmark accuracy or capacity beyond configured window."
+}

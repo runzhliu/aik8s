@@ -1,0 +1,9 @@
+# Official MiniMax-M3 CUDA 13 image; the H20 GPU gate is still required.
+ARG BASE_IMAGE=lmsysorg/sglang@sha256:8cc6e6f90bf803e9817800b679173d0b526f2b42b2c61b7ecafecdadb610eb55
+FROM ${BASE_IMAGE}
+ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+# Keep the NIXL frontend. Its declared dependencies include both backend wheels;
+# it selects nixl_cu13 from torch.version.cuda at runtime.
+RUN python3 -m pip install --no-cache-dir nixl-cu12==1.2.0 pillow==11.3.0 && \
+    python3 -m pip check && \
+    python3 -c "import importlib.metadata as m, importlib.util as u; print(m.version('nixl'), m.version('nixl-cu13')); assert u.find_spec('nixl') is not None"

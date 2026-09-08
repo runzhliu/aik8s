@@ -1,0 +1,18 @@
+{
+  "sglang": {
+    "registration": "PASS",
+    "cross_cluster_completion": "PASS",
+    "other_connections_preserved": true,
+    "application_proxy": "PASS",
+    "application_proxy_answer": "45",
+    "application_proxy_elapsed_s": 0.1585860699415207,
+    "application_proxy_scope": "Model discovery and temporary-chat request via actual OpenWebUI application API; not a browser UI test"
+  },
+  "vllm": {
+    "registration": "PASS",
+    "cross_cluster_completion": "PASS",
+    "other_connections_preserved": true
+  },
+  "browser_screenshot": "UNAVAILABLE_NO_CONNECTED_BROWSER",
+  "scope": "Both engines registered serially using gmanctl in existing OpenWebUI; no new instance."
+}

@@ -1,0 +1,147 @@
+{
+  "model": "minimax-m3-vllm",
+  "status": "PASS",
+  "scope": "Explicit field-extraction prompt retest; original template outcomes retained separately.",
+  "cases": [
+    {
+      "case": "needle-32768-absent",
+      "expected": "NOT_FOUND",
+      "source_sha256": "88bdccb1191a1345afc4e25b40eb19f1d6c0b1673f5de1e857f139ca3ee1894e",
+      "status": "PASS",
+      "answer": "NOT_FOUND",
+      "usage": {
+        "prompt_tokens": 31945,
+        "total_tokens": 31948,
+        "completion_tokens": 3,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.3768326910212636
+    },
+    {
+      "case": "needle-32768-p10-r1",
+      "expected": "jade-10-1-409066",
+      "source_sha256": "c607f15539f3fb7e9ccacd6ed5009a4a595278d3f9c67b5234b2f03832317c20",
+      "status": "PASS",
+      "answer": "jade-10-1-409066",
+      "usage": {
+        "prompt_tokens": 31958,
+        "total_tokens": 31968,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.4301117551513016
+    },
+    {
+      "case": "needle-32768-p10-r2",
+      "expected": "jade-10-2-594408",
+      "source_sha256": "990adfa12b70584b3a622b126e6118e25ab6c40dbdbea2b91acbbaf7be4e57f2",
+      "status": "PASS",
+      "answer": "jade-10-2-594408",
+      "usage": {
+        "prompt_tokens": 31958,
+        "total_tokens": 31968,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.432498665060848
+    },
+    {
+      "case": "needle-32768-p10-r3",
+      "expected": "jade-10-3-871990",
+      "source_sha256": "6e4dd43fb17b35415211bcc5a7ab1bf5f83bc651e8cd203574f1ceed9ba276e1",
+      "status": "PASS",
+      "answer": "jade-10-3-871990",
+      "usage": {
+        "prompt_tokens": 31958,
+        "total_tokens": 31968,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.4356743209064007
+    },
+    {
+      "case": "needle-32768-p50-r1",
+      "expected": "jade-50-1-259920",
+      "source_sha256": "ef5412093a633f1dac63d013319d98de51592cabaa4b97064a1d2ba0cf0a9746",
+      "status": "PASS",
+      "answer": "jade-50-1-259920",
+      "usage": {
+        "prompt_tokens": 31958,
+        "total_tokens": 31968,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.4351573223248124
+    },
+    {
+      "case": "needle-32768-p50-r2",
+      "expected": "jade-50-2-482048",
+      "source_sha256": "2704b93b0d6b1b1476e30b10d18059f799d2c23bf9752fa5c3d0d70623520d0f",
+      "status": "PASS",
+      "answer": "jade-50-2-482048",
+      "usage": {
+        "prompt_tokens": 31958,
+        "total_tokens": 31968,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.436251820065081
+    },
+    {
+      "case": "needle-32768-p50-r3",
+      "expected": "jade-50-3-145728",
+      "source_sha256": "507e6cf47c82085e2e1f92cc30cd6814650603fe5eb7206405e5c72ebe337883",
+      "status": "PASS",
+      "answer": "jade-50-3-145728",
+      "usage": {
+        "prompt_tokens": 31958,
+        "total_tokens": 31968,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.4357782690785825
+    },
+    {
+      "case": "needle-32768-p90-r1",
+      "expected": "jade-90-1-920414",
+      "source_sha256": "b85af3ca4117356ebedfccf0a3eab89389f7524b841ec7a2bc377f3dadf5a15a",
+      "status": "PASS",
+      "answer": "jade-90-1-920414",
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31967,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.4315387862734497
+    },
+    {
+      "case": "needle-32768-p90-r2",
+      "expected": "jade-90-2-249448",
+      "source_sha256": "d93d06e23f4f15a719e8f05f5cd4464cc22742e23938ba459f5a370b3ddf1650",
+      "status": "PASS",
+      "answer": "jade-90-2-249448",
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31967,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.433606604114175
+    },
+    {
+      "case": "needle-32768-p90-r3",
+      "expected": "jade-90-3-650645",
+      "source_sha256": "ad5bcc2d9d90f0be4629de7a425664c977515e8bd35418857b764952e5bcf1cd",
+      "status": "PASS",
+      "answer": "jade-90-3-650645",
+      "usage": {
+        "prompt_tokens": 31957,
+        "total_tokens": 31967,
+        "completion_tokens": 10,
+        "prompt_tokens_details": null
+      },
+      "elapsed_s": 3.4330432643182576
+    }
+  ]
+}

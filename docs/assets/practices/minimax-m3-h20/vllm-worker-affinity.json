@@ -1,0 +1,47 @@
+{
+  "scope": "Read-only /proc status snapshot of all eight vLLM TP workers; allowed CPU/memory-node sets do not prove actual thread placement or memory residency.",
+  "engine": "vllm",
+  "tp_workers": [
+    {
+      "pid": 226,
+      "cpus_allowed_list": "0-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 227,
+      "cpus_allowed_list": "0-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 228,
+      "cpus_allowed_list": "0-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 229,
+      "cpus_allowed_list": "0-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 230,
+      "cpus_allowed_list": "0-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 231,
+      "cpus_allowed_list": "0-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 232,
+      "cpus_allowed_list": "0-383",
+      "mems_allowed_list": "0-1"
+    },
+    {
+      "pid": 233,
+      "cpus_allowed_list": "0-383",
+      "mems_allowed_list": "0-1"
+    }
+  ],
+  "manual_numa_binding": false
+}

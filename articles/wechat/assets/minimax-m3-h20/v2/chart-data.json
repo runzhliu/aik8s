@@ -1,0 +1,210 @@
+[
+  {
+    "figure": "short-throughput.png",
+    "group": "C=1",
+    "engine": "sglang",
+    "median": 114.70901856096502,
+    "min": 114.61778032043645,
+    "max": 114.71628836685937
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=1",
+    "engine": "vllm",
+    "median": 116.55023087972442,
+    "min": 116.53429716743422,
+    "max": 116.61885883013258
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=4",
+    "engine": "sglang",
+    "median": 324.23769061138637,
+    "min": 316.77032579739046,
+    "max": 325.3229065555667
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=4",
+    "engine": "vllm",
+    "median": 275.3951993205399,
+    "min": 247.88697764477885,
+    "max": 277.87630634904633
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=8",
+    "engine": "sglang",
+    "median": 499.4966845276775,
+    "min": 498.6539385731692,
+    "max": 502.49004969472236
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=8",
+    "engine": "vllm",
+    "median": 382.2208028723806,
+    "min": 382.1250317996611,
+    "max": 404.71852415231336
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=16",
+    "engine": "sglang",
+    "median": 784.0312923748921,
+    "min": 782.9985288176488,
+    "max": 784.8328252759403
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=16",
+    "engine": "vllm",
+    "median": 776.7094237785318,
+    "min": 759.9033886040444,
+    "max": 821.6231698384922
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=32",
+    "engine": "sglang",
+    "median": 1111.9894211450205,
+    "min": 1111.208438760118,
+    "max": 1119.607707371214
+  },
+  {
+    "figure": "short-throughput.png",
+    "group": "C=32",
+    "engine": "vllm",
+    "median": 1089.415981077916,
+    "min": 1071.7828908108404,
+    "max": 1098.562561332827
+  },
+  {
+    "figure": "rag-ttft.png",
+    "group": "4K / 128\nC4",
+    "engine": "sglang",
+    "median": 1.5826376880286261,
+    "min": 1.5821534593589603,
+    "max": 1.5838963651331142
+  },
+  {
+    "figure": "rag-ttft.png",
+    "group": "4K / 128\nC4",
+    "engine": "vllm",
+    "median": 1.3491518668131903,
+    "min": 1.347046825918369,
+    "max": 1.349345861072652
+  },
+  {
+    "figure": "rag-ttft.png",
+    "group": "4K / 128\nC8",
+    "engine": "sglang",
+    "median": 3.134704578621313,
+    "min": 3.13414355465211,
+    "max": 3.134891567565501
+  },
+  {
+    "figure": "rag-ttft.png",
+    "group": "4K / 128\nC8",
+    "engine": "vllm",
+    "median": 1.1680841097375378,
+    "min": 1.1672276180004701,
+    "max": 1.1688565120799468
+  },
+  {
+    "figure": "rag-ttft.png",
+    "group": "16K / 256\nC4",
+    "engine": "sglang",
+    "median": 6.8550100968685,
+    "min": 6.854308475018479,
+    "max": 6.856888169585727
+  },
+  {
+    "figure": "rag-ttft.png",
+    "group": "16K / 256\nC4",
+    "engine": "vllm",
+    "median": 4.473805673280729,
+    "min": 4.471275191754102,
+    "max": 4.474537029070778
+  },
+  {
+    "figure": "rag-ttft.png",
+    "group": "16K / 256\nC8",
+    "engine": "sglang",
+    "median": 13.614306285162456,
+    "min": 13.606140815257096,
+    "max": 13.621580116194673
+  },
+  {
+    "figure": "rag-ttft.png",
+    "group": "16K / 256\nC8",
+    "engine": "vllm",
+    "median": 8.696415709215207,
+    "min": 8.681517189485012,
+    "max": 8.700127123785196
+  },
+  {
+    "figure": "multimodal-throughput.png",
+    "group": "512 单图\nC4",
+    "engine": "sglang",
+    "median": 12.290789005435077,
+    "min": 12.193245242872235,
+    "max": 12.375680696480606
+  },
+  {
+    "figure": "multimodal-throughput.png",
+    "group": "512 单图\nC4",
+    "engine": "vllm",
+    "median": 11.753656561322602,
+    "min": 11.5878025346439,
+    "max": 14.037558722990111
+  },
+  {
+    "figure": "multimodal-throughput.png",
+    "group": "1024 单图\nC4",
+    "engine": "sglang",
+    "median": 7.715796565565054,
+    "min": 7.674774199415675,
+    "max": 7.754698207157222
+  },
+  {
+    "figure": "multimodal-throughput.png",
+    "group": "1024 单图\nC4",
+    "engine": "vllm",
+    "median": 10.895159931669959,
+    "min": 10.875978629179924,
+    "max": 10.89631183452334
+  },
+  {
+    "figure": "multimodal-throughput.png",
+    "group": "512 双图\nC4",
+    "engine": "sglang",
+    "median": 6.785025852713255,
+    "min": 6.661284720182156,
+    "max": 6.810325589363474
+  },
+  {
+    "figure": "multimodal-throughput.png",
+    "group": "512 双图\nC4",
+    "engine": "vllm",
+    "median": 7.844610007386512,
+    "min": 7.52698076613944,
+    "max": 8.059384012648957
+  },
+  {
+    "figure": "multimodal-throughput.png",
+    "group": "16 帧源视频\nC2",
+    "engine": "sglang",
+    "median": 4.38804608022757,
+    "min": 4.269883883939482,
+    "max": 4.43291928306539
+  },
+  {
+    "figure": "multimodal-throughput.png",
+    "group": "16 帧源视频\nC2",
+    "engine": "vllm",
+    "median": 4.506779354199742,
+    "min": 4.503107176326327,
+    "max": 4.514873097493693
+  }
+]
