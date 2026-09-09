@@ -1,0 +1,287 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "dsv4-flash-aibrix-perf",
+        "namespace": "inference-lab",
+        "labels": {
+          "aik8s.run/experiment": "aibrix-dsv4",
+          "prometheus-discovery": "true"
+        }
+      },
+      "spec": {
+        "selector": {
+          "app.kubernetes.io/name": "dsv4-flash-aibrix-perf"
+        },
+        "ports": [
+          {
+            "name": "http",
+            "port": 8000,
+            "targetPort": 8000
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "dsv4-flash-aibrix-perf",
+        "namespace": "inference-lab",
+        "labels": {
+          "app.kubernetes.io/name": "dsv4-flash-aibrix-perf",
+          "model.aibrix.ai/name": "dsv4-flash-aibrix-perf",
+          "model.aibrix.ai/port": "8000",
+          "aik8s.run/experiment": "aibrix-dsv4"
+        }
+      },
+      "spec": {
+        "replicas": 2,
+        "strategy": {
+          "type": "RollingUpdate",
+          "rollingUpdate": {
+            "maxSurge": 0,
+            "maxUnavailable": 1
+          }
+        },
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "dsv4-flash-aibrix-perf"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "dsv4-flash-aibrix-perf",
+              "model.aibrix.ai/name": "dsv4-flash-aibrix-perf",
+              "model.aibrix.ai/port": "8000",
+              "aik8s.run/experiment": "aibrix-dsv4"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "args": [
+                  "set -euo pipefail\nulimit -n 65536\nexec vllm serve /models/<MODEL_SUBDIRECTORY> \\\n  --served-model-name dsv4-flash-aibrix-perf \\\n  --host 0.0.0.0 \\\n  --port 8000 \\\n  --trust-remote-code \\\n  --tensor-parallel-size 8 \\\n  --kv-cache-dtype fp8 \\\n  --block-size 256 \\\n  --gpu-memory-utilization 0.88 \\\n  --max-model-len 32768 \\\n  --max-num-seqs 32 \\\n  --tokenizer-mode deepseek_v4 \\\n  --tool-call-parser deepseek_v4 \\\n  --enable-auto-tool-choice \\\n  --reasoning-parser deepseek_v4 \\\n  --enable-prefix-caching\n"
+                ],
+                "command": [
+                  "bash",
+                  "-lc"
+                ],
+                "env": [
+                  {
+                    "name": "HF_HUB_OFFLINE",
+                    "value": "1"
+                  },
+                  {
+                    "name": "TRANSFORMERS_OFFLINE",
+                    "value": "1"
+                  },
+                  {
+                    "name": "PYTHONUNBUFFERED",
+                    "value": "1"
+                  }
+                ],
+                "image": "<VLLM_DSV4_IMAGE>",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "vllm",
+                "ports": [
+                  {
+                    "name": "http",
+                    "containerPort": 8000
+                  }
+                ],
+                "readinessProbe": {
+                  "httpGet": {
+                    "path": "/health",
+                    "port": 8000
+                  },
+                  "periodSeconds": 5,
+                  "timeoutSeconds": 3,
+                  "failureThreshold": 3
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "160",
+                    "memory": "1200Gi",
+                    "nvidia.com/gpu": "8"
+                  },
+                  "requests": {
+                    "cpu": "64",
+                    "memory": "256Gi",
+                    "nvidia.com/gpu": "8"
+                  }
+                },
+                "securityContext": {
+                  "capabilities": {
+                    "add": [
+                      "IPC_LOCK"
+                    ]
+                  }
+                },
+                "startupProbe": {
+                  "httpGet": {
+                    "path": "/health",
+                    "port": 8000
+                  },
+                  "periodSeconds": 10,
+                  "timeoutSeconds": 5,
+                  "failureThreshold": 180
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/models",
+                    "name": "model",
+                    "readOnly": true
+                  },
+                  {
+                    "mountPath": "/dev/shm",
+                    "name": "dshm"
+                  },
+                  {
+                    "mountPath": "/root/.cache",
+                    "name": "cache"
+                  }
+                ],
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/health",
+                    "port": 8000
+                  },
+                  "periodSeconds": 30,
+                  "timeoutSeconds": 10,
+                  "failureThreshold": 6
+                }
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "initContainers": [
+              {
+                "name": "verify-checkpoint",
+                "image": "<VLLM_DSV4_IMAGE>",
+                "command": [
+                  "python3",
+                  "-c"
+                ],
+                "args": [
+                  "import json,pathlib; p=pathlib.Path(\"/models/<MODEL_SUBDIRECTORY>\"); c=json.loads((p/\"config.json\").read_text()); indexes=list(p.glob(\"*.index.json\")); assert indexes,\"missing index\"; shards=set(); [shards.update(json.loads(i.read_text()).get(\"weight_map\",{}).values()) for i in indexes]; assert shards; missing=[f for f in shards if not (p/f).is_file() or (p/f).stat().st_size==0]; assert not missing,missing; print(\"checkpoint\",c.get(\"model_type\"),\"shards\",len(shards),\"bytes\",sum((p/f).stat().st_size for f in shards),flush=True)"
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "model",
+                    "mountPath": "/models",
+                    "readOnly": true
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "256Mi"
+                  },
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "1Gi"
+                  }
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 180,
+            "tolerations": [
+              {
+                "effect": "NoSchedule",
+                "key": "quarantine-room",
+                "operator": "Equal",
+                "value": "gpu-training-H20"
+              },
+              {
+                "effect": "NoExecute",
+                "key": "quarantine-room",
+                "operator": "Equal",
+                "value": "gpu-training-H20"
+              }
+            ],
+            "volumes": [
+              {
+                "name": "model",
+                "persistentVolumeClaim": {
+                  "claimName": "<MODEL_PVC>",
+                  "readOnly": true
+                }
+              },
+              {
+                "emptyDir": {
+                  "medium": "Memory",
+                  "sizeLimit": "128Gi"
+                },
+                "name": "dshm"
+              },
+              {
+                "emptyDir": {
+                  "sizeLimit": "96Gi"
+                },
+                "name": "cache"
+              }
+            ],
+            "affinity": {
+              "nodeAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": {
+                  "nodeSelectorTerms": [
+                    {
+                      "matchExpressions": [
+                        {
+                          "key": "kubernetes.io/hostname",
+                          "operator": "In",
+                          "values": [
+                            "<GPU_NODE_A>",
+                            "<GPU_NODE_B>"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "podAntiAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": [
+                  {
+                    "labelSelector": {
+                      "matchLabels": {
+                        "app.kubernetes.io/name": "dsv4-flash-aibrix-perf"
+                      }
+                    },
+                    "topologyKey": "kubernetes.io/hostname"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "policy/v1",
+      "kind": "PodDisruptionBudget",
+      "metadata": {
+        "name": "dsv4-flash-aibrix-perf",
+        "namespace": "inference-lab"
+      },
+      "spec": {
+        "minAvailable": 1,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "dsv4-flash-aibrix-perf"
+          }
+        }
+      }
+    }
+  ]
+}

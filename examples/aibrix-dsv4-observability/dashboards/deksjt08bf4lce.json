@@ -1,0 +1,658 @@
+{
+  "uid": "deksjt08bf4lce",
+  "title": "AIBrix · Control plane",
+  "schemaVersion": 39,
+  "version": 2,
+  "editable": true,
+  "tags": [
+    "AIBrix",
+    "DS V4 Flash",
+    "validated metric contract"
+  ],
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0,211,255,1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "model",
+        "label": "Model",
+        "type": "constant",
+        "query": "dsv4-flash-aibrix-perf",
+        "current": {
+          "text": "dsv4-flash-aibrix-perf",
+          "value": "dsv4-flash-aibrix-perf"
+        },
+        "hide": 0
+      }
+    ]
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "type": "link",
+      "url": "/d/aibrix-perf-overview",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Control plane",
+      "type": "link",
+      "url": "/d/deksjt08bf4lce",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Envoy",
+      "type": "link",
+      "url": "/d/beidja4ourr40f",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Routing & cache",
+      "type": "link",
+      "url": "/d/5rRLZ0zDz",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "vLLM engine",
+      "type": "link",
+      "url": "/d/ce2azhsbhel8gd",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "GPU & capacity",
+      "type": "link",
+      "url": "/d/aibrix-perf-gpu",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "Scope & metric contract",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Shared AIBrix controller.** These are cluster-wide reconcile/workqueue statistics, not isolated model request metrics. A healthy reconcile loop does not prove model readiness. Autoscaling, P/D separation and external distributed KV cache are not enabled in this experiment."
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Controller scrape UP",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=\"aibrix-controller\"}",
+          "legendFormat": "Controller",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Reconcile rate by result",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(controller,result)(rate(controller_runtime_reconcile_total{job=\"aibrix-controller\"}[$__rate_interval]))",
+          "legendFormat": "{{controller}} · {{result}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Reconcile errors",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(controller)(rate(controller_runtime_reconcile_errors_total{job=\"aibrix-controller\"}[$__rate_interval]))",
+          "legendFormat": "{{controller}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Reconcile P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, controller) (rate(controller_runtime_reconcile_time_seconds_bucket{job=\"aibrix-controller\"}[$__rate_interval])))",
+          "legendFormat": "{{controller}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Workqueue depth",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "workqueue_depth{job=\"aibrix-controller\"}",
+          "legendFormat": "{{name}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Workqueue retries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(workqueue_retries_total{job=\"aibrix-controller\"}[$__rate_interval])",
+          "legendFormat": "{{name}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Active reconcile workers",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "controller_runtime_active_workers{job=\"aibrix-controller\"}",
+          "legendFormat": "{{controller}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Controller CPU cores",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(process_cpu_seconds_total{job=\"aibrix-controller\"}[$__rate_interval])",
+          "legendFormat": "Controller",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Controller RSS",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "process_resident_memory_bytes{job=\"aibrix-controller\"}",
+          "legendFormat": "Controller",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Queue wait P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 35,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, name) (rate(workqueue_queue_duration_seconds_bucket{job=\"aibrix-controller\"}[$__rate_interval])))",
+          "legendFormat": "{{name}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ]
+}

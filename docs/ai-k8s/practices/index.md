@@ -62,6 +62,7 @@ last_reviewed: 2026-08-14
 - [GLM-5.2 FP8 在 8×H20 141GB 上的 AIBrix + vLLM 实测](glm52-fp8-h20-aibrix-vllm.md)
 - [DeepSeek-V4-Flash-0731 的 H20 部署与压测](deepseek-v4-flash-h20-evaluation.md)
 - [在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)
+- [AIBrix 面向生产：DS V4 Flash 压测、看板与恢复实战](aibrix-dsv4-observability.md)
 - [AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU](aibrix-gpu-multinode-pd-production.md)
 - [在 Kubernetes 部署 ComfyUI：离线镜像、CephFS 模型与跨集群 Ingress](comfyui-minimax-h3-gpu.md)
 - [RBG 多角色推理编排与 sr1 实战](rbg-existing-cluster.md)

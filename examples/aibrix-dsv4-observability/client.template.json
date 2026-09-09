@@ -1,0 +1,120 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "aibrix-perf-client",
+        "namespace": "inference-lab"
+      },
+      "data": {
+        "client.py": "import argparse, asyncio, collections, json, math, os, random, statistics, time, uuid\nfrom pathlib import Path\nimport aiohttp\nfrom prometheus_client import REGISTRY, start_http_server\nfrom prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, HistogramMetricFamily\n\nROOT=Path(os.environ.get('RESULT_DIR','/results')); ROOT.mkdir(parents=True,exist_ok=True)\nMODEL=os.environ.get('MODEL','dsv4-flash-aibrix-perf')\nGATEWAY=os.environ['GATEWAY_URL'].rstrip('/')\nDIRECT=os.environ.get('SINGLE_POD_URL','http://dsv4-flash-aibrix-perf:8000')\nBUCKETS=[.001,.002,.003,.004,.005,.006,.007,.008,.009,.01,.0125,.015,.02,.025,.035,.05,.075,.1,.125,.15,.175,.2,.25,.3,.4,.5,.75,1,2,5,10,20,30,60,120,300,float('inf')]\n\ndef append(name,row):\n    with (ROOT/name).open('a') as f: f.write(json.dumps(row,ensure_ascii=False)+'\\n');f.flush();os.fsync(f.fileno())\n\ndef rows():\n    out=[]\n    for path in ROOT.glob('requests-*.jsonl'):\n        for line in path.read_text().splitlines():\n            try: out.append(json.loads(line))\n            except json.JSONDecodeError: pass\n    return out\n\nclass Collector:\n    def collect(self):\n        groups=collections.defaultdict(list)\n        for r in rows():groups[(r['phase'],str(r['concurrency']),r['route'],r['workload'])].append(r)\n        labels=['phase','concurrency','route','workload']\n        completed=CounterMetricFamily('aik8s_benchmark_requests','Completed client requests',labels=labels+['result'])\n        tokens=CounterMetricFamily('aik8s_benchmark_output_tokens','Actual completion tokens from usage',labels=labels)\n        for key,rs in groups.items():\n            for status in ['ok','error']:completed.add_metric(list(key)+[status],sum(r['result']==status for r in rs))\n            tokens.add_metric(list(key),sum(r.get('output_tokens',0) for r in rs if r['result']=='ok'))\n        yield completed;yield tokens\n        for metric,field,helptext in [('ttft','ttft','First nonempty streamed content or reasoning latency'),('tpot','tpot','Per request (last-first content time)/(completion tokens-1)'),('e2e','e2e','Full streaming response latency')]:\n            h=HistogramMetricFamily('aik8s_benchmark_'+metric+'_seconds',helptext,labels=labels)\n            for key,rs in groups.items():\n                values=[r[field] for r in rs if r['result']=='ok' and r.get(field) is not None]\n                h.add_metric(list(key),buckets=[('+'+'Inf' if math.isinf(b) else str(b),sum(v<=b for v in values)) for b in BUCKETS],sum_value=sum(values))\n            yield h\n        for field,helptext in [('elapsed','Measured phase duration'),('output_tokens_per_second','Aggregate generated tokens per second'),('request_rate','Completed requests per second')]:\n            g=GaugeMetricFamily('aik8s_benchmark_phase_'+field,helptext,labels=['phase','route','workload','concurrency'])\n            for p in ROOT.glob('summary-*.json'):\n                s=json.loads(p.read_text())\n                g.add_metric([s['phase'],s['route'],s['workload'],str(s['concurrency'])],s[field])\n            yield g\n        g=GaugeMetricFamily('aik8s_benchmark_phase_active','Currently executing phase',labels=['phase'])\n        p=ROOT/'active.json'\n        if p.exists():g.add_metric([json.loads(p.read_text())['phase']],1)\n        yield g\n\nasync def request(session,base,prompt,phase,concurrency,route,workload,max_tokens=128):\n    rid=str(uuid.uuid4());start=time.monotonic();first=last=None;usage={};fragments=0\n    row=dict(id=rid,phase=phase,concurrency=concurrency,route=route,workload=workload,started_at=time.time(),result='error')\n    body={'model':MODEL,'prompt':prompt,'max_tokens':max_tokens,'temperature':0,'ignore_eos':True,'stream':True,'stream_options':{'include_usage':True}}\n    headers={'x-request-id':rid}\n    if route not in ('direct','default'):headers['routing-strategy']=route\n    try:\n        async with session.post(base+'/v1/completions',json=body,headers=headers) as resp:\n            row['status']=resp.status\n            if resp.status!=200:raise RuntimeError((await resp.text())[:500])\n            done=False\n            async for raw in resp.content:\n                line=raw.decode().strip()\n                if not line.startswith('data:'):continue\n                payload=line[5:].strip()\n                if payload=='[DONE]':done=True;break\n                data=json.loads(payload)\n                if data.get('error'):raise RuntimeError(str(data['error']))\n                if data.get('usage'):usage=data['usage']\n                for choice in data.get('choices',[]):\n                    delta=choice.get('delta') or {}\n                    content=choice.get('text') or delta.get('content') or delta.get('reasoning_content') or delta.get('reasoning')\n                    if content:\n                        now=time.monotonic();first=first or now;last=now;fragments+=1\n            if not done or first is None or not usage.get('completion_tokens'):raise RuntimeError('Missing DONE/content/usage')\n        n=usage['completion_tokens']\n        row.update(result='ok',input_tokens=usage['prompt_tokens'],output_tokens=n,ttft=first-start,tpot=(last-first)/(n-1) if n>1 else None,e2e=time.monotonic()-start,fragments=fragments)\n    except Exception as e:row.update(error=str(e),e2e=time.monotonic()-start)\n    append('requests-'+phase+'.jsonl',row)\n    return row\n\ndef quantile(values,q):\n    a=sorted(values)\n    if not a:return None\n    x=(len(a)-1)*q;i=int(x);return a[i]+(a[min(i+1,len(a)-1)]-a[i])*(x-i)\n\nasync def runphase(session,phase,c,n,route='least-request',workload='short',base=GATEWAY,out=256):\n    if (ROOT/('summary-'+phase+'.json')).exists():print('SKIP completed '+phase,flush=True);return\n    start=time.monotonic();wall=time.time();sem=asyncio.Semaphore(c)\n    (ROOT/'active.json').write_text(json.dumps({'phase':phase,'start':wall}))\n    # Unique leading nonce reduces accidental prefix reuse in short/long workloads.\n    async def one(i,request_phase=phase):\n        async with sem:\n            nonce=uuid.uuid4().hex\n            sentence='The service tracks request latency, token throughput, cache utilization, and healthy replicas. '\n            if workload=='shared-prefix':prompt=sentence*260+'\\nRequest '+nonce+': explain the operational implications.'\n            else:prompt='Request '+nonce+'\\n'+sentence*(260 if workload=='long' else 30)+'\\nContinue with a technical explanation.'\n            return await request(session,base,prompt,request_phase,c,route,workload,out)\n    warm=await asyncio.gather(*(one(i,'warmup-'+phase) for i in range(c*2)))\n    if any(r['result']!='ok' for r in warm):raise RuntimeError('Warmup failed')\n    await asyncio.sleep(5)\n    start=time.monotonic();wall=time.time()\n    print(json.dumps({'event':'start','phase':phase,'concurrency':c,'requests':n,'at':wall}),flush=True)\n    counter=0\n    async def worker():\n        nonlocal counter\n        result=[]\n        while counter<n or time.monotonic()-start<60:\n            counter+=1\n            result.append(await one(counter))\n            if result[-1]['result']=='error':break\n        return result\n    groups=await asyncio.gather(*(worker() for _ in range(c)))\n    rs=[r for group in groups for r in group];n=len(rs)\n    elapsed=time.monotonic()-start;ok=[r for r in rs if r['result']=='ok']\n    s=dict(phase=phase,route=route,workload=workload,concurrency=c,requests=n,success=len(ok),errors=n-len(ok),started_at=wall,finished_at=time.time(),elapsed=elapsed,output_tokens_per_second=sum(r['output_tokens'] for r in ok)/elapsed,request_rate=len(ok)/elapsed)\n    for field in ['ttft','tpot','e2e','input_tokens','output_tokens']:\n        vals=[r[field] for r in ok if r.get(field) is not None]\n        s[field]={'p50':quantile(vals,.5),'p95':quantile(vals,.95),'p99':quantile(vals,.99),'min':min(vals) if vals else None,'max':max(vals) if vals else None}\n    (ROOT/('summary-'+phase+'.json')).write_text(json.dumps(s,indent=2))\n    print(json.dumps(s),flush=True)\n    if s['errors']>max(1,n*.05):raise RuntimeError('Error budget exceeded; stop benchmark')\n    await asyncio.sleep(15)\n\nasync def main(mode):\n    timeout=aiohttp.ClientTimeout(total=240,sock_read=120)\n    async with aiohttp.ClientSession(timeout=timeout,connector=aiohttp.TCPConnector(limit=80)) as session:\n        if mode=='smoke':\n            print(json.dumps(await request(session,GATEWAY,'Reply with READY.','smoke',1,'least-request','smoke',8)),flush=True);return\n        phases=[('direct-c1',1,8,'direct','short',DIRECT),('gateway-c1',1,8,'least-request','short',GATEWAY),('gateway-c4',4,24,'least-request','short',GATEWAY),('gateway-c16',16,64,'least-request','short',GATEWAY),('gateway-c32',32,96,'least-request','short',GATEWAY),('long-c16',16,48,'least-request','long',GATEWAY),('prefix-random',16,64,'random','shared-prefix',GATEWAY),('prefix-aware',16,64,'prefix-cache','shared-prefix',GATEWAY)]\n        for p in phases:await runphase(session,*p)\n        (ROOT/'active.json').write_text(json.dumps({'phase':'complete'}))\n\nif __name__=='__main__':\n    p=argparse.ArgumentParser();p.add_argument('mode',choices=['serve','smoke','run']);args=p.parse_args()\n    if args.mode=='serve':\n        REGISTRY.register(Collector());start_http_server(int(os.environ.get('METRICS_PORT','9095')))\n        while True:time.sleep(60)\n    else:asyncio.run(main(args.mode))\n"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "aibrix-perf-client",
+        "namespace": "inference-lab",
+        "labels": {
+          "app": "aibrix-perf-client"
+        }
+      },
+      "spec": {
+        "nodeSelector": {
+          "kubernetes.io/hostname": "<CPU_NODE>"
+        },
+        "automountServiceAccountToken": false,
+        "restartPolicy": "Always",
+        "containers": [
+          {
+            "name": "client",
+            "image": "<BENCHMARK_CLIENT_IMAGE>",
+            "command": [
+              "python3",
+              "/app/client.py",
+              "serve"
+            ],
+            "env": [
+              {
+                "name": "GATEWAY_URL",
+                "value": "<GATEWAY_URL>"
+              },
+              {
+                "name": "SINGLE_POD_URL",
+                "value": "<SINGLE_POD_URL>"
+              },
+              {
+                "name": "RESULT_DIR",
+                "value": "/results"
+              }
+            ],
+            "ports": [
+              {
+                "name": "metrics",
+                "containerPort": 9095
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "limits": {
+                "cpu": "4",
+                "memory": "4Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "code",
+                "mountPath": "/app"
+              },
+              {
+                "name": "results",
+                "mountPath": "/results"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "code",
+            "configMap": {
+              "name": "aibrix-perf-client"
+            }
+          },
+          {
+            "name": "results",
+            "hostPath": {
+              "path": "/var/lib/aik8s/aibrix-perf",
+              "type": "DirectoryOrCreate"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "aibrix-perf-client",
+        "namespace": "inference-lab"
+      },
+      "spec": {
+        "selector": {
+          "app": "aibrix-perf-client"
+        },
+        "ports": [
+          {
+            "port": 9095,
+            "targetPort": 9095
+          }
+        ]
+      }
+    }
+  ]
+}

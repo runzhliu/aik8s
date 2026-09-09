@@ -1,0 +1,795 @@
+{
+  "uid": "aibrix-perf-overview",
+  "title": "AIBrix · Overview",
+  "schemaVersion": 39,
+  "version": 2,
+  "editable": true,
+  "tags": [
+    "AIBrix",
+    "DS V4 Flash",
+    "validated metric contract"
+  ],
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0,211,255,1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "model",
+        "label": "Model",
+        "type": "constant",
+        "query": "dsv4-flash-aibrix-perf",
+        "current": {
+          "text": "dsv4-flash-aibrix-perf",
+          "value": "dsv4-flash-aibrix-perf"
+        },
+        "hide": 0
+      }
+    ]
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "type": "link",
+      "url": "/d/aibrix-perf-overview",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Control plane",
+      "type": "link",
+      "url": "/d/deksjt08bf4lce",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Envoy",
+      "type": "link",
+      "url": "/d/beidja4ourr40f",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Routing & cache",
+      "type": "link",
+      "url": "/d/5rRLZ0zDz",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "vLLM engine",
+      "type": "link",
+      "url": "/d/ce2azhsbhel8gd",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "GPU & capacity",
+      "type": "link",
+      "url": "/d/aibrix-perf-gpu",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "Scope & metric contract",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**2 replicas × TP8 · vLLM · AIBrix v0.7.0.** Client TTFT starts before POST and ends at first nonempty content/reasoning. Client TPOT = (last − first content time)/(output tokens − 1). Histogram quantiles are estimates; exact phase results remain in JSONL. Scrape UP is availability of metrics, not Kubernetes readiness. Shared Envoy and control-plane metrics include other tenants."
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Engine scrape targets UP",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(up{job=\"aibrix-vllm\"})",
+          "legendFormat": "UP",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Client completed requests by phase",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (phase,result) (aik8s_benchmark_requests_total{phase!~\"warmup.*|smoke\",result=\"ok\"})",
+          "legendFormat": "{{phase}} · {{result}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Client TTFT P50 / P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (le, phase) (rate(aik8s_benchmark_ttft_seconds_bucket{phase!~\"warmup.*|smoke\"}[$__rate_interval])))",
+          "legendFormat": "P50 · {{phase}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le, phase) (rate(aik8s_benchmark_ttft_seconds_bucket{phase!~\"warmup.*|smoke\"}[$__rate_interval])))",
+          "legendFormat": "P95 · {{phase}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Client TPOT P50 / P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (le, phase) (rate(aik8s_benchmark_tpot_seconds_bucket{phase!~\"warmup.*|smoke\"}[$__rate_interval])))",
+          "legendFormat": "P50 · {{phase}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le, phase) (rate(aik8s_benchmark_tpot_seconds_bucket{phase!~\"warmup.*|smoke\"}[$__rate_interval])))",
+          "legendFormat": "P95 · {{phase}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Client output throughput · completed phases",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "aik8s_benchmark_phase_output_tokens_per_second",
+          "legendFormat": "{{phase}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:tok/s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Engine output throughput",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (replica) (rate(vllm:generation_tokens_total{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval]))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:tok/s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Engine TTFT P95 · aggregated replicas",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval])))",
+          "legendFormat": "Engine TTFT P95",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Running / waiting",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (replica) (vllm:num_requests_running{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"})",
+          "legendFormat": "running · {{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (replica) (vllm:num_requests_waiting{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"})",
+          "legendFormat": "waiting · {{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Collection health by job",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "min by(job) (up)",
+          "legendFormat": "{{job}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Completed phase request rate",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 35,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "aik8s_benchmark_phase_request_rate",
+          "legendFormat": "{{phase}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Active experiment alerts",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "ALERTS{scope=\"aibrix-performance-lab\",alertstate=\"firing\"}",
+          "legendFormat": "{{alertname}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Recovery probe completed requests",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 43,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(result)(aik8s_benchmark_requests_total{phase=\"eviction-c4\"})",
+          "legendFormat": "{{result}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ]
+}

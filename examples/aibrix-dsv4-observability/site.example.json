@@ -1,0 +1,13 @@
+{
+  "GPU_NODE_A": "gpu-worker-a",
+  "GPU_NODE_B": "gpu-worker-b",
+  "CPU_NODE": "cpu-observability",
+  "MODEL_PVC": "model-readonly",
+  "MODEL_SUBDIRECTORY": "DeepSeek-V4-Flash-0731",
+  "VLLM_DSV4_IMAGE": "registry.example.com/inference/vllm-dsv4:validated-amd64",
+  "PROMETHEUS_IMAGE": "prom/prometheus:v3.13.2",
+  "GRAFANA_IMAGE": "grafana/grafana:13.1.2",
+  "BENCHMARK_CLIENT_IMAGE": "aibrix/metadata-service:v0.7.0",
+  "GATEWAY_URL": "http://<your-envoy-service>.envoy-gateway-system.svc",
+  "SINGLE_POD_URL": "http://<one-ready-model-pod-ip>:8000"
+}

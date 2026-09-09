@@ -1,0 +1,770 @@
+{
+  "uid": "ce2azhsbhel8gd",
+  "title": "AIBrix · vLLM engine",
+  "schemaVersion": 39,
+  "version": 2,
+  "editable": true,
+  "tags": [
+    "AIBrix",
+    "DS V4 Flash",
+    "validated metric contract"
+  ],
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0,211,255,1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "model",
+        "label": "Model",
+        "type": "constant",
+        "query": "dsv4-flash-aibrix-perf",
+        "current": {
+          "text": "dsv4-flash-aibrix-perf",
+          "value": "dsv4-flash-aibrix-perf"
+        },
+        "hide": 0
+      }
+    ]
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "type": "link",
+      "url": "/d/aibrix-perf-overview",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Control plane",
+      "type": "link",
+      "url": "/d/deksjt08bf4lce",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Envoy",
+      "type": "link",
+      "url": "/d/beidja4ourr40f",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Routing & cache",
+      "type": "link",
+      "url": "/d/5rRLZ0zDz",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "vLLM engine",
+      "type": "link",
+      "url": "/d/ce2azhsbhel8gd",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "GPU & capacity",
+      "type": "link",
+      "url": "/d/aibrix-perf-gpu",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "Scope & metric contract",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**vLLM v0.26 metrics contract.** TTFT, request-average TPOT and inter-token latency have distinct histograms. Never average pod quantiles: merge histogram buckets before histogram_quantile. Prefix cache uses counters; this engine has no v0-style CPU swap/cache panels."
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Engine TTFT P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, replica) (rate(vllm:time_to_first_token_seconds_bucket{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval])))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Request-average TPOT P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, replica) (rate(vllm:request_time_per_output_token_seconds_bucket{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval])))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Inter-token latency P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, replica) (rate(vllm:inter_token_latency_seconds_bucket{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval])))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "End-to-end latency P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, replica) (rate(vllm:e2e_request_latency_seconds_bucket{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval])))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Queue time P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, replica) (rate(vllm:request_queue_time_seconds_bucket{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval])))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Prefill time P95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, replica) (rate(vllm:request_prefill_time_seconds_bucket{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval])))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Running requests",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by(replica)(vllm:num_requests_running{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"})",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Waiting requests",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by(replica)(vllm:num_requests_waiting{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"})",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Generated token throughput",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(replica)(rate(vllm:generation_tokens_total{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval]))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:tok/s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Prompt token throughput",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 35,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(replica)(rate(vllm:prompt_tokens_total{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval]))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:tok/s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "KV cache utilization",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by(replica)(vllm:kv_cache_usage_perc{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"})",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Preemption rate",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "aibrix-perf-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 43,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(replica)(rate(vllm:num_preemptions_total{job=\"aibrix-vllm\",replica!=\"\",model_name=\"$model\"}[$__rate_interval]))",
+          "legendFormat": "{{replica}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "aibrix-perf-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ]
+}

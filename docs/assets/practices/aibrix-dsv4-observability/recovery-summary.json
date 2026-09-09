@@ -1,0 +1,18 @@
+{
+  "scope": "single replica Eviction; no retry; concurrency 4; 256 output tokens",
+  "pod_created_to_ready_seconds": 541,
+  "pod_created_to_scheduled_seconds": 91,
+  "pod_created_to_initialized_seconds": 96,
+  "weight_loading_seconds": 47.406,
+  "second_eviction_dry_run_status": 429,
+  "second_eviction_executed": false,
+  "requests": 928,
+  "success": 926,
+  "errors": 2,
+  "errors_received_http_200": true,
+  "error_category": "stream_read_timeout",
+  "all_12_scrape_targets_up_after_recovery": true,
+  "all_8_rules_inactive_after_recovery": true,
+  "replacement_generation_check_output_tokens": 16,
+  "lossless_failover_verified": false
+}

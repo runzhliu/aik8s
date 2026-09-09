@@ -1,0 +1,115 @@
+{
+  "matching": "model name and measured phase time window; no request-id join; only pre-eviction phases are used for replica comparisons",
+  "counts": [
+    {
+      "phase": "gateway-c1",
+      "replica": "gpu-worker-b",
+      "request_start_events": 18
+    },
+    {
+      "phase": "gateway-c1",
+      "replica": "gpu-worker-a",
+      "request_start_events": 17
+    },
+    {
+      "phase": "gateway-c4",
+      "replica": "gpu-worker-b",
+      "request_start_events": 46
+    },
+    {
+      "phase": "gateway-c4",
+      "replica": "gpu-worker-a",
+      "request_start_events": 62
+    },
+    {
+      "phase": "gateway-c16",
+      "replica": "gpu-worker-a",
+      "request_start_events": 192
+    },
+    {
+      "phase": "gateway-c16",
+      "replica": "gpu-worker-b",
+      "request_start_events": 176
+    },
+    {
+      "phase": "gateway-c32",
+      "replica": "gpu-worker-a",
+      "request_start_events": 336
+    },
+    {
+      "phase": "gateway-c32",
+      "replica": "gpu-worker-b",
+      "request_start_events": 336
+    },
+    {
+      "phase": "long-c16",
+      "replica": "gpu-worker-b",
+      "request_start_events": 104
+    },
+    {
+      "phase": "long-c16",
+      "replica": "gpu-worker-a",
+      "request_start_events": 96
+    },
+    {
+      "phase": "prefix-random",
+      "replica": "gpu-worker-b",
+      "request_start_events": 40
+    },
+    {
+      "phase": "prefix-random",
+      "replica": "gpu-worker-a",
+      "request_start_events": 24
+    },
+    {
+      "phase": "prefix-aware",
+      "replica": "gpu-worker-a",
+      "request_start_events": 288
+    },
+    {
+      "phase": "recheck-c4",
+      "replica": "gpu-worker-b",
+      "request_start_events": 62
+    },
+    {
+      "phase": "recheck-c4",
+      "replica": "gpu-worker-a",
+      "request_start_events": 62
+    },
+    {
+      "phase": "recheck-c16",
+      "replica": "gpu-worker-b",
+      "request_start_events": 200
+    },
+    {
+      "phase": "recheck-c16",
+      "replica": "gpu-worker-a",
+      "request_start_events": 200
+    },
+    {
+      "phase": "recheck-c32",
+      "replica": "gpu-worker-b",
+      "request_start_events": 336
+    },
+    {
+      "phase": "recheck-c32",
+      "replica": "gpu-worker-a",
+      "request_start_events": 336
+    },
+    {
+      "phase": "recheck-prefix-random",
+      "replica": "gpu-worker-a",
+      "request_start_events": 31
+    },
+    {
+      "phase": "recheck-prefix-random",
+      "replica": "gpu-worker-b",
+      "request_start_events": 35
+    },
+    {
+      "phase": "recheck-prefix-aware",
+      "replica": "gpu-worker-a",
+      "request_start_events": 369
+    }
+  ]
+}

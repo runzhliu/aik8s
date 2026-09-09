@@ -125,6 +125,7 @@ nav = [
       {"DeepSeek V4 Flash H20 部署与压测" = "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"},
       {"DeepSeek Harness + Chromium 实战" = "ai-k8s/practices/deepseek-harness-kubernetes.md"},
       {"既有集群落地 AIBrix" = "ai-k8s/practices/aibrix-existing-cluster.md"},
+      {"AIBrix：压测、看板与恢复实战" = "ai-k8s/practices/aibrix-dsv4-observability.md"},
       {"AIBrix GPU 多机、P/D 与碎片卡实测" = "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md"},
       {"ComfyUI、MiniMax-H3 与跨集群 Ingress" = "ai-k8s/practices/comfyui-minimax-h3-gpu.md"},
       {"RBG 多角色推理编排" = "ai-k8s/practices/rbg-existing-cluster.md"},
