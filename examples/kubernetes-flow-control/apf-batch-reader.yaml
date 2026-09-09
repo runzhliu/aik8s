@@ -1,0 +1,42 @@
+# APF classification example, not an RBAC grant.
+# The dedicated ServiceAccount apf-demo/batch-reader and its read permissions
+# must already exist. Verify matchingPrecedence against existing FlowSchemas.
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: PriorityLevelConfiguration
+metadata:
+  name: example-batch-reader
+spec:
+  type: Limited
+  limited:
+    nominalConcurrencyShares: 5
+    lendablePercent: 0
+    borrowingLimitPercent: 0
+    limitResponse:
+      type: Queue
+      queuing:
+        queues: 64
+        handSize: 8
+        queueLengthLimit: 20
+---
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: FlowSchema
+metadata:
+  name: example-batch-reader
+spec:
+  matchingPrecedence: 1000
+  priorityLevelConfiguration:
+    name: example-batch-reader
+  distinguisherMethod:
+    type: ByUser
+  rules:
+    - subjects:
+        - kind: ServiceAccount
+          serviceAccount:
+            namespace: apf-demo
+            name: batch-reader
+      resourceRules:
+        - verbs: ["get", "list"]
+          apiGroups: [""]
+          resources: ["pods"]
+          namespaces: ["apf-demo"]
+          clusterScope: false

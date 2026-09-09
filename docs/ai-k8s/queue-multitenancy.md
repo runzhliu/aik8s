@@ -11,6 +11,8 @@ GPU 平台的多租户问题，不是简单地给每个团队建一个 namespace
 
 本章以 Kueue 的模型为主线，同时说明它与 Kubernetes 调度、RBAC 和网络隔离之间的边界。
 
+API 请求流控与模型接口限流属于另外的治理层次，参见 [Kubernetes 流控指南](cluster/flow-control.md)。
+
 ## 1. 多租户至少有五层
 
 | 层级 | 解决的问题 | 常用机制 |

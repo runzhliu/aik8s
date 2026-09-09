@@ -59,6 +59,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [Kubernetes 如何承载 AI](foundations/kubernetes-for-ai.md)：从 API、控制器、调度器到 CRI、CNI、CSI 和设备接口。
 - [AI 集群架构设计](cluster/architecture.md)：工作负载画像、节点池、故障域、单集群与多集群边界。
+- [Kubernetes 流控与服务限流](cluster/flow-control.md)：APF、公平排队、客户端限速、GPU 任务准入与模型接口流量治理。
 - [开源 Kubernetes 集群管理工具与方式](cluster/open-source-management.md)：从 kubectl、Headlamp 和 GitOps，到 Rancher、Cluster API、Gardener、Karmada 与 OCM 的分层选型。
 - [国内外主流云厂商 Kubernetes](cluster/cloud-managed-kubernetes.md)：对比 ACK、TKE、CCE、EKS、GKE 和 AKS 的托管边界、网络存储生态与 AI/GPU 能力。
 - [Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)：Federation 历史、Karmada/MultiKueue 等当前能力，以及训练整 Job 放置和区域级推理架构。
