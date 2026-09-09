@@ -1,0 +1,810 @@
+{
+  "model": "Qwen3.8-27B-FP8",
+  "runtime_version": "0.26.0b2.dev1+g3b102b576",
+  "aibrix_version": "v0.7.0",
+  "gpu": "NVIDIA L20",
+  "tp": 1,
+  "max_model_len": 32768,
+  "slo": {
+    "ttft_seconds": 2,
+    "tpot_seconds": 0.15,
+    "e2e_seconds": 30
+  },
+  "quantile_method": "linear interpolation of successful complete streams; excludes rejected and failed requests",
+  "notes": [
+    "Synthetic performance load, not model quality evaluation.",
+    "Admission proxy uses synthetic tenant headers; not native AIBrix tenant isolation.",
+    "Cache phases preserve online engine and routing state; not a controlled cold-cache A/B.",
+    "KPA wave stayed at two desired and Ready replicas; no scale event was demonstrated.",
+    "Drain variants had different Pod placement; do not attribute throughput changes to shutdown settings."
+  ],
+  "phases": [
+    {
+      "phase": "fixed1-wave",
+      "config": {
+        "phase": "fixed1-wave",
+        "repeat": 30,
+        "output": 128,
+        "route": "least-request",
+        "inflight_cap": 48,
+        "stages": [
+          {
+            "duration": 60,
+            "rps": 0.2
+          },
+          {
+            "duration": 240,
+            "rps": 1.6
+          },
+          {
+            "duration": 90,
+            "rps": 0.2
+          }
+        ]
+      },
+      "elapsed": 392.345954015851,
+      "requests": 309,
+      "success": 309,
+      "errors": 0,
+      "dropped_arrivals": 105,
+      "good": 28,
+      "output_tokens_per_second": 100.80899164415004,
+      "ttft": {
+        "p50": 39.901676304638386,
+        "p95": 40.38109262287617,
+        "p99": 40.455603786706924
+      },
+      "tpot": {
+        "p50": 0.061438812749592335,
+        "p95": 0.06148603390755616,
+        "p99": 0.06149819031475097
+      },
+      "e2e": {
+        "p50": 47.70671582967043,
+        "p95": 48.18672317266464,
+        "p99": 48.26311762690544
+      },
+      "started_relative_seconds": 0.0,
+      "finished_relative_seconds": 392.3467252254486,
+      "tenants": {
+        "A": {
+          "requests": 309,
+          "success": 309,
+          "good": 28,
+          "status_counts": {
+            "200": 309
+          },
+          "input_tokens_range": [
+            512,
+            522
+          ],
+          "ttft_p95_seconds": 40.38109262287617,
+          "tpot_p95_seconds": 0.06148603390755616
+        }
+      }
+    },
+    {
+      "phase": "apa-cold-wave",
+      "config": {
+        "phase": "apa-cold-wave",
+        "repeat": 30,
+        "output": 128,
+        "route": "least-request",
+        "inflight_cap": 48,
+        "stages": [
+          {
+            "duration": 60,
+            "rps": 0.2
+          },
+          {
+            "duration": 240,
+            "rps": 1.6
+          },
+          {
+            "duration": 90,
+            "rps": 0.2
+          }
+        ]
+      },
+      "elapsed": 392.3328397125006,
+      "requests": 309,
+      "success": 309,
+      "errors": 0,
+      "dropped_arrivals": 105,
+      "good": 28,
+      "output_tokens_per_second": 100.81236133325851,
+      "ttft": {
+        "p50": 39.88237251341343,
+        "p95": 40.398177574574945,
+        "p99": 40.465438741147516
+      },
+      "tpot": {
+        "p50": 0.0614209229669233,
+        "p95": 0.06148465523334939,
+        "p99": 0.061499916552089334
+      },
+      "e2e": {
+        "p50": 47.69075945019722,
+        "p95": 48.20229391157627,
+        "p99": 48.27388119995594
+      },
+      "started_relative_seconds": 932.4455032348633,
+      "finished_relative_seconds": 1324.7788314819336,
+      "tenants": {
+        "A": {
+          "requests": 309,
+          "success": 309,
+          "good": 28,
+          "status_counts": {
+            "200": 309
+          },
+          "input_tokens_range": [
+            512,
+            522
+          ],
+          "ttft_p95_seconds": 40.398177574574945,
+          "tpot_p95_seconds": 0.06148465523334939
+        }
+      }
+    },
+    {
+      "phase": "apa-min2-wave",
+      "config": {
+        "phase": "apa-min2-wave",
+        "repeat": 30,
+        "output": 128,
+        "route": "least-request",
+        "inflight_cap": 48,
+        "stages": [
+          {
+            "duration": 60,
+            "rps": 0.2
+          },
+          {
+            "duration": 240,
+            "rps": 1.6
+          },
+          {
+            "duration": 90,
+            "rps": 0.2
+          }
+        ]
+      },
+      "elapsed": 392.3894816637039,
+      "requests": 414,
+      "success": 414,
+      "errors": 0,
+      "dropped_arrivals": 0,
+      "good": 414,
+      "output_tokens_per_second": 135.04949157994153,
+      "ttft": {
+        "p50": 0.2726028822362423,
+        "p95": 0.29837810099124906,
+        "p99": 0.30076953627169134
+      },
+      "tpot": {
+        "p50": 0.05865061341777561,
+        "p95": 0.059664945694522596,
+        "p99": 0.059744584516981454
+      },
+      "e2e": {
+        "p50": 7.728795420378447,
+        "p95": 7.861676347255707,
+        "p99": 7.873628860488534
+      },
+      "started_relative_seconds": 1887.4088773727417,
+      "finished_relative_seconds": 2279.7988002300262,
+      "tenants": {
+        "A": {
+          "requests": 414,
+          "success": 414,
+          "good": 414,
+          "status_counts": {
+            "200": 414
+          },
+          "input_tokens_range": [
+            513,
+            522
+          ],
+          "ttft_p95_seconds": 0.29837810099124906,
+          "tpot_p95_seconds": 0.059664945694522596
+        }
+      }
+    },
+    {
+      "phase": "fixed2-wave",
+      "config": {
+        "phase": "fixed2-wave",
+        "repeat": 30,
+        "output": 128,
+        "route": "least-request",
+        "inflight_cap": 48,
+        "stages": [
+          {
+            "duration": 60,
+            "rps": 0.2
+          },
+          {
+            "duration": 240,
+            "rps": 1.6
+          },
+          {
+            "duration": 90,
+            "rps": 0.2
+          }
+        ]
+      },
+      "elapsed": 392.3895588964224,
+      "requests": 414,
+      "success": 414,
+      "errors": 0,
+      "dropped_arrivals": 0,
+      "good": 414,
+      "output_tokens_per_second": 135.04946499860387,
+      "ttft": {
+        "p50": 0.2710700184106827,
+        "p95": 0.2986324720084667,
+        "p99": 0.3008790207654238
+      },
+      "tpot": {
+        "p50": 0.05886959000013944,
+        "p95": 0.05961882105375838,
+        "p99": 0.059693391928522604
+      },
+      "e2e": {
+        "p50": 7.750721704214811,
+        "p95": 7.857001676782965,
+        "p99": 7.868180607184768
+      },
+      "started_relative_seconds": 3352.3762674331665,
+      "finished_relative_seconds": 3744.766389131546,
+      "tenants": {
+        "A": {
+          "requests": 414,
+          "success": 414,
+          "good": 414,
+          "status_counts": {
+            "200": 414
+          },
+          "input_tokens_range": [
+            512,
+            522
+          ],
+          "ttft_p95_seconds": 0.2986324720084667,
+          "tpot_p95_seconds": 0.05961882105375838
+        }
+      }
+    },
+    {
+      "phase": "drain-native",
+      "config": {
+        "phase": "drain-native",
+        "concurrency": 4,
+        "duration": 180,
+        "repeat": 30,
+        "output": 512
+      },
+      "elapsed": 203.7812102586031,
+      "requests": 24,
+      "success": 22,
+      "errors": 2,
+      "dropped_arrivals": 0,
+      "good": 22,
+      "output_tokens_per_second": 55.27496860827218,
+      "ttft": {
+        "p50": 0.3834165707230568,
+        "p95": 0.5359837368130683,
+        "p99": 0.5412607724964619
+      },
+      "tpot": {
+        "p50": 0.05346801510324917,
+        "p95": 0.05388982946421302,
+        "p99": 0.05606501197395026
+      },
+      "e2e": {
+        "p50": 27.732523139566183,
+        "p95": 27.92247476056218,
+        "p99": 28.89585443511605
+      },
+      "started_relative_seconds": 4342.315498828888,
+      "finished_relative_seconds": 4546.097085237503,
+      "tenants": {
+        "A": {
+          "requests": 24,
+          "success": 22,
+          "good": 22,
+          "status_counts": {
+            "200": 24
+          },
+          "input_tokens_range": [
+            513,
+            522
+          ],
+          "ttft_p95_seconds": 0.5359837368130683,
+          "tpot_p95_seconds": 0.05388982946421302
+        }
+      }
+    },
+    {
+      "phase": "drain-graceful",
+      "config": {
+        "phase": "drain-graceful",
+        "concurrency": 4,
+        "duration": 180,
+        "repeat": 30,
+        "output": 512
+      },
+      "elapsed": 194.7581042200327,
+      "requests": 28,
+      "success": 28,
+      "errors": 0,
+      "dropped_arrivals": 0,
+      "good": 28,
+      "output_tokens_per_second": 73.60926035613674,
+      "ttft": {
+        "p50": 0.5854735560715199,
+        "p95": 0.6343849528580904,
+        "p99": 0.6352452652156353
+      },
+      "tpot": {
+        "p50": 0.05337843148004985,
+        "p95": 0.05388749792603247,
+        "p99": 0.05388914720667435
+      },
+      "e2e": {
+        "p50": 27.88128402084112,
+        "p95": 27.916022704914212,
+        "p99": 27.9179232878983
+      },
+      "started_relative_seconds": 8865.672135591507,
+      "finished_relative_seconds": 9060.430705785751,
+      "tenants": {
+        "A": {
+          "requests": 28,
+          "success": 28,
+          "good": 28,
+          "status_counts": {
+            "200": 28
+          },
+          "input_tokens_range": [
+            511,
+            521
+          ],
+          "ttft_p95_seconds": 0.6343849528580904,
+          "tpot_p95_seconds": 0.05388749792603247
+        }
+      }
+    },
+    {
+      "phase": "tenants-baseline",
+      "config": {
+        "repeat": 30,
+        "route": "least-request",
+        "stages": [
+          {
+            "duration": 150,
+            "rps": 1.4
+          }
+        ],
+        "inflight_cap": 48,
+        "tenants": {
+          "A": {
+            "repeat": 30,
+            "output": 64
+          },
+          "B": {
+            "repeat": 90,
+            "output": 512
+          }
+        },
+        "phase": "tenants-baseline"
+      },
+      "elapsed": 223.45737256109715,
+      "requests": 172,
+      "success": 172,
+      "errors": 0,
+      "dropped_arrivals": 38,
+      "good": 15,
+      "output_tokens_per_second": 219.6750075300312,
+      "ttft": {
+        "p50": 25.23710623383522,
+        "p95": 43.053326283395286,
+        "p99": 46.691030851230025
+      },
+      "tpot": {
+        "p50": 0.061240333482172726,
+        "p95": 0.06593119872822648,
+        "p99": 0.07242433642347652
+      },
+      "e2e": {
+        "p50": 39.585700672119856,
+        "p95": 72.93417028151453,
+        "p99": 75.70323713079095
+      },
+      "started_relative_seconds": 9304.224569797516,
+      "finished_relative_seconds": 9527.682366371155,
+      "tenants": {
+        "A": {
+          "requests": 87,
+          "success": 87,
+          "good": 15,
+          "status_counts": {
+            "200": 87
+          },
+          "input_tokens_range": [
+            514,
+            522
+          ],
+          "ttft_p95_seconds": 42.293959968537095,
+          "tpot_p95_seconds": 0.06849143496818014
+        },
+        "B": {
+          "requests": 85,
+          "success": 85,
+          "good": 0,
+          "status_counts": {
+            "200": 85
+          },
+          "input_tokens_range": [
+            1472,
+            1482
+          ],
+          "ttft_p95_seconds": 43.86137460321188,
+          "tpot_p95_seconds": 0.06279165382312935
+        }
+      }
+    },
+    {
+      "phase": "tenants-protected",
+      "config": {
+        "repeat": 30,
+        "route": "least-request",
+        "stages": [
+          {
+            "duration": 150,
+            "rps": 1.4
+          }
+        ],
+        "inflight_cap": 48,
+        "tenants": {
+          "A": {
+            "repeat": 30,
+            "output": 64
+          },
+          "B": {
+            "repeat": 90,
+            "output": 512
+          }
+        },
+        "phase": "tenants-protected"
+      },
+      "elapsed": 152.2747110053897,
+      "requests": 210,
+      "success": 115,
+      "errors": 95,
+      "dropped_arrivals": 0,
+      "good": 115,
+      "output_tokens_per_second": 77.75421093776319,
+      "ttft": {
+        "p50": 0.27838539332151413,
+        "p95": 0.5574404694139957,
+        "p99": 0.5880263376235962
+      },
+      "tpot": {
+        "p50": 0.05570503229659701,
+        "p95": 0.05782266118460231,
+        "p99": 0.06687534065000596
+      },
+      "e2e": {
+        "p50": 3.794935941696167,
+        "p95": 28.486618676781653,
+        "p99": 28.89825769469142
+      },
+      "started_relative_seconds": 9538.32793211937,
+      "finished_relative_seconds": 9690.603073596954,
+      "tenants": {
+        "A": {
+          "requests": 105,
+          "success": 105,
+          "good": 105,
+          "status_counts": {
+            "200": 105
+          },
+          "input_tokens_range": [
+            513,
+            522
+          ],
+          "ttft_p95_seconds": 0.30286300033330915,
+          "tpot_p95_seconds": 0.0578649681238901
+        },
+        "B": {
+          "requests": 105,
+          "success": 10,
+          "good": 10,
+          "status_counts": {
+            "429": 95,
+            "200": 10
+          },
+          "input_tokens_range": [
+            1477,
+            1480
+          ],
+          "ttft_p95_seconds": 0.5915707375854253,
+          "tpot_p95_seconds": 0.05555752341848764
+        }
+      }
+    },
+    {
+      "phase": "cache-online-least-a",
+      "config": {
+        "phase": "cache-online-least-a",
+        "concurrency": 4,
+        "duration": 60,
+        "repeat": 300,
+        "output": 64,
+        "shared_prefix": true,
+        "route": "least-request"
+      },
+      "elapsed": 62.692971378564835,
+      "requests": 68,
+      "success": 68,
+      "errors": 0,
+      "dropped_arrivals": 0,
+      "good": 68,
+      "output_tokens_per_second": 69.41767002429843,
+      "ttft": {
+        "p50": 0.2655413784086704,
+        "p95": 1.1975286073982696,
+        "p99": 1.6898900564759969
+      },
+      "tpot": {
+        "p50": 0.05329248734882899,
+        "p95": 0.0536011961894849,
+        "p99": 0.053619248438922185
+      },
+      "e2e": {
+        "p50": 3.598590638488531,
+        "p95": 4.54417694583535,
+        "p99": 5.0564700708538295
+      },
+      "started_relative_seconds": 9703.348162174225,
+      "finished_relative_seconds": 9766.041545391083,
+      "tenants": {
+        "A": {
+          "requests": 68,
+          "success": 68,
+          "good": 68,
+          "status_counts": {
+            "200": 68
+          },
+          "input_tokens_range": [
+            4831,
+            4842
+          ],
+          "ttft_p95_seconds": 1.1975286073982696,
+          "tpot_p95_seconds": 0.0536011961894849
+        }
+      }
+    },
+    {
+      "phase": "cache-online-prefix-a",
+      "config": {
+        "phase": "cache-online-prefix-a",
+        "concurrency": 4,
+        "duration": 60,
+        "repeat": 300,
+        "output": 64,
+        "shared_prefix": true,
+        "route": "prefix-cache"
+      },
+      "elapsed": 61.46577537059784,
+      "requests": 68,
+      "success": 68,
+      "errors": 0,
+      "dropped_arrivals": 0,
+      "good": 68,
+      "output_tokens_per_second": 70.80362972337578,
+      "ttft": {
+        "p50": 0.21858476847410202,
+        "p95": 0.28404670730233195,
+        "p99": 0.2932561206817627
+      },
+      "tpot": {
+        "p50": 0.05350490535298984,
+        "p95": 0.05417660199815318,
+        "p99": 0.05522300301917961
+      },
+      "e2e": {
+        "p50": 3.6031925678253174,
+        "p95": 3.614302673563361,
+        "p99": 3.6610227274149656
+      },
+      "started_relative_seconds": 9776.114625930786,
+      "finished_relative_seconds": 9837.580732584,
+      "tenants": {
+        "A": {
+          "requests": 68,
+          "success": 68,
+          "good": 68,
+          "status_counts": {
+            "200": 68
+          },
+          "input_tokens_range": [
+            4831,
+            4842
+          ],
+          "ttft_p95_seconds": 0.28404670730233195,
+          "tpot_p95_seconds": 0.05417660199815318
+        }
+      }
+    },
+    {
+      "phase": "cache-online-prefix-b",
+      "config": {
+        "phase": "cache-online-prefix-b",
+        "concurrency": 4,
+        "duration": 60,
+        "repeat": 300,
+        "output": 64,
+        "shared_prefix": true,
+        "route": "prefix-cache"
+      },
+      "elapsed": 61.263291619718075,
+      "requests": 68,
+      "success": 68,
+      "errors": 0,
+      "dropped_arrivals": 0,
+      "good": 68,
+      "output_tokens_per_second": 71.03764562659043,
+      "ttft": {
+        "p50": 0.2599153704941273,
+        "p95": 0.2909151565283537,
+        "p99": 0.2945626311004162
+      },
+      "tpot": {
+        "p50": 0.0530034349196487,
+        "p95": 0.0535420951980447,
+        "p99": 0.0535731813690019
+      },
+      "e2e": {
+        "p50": 3.599989678710699,
+        "p95": 3.6061027802526953,
+        "p99": 3.625976641848683
+      },
+      "started_relative_seconds": 9848.634984731674,
+      "finished_relative_seconds": 9909.898652791977,
+      "tenants": {
+        "A": {
+          "requests": 68,
+          "success": 68,
+          "good": 68,
+          "status_counts": {
+            "200": 68
+          },
+          "input_tokens_range": [
+            4834,
+            4841
+          ],
+          "ttft_p95_seconds": 0.2909151565283537,
+          "tpot_p95_seconds": 0.0535420951980447
+        }
+      }
+    },
+    {
+      "phase": "cache-online-least-b",
+      "config": {
+        "phase": "cache-online-least-b",
+        "concurrency": 4,
+        "duration": 60,
+        "repeat": 300,
+        "output": 64,
+        "shared_prefix": true,
+        "route": "least-request"
+      },
+      "elapsed": 61.26087223738432,
+      "requests": 68,
+      "success": 68,
+      "errors": 0,
+      "dropped_arrivals": 0,
+      "good": 68,
+      "output_tokens_per_second": 71.04045112410596,
+      "ttft": {
+        "p50": 0.2488998882472515,
+        "p95": 0.28729185834527016,
+        "p99": 0.29063731551170346
+      },
+      "tpot": {
+        "p50": 0.053010962075657315,
+        "p95": 0.053547991356915896,
+        "p99": 0.053596685560686246
+      },
+      "e2e": {
+        "p50": 3.59902635589242,
+        "p95": 3.606399295479059,
+        "p99": 3.616635184213519
+      },
+      "started_relative_seconds": 9920.987095594406,
+      "finished_relative_seconds": 9982.248330116272,
+      "tenants": {
+        "A": {
+          "requests": 68,
+          "success": 68,
+          "good": 68,
+          "status_counts": {
+            "200": 68
+          },
+          "input_tokens_range": [
+            4834,
+            4842
+          ],
+          "ttft_p95_seconds": 0.28729185834527016,
+          "tpot_p95_seconds": 0.053547991356915896
+        }
+      }
+    },
+    {
+      "phase": "kpa-min2-wave",
+      "config": {
+        "phase": "kpa-min2-wave",
+        "repeat": 30,
+        "output": 128,
+        "route": "least-request",
+        "inflight_cap": 48,
+        "stages": [
+          {
+            "duration": 60,
+            "rps": 0.2
+          },
+          {
+            "duration": 240,
+            "rps": 1.6
+          },
+          {
+            "duration": 90,
+            "rps": 0.2
+          }
+        ]
+      },
+      "elapsed": 392.39199175685644,
+      "requests": 414,
+      "success": 414,
+      "errors": 0,
+      "dropped_arrivals": 0,
+      "good": 414,
+      "output_tokens_per_second": 135.04862768156644,
+      "ttft": {
+        "p50": 0.2700747177004814,
+        "p95": 0.29862666986882686,
+        "p99": 0.3021580930054188
+      },
+      "tpot": {
+        "p50": 0.05885482512003794,
+        "p95": 0.05975780751644157,
+        "p99": 0.05985030486769095
+      },
+      "e2e": {
+        "p50": 7.764125794172287,
+        "p95": 7.869916563108563,
+        "p99": 7.8868341839313505
+      },
+      "started_relative_seconds": 10123.869966983795,
+      "finished_relative_seconds": 10516.26253604889,
+      "tenants": {
+        "A": {
+          "requests": 414,
+          "success": 414,
+          "good": 414,
+          "status_counts": {
+            "200": 414
+          },
+          "input_tokens_range": [
+            513,
+            522
+          ],
+          "ttft_p95_seconds": 0.29862666986882686,
+          "tpot_p95_seconds": 0.05975780751644157
+        }
+      }
+    }
+  ]
+}
