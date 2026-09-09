@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1390" viewBox="0 0 720 1390" role="img" aria-labelledby="title desc">
+<title id="title">Karmada 与 Virtual Kubelet</title><desc id="desc">架构示意 · 对象归属与执行路径</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="#687b93" stroke-width="1.5"/></marker></defs>
+<rect width="720" height="1390" fill="#f6f8fc"/>
+<g font-family="-apple-system,BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;,sans-serif">
+<text x="44" y="55" fill="#172b49" font-size="32" font-weight="700" text-anchor="start" data-max-width="632">Karmada 与 Virtual Kubelet</text>
+<text x="44" y="95" fill="#596b82" font-size="23" font-weight="400" text-anchor="start" data-max-width="632">架构示意 · 对象归属与执行路径</text>
+<text x="44" y="158" fill="#2455a6" font-size="29" font-weight="700" text-anchor="start" data-max-width="632">Karmada：跨集群放置</text>
+<rect x="44" y="185" width="632" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="224" fill="#2455a6" font-size="28" font-weight="650" text-anchor="middle" data-max-width="584">Karmada API</text>
+<text x="360" y="260" fill="#596b82" font-size="25" font-weight="400" text-anchor="middle" data-max-width="584">Deployment 模板：6 个副本</text>
+<path d="M360 286 L360 305" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="312" width="632" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="351" fill="#2455a6" font-size="28" font-weight="650" text-anchor="middle" data-max-width="584">策略 / Binding / Work</text>
+<text x="360" y="387" fill="#596b82" font-size="25" font-weight="400" text-anchor="middle" data-max-width="584">选择集群并分发资源</text>
+<path d="M360 413 L360 432" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="439" width="632" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="478" fill="#2455a6" font-size="28" font-weight="650" text-anchor="middle" data-max-width="584">成员 Deployment 控制器</text>
+<text x="360" y="514" fill="#596b82" font-size="25" font-weight="400" text-anchor="middle" data-max-width="584">在各成员集群创建 Pod</text>
+<path d="M360 540 L360 559" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="566" width="632" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="605" fill="#2455a6" font-size="28" font-weight="650" text-anchor="middle" data-max-width="584">成员调度器 → 真实节点</text>
+<text x="360" y="641" fill="#596b82" font-size="25" font-weight="400" text-anchor="middle" data-max-width="584">示例：A 为 4 副本，B 为 2 副本</text>
+<text x="44" y="745" fill="#087e82" font-size="29" font-weight="700" text-anchor="start" data-max-width="632">VK：外部计算适配</text>
+<rect x="44" y="772" width="632" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="811" fill="#087e82" font-size="28" font-weight="650" text-anchor="middle" data-max-width="584">普通 Kubernetes API</text>
+<text x="360" y="847" fill="#596b82" font-size="25" font-weight="400" text-anchor="middle" data-max-width="584">Deployment：6 个副本</text>
+<path d="M360 873 L360 892" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="899" width="632" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="938" fill="#087e82" font-size="28" font-weight="650" text-anchor="middle" data-max-width="584">本地控制器 / 调度器</text>
+<text x="360" y="974" fill="#596b82" font-size="25" font-weight="400" text-anchor="middle" data-max-width="584">创建 Pod，选择虚拟节点</text>
+<path d="M360 1000 L360 1019" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="1026" width="632" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="1065" fill="#087e82" font-size="28" font-weight="650" text-anchor="middle" data-max-width="584">VK / Provider</text>
+<text x="360" y="1101" fill="#596b82" font-size="25" font-weight="400" text-anchor="middle" data-max-width="584">在外部创建执行实例、回报状态</text>
+<path d="M360 1127 L360 1146" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="1153" width="632" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="1192" fill="#087e82" font-size="28" font-weight="650" text-anchor="middle" data-max-width="584">外部执行后端</text>
+<text x="360" y="1228" fill="#596b82" font-size="25" font-weight="400" text-anchor="middle" data-max-width="584">功能与限制取决于 Provider</text>
+<text x="44" y="1355" fill="#172b49" font-size="25" font-weight="400" text-anchor="start" data-max-width="632">两者可以组合；需明确控制与恢复责任。</text>
+</g></svg>

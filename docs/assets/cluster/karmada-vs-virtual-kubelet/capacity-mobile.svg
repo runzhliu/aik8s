@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1320" viewBox="0 0 720 1320" role="img" aria-labelledby="title desc">
+<title id="title">放置成功之后，还要检查准入</title><desc id="desc">工程分析 · 上报额度与物理布局不同</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="#687b93" stroke-width="1.5"/></marker></defs>
+<rect width="720" height="1320" fill="#f6f8fc"/>
+<g font-family="-apple-system,BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;,sans-serif">
+<text x="44" y="55" fill="#172b49" font-size="32" font-weight="700" text-anchor="start" data-max-width="632">放置成功之后，还要检查准入</text>
+<text x="44" y="95" fill="#596b82" font-size="23" font-weight="400" text-anchor="start" data-max-width="632">工程分析 · 上报额度与物理布局不同</text>
+<text x="44" y="158" fill="#2455a6" font-size="29" font-weight="700" text-anchor="start" data-max-width="632">Karmada</text>
+<rect x="44" y="186" width="632" height="86" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="239" fill="#2455a6" font-size="30" font-weight="650" text-anchor="middle" data-max-width="584">选定成员集群</text>
+<path d="M360 273 L360 295" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="302" width="632" height="86" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="355" fill="#2455a6" font-size="30" font-weight="650" text-anchor="middle" data-max-width="584">成员调度 / 队列检查</text>
+<path d="M360 389 L360 411" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="418" width="632" height="86" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="471" fill="#2455a6" font-size="30" font-weight="650" text-anchor="middle" data-max-width="584">真实节点执行</text>
+<text x="44" y="590" fill="#087e82" font-size="29" font-weight="700" text-anchor="start" data-max-width="632">Virtual Kubelet</text>
+<rect x="44" y="618" width="632" height="86" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="671" fill="#087e82" font-size="30" font-weight="650" text-anchor="middle" data-max-width="584">选定虚拟节点</text>
+<path d="M360 705 L360 727" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="734" width="632" height="86" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="787" fill="#087e82" font-size="30" font-weight="650" text-anchor="middle" data-max-width="584">Provider / 后端准入</text>
+<path d="M360 821 L360 843" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="850" width="632" height="86" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="360" y="903" fill="#087e82" font-size="30" font-weight="650" text-anchor="middle" data-max-width="584">真实执行资源</text>
+<rect x="44" y="1020" width="632" height="244" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="70" y="1069" fill="#172b49" font-size="27" font-weight="400" text-anchor="start" data-max-width="580">假设两台机器各空闲 4 GPU，</text>
+<text x="70" y="1118" fill="#172b49" font-size="27" font-weight="400" text-anchor="start" data-max-width="580">一个 Pod 要求同机 8 GPU。</text>
+<text x="70" y="1167" fill="#2455a6" font-size="27" font-weight="650" text-anchor="start" data-max-width="580">合计 8 GPU，但没有满足的节点。</text>
+<text x="70" y="1216" fill="#172b49" font-size="27" font-weight="400" text-anchor="start" data-max-width="580">需要校验真实拓扑和可执行布局。</text>
+<text x="44" y="1300" fill="#596b82" font-size="23" font-weight="400" text-anchor="start" data-max-width="632">假设算例，不代表所有 Provider 的容量模型。</text>
+</g></svg>

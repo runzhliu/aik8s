@@ -1,0 +1,346 @@
+{
+  "repository": "karmada-io/karmada",
+  "ref": "v1.18.0",
+  "commit": "18d5e4a39371d5618495357833df6336fd642b3a",
+  "tree_sha": "18d5e4a39371d5618495357833df6336fd642b3a",
+  "counting_rule": "Unique metadata.name of kind CustomResourceDefinition in main chart bases and operator/config/crds; versions are not separate CRDs; examples, patch files and duplicate packaging copies are excluded.",
+  "main_bundle_count": 19,
+  "operator_bundle_count": 1,
+  "unique_union_count": 20,
+  "main_groups": {
+    "apps.karmada.io": 1,
+    "autoscaling.karmada.io": 2,
+    "config.karmada.io": 2,
+    "multicluster.x-k8s.io": 2,
+    "networking.karmada.io": 2,
+    "policy.karmada.io": 6,
+    "remedy.karmada.io": 1,
+    "work.karmada.io": 3
+  },
+  "crds": [
+    {
+      "name": "workloadrebalancers.apps.karmada.io",
+      "kind": "WorkloadRebalancer",
+      "group": "apps.karmada.io",
+      "scope": "Cluster",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/apps/apps.karmada.io_workloadrebalancers.yaml",
+      "git_blob_sha": "f0c2da1e254bb2a663dd332662b171fc9de2e066",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/apps/apps.karmada.io_workloadrebalancers.yaml"
+    },
+    {
+      "name": "cronfederatedhpas.autoscaling.karmada.io",
+      "kind": "CronFederatedHPA",
+      "group": "autoscaling.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/autoscaling/autoscaling.karmada.io_cronfederatedhpas.yaml",
+      "git_blob_sha": "6fa5a7f867a04e6922016e417d04a8dc30b2a555",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/autoscaling/autoscaling.karmada.io_cronfederatedhpas.yaml"
+    },
+    {
+      "name": "federatedhpas.autoscaling.karmada.io",
+      "kind": "FederatedHPA",
+      "group": "autoscaling.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/autoscaling/autoscaling.karmada.io_federatedhpas.yaml",
+      "git_blob_sha": "dab9c834a2d3b4566159938efe485d9bac566373",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/autoscaling/autoscaling.karmada.io_federatedhpas.yaml"
+    },
+    {
+      "name": "resourceinterpretercustomizations.config.karmada.io",
+      "kind": "ResourceInterpreterCustomization",
+      "group": "config.karmada.io",
+      "scope": "Cluster",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/config/config.karmada.io_resourceinterpretercustomizations.yaml",
+      "git_blob_sha": "558c8e261e054b4e4bf70ca8fcb3eb6fae080cc5",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/config/config.karmada.io_resourceinterpretercustomizations.yaml"
+    },
+    {
+      "name": "resourceinterpreterwebhookconfigurations.config.karmada.io",
+      "kind": "ResourceInterpreterWebhookConfiguration",
+      "group": "config.karmada.io",
+      "scope": "Cluster",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/config/config.karmada.io_resourceinterpreterwebhookconfigurations.yaml",
+      "git_blob_sha": "c35f0632c0c2ddfb4ba4df7f1df40f6e1bcfa1a3",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/config/config.karmada.io_resourceinterpreterwebhookconfigurations.yaml"
+    },
+    {
+      "name": "serviceexports.multicluster.x-k8s.io",
+      "kind": "ServiceExport",
+      "group": "multicluster.x-k8s.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/multicluster/multicluster.x-k8s.io_serviceexports.yaml",
+      "git_blob_sha": "8dda38c2f912eb6a4cefabc80f6ecff95192bea9",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/multicluster/multicluster.x-k8s.io_serviceexports.yaml"
+    },
+    {
+      "name": "serviceimports.multicluster.x-k8s.io",
+      "kind": "ServiceImport",
+      "group": "multicluster.x-k8s.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/multicluster/multicluster.x-k8s.io_serviceimports.yaml",
+      "git_blob_sha": "d0e26e9ec360b4b3ea8a4c160340bdce30304e35",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/multicluster/multicluster.x-k8s.io_serviceimports.yaml"
+    },
+    {
+      "name": "multiclusteringresses.networking.karmada.io",
+      "kind": "MultiClusterIngress",
+      "group": "networking.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/networking/networking.karmada.io_multiclusteringresses.yaml",
+      "git_blob_sha": "801de5aac42ea00f7dd59612e0d04e2cf04dccb7",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/networking/networking.karmada.io_multiclusteringresses.yaml"
+    },
+    {
+      "name": "multiclusterservices.networking.karmada.io",
+      "kind": "MultiClusterService",
+      "group": "networking.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/networking/networking.karmada.io_multiclusterservices.yaml",
+      "git_blob_sha": "633beae9977e432d0f7543d19af36d8385a94433",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/networking/networking.karmada.io_multiclusterservices.yaml"
+    },
+    {
+      "name": "clusteroverridepolicies.policy.karmada.io",
+      "kind": "ClusterOverridePolicy",
+      "group": "policy.karmada.io",
+      "scope": "Cluster",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/policy/policy.karmada.io_clusteroverridepolicies.yaml",
+      "git_blob_sha": "059897e5b56566a61a4c140e21f14e48da6e99b6",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/policy/policy.karmada.io_clusteroverridepolicies.yaml"
+    },
+    {
+      "name": "clusterpropagationpolicies.policy.karmada.io",
+      "kind": "ClusterPropagationPolicy",
+      "group": "policy.karmada.io",
+      "scope": "Cluster",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/policy/policy.karmada.io_clusterpropagationpolicies.yaml",
+      "git_blob_sha": "b22f9d7178215e91de939ee956a9c3a01cdf4f75",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/policy/policy.karmada.io_clusterpropagationpolicies.yaml"
+    },
+    {
+      "name": "clustertaintpolicies.policy.karmada.io",
+      "kind": "ClusterTaintPolicy",
+      "group": "policy.karmada.io",
+      "scope": "Cluster",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/policy/policy.karmada.io_clustertaintpolicies.yaml",
+      "git_blob_sha": "d0612dc2acfeab2d3d7d2bcaf345c3be84e74df7",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/policy/policy.karmada.io_clustertaintpolicies.yaml"
+    },
+    {
+      "name": "federatedresourcequotas.policy.karmada.io",
+      "kind": "FederatedResourceQuota",
+      "group": "policy.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/policy/policy.karmada.io_federatedresourcequotas.yaml",
+      "git_blob_sha": "c4657cc93f3b3e57b81d8772a794450538f8f704",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/policy/policy.karmada.io_federatedresourcequotas.yaml"
+    },
+    {
+      "name": "overridepolicies.policy.karmada.io",
+      "kind": "OverridePolicy",
+      "group": "policy.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/policy/policy.karmada.io_overridepolicies.yaml",
+      "git_blob_sha": "7181656958aa683d222c03b1eb91356492441450",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/policy/policy.karmada.io_overridepolicies.yaml"
+    },
+    {
+      "name": "propagationpolicies.policy.karmada.io",
+      "kind": "PropagationPolicy",
+      "group": "policy.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/policy/policy.karmada.io_propagationpolicies.yaml",
+      "git_blob_sha": "53b093c801dc6dedc891d6fca33b4b40dea59aad",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/policy/policy.karmada.io_propagationpolicies.yaml"
+    },
+    {
+      "name": "remedies.remedy.karmada.io",
+      "kind": "Remedy",
+      "group": "remedy.karmada.io",
+      "scope": "Cluster",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/remedy/remedy.karmada.io_remedies.yaml",
+      "git_blob_sha": "637b546659be94dc7b13a8b1f33c8b08739dce5d",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/remedy/remedy.karmada.io_remedies.yaml"
+    },
+    {
+      "name": "clusterresourcebindings.work.karmada.io",
+      "kind": "ClusterResourceBinding",
+      "group": "work.karmada.io",
+      "scope": "Cluster",
+      "versions": [
+        "v1alpha1",
+        "v1alpha2"
+      ],
+      "served_versions": [
+        "v1alpha1",
+        "v1alpha2"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/work/work.karmada.io_clusterresourcebindings.yaml",
+      "git_blob_sha": "e1a7a706cf1ce6db9d937e65195c81a5c689b007",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/work/work.karmada.io_clusterresourcebindings.yaml"
+    },
+    {
+      "name": "resourcebindings.work.karmada.io",
+      "kind": "ResourceBinding",
+      "group": "work.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1",
+        "v1alpha2"
+      ],
+      "served_versions": [
+        "v1alpha1",
+        "v1alpha2"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/work/work.karmada.io_resourcebindings.yaml",
+      "git_blob_sha": "44d8b06e7dcb0a0ceec6dc0dfd06d85575351e1e",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/work/work.karmada.io_resourcebindings.yaml"
+    },
+    {
+      "name": "works.work.karmada.io",
+      "kind": "Work",
+      "group": "work.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "main",
+      "source_path": "charts/karmada/_crds/bases/work/work.karmada.io_works.yaml",
+      "git_blob_sha": "eb8cef52a8c5bdfc1e51412c897aa8e5005c20a5",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/charts/karmada/_crds/bases/work/work.karmada.io_works.yaml"
+    },
+    {
+      "name": "karmadas.operator.karmada.io",
+      "kind": "Karmada",
+      "group": "operator.karmada.io",
+      "scope": "Namespaced",
+      "versions": [
+        "v1alpha1"
+      ],
+      "served_versions": [
+        "v1alpha1"
+      ],
+      "bundle": "operator",
+      "source_path": "operator/config/crds/operator.karmada.io_karmadas.yaml",
+      "git_blob_sha": "e174f24039f4cffb6eef7280c24a77dc8552f79c",
+      "source_url": "https://github.com/karmada-io/karmada/blob/18d5e4a39371d5618495357833df6336fd642b3a/operator/config/crds/operator.karmada.io_karmadas.yaml"
+    }
+  ]
+}

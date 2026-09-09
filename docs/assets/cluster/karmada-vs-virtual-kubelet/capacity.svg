@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+<title id="title">获得放置结果，还需要通过执行层准入</title><desc id="desc">工程分析示意 · 容量总量、资源拓扑与实际可运行数量需要分别验证</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="#687b93" stroke-width="1.5"/></marker></defs>
+<rect width="1200" height="760" fill="#f6f8fc"/>
+<g font-family="-apple-system,BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;,sans-serif">
+<text x="44" y="55" fill="#172b49" font-size="32" font-weight="700" text-anchor="start" data-max-width="1112">获得放置结果，还需要通过执行层准入</text>
+<text x="44" y="95" fill="#596b82" font-size="23" font-weight="400" text-anchor="start" data-max-width="1112">工程分析示意 · 容量总量、资源拓扑与实际可运行数量需要分别验证</text>
+<text x="44" y="153" fill="#2455a6" font-size="24" font-weight="700" text-anchor="start" data-max-width="1100">Karmada 路径</text>
+<text x="44" y="333" fill="#087e82" font-size="24" font-weight="700" text-anchor="start" data-max-width="1100">Virtual Kubelet 路径</text>
+<rect x="44" y="181" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="214.0" y="220" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308">选定成员集群</text>
+<text x="214.0" y="255" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308">策略与资源估算</text>
+<rect x="429" y="181" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="599.0" y="220" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308">成员调度 / 队列</text>
+<text x="599.0" y="255" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308">检查具体 Pod 约束</text>
+<rect x="814" y="181" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="984.0" y="220" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308">真实节点执行</text>
+<text x="984.0" y="255" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308">CPU / GPU / 卷 / 网络</text>
+<path d="M387 231 L417 231" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M772 231 L802 231" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="361" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="214.0" y="400" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308">选定虚拟节点</text>
+<text x="214.0" y="435" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308">上报容量与节点标签</text>
+<rect x="429" y="361" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="599.0" y="400" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308">Provider / 后端准入</text>
+<text x="599.0" y="435" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308">配额、能力与可用布局</text>
+<rect x="814" y="361" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="984.0" y="400" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308">真实执行资源</text>
+<text x="984.0" y="435" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308">实例启动后才产生能力</text>
+<path d="M387 411 L417 411" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M772 411 L802 411" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="514" width="1112" height="187" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="70" y="556" fill="#172b49" font-size="25" font-weight="650" text-anchor="start" data-max-width="1060">假设算例：两台机器各空闲 4 GPU，单个 Pod 要求同机 8 GPU</text>
+<text x="70" y="601" fill="#2455a6" font-size="23" font-weight="400" text-anchor="start" data-max-width="1060">资源总和 = 8 GPU；满足这个 Pod 的物理节点数 = 0。</text>
+<text x="70" y="646" fill="#596b82" font-size="22" font-weight="400" text-anchor="start" data-max-width="1060">资源估算或 Provider 准入应识别这种碎片，不能只向上暴露加总后的卡数。</text>
+<text x="44" y="735" fill="#596b82" font-size="19" font-weight="400" text-anchor="start" data-max-width="1112">图中的执行约束是验证要求，不代表所有 Provider 使用相同的容量模型。</text>
+</g></svg>

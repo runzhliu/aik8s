@@ -63,6 +63,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [开源 Kubernetes 集群管理工具与方式](cluster/open-source-management.md)：从 kubectl、Headlamp 和 GitOps，到 Rancher、Cluster API、Gardener、Karmada 与 OCM 的分层选型。
 - [国内外主流云厂商 Kubernetes](cluster/cloud-managed-kubernetes.md)：对比 ACK、TKE、CCE、EKS、GKE 和 AKS 的托管边界、网络存储生态与 AI/GPU 能力。
 - [Kubernetes 跨集群与大规模 GPU](cluster/multi-cluster-ai.md)：Federation 历史、Karmada/MultiKueue 等当前能力，以及训练整 Job 放置和区域级推理架构。
+- [Karmada 与 Virtual Kubelet 对比](cluster/karmada-vs-virtual-kubelet.md)：集群级编排与虚拟节点适配的架构边界、副本语义、故障恢复、网络存储及 GPU 选型。
 - [AI on Kubernetes 十年发展史](history.md)：从 GPU Pod、Operator 和批调度，到 DRA、推理网关与分离式推理。
 - [术语表](reference/glossary.md)：统一 Kubernetes、GPU、训练、推理、网络、RAG 和可靠性术语。
 

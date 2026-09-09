@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="960" viewBox="0 0 1200 960" role="img" aria-labelledby="title desc">
+<title id="title">应用跨集群编排，与外部计算接入</title><desc id="desc">架构示意 · 箭头表示控制与执行路径，不表示跨集群网络已经连通</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="#687b93" stroke-width="1.5"/></marker></defs>
+<rect width="1200" height="960" fill="#f6f8fc"/>
+<g font-family="-apple-system,BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;,sans-serif">
+<text x="44" y="55" fill="#172b49" font-size="32" font-weight="700" text-anchor="start" data-max-width="1112">应用跨集群编排，与外部计算接入</text>
+<text x="44" y="95" fill="#596b82" font-size="23" font-weight="400" text-anchor="start" data-max-width="1112">架构示意 · 箭头表示控制与执行路径，不表示跨集群网络已经连通</text>
+<rect x="40" y="130" width="540" height="734" rx="12" fill="#edf3fd" stroke="#d9e1ed"/>
+<text x="70" y="174" fill="#2455a6" font-size="29" font-weight="700" text-anchor="start" data-max-width="480">Karmada</text>
+<text x="70" y="206" fill="#596b82" font-size="21" font-weight="400" text-anchor="start" data-max-width="480">放置对象：资源模板及其副本</text>
+<rect x="620" y="130" width="540" height="734" rx="12" fill="#eaf6f5" stroke="#d9e1ed"/>
+<text x="650" y="174" fill="#087e82" font-size="29" font-weight="700" text-anchor="start" data-max-width="480">Virtual Kubelet</text>
+<text x="650" y="206" fill="#596b82" font-size="21" font-weight="400" text-anchor="start" data-max-width="480">适配对象：已绑定虚拟节点的 Pod</text>
+<rect x="70" y="232" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="310.0" y="271" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">Karmada API</text>
+<text x="310.0" y="306" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448">Deployment 模板：6 个副本</text>
+<rect x="70" y="378" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="310.0" y="417" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">策略 / Binding / Work</text>
+<text x="310.0" y="452" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448">集群级调度、差异覆盖与分发</text>
+<rect x="70" y="524" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="310.0" y="563" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">成员集群中的 Deployment</text>
+<text x="310.0" y="598" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448">各成员本地控制器创建 Pod</text>
+<path d="M310 332 L310 371" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M310 478 L310 517" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M310 624 V652 H182.5 V679" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M310 624 V652 H437.5 V679" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="70" y="686" width="225" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="182.5" y="725" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="193">集群 A：4 副本</text>
+<text x="182.5" y="760" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="193">本地节点调度</text>
+<rect x="325" y="686" width="225" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="437.5" y="725" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="193">集群 B：2 副本</text>
+<text x="437.5" y="760" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="193">本地节点调度</text>
+<text x="310" y="831" fill="#596b82" font-size="21" font-weight="400" text-anchor="middle" data-max-width="480">示例策略：Divided，权重 2:1</text>
+<rect x="650" y="232" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="890.0" y="271" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">普通 Kubernetes API</text>
+<text x="890.0" y="306" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448">Deployment：6 个副本</text>
+<rect x="650" y="378" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="890.0" y="417" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">本地控制器 / kube-scheduler</text>
+<text x="890.0" y="452" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448">创建 Pod，并选择虚拟节点</text>
+<rect x="650" y="524" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="890.0" y="563" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">VK / Provider</text>
+<text x="890.0" y="598" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448">转换创建请求、回报状态与容量</text>
+<rect x="650" y="686" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="890.0" y="725" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">外部执行后端</text>
+<text x="890.0" y="760" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448">容器云 / 远端 Kubernetes / 其他</text>
+<path d="M890 332 L890 371" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M890 478 L890 517" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M890 624 L890 679" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="890" y="831" fill="#596b82" font-size="21" font-weight="400" text-anchor="middle" data-max-width="480">具体语义取决于 Provider 实现</text>
+<text x="44" y="910" fill="#172b49" font-size="23" font-weight="400" text-anchor="start" data-max-width="1112">两种方式可以组合；需明确副本、数据、身份和故障恢复的责任方。</text>
+</g></svg>

@@ -19,6 +19,7 @@ nav = [
       {"开源集群管理工具" = "ai-k8s/cluster/open-source-management.md"},
       {"云厂商托管 Kubernetes" = "ai-k8s/cluster/cloud-managed-kubernetes.md"},
       {"跨集群与大规模 GPU" = "ai-k8s/cluster/multi-cluster-ai.md"},
+      {"Karmada 与 Virtual Kubelet 对比" = "ai-k8s/cluster/karmada-vs-virtual-kubelet.md"},
       {"十年发展史" = "ai-k8s/history.md"},
       {"术语表" = "ai-k8s/reference/glossary.md"},
     ]},
