@@ -1,0 +1,178 @@
+{
+  "kubernetes_version": "v1.30.4",
+  "phases_seconds": 90,
+  "offered_batch_rps": 5,
+  "offered_control_rps": 1,
+  "max_batch_inflight": 8,
+  "client_timeout_seconds": 25,
+  "server_timeout_parameter_seconds": 20,
+  "sampling_seconds": 15,
+  "phase_attribution": "request start time",
+  "summary": [
+    {
+      "phase": "normal",
+      "actor": "batch",
+      "requests": 450,
+      "status_counts": {
+        "200": 450
+      },
+      "client_p50_ms": 18.27216148376465,
+      "client_p95_ms": 49.29399490356445,
+      "classification_matches": 450
+    },
+    {
+      "phase": "normal",
+      "actor": "control",
+      "requests": 90,
+      "status_counts": {
+        "200": 90
+      },
+      "client_p50_ms": 17.442703247070312,
+      "client_p95_ms": 46.71216011047363,
+      "classification_matches": 0
+    },
+    {
+      "phase": "reject",
+      "actor": "batch",
+      "requests": 450,
+      "status_counts": {
+        "200": 450
+      },
+      "client_p50_ms": 18.96190643310547,
+      "client_p95_ms": 62.14594841003418,
+      "classification_matches": 450
+    },
+    {
+      "phase": "reject",
+      "actor": "control",
+      "requests": 90,
+      "status_counts": {
+        "200": 90
+      },
+      "client_p50_ms": 19.833087921142578,
+      "client_p95_ms": 44.634103775024414,
+      "classification_matches": 0
+    },
+    {
+      "phase": "queue",
+      "actor": "batch",
+      "requests": 450,
+      "status_counts": {
+        "429": 448,
+        "200": 2
+      },
+      "client_p50_ms": 12.704849243164062,
+      "client_p95_ms": 5011.914014816284,
+      "classification_matches": 450
+    },
+    {
+      "phase": "queue",
+      "actor": "control",
+      "requests": 90,
+      "status_counts": {
+        "200": 90
+      },
+      "client_p50_ms": 14.440059661865234,
+      "client_p95_ms": 73.48418235778809,
+      "classification_matches": 0
+    },
+    {
+      "phase": "recovered",
+      "actor": "batch",
+      "requests": 450,
+      "status_counts": {
+        "200": 450
+      },
+      "client_p50_ms": 14.230012893676758,
+      "client_p95_ms": 52.95300483703613,
+      "classification_matches": 450
+    },
+    {
+      "phase": "recovered",
+      "actor": "control",
+      "requests": 89,
+      "status_counts": {
+        "200": 89
+      },
+      "client_p50_ms": 14.940977096557617,
+      "client_p95_ms": 48.33984375,
+      "classification_matches": 0
+    }
+  ],
+  "events": [
+    {
+      "elapsed_seconds": -0.352471,
+      "event": "classification_verified",
+      "batch_matches": true,
+      "control_matches": false
+    },
+    {
+      "elapsed_seconds": -0.351473,
+      "event": "policy_apply_begin",
+      "phase": "normal"
+    },
+    {
+      "elapsed_seconds": 0.0,
+      "event": "phase_start",
+      "phase": "normal"
+    },
+    {
+      "elapsed_seconds": 90.003979,
+      "event": "phase_end",
+      "phase": "normal"
+    },
+    {
+      "elapsed_seconds": 90.004639,
+      "event": "policy_apply_begin",
+      "phase": "reject"
+    },
+    {
+      "elapsed_seconds": 90.270575,
+      "event": "phase_start",
+      "phase": "reject"
+    },
+    {
+      "elapsed_seconds": 180.27237,
+      "event": "phase_end",
+      "phase": "reject"
+    },
+    {
+      "elapsed_seconds": 180.27421,
+      "event": "policy_apply_begin",
+      "phase": "queue"
+    },
+    {
+      "elapsed_seconds": 180.601698,
+      "event": "phase_start",
+      "phase": "queue"
+    },
+    {
+      "elapsed_seconds": 270.605439,
+      "event": "phase_end",
+      "phase": "queue"
+    },
+    {
+      "elapsed_seconds": 270.606313,
+      "event": "policy_apply_begin",
+      "phase": "recovered"
+    },
+    {
+      "elapsed_seconds": 270.963331,
+      "event": "phase_start",
+      "phase": "recovered"
+    },
+    {
+      "elapsed_seconds": 360.970701,
+      "event": "phase_end",
+      "phase": "recovered"
+    },
+    {
+      "elapsed_seconds": 360.974779,
+      "event": "experiment_completed"
+    },
+    {
+      "elapsed_seconds": 361.472643,
+      "event": "cleanup_requested"
+    }
+  ]
+}

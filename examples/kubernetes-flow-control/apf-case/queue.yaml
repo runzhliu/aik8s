@@ -1,0 +1,17 @@
+# A queue holds requests; it cannot make progress with zero execution seats.
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: PriorityLevelConfiguration
+metadata:
+  name: apf-case-batch
+spec:
+  type: Limited
+  limited:
+    nominalConcurrencyShares: 0
+    lendablePercent: 0
+    borrowingLimitPercent: 0
+    limitResponse:
+      type: Queue
+      queuing:
+        queues: 1
+        handSize: 1
+        queueLengthLimit: 2

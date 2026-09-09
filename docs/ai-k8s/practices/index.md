@@ -16,6 +16,7 @@ last_reviewed: 2026-08-14
 - [GPU 节点故障图鉴](gpu-failure-atlas.md)
 - [看似 NCCL 故障，实际是 Host Memory OOM](nccl-unhandled-cuda-error-host-memory-oom.md)
 - [AI 集群事故复盘方法](incident-review.md)
+- [APF 隔离实战：零席位 Reject 为什么仍会放行](apf-isolation-case.md)
 
 ## 性能、成本与容量
 

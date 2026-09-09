@@ -1,0 +1,39 @@
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: PriorityLevelConfiguration
+metadata:
+  name: apf-case-batch
+spec:
+  type: Limited
+  limited:
+    nominalConcurrencyShares: 5
+    lendablePercent: 0
+    borrowingLimitPercent: 0
+    limitResponse:
+      type: Queue
+      queuing:
+        queues: 1
+        handSize: 1
+        queueLengthLimit: 2
+---
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: FlowSchema
+metadata:
+  name: apf-case-batch
+spec:
+  matchingPrecedence: 1000
+  priorityLevelConfiguration:
+    name: apf-case-batch
+  distinguisherMethod:
+    type: ByUser
+  rules:
+    - subjects:
+        - kind: ServiceAccount
+          serviceAccount:
+            namespace: apf-case
+            name: batch-reader
+      resourceRules:
+        - verbs: [get]
+          apiGroups: [""]
+          resources: [configmaps]
+          namespaces: [apf-case]
+          clusterScope: false

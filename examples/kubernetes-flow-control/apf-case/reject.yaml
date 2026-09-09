@@ -1,0 +1,15 @@
+# Deliberately grant zero nominal execution seats for a bounded experiment.
+# In Kubernetes v1.30.4, Reject still permits one request when idle.
+# Do not use this file as an absolute deny or security boundary.
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: PriorityLevelConfiguration
+metadata:
+  name: apf-case-batch
+spec:
+  type: Limited
+  limited:
+    nominalConcurrencyShares: 0
+    lendablePercent: 0
+    borrowingLimitPercent: 0
+    limitResponse:
+      type: Reject

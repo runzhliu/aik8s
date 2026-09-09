@@ -13,6 +13,8 @@ Kubernetes 已经具备 API 请求分类、公平排队、并发预算和资源�
 
 本文依据官方文档与 API 定义，配图属于架构说明和假设算例。示例不代表已经在生产集群执行过流控压测。
 
+希望结合真实配置和监控验证行为，可继续阅读 [APF 隔离实测案例](../practices/apf-isolation-case.md)：四阶段实验、Grafana 截图，以及 Kubernetes 1.30.4 中零席位 Reject 仍放行的源码解释。
+
 ## 1. 先找到需要保护的对象
 
 <picture>
