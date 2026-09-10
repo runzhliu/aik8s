@@ -19,10 +19,7 @@ AIBrix 面向 Kubernetes 上的推理服务，提供模型感知路由、扩缩�
 
 ## 1. 先分清两份缓存账本
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/mechanism-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/mechanism.png" alt="AIBrix 路由索引与 vLLM 实际缓存的区别" loading="lazy">
-</picture>
+![AIBrix 路由索引与 vLLM 实际缓存的区别](../../assets/practices/aibrix-routing-cache/mechanism.png)
 
 本次 AIBrix 为 **v0.7.0**，使用 `character` tokenizer、128 字符分块、20 万索引块；**KV event sync 关闭**。这是按请求历史维护的本地前缀索引：路由器选定副本时就记录该前缀曾发往这里，并不等待引擎报告“这段 KV 现已可复用”。它能帮助定位可能命中的副本，但不能直接证明引擎缓存仍在。[v0.7.0 前缀路由实现](https://github.com/vllm-project/aibrix/blob/v0.7.0/pkg/plugins/gateway/algorithms/prefix_cache.go)
 
@@ -135,10 +132,7 @@ salt 在同一组内保持一致，结尾问题编号随请求变化。不同 sa
 | 两边均热 / 2 | least-request | 0.327 | 58.5 | 93.2% | 96 | 50 / 46 |
 | 两边均热 / 2 | prefix-cache | 9.692 | 60.4 | 93.1% | 43 | 70 / 26 |
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/cold-warm-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/cold-warm.png" alt="两轮冷、热缓存 TTFT P95 对照" loading="lazy">
-</picture>
+![两轮冷、热缓存 TTFT P95 对照](../../assets/practices/aibrix-routing-cache/cold-warm.png)
 
 第一轮冷缓存中，prefix-cache 的命中率约 85.4%，高于另外两种策略的 77.7%，TTFT P95 也较低。但第二轮 prefix-cache 的 TTFT P95 为 **9.049 秒**，least-request 为 **6.422 秒**，random 为 **9.229 秒**。命中率相近，不代表尾延迟相近。
 
@@ -174,19 +168,13 @@ warm-uniform 控制了引擎 KV 可用性，但路由引导步骤没有强制索
 | 89.6% 热点 / 2 | least-request | 1.255 | 82.2 | 88.2% | 96 | 48 / 48 |
 | 89.6% 热点 / 2 | prefix-cache | 8.001 | 59.8 | 92.4% | 61 | 38 / 58 |
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/hotspots-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/hotspots.png" alt="两轮热点场景 TTFT P95 对照" loading="lazy">
-</picture>
+![两轮热点场景 TTFT P95 对照](../../assets/practices/aibrix-routing-cache/hotspots.png)
 
 ### 50% 热点的证据链
 
 第一轮 prefix-cache 有 96 次 `prefix_match`，实际 Token 命中率 93.3%，但只完成了 38/96 次达标请求。逐请求响应头显示 A 收到 27 次、B 收到 69 次：B 持有热点组的 48 次，加上其余三组的 21 次，正好形成 69 次集中。引擎完成计数分别为 27 / 69，与客户端和网关日志一致。
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/allocation-hot50-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/allocation-hot50.png" alt="50% 热点下的请求分配与等待快照" loading="lazy">
-</picture>
+![50% 热点下的请求分配与等待快照](../../assets/practices/aibrix-routing-cache/allocation-hot50.png)
 
 五秒快照中 B 的等待峰值为 8，A 为 0。与此同时，prefix-cache 的 TPOT P95 为 59.8 毫秒，低于 least-request 的 71.6 毫秒；主要退化体现在首段内容之前的等待。它不是“缓存完全没起作用”，而是缓存局部性与队列集中同时发生。
 
@@ -203,32 +191,17 @@ warm-uniform 控制了引擎 KV 可用性，但路由引导步骤没有强制索
 
 ## 6. Grafana 如何串起原因与结果
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/grafana-cold-uniform-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/grafana-cold-uniform.png" alt="第一轮冷缓存：三种路由的完整时间窗口" loading="lazy">
-</picture>
+![第一轮冷缓存：三种路由的完整时间窗口](../../assets/practices/aibrix-routing-cache/grafana-cold-uniform-compact.png)
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/grafana-r2-cold-uniform-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/grafana-r2-cold-uniform.png" alt="第二轮冷缓存：反向执行后的时间窗口" loading="lazy">
-</picture>
+![第二轮冷缓存：反向执行后的时间窗口](../../assets/practices/aibrix-routing-cache/grafana-r2-cold-uniform-compact.png)
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/grafana-r2-warm-uniform-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/grafana-r2-warm-uniform.png" alt="第二轮引擎均热：路由索引倾斜与等待" loading="lazy">
-</picture>
+![第二轮引擎均热：路由索引倾斜与等待](../../assets/practices/aibrix-routing-cache/grafana-r2-warm-uniform-compact.png)
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/grafana-hot50-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/grafana-hot50.png" alt="第一轮50%热点：路由选择、实际命中、等待和客户端延迟" loading="lazy">
-</picture>
+![第一轮50%热点：路由选择、实际命中、等待和客户端延迟](../../assets/practices/aibrix-routing-cache/grafana-hot50-compact.png)
 
-<picture>
-  <source media="(max-width: 600px)" srcset="/assets/practices/aibrix-routing-cache/grafana-hot90-mobile.png">
-  <img src="../../assets/practices/aibrix-routing-cache/grafana-hot90.png" alt="第一轮89.6%热点：保护分支出现后的时间窗口" loading="lazy">
-</picture>
+![第一轮89.6%热点：保护分支出现后的时间窗口](../../assets/practices/aibrix-routing-cache/grafana-hot90-compact.png)
 
-以上为真实 Grafana 浅色页面，桌面与手机分别截图。第一轮依次为 random、least-request、prefix-cache；第二轮反向执行，图中的策略图例与时间段对应。初始化流量位于测量间隙。五秒客户端快照与 Prometheus 抓取时刻不同，观察到的瞬时队列峰值可能不同。
+以上为真实 Grafana 浅色页面，采用四面板、16:9 横图：TTFT、每副本在运行与等待请求、实际 KV 命中、AIBrix 路由选择。完整六面板截图与看板 JSON 保留在文末的证据附件中。第一轮依次为 random、least-request、prefix-cache；第二轮反向执行，图中的策略图例与时间段对应。初始化流量位于测量间隙。五秒客户端快照与 Prometheus 抓取时刻不同，观察到的瞬时队列峰值可能不同。
 
 
 建议依次读同一时间轴上的六项：路由选择方式 → 每副本分配 → 实际 KV 命中 → 等待队列 → TTFT → 达标请求。前缀路由的匹配选择计数升高，只解释了第一步；如果等待队列同步升高，必须继续看客户端是否受益。
@@ -291,6 +264,7 @@ histogram_quantile(0.95, sum by (le, phase) (
 - [请求重建脚本](../../assets/practices/aibrix-routing-cache/make_request.py)：`python3 make_request.py --phase r1-hot50-prefix-cache --family 0 --index 17 > request.json`，根据同目录 `results.json` 还原 Prompt；只输出 JSON，不发送请求。需要自行选择正确的模型名、路由头与入口。
 - [Prometheus 历史导出](../../assets/practices/aibrix-routing-cache/metrics-history.json.gz)：查询表达式、五秒查询步长与原始有限样本；查询步长不等于采集间隔。
 - [完整路由看板 JSON](../../assets/practices/aibrix-routing-cache/dashboard-routing.json)，以及 [冷缓存](../../assets/practices/aibrix-routing-cache/dashboard-cold-uniform.json)、[50% 热点](../../assets/practices/aibrix-routing-cache/dashboard-hot50.json)、[89.6% 热点](../../assets/practices/aibrix-routing-cache/dashboard-hot90.json) 的六面板证据视图。
+- 完整六面板截图：[第一轮冷缓存](../../assets/practices/aibrix-routing-cache/grafana-cold-uniform.png)、[第二轮冷缓存](../../assets/practices/aibrix-routing-cache/grafana-r2-cold-uniform.png)、[第二轮均热](../../assets/practices/aibrix-routing-cache/grafana-r2-warm-uniform.png)、[50% 热点](../../assets/practices/aibrix-routing-cache/grafana-hot50.png)、[89.6% 热点](../../assets/practices/aibrix-routing-cache/grafana-hot90.png)。
 - [数据口径与 SHA-256 清单](../../assets/practices/aibrix-routing-cache/manifest.json)。
 
 正式统计排除了计算形状预热、24 条 pilot、前缀初始化与失败初始化。结束后专用 GPU Deployment 已缩容为 0，临时开发接口配置已撤销。

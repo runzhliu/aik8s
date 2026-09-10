@@ -5,6 +5,6 @@
   "client_gateway_engine_counts_match": true,
   "client_quantiles_recomputed": true,
   "request_reconstruction_checked": true,
-  "images": 22,
+  "images": 27,
   "finite_metric_queries": 18
 }

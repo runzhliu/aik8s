@@ -21,7 +21,7 @@
     "file": "cold-warm.png",
     "width": 1200,
     "height": 675,
-    "sha256": "f693518e2826d3e51297b4dababd02e2b58144bac285635d39f7eb166ad5203a"
+    "sha256": "d73951ae388951222d5d4af371dc2ceb9ed9133eff2d0cf519605cf3409fa6af"
   },
   {
     "file": "cover-square.png",
@@ -36,6 +36,12 @@
     "sha256": "cc20ec2ce494f08848acb87f30baebf4e28b43540fd6f2a613668e7c209bd87c"
   },
   {
+    "file": "grafana-cold-uniform-compact.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "e3d6fddcf36dc84db2a5d77a31037355fbc68efa2ba77780533474d6199a359e"
+  },
+  {
     "file": "grafana-cold-uniform-mobile.png",
     "width": 390,
     "height": 2228,
@@ -46,6 +52,12 @@
     "width": 1200,
     "height": 1120,
     "sha256": "1d39da226edee74102f2451f5a6bc45e399f0ce2f60a9f6a5a6527b122176188"
+  },
+  {
+    "file": "grafana-hot50-compact.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "ad14c4c960314bfce2d5e358c6a01076604a436fafedd8dc0274fd15653bfc41"
   },
   {
     "file": "grafana-hot50-mobile.png",
@@ -60,6 +72,12 @@
     "sha256": "b4f46fc2bb467ba8c6be243b3a06588a418c033dfc6f6c93ea7d7514db8456a1"
   },
   {
+    "file": "grafana-hot90-compact.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "b405a95a677b67fdc77fae609af1f542f50a345a3318444bf5fca0231e2fe998"
+  },
+  {
     "file": "grafana-hot90-mobile.png",
     "width": 390,
     "height": 2228,
@@ -72,6 +90,12 @@
     "sha256": "491e15980bb63c1f35baabd9a84f369a374e6490fba3feb5624004cdf6055e1f"
   },
   {
+    "file": "grafana-r2-cold-uniform-compact.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "25823770888a4e2106586cc1ff494025b77b87a08a66c0c1ed5f76111f6db731"
+  },
+  {
     "file": "grafana-r2-cold-uniform-mobile.png",
     "width": 390,
     "height": 2228,
@@ -82,6 +106,12 @@
     "width": 1200,
     "height": 1120,
     "sha256": "ddb98cfb7bee22605d8eb0dc0c727fbb1be6ea9ccea309b3a3165b62fe0ace49"
+  },
+  {
+    "file": "grafana-r2-warm-uniform-compact.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "1645e3f81c653827d1f546ec52b1777cb29e6bee22eba1cad62808c098b94c52"
   },
   {
     "file": "grafana-r2-warm-uniform-mobile.png",
@@ -117,7 +147,7 @@
     "file": "hotspots.png",
     "width": 1200,
     "height": 675,
-    "sha256": "84668977ec8156b74ea851f4d4d635a1732174f91a5989c31a3eb5c3290ca2e6"
+    "sha256": "5d29dd9d88d0ad6802fad5fb0a5f6b3bf8842672e20e4ca8bfac8337df60c902"
   },
   {
     "file": "mechanism-mobile.png",

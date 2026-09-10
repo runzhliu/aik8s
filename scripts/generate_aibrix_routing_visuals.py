@@ -50,13 +50,13 @@ def chart(filename,title,scenarios):
         center(d,(left,179,right,215),label,25,bold=True)
         for j in range(5):
             v=maximum*j/4;y=bottom-(bottom-top)*j/4;d.line((left,y,right,y),fill=LINE)
-            txt(d,left-50,y-10,f'{v:.1f}',18,fill=MUTED,latin=True)
+            txt(d,left-50,y-10,f'{v:.1f}',20,fill=MUTED,latin=True)
         for ri,r in enumerate([1,2]):
             mid=left+125+ri*252
             for sj,(s,color) in enumerate(COLORS.items()):
                 v=lookup[f'r{r}-{scenario}-{s}']['ttft']['p95'];x=mid+(sj-1)*66;y=bottom-v/maximum*(bottom-top)
                 d.rectangle((x-23,y,x+23,bottom),fill=color)
-                center(d,(x-45,y-33,x+45,y-5),f'{v:.2f}',23,fill=color,bold=True)
+                center(d,(x-45,y-33,x+45,y-5),f'{v:.2f}',25,fill=color,bold=True)
             center(d,(mid-95,535,mid+95,569),'第 '+str(r)+' 轮',24)
     footer(d,'TTFT P95，单位：秒，越低越好 · 两轮分别计算 · 左右图纵轴独立缩放')
     im.save(OUT/filename,optimize=True)
@@ -126,7 +126,10 @@ def allocation():
     center(d,(30,1034,690,1082),'来源：实际落点、引擎计数与五秒快照',24,fill=MUTED)
     im.save(OUT/'allocation-hot50-mobile.png',optimize=True)
 
-mechanism();covers()
+# Article figures retain the M3 16:9 baseline; covers are opt-in.
+mechanism()
+if '--with-covers' in sys.argv:
+    covers()
 allocation()
 if json.loads((R/'results.json').read_text())['complete']:
     chart('cold-warm.png','冷热对照：首 Token 的等待差异',[('cold-uniform','冷缓存 · 均匀流量'),('warm-uniform','双副本均热 · 均匀流量')])

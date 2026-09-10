@@ -18,7 +18,7 @@ random 随机找人，同一本书可能两个人都要重新翻；least-request
 
 但如果一半问题来自同一本手册，那位“熟悉业务的客服”可能越来越忙。**省下的翻书时间，不一定抵得过排队时间。**
 
-![路由索引与实际 KV 缓存是两份账本](../../docs/assets/practices/aibrix-routing-cache/mechanism-mobile.png)
+![路由索引与实际 KV 缓存是两份账本](../../docs/assets/practices/aibrix-routing-cache/mechanism.png)
 
 本次没有启用 KV event sync。AIBrix 使用 128 字符分块的本地前缀索引，在选定目标副本时记录请求历史；它知道的是“这段前缀曾发给谁”，并非引擎实时确认的缓存清单。
 
@@ -34,7 +34,7 @@ random 随机找人，同一本书可能两个人都要重新翻；least-request
 
 但输出吞吐并没有一起提高：按完整阶段、包含尾部请求排空计算，prefix-cache 约 171.8 Token/s，另外两种约 184.6–184.7 Token/s。不能据此写成“全方位加速”。
 
-![冷、热缓存下两轮 TTFT P95 对照](../../docs/assets/practices/aibrix-routing-cache/cold-warm-mobile.png)
+![冷、热缓存下两轮 TTFT P95 对照](../../docs/assets/practices/aibrix-routing-cache/cold-warm.png)
 
 **第二轮没有照搬第一轮的优势。** prefix-cache 的 TTFT P95 为 9.05 秒，least-request 为 6.42 秒，random 为 9.23 秒。前缀命中率仍约 85.4%，但排队改变了尾延迟。两轮都保留，不能只选第一次好看的结果。
 
@@ -62,7 +62,7 @@ prefix-cache 的真实 Token 命中率最高，达到 **93.3%**，网关也记�
 
 缓存复用没有失效，问题出在请求集中后的等待。它的 TPOT P95 约 59.8 毫秒，低于 least-request 的约 71.6 毫秒；生成阶段更顺畅，用户却更晚看到第一个字。
 
-![两种热点强度下的两轮 TTFT 对照](../../docs/assets/practices/aibrix-routing-cache/hotspots-mobile.png)
+![两种热点强度下的两轮 TTFT 对照](../../docs/assets/practices/aibrix-routing-cache/hotspots.png)
 
 反转策略顺序后，第二轮 50% 热点下，prefix-cache 的 TTFT P95 为 8.28 秒、37/96 达标；least-request 为 1.91 秒、94/96 达标。
 
@@ -78,9 +78,9 @@ prefix-cache 的真实 Token 命中率最高，达到 **93.3%**，网关也记�
 
 第一轮近 90% 热点时，网关记录到 1 次负载保护事件和 1 次 least-request 回退，最终分配变为 38/58，TTFT P95 为 6.53 秒、68/96 达标。比 50% 热点时更均衡，说明算法的保护分支确实改变了后续分配；但它仍没有达到同场景 least-request 的 96/96 达标水平。
 
-![真实 Grafana 浅色看板：50% 热点下的路由、命中、排队与延迟](../../docs/assets/practices/aibrix-routing-cache/grafana-hot50-mobile.png)
+![真实 Grafana 浅色看板：50% 热点下的路由、命中、排队与延迟](../../docs/assets/practices/aibrix-routing-cache/grafana-hot50-compact.png)
 
-读这张图时，可以从上到下对照：客户端 TTFT、完整流与达标请求率、每副本等待、真实 KV 命中、AIBrix 前缀选择和输出吞吐。最后一段是 prefix-cache：命中率提高，较忙副本的等待和 TTFT 也同步上升，达标请求率与完整成功率拉开距离。
+这张图按从左到右、从上到下排列：客户端 TTFT、各副本运行与等待、真实 KV 命中、AIBrix 前缀选择。最后一段是 prefix-cache：命中率提高，较忙副本的等待和 TTFT 也同步上升。结合前面的达标数据，才能判断缓存复用是否改善了服务体验；包含达标请求率与输出吞吐的完整看板见阅读原文。
 
 看板使用一分钟滑动窗口与直方图估计；表格则由逐请求记录计算整轮 P95，两者不能直接当成同一个数。
 
