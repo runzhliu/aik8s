@@ -1,0 +1,397 @@
+{
+  "uid": "routing-evidence-warm-uniform",
+  "title": "AIBrix 路由证据 · warm-uniform",
+  "schemaVersion": 39,
+  "version": 1,
+  "style": "light",
+  "tags": [
+    "AIBrix",
+    "routing-study",
+    "L20"
+  ],
+  "timezone": "Asia/Shanghai",
+  "refresh": "",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "客户端 TTFT P95",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "label_replace(histogram_quantile(.95,sum by(le,phase)(rate(routing_study_ttft_seconds_bucket{job=\"qwen-routing-study\",phase=~\"r1-warm-uniform-.*\"}[1m]))),\"strategy\",\"$1\",\"phase\",\"r1-warm-uniform-(.*)\")",
+          "legendFormat": "{{strategy}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "random"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#7B8798"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "least-request"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3677D6"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "prefix-cache"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#D47927"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "interval": "5s",
+      "maxDataPoints": 2000
+    },
+    {
+      "id": 2,
+      "title": "完整流与达标请求率",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(result)(rate(routing_study_requests_total{job=\"qwen-routing-study\",phase=~\"r1-warm-uniform-.*\"}[1m]))",
+          "legendFormat": "{{result}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(routing_study_good_requests_total{job=\"qwen-routing-study\",phase=~\"r1-warm-uniform-.*\"}[1m]))",
+          "legendFormat": "达标",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "interval": "5s",
+      "maxDataPoints": 2000
+    },
+    {
+      "id": 3,
+      "title": "各副本运行 / 等待",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(node_alias)(vllm:num_requests_running{job=\"qwen-lab-engine\",model_name=\"qwen38-aibrix-lab\"})",
+          "legendFormat": "{{node_alias}} 运行",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum by(node_alias)(vllm:num_requests_waiting{job=\"qwen-lab-engine\",model_name=\"qwen38-aibrix-lab\"})",
+          "legendFormat": "{{node_alias}} 等待",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "interval": "5s",
+      "maxDataPoints": 2000
+    },
+    {
+      "id": 4,
+      "title": "引擎实际前缀 Token 命中率",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(node_alias)(rate(vllm:prefix_cache_hits_total{job=\"qwen-lab-engine\",model_name=\"qwen38-aibrix-lab\"}[1m]))/sum by(node_alias)(rate(vllm:prefix_cache_queries_total{job=\"qwen-lab-engine\",model_name=\"qwen38-aibrix-lab\"}[1m]))",
+          "legendFormat": "{{node_alias}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "interval": "5s",
+      "maxDataPoints": 2000
+    },
+    {
+      "id": 5,
+      "title": "AIBrix 前缀选择方式",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(selection)(rate(aibrix_prefix_cache_routing_selection_total{job=\"qwen-lab-gateway\",model=\"qwen38-aibrix-lab\"}[1m]))",
+          "legendFormat": "{{selection}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "interval": "5s",
+      "maxDataPoints": 2000
+    },
+    {
+      "id": 7,
+      "title": "各副本输出 Token/s",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(node_alias)(rate(vllm:generation_tokens_total{job=\"qwen-lab-engine\",model_name=\"qwen38-aibrix-lab\"}[1m]))",
+          "legendFormat": "{{node_alias}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix:Token/s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "interval": "5s",
+      "maxDataPoints": 2000
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "rgba(0, 160, 210, 1)",
+        "name": "阶段边界",
+        "type": "dashboard"
+      }
+    ]
+  }
+}

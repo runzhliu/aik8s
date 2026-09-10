@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "formal_phases": 24,
+  "client_requests": 2304,
+  "client_gateway_engine_counts_match": true,
+  "client_quantiles_recomputed": true,
+  "request_reconstruction_checked": true,
+  "images": 22,
+  "finite_metric_queries": 18
+}

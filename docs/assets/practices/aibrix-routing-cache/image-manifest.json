@@ -1,0 +1,134 @@
+[
+  {
+    "file": "allocation-hot50-mobile.png",
+    "width": 720,
+    "height": 1110,
+    "sha256": "3434ba5010080e42de6d2b12f075d9e00e67b2b87a33940ae36fc0ac2edf7d5d"
+  },
+  {
+    "file": "allocation-hot50.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "bebd3d48f5a85ad8a4373322f9b94e078ed0263bfa87b7a9fbc02349f6fd2c39"
+  },
+  {
+    "file": "cold-warm-mobile.png",
+    "width": 720,
+    "height": 1300,
+    "sha256": "a138fe597a12e92dce7ee733f21e782e512f45b0b104958a981d4fa867fdd4bd"
+  },
+  {
+    "file": "cold-warm.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "f693518e2826d3e51297b4dababd02e2b58144bac285635d39f7eb166ad5203a"
+  },
+  {
+    "file": "cover-square.png",
+    "width": 900,
+    "height": 900,
+    "sha256": "64fc9bb25d05e5005dba4539af3c2a68c55813dadfb13c3efdd5923384e902d6"
+  },
+  {
+    "file": "cover.png",
+    "width": 900,
+    "height": 383,
+    "sha256": "cc20ec2ce494f08848acb87f30baebf4e28b43540fd6f2a613668e7c209bd87c"
+  },
+  {
+    "file": "grafana-cold-uniform-mobile.png",
+    "width": 390,
+    "height": 2228,
+    "sha256": "46283ed0739d11f90afbef81ed060bb0fadde1746aa3dffe3d54508e7ee35258"
+  },
+  {
+    "file": "grafana-cold-uniform.png",
+    "width": 1200,
+    "height": 1120,
+    "sha256": "1d39da226edee74102f2451f5a6bc45e399f0ce2f60a9f6a5a6527b122176188"
+  },
+  {
+    "file": "grafana-hot50-mobile.png",
+    "width": 390,
+    "height": 2228,
+    "sha256": "42e7070f4ea3bf905432f4c1ba8bf075f288235e57f4f2629eb95c786cf3e81e"
+  },
+  {
+    "file": "grafana-hot50.png",
+    "width": 1200,
+    "height": 1120,
+    "sha256": "b4f46fc2bb467ba8c6be243b3a06588a418c033dfc6f6c93ea7d7514db8456a1"
+  },
+  {
+    "file": "grafana-hot90-mobile.png",
+    "width": 390,
+    "height": 2228,
+    "sha256": "00be362cfdaa65331421fed1e1df3207d30e4e919e8b7aba52dc1f61cd2c83c0"
+  },
+  {
+    "file": "grafana-hot90.png",
+    "width": 1200,
+    "height": 1120,
+    "sha256": "491e15980bb63c1f35baabd9a84f369a374e6490fba3feb5624004cdf6055e1f"
+  },
+  {
+    "file": "grafana-r2-cold-uniform-mobile.png",
+    "width": 390,
+    "height": 2228,
+    "sha256": "f4807be9c342541f64bffb48d50a14866241ec9aea475ec45e43dc228da3ef28"
+  },
+  {
+    "file": "grafana-r2-cold-uniform.png",
+    "width": 1200,
+    "height": 1120,
+    "sha256": "ddb98cfb7bee22605d8eb0dc0c727fbb1be6ea9ccea309b3a3165b62fe0ace49"
+  },
+  {
+    "file": "grafana-r2-warm-uniform-mobile.png",
+    "width": 390,
+    "height": 2228,
+    "sha256": "90c1967aed5e810f528ed26533da1d63056ea9ec1956feb4652ed2ced6af68da"
+  },
+  {
+    "file": "grafana-r2-warm-uniform.png",
+    "width": 1200,
+    "height": 1120,
+    "sha256": "90db0f6fe5c08440d5288b6169924dfcef241c970aaee204106ad8da007123c8"
+  },
+  {
+    "file": "grafana-warm-uniform-mobile.png",
+    "width": 390,
+    "height": 2228,
+    "sha256": "00cf4a49f42baa410ca2ad40e42101bf395609065a384b34f4eb7bffeff6ddfe"
+  },
+  {
+    "file": "grafana-warm-uniform.png",
+    "width": 1200,
+    "height": 1120,
+    "sha256": "658bd577f739765c469ad38cc6106c2a0bd27c2b950d04aea05668cabe71902c"
+  },
+  {
+    "file": "hotspots-mobile.png",
+    "width": 720,
+    "height": 1300,
+    "sha256": "bd2e5bdd3d25c0e061eedff073a25b73d0628d50fa5ee1a493ba69dcca878ab6"
+  },
+  {
+    "file": "hotspots.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "84668977ec8156b74ea851f4d4d635a1732174f91a5989c31a3eb5c3290ca2e6"
+  },
+  {
+    "file": "mechanism-mobile.png",
+    "width": 720,
+    "height": 1080,
+    "sha256": "be34d994bfed1116285e36443bb81fd965b3e2db214f8ec644735872ac1893a6"
+  },
+  {
+    "file": "mechanism.png",
+    "width": 1200,
+    "height": 675,
+    "sha256": "984637d63335021c8364b928111ab0245a66a0e0cedbf755721c8ebfbfd3e425"
+  }
+]

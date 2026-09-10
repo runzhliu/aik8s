@@ -1,0 +1,23 @@
+{
+  "formal_phases": 24,
+  "formal_requests": 2304,
+  "excludes": [
+    "shape warmup",
+    "pilot",
+    "priming",
+    "failed initialization"
+  ],
+  "request_success_rule": "HTTP 200 + visible content + DONE + completion_tokens=128",
+  "quantile_method": "linear interpolation, each phase separately",
+  "slo": {
+    "ttft_s": 2,
+    "tpot_s": 0.15,
+    "e2e_s": 30
+  },
+  "files": {
+    "results.json": "05cf30114a5bdc12877992da89e76dfa93339935b30405a6b908b194eb70c5b9",
+    "requests.jsonl.gz": "0a5442106fe4da0fb4242c8866724257480863cf45e9e23c64539fcd1f5db4ed",
+    "metrics-history.json.gz": "284181fcb7e60c07bd946e11c188eaf0f145ffeb60657c26fe2c90825965ed14",
+    "dashboard-routing.json": "b5dce1a0b873f53836998e4cfddaa28190f61c531a0253314d9a8759a8616eab"
+  }
+}
