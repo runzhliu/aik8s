@@ -1,0 +1,125 @@
+[
+  {
+    "engine": "sglang",
+    "uid": "dsv41-day0-client-sglang-article",
+    "from_epoch": 1789088290,
+    "to_epoch": 1789092203,
+    "image": "grafana-sglang-client-light.png",
+    "dimensions": [
+      1200,
+      675
+    ],
+    "theme": "light",
+    "actual_grafana_screenshot": true,
+    "historical_data": true,
+    "panels": [
+      {
+        "panel": "TTFT · 首个非空内容 · 滑动 P95",
+        "query": "1000 * histogram_quantile(0.95,sum by(engine,le)(rate(dsv41_client_ttft_seconds_bucket{engine=~\"sglang\",case=~\".*\",purpose=\"measurement\"}[1m])))",
+        "finite_points": 174,
+        "max": 234000.0
+      },
+      {
+        "panel": "每请求平均 TPOT · 滑动 P95",
+        "query": "1000 * histogram_quantile(0.95,sum by(engine,le)(rate(dsv41_client_tpot_seconds_bucket{engine=~\"sglang\",case=~\".*\",purpose=\"measurement\"}[1m])))",
+        "finite_points": 174,
+        "max": 2849.9999999999995
+      },
+      {
+        "panel": "完成输出吞吐与完整请求",
+        "query": "sum by(engine)(rate(dsv41_client_output_tokens_total{engine=~\"sglang\",case=~\".*\",purpose=\"measurement\"}[1m]))",
+        "finite_points": 258,
+        "max": 893.6727272727272
+      },
+      {
+        "panel": "完整流 E2E · 滑动 P95",
+        "query": "1000 * histogram_quantile(0.95,sum by(engine,le)(rate(dsv41_client_e2e_seconds_bucket{engine=~\"sglang\",case=~\".*\",purpose=\"measurement\"}[1m])))",
+        "finite_points": 174,
+        "max": 240000.0
+      }
+    ],
+    "captured_at": 1789111457.742253
+  },
+  {
+    "engine": "vllm",
+    "uid": "dsv41-day0-client-vllm-article",
+    "from_epoch": 1789098690,
+    "to_epoch": 1789101276,
+    "image": "grafana-vllm-client-light.png",
+    "dimensions": [
+      1200,
+      675
+    ],
+    "theme": "light",
+    "actual_grafana_screenshot": true,
+    "historical_data": true,
+    "panels": [
+      {
+        "panel": "TTFT · 首个非空内容 · 滑动 P95",
+        "query": "1000 * histogram_quantile(0.95,sum by(engine,le)(rate(dsv41_client_ttft_seconds_bucket{engine=~\"vllm\",case=~\".*\",purpose=\"measurement\"}[1m])))",
+        "finite_points": 127,
+        "max": 117000.0
+      },
+      {
+        "panel": "每请求平均 TPOT · 滑动 P95",
+        "query": "1000 * histogram_quantile(0.95,sum by(engine,le)(rate(dsv41_client_tpot_seconds_bucket{engine=~\"vllm\",case=~\".*\",purpose=\"measurement\"}[1m])))",
+        "finite_points": 127,
+        "max": 980.0
+      },
+      {
+        "panel": "完成输出吞吐与完整请求",
+        "query": "sum by(engine)(rate(dsv41_client_output_tokens_total{engine=~\"vllm\",case=~\".*\",purpose=\"measurement\"}[1m]))",
+        "finite_points": 171,
+        "max": 926.203904
+      },
+      {
+        "panel": "完整流 E2E · 滑动 P95",
+        "query": "1000 * histogram_quantile(0.95,sum by(engine,le)(rate(dsv41_client_e2e_seconds_bucket{engine=~\"vllm\",case=~\".*\",purpose=\"measurement\"}[1m])))",
+        "finite_points": 127,
+        "max": 234000.0
+      }
+    ],
+    "captured_at": 1789111465.5251572
+  },
+  {
+    "engine": "vllm",
+    "uid": "dsv41-day0-gpu-vllm-article",
+    "from_epoch": 1789099856,
+    "to_epoch": 1789101276,
+    "image": "grafana-vllm-long-gpu-light.png",
+    "dimensions": [
+      1200,
+      675
+    ],
+    "theme": "light",
+    "actual_grafana_screenshot": true,
+    "historical_data": true,
+    "panels": [
+      {
+        "panel": "八张测试 GPU 的利用率",
+        "query": "DCGM_FI_DEV_GPU_UTIL{job=\"dsv41-dcgm\"}",
+        "finite_points": 760,
+        "max": 100.0
+      },
+      {
+        "panel": "每张 GPU 的显存占用",
+        "query": "DCGM_FI_DEV_FB_USED{job=\"dsv41-dcgm\"} * 1024 * 1024",
+        "finite_points": 760,
+        "max": 133864357888.0
+      },
+      {
+        "panel": "每张 GPU 的功率",
+        "query": "DCGM_FI_DEV_POWER_USAGE{job=\"dsv41-dcgm\"}",
+        "finite_points": 760,
+        "max": 327.374
+      },
+      {
+        "panel": "每张 GPU 的 SM 频率",
+        "query": "DCGM_FI_DEV_SM_CLOCK{job=\"dsv41-dcgm\"} * 1000000",
+        "finite_points": 760,
+        "max": 1980000000.0
+      }
+    ],
+    "captured_at": 1789111473.464205
+  }
+]
