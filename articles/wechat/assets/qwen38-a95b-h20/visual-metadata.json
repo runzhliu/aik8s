@@ -1,0 +1,29 @@
+{
+  "style_reference": "MiniMax M3 body visuals",
+  "palette": {
+    "qwen_blue": "#0A2EFE",
+    "purple": "#7057D9",
+    "accent": "#00A6A6"
+  },
+  "body_size": [
+    1200,
+    675
+  ],
+  "cover_sizes": [
+    [
+      900,
+      383
+    ],
+    [
+      900,
+      900
+    ]
+  ],
+  "evidence_policy": "Covers are editorial; measured charts must read archived JSON. Public UI and Grafana derivatives are crop-only copies of archived screenshots; no chart data or interface content is altered.",
+  "visual_review": {
+    "short_chart": "axis titles, scales, legend, markers and mobile readability checked",
+    "workload_chart": "labels, values and panel boundaries checked",
+    "context_chart": "64K, 128K and 262K display labels checked against configured contexts",
+    "topology": "stage count, GPU count and storage labels checked"
+  }
+}

@@ -2,7 +2,7 @@
 title: 实战、排障与选型
 description: 用可复现的实验、性能数字、事故证据和决策树回答 AI/LLM on Kubernetes 的高频问题
 status: evolving
-last_reviewed: 2026-08-14
+last_reviewed: 2026-09-12
 ---
 
 # 实战、排障与选型
@@ -21,6 +21,7 @@ last_reviewed: 2026-08-14
 
 ## 性能、成本与容量
 
+- [Qwen3.8-2.4T-A95B-FP8 Day 0：32×H20-3e 的 SGLang 部署与压测](qwen38-a95b-h20-day0.md)
 - [MiniMax-M3：八卡 H20 上的 SGLang 与 vLLM 实测](minimax-m3-h20-benchmark.md)
 - [MiniMax H3 H20-3e 实测：完整音视频生成、双引擎与持久化验收](minimax-h3-h20-benchmark.md)
 - [DeepSeek-V4-Flash-Vision-Exp Day 0：4×H20 多模态部署与压测](deepseek-v4-flash-vision-exp-day0-h20.md)
