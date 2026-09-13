@@ -48,9 +48,9 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 | 建设大数据与 AI 数据平台 | [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [数据与缓存](data-storage.md) → [模型制品](data/model-artifacts.md) → [MLOps](mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](queue-multitenancy.md) → [分布式训练](distributed-training.md) → [RDMA 网络](rdma-networking.md) → [可靠性](reliability.md) |
 | 建设 Ray 大模型平台 | [Ray 训练与推理](ray-llm-platform.md) → [分布式训练](distributed-training.md) → [大数据 on Kubernetes](data/big-data-on-kubernetes.md) → [可靠性](reliability.md) |
-| 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [Serving 框架](inference/serving-frameworks.md) → [网关与路由](inference/gateway-routing.md) → [Higress 实战](inference/higress-ai-gateway.md) |
+| 建设在线 LLM 推理服务 | [本地运行与测试](inference/local-testing.md) → [推理平台总览](llm-inference.md) → [推理引擎](inference/engines.md) → [Serving 框架](inference/serving-frameworks.md) → [API 中转与网关选型](inference/llm-api-relay-gateway-overview.md) → [网关与路由](inference/gateway-routing.md) → [Higress 实战](inference/higress-ai-gateway.md) |
 | 规划多地域或多 GPU 集群 | [集群架构设计](cluster/architecture.md) → [跨集群与大规模 GPU](cluster/multi-cluster-ai.md) → [生产参考架构](guides/reference-architectures.md) |
-| 建设 RAG 或 Agent 平台 | [Agent 现状与趋势](rag-agent/agent-landscape-2026.md) → [DeepSeek Harness 容器化](rag-agent/deepseek-harness-runtime-containerization.md) → [Kubernetes 实战](practices/deepseek-harness-kubernetes.md) → [OpenClaw 企业平台分析](rag-agent/openclaw-enterprise-agent-platform.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [工具与执行治理](agentic-workloads.md) → [安全治理](security-governance.md) |
+| 建设 RAG 或 Agent 平台 | [Agent 现状与趋势](rag-agent/agent-landscape-2026.md) → [Agent Harness](rag-agent/agent-harness-technology-overview.md) → [HarnessRouter](rag-agent/harnessrouter-overview.md) → [DeepSeek Harness 容器化](rag-agent/deepseek-harness-runtime-containerization.md) → [Kubernetes 实战](practices/deepseek-harness-kubernetes.md) → [Agent Sandbox 选型](rag-agent/agent-sandbox-selection.md) → [安全治理](security-governance.md) |
 | 负责 SRE、成本或容量 | [可观测性](observability.md) → [性能基准](benchmarking.md) → [成本与容量](cost-capacity.md) → [落地路线图](adoption-roadmap.md) |
 
 ## 完整主题地图 { #topic-map }
@@ -107,6 +107,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [LLM Serving 与 AI 微服务框架](inference/serving-frameworks.md)：vLLM、KServe、AIBrix、Ray Serve、BentoML、NVIDIA NIM 与应用层框架。
 - [LLM 推理性能优化](inference/optimization.md)：TTFT、TPOT、批处理、KV Cache、量化、并行和推测解码。
 - [KV Cache 原理、应用与 Kubernetes](inference/kv-cache-overview.md)：Attention 原理、显存算例、前缀复用、分层缓存，以及请求路由、NUMA 和扩缩容。
+- [大模型 API 中转器与 LLM Gateway 综述](inference/llm-api-relay-gateway-overview.md)：模型聚合、自建统一 API、企业 AI Gateway、推理路由、语义路由、安全风险与选型。
 - [AI Gateway 与智能路由](inference/gateway-routing.md)：Gateway API Inference Extension、前缀感知、负载感知和流控。
 - [Higress AI Gateway 实战](inference/higress-ai-gateway.md)：隔离安装、AI Proxy、Token 治理、可观测性，以及与 AIBrix 同集群和跨集群接入。
 - [分布式与 Prefill/Decode 分离推理](inference/distributed-serving.md)：模型并行、LeaderWorkerSet、llm-d、Dynamo 和 KV 传输。
@@ -114,6 +115,8 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 ### RAG、Agent 与边缘
 
 - [2026 年 AI Agent 现状、实现原理与趋势](rag-agent/agent-landscape-2026.md)：主流编程、浏览器与企业 Agent 的产品格局、实现原理、框架、风险和演进方向。
+- [Agent Harness 技术综述](rag-agent/agent-harness-technology-overview.md)：Agent Loop、上下文、工具、状态恢复、沙箱、权限、验证与 Kubernetes 生产架构。
+- [HarnessRouter 综述](rag-agent/harnessrouter-overview.md)：UHP、统一 Harness API、Cloud 与 Community Edition、安全边界、成本及与模型网关的关系。
 - [DeepSeek Harness GitHub 仓库深度解析](rag-agent/deepseek-harness-repository-analysis.md)：源码目录、Cordis 插件树、Profile 与 Bundle、Agent Loop、事件溯源会话和能力 seam。
 - [DeepSeek Harness Docker、Compose 与 Helm 部署实战](rag-agent/deepseek-harness-runtime-containerization.md)：多架构镜像、EROFS 修复、状态持久化、StatefulSet、Helm 与安全暴露边界。
 - [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](practices/deepseek-harness-kubernetes.md)：all-in-one 浏览器桌面、自研 DSH Plugin、Tailscale 远程入口、状态卷、Cilium 探针冲突和安全边界。

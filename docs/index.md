@@ -83,8 +83,8 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 | 建设大数据与 AI 数据平台 | [大数据 on Kubernetes](ai-k8s/data/big-data-on-kubernetes.md) → [数据与缓存](ai-k8s/data-storage.md) → [模型制品](ai-k8s/data/model-artifacts.md) → [MLOps](ai-k8s/mlops.md) |
 | 建设多租户训练平台 | [队列与多租户](ai-k8s/queue-multitenancy.md) → [分布式训练](ai-k8s/distributed-training.md) → [RDMA 网络](ai-k8s/rdma-networking.md) → [可靠性](ai-k8s/reliability.md) |
 | 建设 Ray 大模型平台 | [Ray 训练与推理](ai-k8s/ray-llm-platform.md) → [分布式训练](ai-k8s/distributed-training.md) → [可靠性](ai-k8s/reliability.md) |
-| 建设 LLM 在线推理平台 | [推理平台总览](ai-k8s/llm-inference.md) → [引擎选型](ai-k8s/inference/engines.md) → [Serving 框架](ai-k8s/inference/serving-frameworks.md) → [智能路由](ai-k8s/inference/gateway-routing.md) → [Higress 实战](ai-k8s/inference/higress-ai-gateway.md) |
-| 建设 RAG 或 Agent 服务 | [Agent 现状与趋势](ai-k8s/rag-agent/agent-landscape-2026.md) → [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md) → [OpenClaw 企业平台分析](ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md) → [Agent Sandbox 选型](ai-k8s/rag-agent/agent-sandbox-selection.md) → [工具与执行治理](ai-k8s/agentic-workloads.md) → [安全治理](ai-k8s/security-governance.md) |
+| 建设 LLM 在线推理平台 | [推理平台总览](ai-k8s/llm-inference.md) → [引擎选型](ai-k8s/inference/engines.md) → [Serving 框架](ai-k8s/inference/serving-frameworks.md) → [API 中转与网关选型](ai-k8s/inference/llm-api-relay-gateway-overview.md) → [智能路由](ai-k8s/inference/gateway-routing.md) → [Higress 实战](ai-k8s/inference/higress-ai-gateway.md) |
+| 建设 RAG 或 Agent 服务 | [Agent 现状与趋势](ai-k8s/rag-agent/agent-landscape-2026.md) → [Agent Harness](ai-k8s/rag-agent/agent-harness-technology-overview.md) → [HarnessRouter](ai-k8s/rag-agent/harnessrouter-overview.md) → [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md) → [Agent Sandbox 选型](ai-k8s/rag-agent/agent-sandbox-selection.md) → [安全治理](ai-k8s/security-governance.md) |
 | 负责稳定性、成本和容量 | [可观测性](ai-k8s/observability.md) → [性能基准](ai-k8s/benchmarking.md) → [成本与容量](ai-k8s/cost-capacity.md) → [落地路线图](ai-k8s/adoption-roadmap.md) |
 
 ## 核心专题
@@ -118,6 +118,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - [推理引擎选型](ai-k8s/inference/engines.md)
 - [LLM Serving 与 AI 微服务框架](ai-k8s/inference/serving-frameworks.md)
 - [LLM 推理性能优化](ai-k8s/inference/optimization.md)
+- [大模型 API 中转器与 LLM Gateway 综述](ai-k8s/inference/llm-api-relay-gateway-overview.md)
 - [AI Gateway 与智能路由](ai-k8s/inference/gateway-routing.md)
 - [Higress AI Gateway：架构、安装与 AIBrix 接入实战](ai-k8s/inference/higress-ai-gateway.md)
 - [分布式与 Prefill/Decode 分离推理](ai-k8s/inference/distributed-serving.md)
@@ -126,6 +127,8 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 
 - [大模型时代的 GPU Notebook 平台与存储选型](ai-k8s/development/gpu-notebook-platform.md)
 - [2026 年 AI Agent 现状、实现原理与趋势](ai-k8s/rag-agent/agent-landscape-2026.md)
+- [Agent Harness 技术综述](ai-k8s/rag-agent/agent-harness-technology-overview.md)
+- [HarnessRouter 综述](ai-k8s/rag-agent/harnessrouter-overview.md)
 - [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md)
 - [Agent Sandbox 选型与架构分析](ai-k8s/rag-agent/agent-sandbox-selection.md)
 - [CubeSandbox Kubernetes 部署条件与生产评估](ai-k8s/rag-agent/cubesandbox-kubernetes.md)
