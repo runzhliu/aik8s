@@ -152,6 +152,22 @@
   outline-offset: 3px;
 }
 
+.md-content .mermaid.aik8s-zoomable-diagram {
+  cursor: zoom-in;
+  transition: filter 140ms ease, transform 140ms ease;
+}
+
+.md-content .mermaid.aik8s-zoomable-diagram:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.md-content .mermaid.aik8s-zoomable-diagram:focus-visible {
+  border-radius: 0.2rem;
+  outline: 3px solid var(--md-accent-fg-color);
+  outline-offset: 3px;
+}
+
 body.aik8s-lightbox-open {
   overflow: hidden;
 }

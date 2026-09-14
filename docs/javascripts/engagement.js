@@ -228,7 +228,8 @@
     dialog: null,
     image: null,
     caption: null,
-    previousFocus: null
+    previousFocus: null,
+    observer: null
   };
 
   function imageDisplaySource(image) {
@@ -238,6 +239,25 @@
       if (/\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(href)) return link.href;
     }
     return image.currentSrc || image.src;
+  }
+
+  function mermaidDisplaySource(svg) {
+    var copy = svg.cloneNode(true);
+    var viewBox = svg.getAttribute("viewBox");
+    if (!copy.getAttribute("xmlns")) copy.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    copy.removeAttribute("style");
+    copy.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+    if (viewBox) {
+      var parts = viewBox.trim().split(/[\s,]+/).map(Number);
+      if (parts.length === 4 && parts.every(Number.isFinite) && parts[2] > 0 && parts[3] > 0) {
+        var width = Math.max(parts[2], Math.min(1800, parts[2] * 2));
+        copy.setAttribute("width", String(width));
+        copy.setAttribute("height", String(width * parts[3] / parts[2]));
+      }
+    }
+
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(copy));
   }
 
   function closeImageLightbox() {
@@ -303,6 +323,19 @@
     dialog.querySelector(".aik8s-lightbox__close").focus();
   }
 
+  function openMermaidLightbox(svg, trigger) {
+    var dialog = ensureImageLightbox();
+    var alternative = (trigger.getAttribute("aria-label") || "架构图放大预览").replace(/，点击放大查看$/, "");
+    lightboxState.previousFocus = trigger;
+    lightboxState.image.src = mermaidDisplaySource(svg);
+    lightboxState.image.alt = alternative;
+    lightboxState.caption.textContent = alternative;
+    lightboxState.caption.hidden = false;
+    dialog.hidden = false;
+    document.body.classList.add("aik8s-lightbox-open");
+    dialog.querySelector(".aik8s-lightbox__close").focus();
+  }
+
   function initializeImageLightbox(article) {
     article.querySelectorAll("img").forEach(function (image) {
       if (image.dataset.aik8sLightbox === "true") return;
@@ -336,13 +369,53 @@
     });
   }
 
+  function initializeMermaidLightbox(article) {
+    article.querySelectorAll(".mermaid").forEach(function (diagram) {
+      if (diagram.dataset.aik8sLightbox === "true") return;
+      var svg = diagram.querySelector("svg");
+      if (!svg) return;
+
+      diagram.classList.add("aik8s-zoomable-diagram");
+      diagram.tabIndex = 0;
+      diagram.setAttribute("role", "button");
+      diagram.setAttribute("aria-label", "架构图，点击放大查看");
+      diagram.title = "点击放大查看";
+      diagram.addEventListener("click", function (event) {
+        if (event.target.closest && event.target.closest("a")) return;
+        event.preventDefault();
+        var currentSvg = diagram.querySelector("svg");
+        if (currentSvg) openMermaidLightbox(currentSvg, diagram);
+      });
+      diagram.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          var currentSvg = diagram.querySelector("svg");
+          if (currentSvg) openMermaidLightbox(currentSvg, diagram);
+        }
+      });
+      diagram.dataset.aik8sLightbox = "true";
+    });
+  }
+
+  function initializeVisualLightbox(article) {
+    initializeImageLightbox(article);
+    initializeMermaidLightbox(article);
+
+    if (lightboxState.observer) lightboxState.observer.disconnect();
+    lightboxState.observer = new MutationObserver(function () {
+      initializeImageLightbox(article);
+      initializeMermaidLightbox(article);
+    });
+    lightboxState.observer.observe(article, { childList: true, subtree: true });
+  }
+
   function initialize() {
     closeImageLightbox();
     var article = document.querySelector("article.md-content__inner");
     if (!article) return;
     initializeShare(article);
     initializeCalculators(article);
-    initializeImageLightbox(article);
+    initializeVisualLightbox(article);
     initializeComments(article);
   }
 
