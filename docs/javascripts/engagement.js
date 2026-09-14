@@ -227,8 +227,11 @@
   var lightboxState = {
     dialog: null,
     image: null,
+    diagramHost: null,
     caption: null,
     previousFocus: null,
+    movedDiagram: null,
+    diagramPlaceholder: null,
     observer: null
   };
 
@@ -241,30 +244,31 @@
     return image.currentSrc || image.src;
   }
 
-  function mermaidDisplaySource(svg) {
-    var copy = svg.cloneNode(true);
-    var viewBox = svg.getAttribute("viewBox");
-    if (!copy.getAttribute("xmlns")) copy.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    copy.removeAttribute("style");
-    copy.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  function restoreMermaidDiagram() {
+    var diagram = lightboxState.movedDiagram;
+    var placeholder = lightboxState.diagramPlaceholder;
+    if (!diagram) return;
 
-    if (viewBox) {
-      var parts = viewBox.trim().split(/[\s,]+/).map(Number);
-      if (parts.length === 4 && parts.every(Number.isFinite) && parts[2] > 0 && parts[3] > 0) {
-        var width = Math.max(parts[2], Math.min(1800, parts[2] * 2));
-        copy.setAttribute("width", String(width));
-        copy.setAttribute("height", String(width * parts[3] / parts[2]));
-      }
+    diagram.classList.remove("aik8s-lightbox__diagram");
+    if (placeholder && placeholder.parentNode) {
+      placeholder.parentNode.insertBefore(diagram, placeholder);
+      placeholder.parentNode.removeChild(placeholder);
+    } else if (diagram.parentNode) {
+      diagram.parentNode.removeChild(diagram);
     }
-
-    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(copy));
+    if (lightboxState.diagramHost) lightboxState.diagramHost.hidden = true;
+    lightboxState.movedDiagram = null;
+    lightboxState.diagramPlaceholder = null;
   }
 
   function closeImageLightbox() {
-    if (!lightboxState.dialog || lightboxState.dialog.hidden) return;
+    if (!lightboxState.dialog) return;
+    if (lightboxState.dialog.hidden && !lightboxState.movedDiagram) return;
     lightboxState.dialog.hidden = true;
+    restoreMermaidDiagram();
     lightboxState.image.removeAttribute("src");
     lightboxState.image.alt = "";
+    lightboxState.image.hidden = false;
     lightboxState.caption.textContent = "";
     document.body.classList.remove("aik8s-lightbox-open");
     if (lightboxState.previousFocus && document.contains(lightboxState.previousFocus)) {
@@ -289,8 +293,11 @@
 
     var content = element("figure", "aik8s-lightbox__content");
     var preview = element("img", "aik8s-lightbox__image");
+    var diagramHost = element("div", "aik8s-lightbox__diagram-host");
+    diagramHost.hidden = true;
     var caption = element("figcaption", "aik8s-lightbox__caption");
     content.appendChild(preview);
+    content.appendChild(diagramHost);
     content.appendChild(caption);
     dialog.appendChild(closeButton);
     dialog.appendChild(content);
@@ -306,6 +313,7 @@
 
     lightboxState.dialog = dialog;
     lightboxState.image = preview;
+    lightboxState.diagramHost = diagramHost;
     lightboxState.caption = caption;
     return dialog;
   }
@@ -314,6 +322,8 @@
     var dialog = ensureImageLightbox();
     var alternative = (image.getAttribute("alt") || "").trim();
     lightboxState.previousFocus = trigger || image;
+    lightboxState.image.hidden = false;
+    lightboxState.diagramHost.hidden = true;
     lightboxState.image.src = imageDisplaySource(image);
     lightboxState.image.alt = alternative;
     lightboxState.caption.textContent = alternative;
@@ -323,12 +333,23 @@
     dialog.querySelector(".aik8s-lightbox__close").focus();
   }
 
-  function openMermaidLightbox(svg, trigger) {
+  function openMermaidLightbox(diagram) {
     var dialog = ensureImageLightbox();
-    var alternative = (trigger.getAttribute("aria-label") || "架构图放大预览").replace(/，点击放大查看$/, "");
-    lightboxState.previousFocus = trigger;
-    lightboxState.image.src = mermaidDisplaySource(svg);
-    lightboxState.image.alt = alternative;
+    var alternative = (diagram.getAttribute("aria-label") || "架构图放大预览").replace(/，点击放大查看$/, "");
+    var bounds = diagram.getBoundingClientRect();
+    var placeholder = element("div", "aik8s-lightbox__placeholder");
+    placeholder.setAttribute("aria-hidden", "true");
+    placeholder.style.height = bounds.height + "px";
+
+    diagram.parentNode.insertBefore(placeholder, diagram);
+    lightboxState.previousFocus = diagram;
+    lightboxState.movedDiagram = diagram;
+    lightboxState.diagramPlaceholder = placeholder;
+    lightboxState.image.hidden = true;
+    lightboxState.image.removeAttribute("src");
+    lightboxState.diagramHost.hidden = false;
+    diagram.classList.add("aik8s-lightbox__diagram");
+    lightboxState.diagramHost.appendChild(diagram);
     lightboxState.caption.textContent = alternative;
     lightboxState.caption.hidden = false;
     dialog.hidden = false;
@@ -372,8 +393,6 @@
   function initializeMermaidLightbox(article) {
     article.querySelectorAll(".mermaid").forEach(function (diagram) {
       if (diagram.dataset.aik8sLightbox === "true") return;
-      var svg = diagram.querySelector("svg");
-      if (!svg) return;
 
       diagram.classList.add("aik8s-zoomable-diagram");
       diagram.tabIndex = 0;
@@ -383,14 +402,17 @@
       diagram.addEventListener("click", function (event) {
         if (event.target.closest && event.target.closest("a")) return;
         event.preventDefault();
-        var currentSvg = diagram.querySelector("svg");
-        if (currentSvg) openMermaidLightbox(currentSvg, diagram);
+        if (lightboxState.movedDiagram === diagram) {
+          closeImageLightbox();
+          return;
+        }
+        openMermaidLightbox(diagram);
       });
       diagram.addEventListener("keydown", function (event) {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          var currentSvg = diagram.querySelector("svg");
-          if (currentSvg) openMermaidLightbox(currentSvg, diagram);
+          if (lightboxState.movedDiagram === diagram) closeImageLightbox();
+          else openMermaidLightbox(diagram);
         }
       });
       diagram.dataset.aik8sLightbox = "true";

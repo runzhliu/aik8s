@@ -208,6 +208,38 @@ body.aik8s-lightbox-open {
   object-fit: contain;
 }
 
+.aik8s-lightbox__diagram-host {
+  align-items: center;
+  background: #fff;
+  border-radius: 0.3rem;
+  box-shadow: 0 1rem 3.5rem rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  max-height: calc(100vh - 6.5rem);
+  max-width: min(96vw, 1800px);
+  overflow: auto;
+  padding: 0.75rem;
+  width: min(96vw, 1800px);
+}
+
+.aik8s-lightbox__diagram-host[hidden] {
+  display: none;
+}
+
+.aik8s-lightbox__diagram-host .mermaid.aik8s-lightbox__diagram {
+  box-sizing: border-box;
+  cursor: zoom-out;
+  flex: 0 0 auto;
+  margin: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.aik8s-lightbox__placeholder {
+  width: 100%;
+}
+
 .aik8s-lightbox__caption {
   color: rgba(255, 255, 255, 0.9);
   font-size: 0.72rem;
@@ -260,5 +292,12 @@ body.aik8s-lightbox-open {
   .aik8s-lightbox__image {
     max-height: calc(100vh - 5.5rem);
     max-width: 98vw;
+  }
+
+  .aik8s-lightbox__diagram-host {
+    max-height: calc(100vh - 5.5rem);
+    max-width: 98vw;
+    padding: 0.4rem;
+    width: 98vw;
   }
 }
