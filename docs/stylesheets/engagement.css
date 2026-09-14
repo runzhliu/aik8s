@@ -136,6 +136,98 @@
   padding-top: 0.75rem;
 }
 
+.md-content img.aik8s-zoomable-image {
+  cursor: zoom-in;
+  transition: filter 140ms ease, transform 140ms ease;
+}
+
+.md-content img.aik8s-zoomable-image:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.md-content img.aik8s-zoomable-image:focus-visible {
+  border-radius: 0.2rem;
+  outline: 3px solid var(--md-accent-fg-color);
+  outline-offset: 3px;
+}
+
+body.aik8s-lightbox-open {
+  overflow: hidden;
+}
+
+.aik8s-lightbox {
+  align-items: center;
+  background: rgba(7, 10, 18, 0.9);
+  backdrop-filter: blur(5px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 3.5rem 1.25rem 1.25rem;
+  position: fixed;
+  z-index: 10000;
+}
+
+.aik8s-lightbox[hidden] {
+  display: none;
+}
+
+.aik8s-lightbox__content {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin: 0;
+  max-height: 100%;
+  max-width: 100%;
+}
+
+.aik8s-lightbox__image {
+  background: #fff;
+  border-radius: 0.3rem;
+  box-shadow: 0 1rem 3.5rem rgba(0, 0, 0, 0.45);
+  display: block;
+  max-height: calc(100vh - 6.5rem);
+  max-width: min(96vw, 1800px);
+  object-fit: contain;
+}
+
+.aik8s-lightbox__caption {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  max-width: min(92vw, 70rem);
+  text-align: center;
+}
+
+.aik8s-lightbox__close {
+  align-items: center;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font: 300 2rem/1 system-ui, sans-serif;
+  height: 2.5rem;
+  justify-content: center;
+  padding: 0 0 0.12rem;
+  position: absolute;
+  right: max(1rem, env(safe-area-inset-right));
+  top: max(0.75rem, env(safe-area-inset-top));
+  transition: background 120ms ease, transform 120ms ease;
+  width: 2.5rem;
+}
+
+.aik8s-lightbox__close:hover,
+.aik8s-lightbox__close:focus-visible {
+  background: rgba(255, 255, 255, 0.25);
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  transform: scale(1.04);
+}
+
 @media screen and (max-width: 44.984375em) {
   .aik8s-calculator {
     grid-template-columns: 1fr;
@@ -143,5 +235,14 @@
 
   .aik8s-share__label {
     flex-basis: 100%;
+  }
+
+  .aik8s-lightbox {
+    padding: 3.25rem 0.5rem 0.75rem;
+  }
+
+  .aik8s-lightbox__image {
+    max-height: calc(100vh - 5.5rem);
+    max-width: 98vw;
   }
 }

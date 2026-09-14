@@ -224,11 +224,125 @@
     });
   }
 
+  var lightboxState = {
+    dialog: null,
+    image: null,
+    caption: null,
+    previousFocus: null
+  };
+
+  function imageDisplaySource(image) {
+    var link = image.closest ? image.closest("a") : null;
+    if (link) {
+      var href = link.getAttribute("href") || "";
+      if (/\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(href)) return link.href;
+    }
+    return image.currentSrc || image.src;
+  }
+
+  function closeImageLightbox() {
+    if (!lightboxState.dialog || lightboxState.dialog.hidden) return;
+    lightboxState.dialog.hidden = true;
+    lightboxState.image.removeAttribute("src");
+    lightboxState.image.alt = "";
+    lightboxState.caption.textContent = "";
+    document.body.classList.remove("aik8s-lightbox-open");
+    if (lightboxState.previousFocus && document.contains(lightboxState.previousFocus)) {
+      lightboxState.previousFocus.focus();
+    }
+    lightboxState.previousFocus = null;
+  }
+
+  function ensureImageLightbox() {
+    if (lightboxState.dialog) return lightboxState.dialog;
+
+    var dialog = element("div", "aik8s-lightbox");
+    dialog.hidden = true;
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-label", "图片放大预览");
+
+    var closeButton = element("button", "aik8s-lightbox__close", "×");
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "关闭图片预览");
+    closeButton.title = "关闭（Esc）";
+
+    var content = element("figure", "aik8s-lightbox__content");
+    var preview = element("img", "aik8s-lightbox__image");
+    var caption = element("figcaption", "aik8s-lightbox__caption");
+    content.appendChild(preview);
+    content.appendChild(caption);
+    dialog.appendChild(closeButton);
+    dialog.appendChild(content);
+    document.body.appendChild(dialog);
+
+    closeButton.addEventListener("click", closeImageLightbox);
+    dialog.addEventListener("click", function (event) {
+      if (event.target === dialog) closeImageLightbox();
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeImageLightbox();
+    });
+
+    lightboxState.dialog = dialog;
+    lightboxState.image = preview;
+    lightboxState.caption = caption;
+    return dialog;
+  }
+
+  function openImageLightbox(image, trigger) {
+    var dialog = ensureImageLightbox();
+    var alternative = (image.getAttribute("alt") || "").trim();
+    lightboxState.previousFocus = trigger || image;
+    lightboxState.image.src = imageDisplaySource(image);
+    lightboxState.image.alt = alternative;
+    lightboxState.caption.textContent = alternative;
+    lightboxState.caption.hidden = !alternative;
+    dialog.hidden = false;
+    document.body.classList.add("aik8s-lightbox-open");
+    dialog.querySelector(".aik8s-lightbox__close").focus();
+  }
+
+  function initializeImageLightbox(article) {
+    article.querySelectorAll("img").forEach(function (image) {
+      if (image.dataset.aik8sLightbox === "true") return;
+      if (image.classList.contains("twemoji") || image.classList.contains("no-lightbox")) return;
+
+      var link = image.closest ? image.closest("a") : null;
+      var trigger = image;
+      if (link) {
+        var href = link.getAttribute("href") || "";
+        if (!/\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(href)) return;
+        trigger = link;
+      } else {
+        image.tabIndex = 0;
+        image.setAttribute("role", "button");
+        image.setAttribute("aria-label", (image.alt ? image.alt + "，" : "") + "点击放大查看");
+        image.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openImageLightbox(image, image);
+          }
+        });
+      }
+
+      image.classList.add("aik8s-zoomable-image");
+      if (!image.title) image.title = "点击放大查看";
+      trigger.addEventListener("click", function (event) {
+        event.preventDefault();
+        openImageLightbox(image, trigger);
+      });
+      image.dataset.aik8sLightbox = "true";
+    });
+  }
+
   function initialize() {
+    closeImageLightbox();
     var article = document.querySelector("article.md-content__inner");
     if (!article) return;
     initializeShare(article);
     initializeCalculators(article);
+    initializeImageLightbox(article);
     initializeComments(article);
   }
 
