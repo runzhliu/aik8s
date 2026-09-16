@@ -17,6 +17,7 @@ Application / API Server ─> OTLP ─> OTel Collector ─> Tempo ─> Grafana E
 
 - `collector.yaml`：Namespace、RBAC、Collector、Service 和 ServiceMonitor；
 - `grafana-dashboard.json`：可导入的 16 面板 Grafana Dashboard；
+- `grafana-observability-dashboard.json`：可同时查询 Prometheus 与 Tempo 的 20 面板实战 Dashboard；
 - `tempo-demo.yaml`：单实例 Tempo 与 10 GiB PVC，供实验环境保存 Trace；
 - `grafana-tempo-datasource.yaml`：Grafana Tempo 数据源 provisioning 示例；
 - `send-demo-traces.py`：只使用 Python 标准库发送带父子关系的 OTLP/HTTP Span。
@@ -133,7 +134,12 @@ samplingRatePerMillion: 10000  # 1%
 
 ## 导入 Grafana
 
-在 Grafana 选择 **Dashboards → New → Import**，上传 `grafana-dashboard.json`，并选择保存这些 `otel_k8s_*` 指标的 Prometheus 数据源。
+在 Grafana 选择 **Dashboards → New → Import**。仓库提供两个版本：
+
+- `grafana-dashboard.json` 是 16 面板的指标看板，只需要选择保存 `otel_k8s_*` 指标的 Prometheus 数据源；
+- `grafana-observability-dashboard.json` 是 20 面板的指标与 Trace 联合看板，导入时分别选择 Prometheus 和 Tempo 数据源。
+
+联合看板顶部显示关键状态与最近 Trace，并提供全部、失败和慢 Trace 三张检索表；下半部分覆盖控制面、调度、etcd、CoreDNS 和 Collector 自监控。点击 Trace 表中的记录可继续进入 Tempo 瀑布图。
 
 Dashboard 包含：
 
@@ -145,6 +151,21 @@ Dashboard 包含：
 - etcd leader、pending/failed proposals；
 - CoreDNS 请求与错误；
 - Collector 接收点数和 RSS。
+
+## 受控负载验证
+
+只看平稳期曲线，很难判断查询、单位和聚合是否真正有效。一次实测使用 4 个并发读取进程持续访问 API Server 240 秒，同时创建 30 个正常调度的轻量 Pod 和 30 个故意无法调度的轻量 Pod。测试完成后删除独立命名空间，未修改 APF、etcd 或控制面启动参数。
+
+| 指标 | 负载前 | 负载期间峰值 |
+| --- | ---: | ---: |
+| API Server QPS | 55.7 req/s | 85.4 req/s |
+| API Server P95 | — | 75.7 ms |
+| Scheduler unschedulable queue | 2 | 32 |
+| APF 当前排队 | 0 | 0 |
+| APF Reject 增量 | 0 | 0 |
+| Collector RSS | — | 754 MiB |
+
+4 个进程共完成 4,478 次读取，请求失败数为 0。API QPS 提升约 53.3%，调度器队列也出现清晰阶跃；APF 排队和拒绝保持为 0，表示负载足以验证看板，却没有把 API Server 推入限流区间。Grafana Dashboard 内置 `otel-loadtest` annotation，可用开始和结束标记对齐负载窗口。
 
 ## 高可用控制面
 

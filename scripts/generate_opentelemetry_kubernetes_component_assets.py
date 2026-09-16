@@ -490,6 +490,64 @@ def cardinality(data: dict) -> None:
     image.save(ASSET_DIR / "k8s-components-cardinality-reduction.png", optimize=True)
 
 
+def controlled_load(data: dict) -> None:
+    item = data.get("load_test")
+    if not item:
+        return
+    image, draw = canvas()
+    heading(
+        draw,
+        "受控负载：让控制面曲线出现可辨识变化",
+        f"{item['api_read_workers']} workers × {item['duration_seconds']}s · "
+        f"{item['api_read_success']:,} 次读取 · 0 失败 · 测试 Pod 已清理",
+    )
+
+    rounded(draw, (45, 120, 575, 610))
+    draw.text((70, 148), "API Server QPS", font=font(21, bold=True), fill=INK)
+    before = item["api_qps_baseline"]
+    peak = item["api_qps_peak"]
+    uplift = (peak / before - 1) * 100
+    baseline_y = 520
+    max_height = 300
+    max_value = peak * 1.15
+    for index, (label, value, color) in enumerate(
+        (("负载前", before, BLUE), ("负载峰值", peak, ORANGE))
+    ):
+        x = 115 + index * 230
+        height = value / max_value * max_height
+        draw.rounded_rectangle((x, baseline_y - height, x + 140, baseline_y), radius=14, fill=color)
+        center_text(
+            draw,
+            (x - 20, baseline_y - height - 50, x + 160, baseline_y - height - 8),
+            f"{value:.1f}",
+            font(24, bold=True),
+            color,
+        )
+        center_text(draw, (x - 20, 535, x + 160, 575), label, font(16, bold=True), INK)
+    draw.line((85, baseline_y, 535, baseline_y), fill=LINE, width=2)
+    center_text(draw, (170, 176, 470, 228), f"峰值提高 {uplift:.1f}%", font(28, bold=True), ORANGE)
+
+    rounded(draw, (595, 120, 1155, 335), fill=PURPLE_LIGHT, outline="#BAACFF")
+    draw.text((625, 150), "调度与延迟", font=font(20, bold=True), fill=PURPLE)
+    draw.text((625, 205), f"{item['api_p95_peak_ms']:.1f} ms", font=font(34, bold=True), fill=INK)
+    draw.text((625, 253), "API Server P95 峰值", font=font(15), fill=MUTED)
+    draw.text((895, 205), f"{item['scheduler_unschedulable_peak']:.0f}", font=font(34, bold=True), fill=INK)
+    draw.text((895, 253), "Unschedulable 峰值", font=font(15), fill=MUTED)
+
+    rounded(draw, (595, 355, 1155, 610), fill=GREEN_LIGHT, outline="#8FD4BB")
+    draw.text((625, 383), "控制面仍有余量", font=font(20, bold=True), fill=GREEN)
+    facts = (
+        f"APF 排队峰值      {item['apf_queue_peak']:.0f}",
+        f"APF Reject        {item['apf_rejected_requests']:.0f}",
+        f"Collector RSS 峰值 {item['collector_rss_peak_mib']:.0f} MiB",
+    )
+    for index, line in enumerate(facts):
+        draw.text((625, 430 + index * 42), line, font=font(17, bold=True), fill=INK)
+    draw.text((625, 558), "曲线明显，但未进入 APF 限流区间", font=font(15), fill=MUTED)
+    footer(draw, "受控负载仅用于观测验证；使用独立命名空间、固定时长与完整清理。")
+    image.save(ASSET_DIR / "k8s-components-controlled-load.png", optimize=True)
+
+
 def trace_panel(
     draw: ImageDraw.ImageDraw,
     box: tuple[int, int, int, int],
@@ -551,6 +609,7 @@ def render(data: dict) -> None:
     etcd_dns(data)
     cluster_pipeline(data)
     cardinality(data)
+    controlled_load(data)
     spans(data)
 
 

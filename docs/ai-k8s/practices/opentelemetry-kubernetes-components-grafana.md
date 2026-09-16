@@ -304,7 +304,9 @@ max by (job) (
 
 ## 8. Grafana 看板怎么读
 
-公开 Dashboard 包含 16 个 Panel。查看顺序可以按“采集链路—控制面入口—调度与控制循环—存储和 DNS—Collector 自身”展开。
+公开示例提供两个 Dashboard：`grafana-dashboard.json` 是 16 面板的指标版；`grafana-observability-dashboard.json` 是 20 面板的 Prometheus + Tempo 联合版。后者在顶部增加关键状态、最近 Trace、失败 Trace 和慢 Trace，点击记录可以继续查看 Tempo 瀑布图。导入联合版时，需要分别选择 Prometheus 和 Tempo 数据源。
+
+查看顺序可以按“采集链路—Trace 检索—控制面入口—调度与控制循环—存储和 DNS—Collector 自身”展开。
 
 ### 第一排：采集链路是否成立
 
@@ -357,16 +359,33 @@ Controller Manager 的 workqueue depth 使用 Top 10 展示积压最多的控制
 
 ![etcd 与 CoreDNS 指标](/assets/practices/opentelemetry-kubernetes/k8s-components-etcd-coredns.png)
 
+### 用受控负载验证图表
+
+平稳期的曲线只能说明“有数据”，很难证明查询、单位和聚合在变化时仍然正确。本轮在独立命名空间内创建 30 个可正常调度的轻量 Pod 和 30 个故意无法调度的轻量 Pod，同时用 4 个并发进程持续读取 API Server 240 秒。4 个进程共完成 4,478 次请求，失败数为 0。
+
+| 指标 | 负载前 | 负载期间峰值 | 观察 |
+| --- | ---: | ---: | --- |
+| API Server QPS | 55.7 req/s | 85.4 req/s | 提高约 53.3% |
+| API Server P95 | — | 75.7 ms | 未出现秒级长尾 |
+| Scheduler unschedulable queue | 2 | 32 | 与 30 个故意 Pending 的 Pod 对齐 |
+| APF 当前排队 | 0 | 0 | 没有请求等待执行席位 |
+| APF Reject 增量 | 0 | 0 | 未触发流控拒绝 |
+| Collector RSS | — | 754 MiB | 采集链路保持工作 |
+
+![受控负载下的 API Server、Scheduler 与 APF 指标](/assets/practices/opentelemetry-kubernetes/k8s-components-controlled-load.png)
+
+这组数据说明负载强度足以让 API Server 和 Scheduler 出现可辨识的阶跃，同时没有进入 APF 限流区间。Dashboard 使用 `otel-loadtest` annotation 标记开始与结束时间，便于把变化与实验窗口对齐。实验结束后完整删除测试命名空间；整个过程未调整 APF、etcd 或控制面启动参数。
+
 ## 9. Span 怎么看：用 Tempo 还原一次请求
 
-为了验证 Trace 链路，实验向 Collector 的 OTLP/HTTP 入口发送了 20 组发布请求，每组包含一个 Root Span 和多个子 Span，再由 Collector 通过 OTLP/gRPC 写入 Tempo。成功请求覆盖清单校验、调用 Kubernetes API、等待 Deployment Ready 和就绪检查；失败请求把错误状态落在 Kubernetes API 子 Span，同时保留 Root Span 的失败状态。
+为了验证 Trace 链路，实验向 Collector 的 OTLP/HTTP 入口发送了 60 组发布请求，每组包含一个 Root Span 和多个子 Span，再由 Collector 通过 OTLP/gRPC 写入 Tempo。成功请求覆盖清单校验、调用 Kubernetes API、等待 Deployment Ready 和就绪检查；失败请求把错误状态落在 Kubernetes API 子 Span，同时保留 Root Span 的失败状态。
 
 | 项目 | 实测配置 |
 | --- | --- |
 | OpenTelemetry Collector | 0.160.0，OTLP/HTTP 接收、OTLP/gRPC 导出 |
 | Tempo | 3.0.3，单实例、10 GiB PVC |
 | Grafana | 13.1.2，Tempo 数据源健康检查通过 |
-| 演示数据 | 20 条 Trace，同时包含成功与失败调用 |
+| 演示数据 | 60 条 Trace；8 条失败，42 条耗时超过 500 ms |
 
 下图由 Tempo 返回的真实 Trace 数据生成，并移除了 trace ID、span ID 和环境标识；它保留实际父子关系、开始时间、耗时和错误状态。
 
