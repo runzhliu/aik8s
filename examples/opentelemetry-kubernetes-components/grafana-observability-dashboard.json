@@ -51,7 +51,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "### Kubernetes OpenTelemetry + Tempo 实战看板\n同一时间窗联查 **Trace → API Server → APF → Scheduler / Controller → etcd / CoreDNS → Collector**。Trace 表格可点击 Trace ID 查看完整 Span 瀑布。`otel-observability-load` 是受控观测负载命名空间。"
+        "content": "### Kubernetes OpenTelemetry + Tempo 实战看板\n同一时间窗联查 **Trace → API Server → APF → Scheduler / Controller → etcd / CoreDNS → Collector**。Trace 表格可点击 Trace ID 查看完整 Span 瀑布，红色 annotation 标记受控负载窗口。"
       }
     },
     {
@@ -228,7 +228,7 @@
     },
     {
       "id": 5,
-      "title": "受控负载 Pending Pod",
+      "title": "etcd Leader",
       "type": "stat",
       "datasource": {
         "type": "prometheus",
@@ -243,7 +243,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "count(otel_k8s_k8s_pod_phase{telemetry_pipeline=\"otel-k8s-components\",k8s_namespace_name=\"otel-observability-load\"} == 1)",
+          "expr": "max(otel_k8s_etcd_server_has_leader{telemetry_pipeline=\"otel-k8s-components\"})",
           "legendFormat": "",
           "range": false,
           "instant": true
@@ -253,8 +253,20 @@
         "defaults": {
           "unit": "short",
           "color": {
-            "mode": "fixed",
-            "fixedColor": "orange"
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
           }
         },
         "overrides": []

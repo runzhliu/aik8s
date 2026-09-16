@@ -308,6 +308,10 @@ max by (job) (
 
 查看顺序可以按“采集链路—Trace 检索—控制面入口—调度与控制循环—存储和 DNS—Collector 自身”展开。
 
+下面是联合版 Dashboard 在实测环境中的 Grafana 浅色主题截图。顶部三张表直接来自 Tempo TraceQL 查询，底部曲线来自 Prometheus；红色虚线 annotation 标出了受控负载的开始和结束时间。截图隐藏了地址与集群标识，Trace 为本文生成的演示数据。
+
+![Grafana 中的 Kubernetes OpenTelemetry 与 Tempo 联合看板](/assets/practices/opentelemetry-kubernetes/grafana-otel-tempo-practice-light.png)
+
 ### 第一排：采集链路是否成立
 
 - **OTel 采集任务在线**：六类 target 的 `up` 汇总；少于预期值先排查协议、端口、Token 和证书。
