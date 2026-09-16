@@ -9,6 +9,8 @@ last_reviewed: 2026-09-16
 
 OpenTelemetry 常被简称为 **OTel**。第一次接触它时，最容易遇到两个问题：名词很多，而且它看起来与 Prometheus、日志系统、APM 都有重叠。
 
+如果你已经理解基本概念，想直接观测 API Server、Scheduler、Controller Manager、etcd、CoreDNS 和集群对象状态，可以继续阅读 [OpenTelemetry × Grafana 实战：观测 Kubernetes 控制面与集群状态](practices/opentelemetry-kubernetes-components-grafana.md)。
+
 可以先记住一句话：
 
 > OpenTelemetry 是一套生成、传输和处理遥测数据的开放标准与工具；它本身不负责长期存储和查询。

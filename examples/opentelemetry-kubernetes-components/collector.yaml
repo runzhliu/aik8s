@@ -1,0 +1,361 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: otel-k8s-monitoring
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-k8s-components
+  namespace: otel-k8s-monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-k8s-components
+rules:
+  - apiGroups: [""]
+    resources:
+      - events
+      - namespaces
+      - nodes
+      - nodes/spec
+      - nodes/stats
+      - pods
+      - replicationcontrollers
+      - resourcequotas
+      - services
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["daemonsets", "deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["cronjobs", "jobs"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-k8s-components
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-k8s-components
+subjects:
+  - kind: ServiceAccount
+    name: otel-k8s-components
+    namespace: otel-k8s-monitoring
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-k8s-components-config
+  namespace: otel-k8s-monitoring
+data:
+  collector.yaml: |
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+    receivers:
+      k8s_cluster:
+        auth_type: serviceAccount
+        collection_interval: 30s
+        node_conditions_to_report:
+          - Ready
+          - MemoryPressure
+          - DiskPressure
+          - PIDPressure
+        allocatable_types_to_report:
+          - cpu
+          - memory
+          - pods
+        metrics:
+          k8s.container.status.reason:
+            enabled: true
+
+      prometheus/control-plane:
+        config:
+          global:
+            scrape_interval: 30s
+            scrape_timeout: 15s
+          scrape_configs:
+            - job_name: otel-kube-apiserver
+              scheme: https
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              tls_config:
+                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                server_name: kubernetes
+              static_configs:
+                - targets: ["kubernetes.default.svc.cluster.local:443"]
+              metric_relabel_configs:
+                - source_labels: [__name__]
+                  action: keep
+                  regex: "up|apiserver_request_total|apiserver_request_duration_seconds_(bucket|sum|count)|apiserver_current_inflight_requests|apiserver_longrunning_requests|apiserver_flowcontrol_(current_inqueue_requests|current_executing_requests|rejected_requests_total)|process_(cpu_seconds_total|resident_memory_bytes|start_time_seconds)"
+
+            - job_name: otel-kube-controller-manager
+              scheme: https
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              tls_config:
+                insecure_skip_verify: true
+              static_configs:
+                - targets: ["${env:CONTROL_PLANE_IP}:10257"]
+              metric_relabel_configs:
+                - source_labels: [__name__]
+                  action: keep
+                  regex: "up|leader_election_master_status|workqueue_(depth|adds_total)|rest_client_requests_total|process_(cpu_seconds_total|resident_memory_bytes|start_time_seconds)"
+
+            - job_name: otel-kube-scheduler
+              scheme: https
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              tls_config:
+                insecure_skip_verify: true
+              static_configs:
+                - targets: ["${env:CONTROL_PLANE_IP}:10259"]
+              metric_relabel_configs:
+                - source_labels: [__name__]
+                  action: keep
+                  regex: "up|leader_election_master_status|scheduler_(pending_pods|scheduler_attempts_total|scheduling_attempt_duration_seconds_.*|queue_incoming_pods_total)|workqueue_(depth|adds_total)|process_(cpu_seconds_total|resident_memory_bytes|start_time_seconds)"
+
+            - job_name: otel-etcd
+              scheme: http
+              static_configs:
+                - targets: ["${env:CONTROL_PLANE_IP}:2381"]
+              metric_relabel_configs:
+                - source_labels: [__name__]
+                  action: keep
+                  regex: "up|etcd_server_(has_leader|leader_changes_seen_total|proposals_.*)|etcd_mvcc_db_total_size_in_bytes|etcd_disk_(wal_fsync_duration_seconds_.*|backend_commit_duration_seconds_.*)|grpc_server_handled_total|process_(cpu_seconds_total|resident_memory_bytes|start_time_seconds)"
+
+            - job_name: otel-coredns
+              scheme: http
+              static_configs:
+                - targets: ["kube-dns.kube-system.svc.cluster.local:9153"]
+              metric_relabel_configs:
+                - source_labels: [__name__]
+                  action: keep
+                  regex: "up|coredns_dns_(requests_total|responses_total|request_duration_seconds_.*)|coredns_cache_(hits_total|misses_total)|process_(cpu_seconds_total|resident_memory_bytes|start_time_seconds)"
+
+            - job_name: otel-collector-self
+              scheme: http
+              static_configs:
+                - targets: ["127.0.0.1:8888"]
+              metric_relabel_configs:
+                - source_labels: [__name__]
+                  action: keep
+                  regex: "up|otelcol_(receiver_accepted_metric_points|receiver_refused_metric_points|exporter_sent_metric_points|exporter_send_failed_metric_points|process_.*)"
+
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 640
+        spike_limit_mib: 128
+      resource/cluster:
+        attributes:
+          - key: cluster.name
+            value: kubernetes
+            action: upsert
+          - key: telemetry.pipeline
+            value: otel-k8s-components
+            action: upsert
+      metrics_transform/reduce-cardinality:
+        transforms:
+          - include: apiserver_request_duration_seconds
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [verb]
+                aggregation_type: sum
+          - include: apiserver_request_total
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [verb, code]
+                aggregation_type: sum
+          - include: apiserver_longrunning_requests
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [verb]
+                aggregation_type: sum
+          - include: apiserver_flowcontrol_current_inqueue_requests
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [priority_level]
+                aggregation_type: sum
+          - include: apiserver_flowcontrol_current_executing_requests
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [priority_level]
+                aggregation_type: sum
+          - include: apiserver_flowcontrol_rejected_requests_total
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [priority_level, reason]
+                aggregation_type: sum
+          - include: scheduler_scheduling_attempt_duration_seconds
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [result]
+                aggregation_type: sum
+          - include: coredns_dns_request_duration_seconds
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [server]
+                aggregation_type: sum
+          - include: coredns_dns_requests_total
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [proto, family]
+                aggregation_type: sum
+          - include: coredns_dns_responses_total
+            action: update
+            operations:
+              - action: aggregate_labels
+                label_set: [rcode]
+                aggregation_type: sum
+      batch:
+        timeout: 5s
+        send_batch_size: 2048
+
+    exporters:
+      prometheus:
+        endpoint: 0.0.0.0:8889
+        namespace: otel_k8s
+        enable_open_metrics: true
+        without_scope_info: true
+        resource_constant_labels:
+          included:
+            - cluster.name
+            - telemetry.pipeline
+            - k8s.*
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        metrics:
+          receivers: [k8s_cluster, prometheus/control-plane]
+          processors: [memory_limiter, resource/cluster, metrics_transform/reduce-cardinality, batch]
+          exporters: [prometheus]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-k8s-components
+  namespace: otel-k8s-monitoring
+  labels:
+    app.kubernetes.io/name: otel-k8s-components
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: otel-k8s-components
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: otel-k8s-components
+    spec:
+      serviceAccountName: otel-k8s-components
+      # This compact example targets a single-control-plane cluster. See README
+      # for the HA control-plane topology and endpoint-discovery guidance.
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: collector
+          image: otel/opentelemetry-collector-contrib:0.160.0
+          imagePullPolicy: IfNotPresent
+          args: ["--config=/conf/collector.yaml"]
+          env:
+            - name: CONTROL_PLANE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          ports:
+            - name: prometheus
+              containerPort: 8889
+            - name: health
+              containerPort: 13133
+          readinessProbe:
+            httpGet:
+              path: /
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /conf
+      volumes:
+        - name: config
+          configMap:
+            name: otel-k8s-components-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-k8s-components
+  namespace: otel-k8s-monitoring
+  labels:
+    app.kubernetes.io/name: otel-k8s-components
+spec:
+  selector:
+    app.kubernetes.io/name: otel-k8s-components
+  ports:
+    - name: prometheus
+      port: 8889
+      targetPort: prometheus
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-k8s-components
+  namespace: otel-k8s-monitoring
+  labels:
+    # Change this label so it matches the serviceMonitorSelector of your
+    # Prometheus custom resource.
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames: ["otel-k8s-monitoring"]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: otel-k8s-components
+  endpoints:
+    - port: prometheus
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 15s
+      honorLabels: true
+      relabelings:
+        - targetLabel: observability_path
+          replacement: otel-collector
