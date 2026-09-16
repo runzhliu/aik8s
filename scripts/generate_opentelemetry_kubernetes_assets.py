@@ -212,12 +212,117 @@ def lab_evidence(data: dict) -> None:
     image.save(ASSET_DIR / "lab-evidence.png", optimize=True)
 
 
+def beginner_mental_model() -> None:
+    image, draw = canvas()
+    heading(draw, "先记住一条主线：产生 → 传输 → 处理 → 存储", "OpenTelemetry 负责前三段；查询、看板和长期保存由可观测后端完成")
+
+    stages = [
+        (55, 160, 260, "应用与基础设施", "SDK · 自动埋点\nKubelet · 容器日志", BLUE, BLUE_LIGHT),
+        (330, 160, 535, "OTLP", "Trace · Metric · Log\n统一传输协议", ORANGE, ORANGE_LIGHT),
+        (605, 160, 810, "Collector", "接收 · 加工 · 采样\n补标签 · 批量 · 路由", PURPLE, PURPLE_LIGHT),
+        (880, 160, 1085, "可观测后端", "存储 · 查询 · 看板\n告警 · 关联分析", GREEN, GREEN_LIGHT),
+    ]
+    for x1, y1, x2, name, detail, color, light in stages:
+        rounded(draw, (x1, y1, x2, 390), fill=WHITE, outline=color, radius=22, width=3)
+        draw.rounded_rectangle((x1 + 18, y1 + 20, x2 - 18, y1 + 78), radius=14, fill=light)
+        center(draw, (x1 + 18, y1 + 20, x2 - 18, y1 + 78), name, font(22, bold=True), color)
+        lines = detail.split("\n")
+        for index, line in enumerate(lines):
+            center(draw, (x1 + 12, y1 + 122 + index * 48, x2 - 12, y1 + 158 + index * 48), line, font(16), INK)
+
+    for start, end, color in [((260, 274), (330, 274), ORANGE), ((535, 274), (605, 274), PURPLE), ((810, 274), (880, 274), GREEN)]:
+        arrow(draw, start, end, color=color, width=4)
+
+    rounded(draw, (80, 455, 1120, 610), fill="#FBFCFF", outline="#CBD3E3", radius=20)
+    draw.text((110, 480), "一个常见误解", font=font(20, bold=True), fill=RED)
+    draw.text((110, 522), "Collector 收到 Span，并不等于数据已经可查询。", font=font(20, bold=True), fill=INK)
+    draw.text((110, 564), "还要继续检查 Exporter、后端入库、索引和查询链路。", font=font(17), fill=MUTED)
+    image.save(ASSET_DIR / "beginner-mental-model.png", optimize=True)
+
+
+def trace_span_context() -> None:
+    image, draw = canvas()
+    heading(draw, "Trace、Span 与 Context：一次请求怎样串成完整链路", "Trace ID 全程不变；每一步有自己的 Span ID；下游通过 traceparent 识别父子关系")
+
+    services = [(80, "Frontend", BLUE), (315, "Order", PURPLE), (550, "Payment", ORANGE), (785, "Database", GREEN)]
+    for x, name, color in services:
+        rounded(draw, (x, 145, x + 175, 202), fill=WHITE, outline=color, radius=14, width=2)
+        center(draw, (x, 145, x + 175, 202), name, font(19, bold=True), color)
+        draw.line((x + 87, 202, x + 87, 515), fill="#D0D7E5", width=2)
+
+    bars = [
+        (167, 242, 1038, 286, BLUE, "Span A · POST /checkout · 820 ms"),
+        (402, 312, 950, 356, PURPLE, "Span B · create-order · 510 ms"),
+        (637, 382, 900, 426, ORANGE, "Span C · charge · 190 ms"),
+        (872, 452, 1065, 496, GREEN, "Span D · INSERT · 80 ms"),
+    ]
+    for x1, y1, x2, y2, color, label in bars:
+        draw.rounded_rectangle((x1, y1, x2, y2), radius=12, fill=color)
+        draw.text((x1 + 12, y1 + 12), label, font=font(14, bold=True), fill=WHITE)
+
+    for start, end, color in [((254, 264), (402, 334), PURPLE), ((489, 334), (637, 404), ORANGE), ((724, 404), (872, 474), GREEN)]:
+        draw.line((start, end), fill=color, width=3)
+
+    rounded(draw, (80, 545, 1120, 625), fill="#EEF2FF", outline="#CAD2EF", radius=16)
+    draw.text((108, 563), "同一个 Trace ID", font=font(17, bold=True), fill=PURPLE)
+    draw.text((275, 563), "7f3a…9c21", font=font(17, bold=True), fill=INK)
+    draw.text((445, 563), "不同 Span ID", font=font(17, bold=True), fill=ORANGE)
+    draw.text((590, 563), "a1… / b2… / c3… / d4…", font=font(17), fill=INK)
+    draw.text((108, 594), "跨进程传递", font=font(16, bold=True), fill=BLUE)
+    draw.text((235, 594), "traceparent: version-trace-id-parent-id-flags", font=font(16), fill=MUTED)
+    image.save(ASSET_DIR / "trace-span-context.png", optimize=True)
+
+
+def kubernetes_collector_roles() -> None:
+    image, draw = canvas()
+    heading(draw, "Kubernetes 中常见的两层 Collector", "DaemonSet 靠近节点采数据，Gateway 集中执行平台策略和后端路由")
+
+    rounded(draw, (45, 128, 760, 615), fill="#FBFCFF", outline="#BEC8DA", radius=22)
+    draw.rounded_rectangle((65, 146, 230, 180), radius=15, fill=BLUE_LIGHT)
+    center(draw, (65, 146, 230, 180), "Kubernetes Cluster", font(16, bold=True), BLUE)
+
+    for x, node in [(78, "Node A"), (330, "Node B")]:
+        rounded(draw, (x, 210, x + 218, 524), fill=WHITE, outline="#CAD3E4", radius=18)
+        center(draw, (x + 18, 226, x + 200, 258), node, font(19, bold=True), INK)
+        rounded(draw, (x + 28, 280, x + 190, 337), fill=BLUE_LIGHT, outline="#AFC4F5", radius=12)
+        center(draw, (x + 28, 280, x + 190, 337), "Application Pod", font(16, bold=True), BLUE)
+        rounded(draw, (x + 28, 370, x + 190, 446), fill=GREEN_LIGHT, outline="#A6D9C5", radius=12)
+        center(draw, (x + 28, 370, x + 190, 402), "Collector Agent", font(16, bold=True), GREEN)
+        center(draw, (x + 28, 406, x + 190, 438), "filelog · kubeletstats", font(13), MUTED)
+        arrow(draw, (x + 109, 337), (x + 109, 370), color=GREEN, width=3)
+
+    rounded(draw, (582, 268, 730, 470), fill=PURPLE_LIGHT, outline="#B9A9FF", radius=18, width=3)
+    center(draw, (594, 288, 718, 330), "Gateway", font(21, bold=True), PURPLE)
+    for i, text_value in enumerate(["鉴权", "过滤", "采样", "批量", "路由"]):
+        center(draw, (596, 340 + i * 25, 716, 362 + i * 25), text_value, font(14), INK)
+    draw.line(((187, 446), (187, 552), (548, 552)), fill=PURPLE, width=3)
+    arrow(draw, (548, 552), (582, 445), color=PURPLE, width=3)
+    arrow(draw, (520, 408), (582, 420), color=PURPLE, width=3)
+
+    backends = [
+        (830, 180, ORANGE_LIGHT, ORANGE, "Trace Backend", "调用链与慢点"),
+        (830, 330, BLUE_LIGHT, BLUE, "Metrics Backend", "趋势、SLO 与告警"),
+        (830, 480, GREEN_LIGHT, GREEN, "Log Backend", "事件与全文检索"),
+    ]
+    for x, y, light, color, name, detail in backends:
+        rounded(draw, (x, y, 1125, y + 103), fill=light, outline=color, radius=18)
+        draw.text((855, y + 18), name, font=font(20, bold=True), fill=color)
+        draw.text((855, y + 58), detail, font=font(16), fill=INK)
+        arrow(draw, (730, y + 51), (830, y + 51), color=color, width=3)
+
+    draw.text((65, 635), "节点日志和 Kubelet 指标适合 Agent；应用 OTLP、统一采样与跨后端凭据适合 Gateway。", font=font(15), fill=MUTED)
+    image.save(ASSET_DIR / "kubernetes-collector-roles.png", optimize=True)
+
+
 def main() -> None:
     ASSET_DIR.mkdir(parents=True, exist_ok=True)
     data = json.loads(DATA.read_text(encoding="utf-8"))
     architecture()
     deployment_patterns()
     lab_evidence(data)
+    beginner_mental_model()
+    trace_span_context()
+    kubernetes_collector_roles()
 
 
 if __name__ == "__main__":
