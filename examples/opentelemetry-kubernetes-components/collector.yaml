@@ -66,6 +66,13 @@ data:
         endpoint: 0.0.0.0:13133
 
     receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
       k8s_cluster:
         auth_type: serviceAccount
         collection_interval: 30s
@@ -232,6 +239,10 @@ data:
         send_batch_size: 2048
 
     exporters:
+      otlp_grpc/tempo:
+        endpoint: tempo.otel-k8s-monitoring.svc.cluster.local:4317
+        tls:
+          insecure: true
       prometheus:
         endpoint: 0.0.0.0:8889
         namespace: otel_k8s
@@ -250,6 +261,10 @@ data:
           receivers: [k8s_cluster, prometheus/control-plane]
           processors: [memory_limiter, resource/cluster, metrics_transform/reduce-cardinality, batch]
           exporters: [prometheus]
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, resource/cluster, batch]
+          exporters: [otlp_grpc/tempo]
 
 ---
 apiVersion: apps/v1
@@ -289,6 +304,10 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
           ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
             - name: prometheus
               containerPort: 8889
             - name: health
@@ -331,6 +350,12 @@ spec:
   selector:
     app.kubernetes.io/name: otel-k8s-components
   ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: otlp-grpc
+    - name: otlp-http
+      port: 4318
+      targetPort: otlp-http
     - name: prometheus
       port: 8889
       targetPort: prometheus

@@ -1,6 +1,6 @@
 ---
 title: OpenTelemetry × Grafana 实战：观测 Kubernetes 控制面与集群状态
-description: 用 OpenTelemetry Collector 汇聚 API Server、Scheduler、Controller Manager、etcd、CoreDNS 与 Kubernetes 对象指标，接入 Prometheus 和 Grafana，并处理指标基数、权限与高可用控制面问题
+description: 用 OpenTelemetry Collector 汇聚 Kubernetes 控制面、DNS 与对象指标，接入 Prometheus、Tempo 和 Grafana，并实测指标基数治理与 Span 排障
 status: stable
 last_reviewed: 2026-09-16
 ---
@@ -33,6 +33,10 @@ flowchart LR
     SM --> PROM[Prometheus]
     PROM --> G[Grafana Dashboard]
 ```
+
+![Kubernetes Metric 与 Trace 两条观测路径](/assets/practices/opentelemetry-kubernetes/k8s-components-metrics-traces-architecture.png)
+
+这里需要先分清两条链路：Prometheus 指标描述一段时间内的整体趋势，Trace 则记录一次请求内部由多个 Span 组成的调用过程。抓到 `/metrics` 并不等于有了 Span；应用或 Kubernetes 组件必须实际发送 OTLP Trace，才能在 Tempo 中还原请求瀑布。
 
 完整清单与可导入的 Dashboard 位于 [`examples/opentelemetry-kubernetes-components`](https://github.com/runzhliu/aik8s/tree/main/examples/opentelemetry-kubernetes-components)。
 
@@ -79,6 +83,10 @@ Prometheus 继续负责抓取后的存储、查询与告警，Grafana 负责展�
 | `otel_k8s_*` 活跃序列 | 7,338 |
 | Collector `/metrics` 文本大小 | 约 2.15 MB |
 | Collector CPU / 内存 | 约 25m / 298 MiB |
+
+把集群对象和 Collector 自监控放在同一页，可以及时发现“看板还有数据，但采集管道已经丢点”这类静默故障：
+
+![集群状态与 Collector 自监控](/assets/practices/opentelemetry-kubernetes/k8s-components-cluster-collector.png)
 
 ## 3. 先确认指标入口
 
@@ -193,6 +201,8 @@ processors:
 ```
 
 优化后的 `/metrics` 为 **2,146,284 bytes**，体积下降约 **93%**，并保留当前看板需要的 `verb`、`code`、`priority_level`、`reason`、`result` 与 `rcode` 等维度。
+
+![指标标签聚合前后的体积变化](/assets/practices/opentelemetry-kubernetes/k8s-components-cardinality-reduction.png)
 
 这项优化有明确代价：被聚合掉的 `resource`、`subresource` 等标签无法再用于细粒度排障。生产策略应从保留的 Dashboard、Recording Rule、Alert Rule 和排障查询反推，先列需求，再删标签。
 
@@ -327,11 +337,17 @@ histogram_quantile(
 
 APF 面板观察 `current_inqueue_requests` 与 `rejected_requests_total`。队列持续上升说明某些 PriorityLevel 的执行席位不足，Reject 增长则要结合 FlowSchema、PriorityLevelConfiguration 和客户端重试检查。
 
+![API Server 请求、P95 与 APF 排队](/assets/practices/opentelemetry-kubernetes/k8s-components-apiserver-apf.png)
+
+图中 APF 当前排队为 0，只表示采样时刻没有请求等待席位。它不能证明 APF 从未限流，还要观察 `rejected_requests_total` 的增量、执行中的请求、各 PriorityLevel 的席位和客户端重试。
+
 ### Scheduler 与 Controller Manager
 
 Scheduler 面板把 `pending_pods` 按 queue 展开，并显示 scheduling attempt P95。`unschedulable` 持续非零时，再进入 Pod Event、资源请求、亲和性、污点、PVC、Gang 或队列配额排查。
 
 Controller Manager 的 workqueue depth 使用 Top 10 展示积压最多的控制器。队列深度、add rate 和处理延迟应一起分析；只有 depth 的瞬时值，无法区分短时抖动与长期处理能力不足。
+
+![Scheduler 与 Controller Manager 指标](/assets/practices/opentelemetry-kubernetes/k8s-components-scheduler-controller.png)
 
 ### etcd、CoreDNS 与 Collector 自监控
 
@@ -339,7 +355,90 @@ Controller Manager 的 workqueue depth 使用 Top 10 展示积压最多的控制
 - CoreDNS 关注总 QPS、SERVFAIL 等错误 rcode、延迟与 cache hit；
 - Collector 关注 accepted、refused、send_failed points 与 RSS，避免观测链路静默丢数据。
 
-## 9. 多控制面集群的部署方式
+![etcd 与 CoreDNS 指标](/assets/practices/opentelemetry-kubernetes/k8s-components-etcd-coredns.png)
+
+## 9. Span 怎么看：用 Tempo 还原一次请求
+
+为了验证 Trace 链路，实验向 Collector 的 OTLP/HTTP 入口发送了 20 组发布请求，每组包含一个 Root Span 和多个子 Span，再由 Collector 通过 OTLP/gRPC 写入 Tempo。成功请求覆盖清单校验、调用 Kubernetes API、等待 Deployment Ready 和就绪检查；失败请求把错误状态落在 Kubernetes API 子 Span，同时保留 Root Span 的失败状态。
+
+| 项目 | 实测配置 |
+| --- | --- |
+| OpenTelemetry Collector | 0.160.0，OTLP/HTTP 接收、OTLP/gRPC 导出 |
+| Tempo | 3.0.3，单实例、10 GiB PVC |
+| Grafana | 13.1.2，Tempo 数据源健康检查通过 |
+| 演示数据 | 20 条 Trace，同时包含成功与失败调用 |
+
+下图由 Tempo 返回的真实 Trace 数据生成，并移除了 trace ID、span ID 和环境标识；它保留实际父子关系、开始时间、耗时和错误状态。
+
+![Tempo 中的父子 Span 瀑布](/assets/practices/opentelemetry-kubernetes/k8s-components-span-waterfall.png)
+
+### 9.1 Trace、Span 和瀑布图分别是什么
+
+- **Trace** 是一次端到端请求，整条链路共享同一个 `trace_id`；
+- **Span** 是其中一个步骤，每段都有自己的 `span_id`、开始时间、耗时、状态和属性；
+- **父子关系** 通过 `parent_span_id` 连接，用来描述谁调用了谁；
+- **瀑布图横向位置** 表示该步骤何时开始，横条长度表示耗时；有重叠时，说明步骤可能并行执行。
+
+排查时先看 Root Span 总耗时，再沿关键路径找最长的子 Span。请求失败时，先点开红色或 `ERROR` Span，查看 status、events 和属性；随后把同一时间段的 API Server、Scheduler、应用日志与资源指标放在一起判断。Root Span 慢不等于每个子 Span 都慢，多个串行子 Span 的累计时间、未被埋点覆盖的空白区间也可能构成主要耗时。
+
+### 9.2 在 Grafana Explore 中查 Span
+
+Grafana 配置 Tempo 数据源后，进入 **Explore** 并选择 Tempo。下面三条 TraceQL 分别查询演示服务的全部请求、失败请求和慢请求：
+
+```traceql
+{ resource.service.name = "otel-k8s-span-demo" }
+{ resource.service.name = "otel-k8s-span-demo" && status = error }
+{ resource.service.name = "otel-k8s-span-demo" && duration > 300ms }
+```
+
+打开搜索结果中的一条 Trace 后，依次检查：
+
+1. Root Span 的总耗时和最终状态；
+2. 最慢或报错的子 Span；
+3. Span 的 `kind`、operation、HTTP 状态码和 Kubernetes 资源属性；
+4. 事件时间线中是否包含重试、超时或异常；
+5. 相同时间窗口的 Metrics 与 Logs。
+
+公开示例中的 `send-demo-traces.py` 只使用 Python 标准库，便于重复生成这组父子 Span。它用于说明怎么看 Trace，并不冒充 kube-apiserver 原生 Span。
+
+### 9.3 API Server 为什么还没有 Span
+
+本文前半部分抓取的是 kube-apiserver `/metrics`。要让 kube-apiserver 产生原生 Span，还要使用 `--tracing-config-file` 启用 tracing。Kubernetes 1.30 可使用下面的配置，从 1% 采样率起步：
+
+```yaml
+apiVersion: apiserver.config.k8s.io/v1alpha1
+kind: TracingConfiguration
+endpoint: 127.0.0.1:4317
+samplingRatePerMillion: 10000
+```
+
+对于 kubeadm 管理的静态 Pod，可以在每个控制面节点创建 `/etc/kubernetes/tracing/tracing-config.yaml`，然后修改 `/etc/kubernetes/manifests/kube-apiserver.yaml`：
+
+```yaml
+spec:
+  containers:
+    - name: kube-apiserver
+      command:
+        - kube-apiserver
+        - --tracing-config-file=/etc/kubernetes/tracing/tracing-config.yaml
+      volumeMounts:
+        - name: tracing-config
+          mountPath: /etc/kubernetes/tracing
+          readOnly: true
+  volumes:
+    - name: tracing-config
+      hostPath:
+        path: /etc/kubernetes/tracing
+        type: DirectoryOrCreate
+```
+
+`127.0.0.1:4317` 要求同一控制面节点上有 host-network OTel Agent 接收 OTLP/gRPC，再由 Agent 转发到集群内的 Gateway 或 Tempo。这样不依赖静态 Pod 的集群 DNS，也避免把无 TLS 的 OTLP 接收端口暴露到更大网络。多控制面集群需要逐台配置 Agent 和 kube-apiserver。
+
+静态 Pod manifest 改动会触发 kubelet 重建 kube-apiserver。正式修改前应先用对应版本的二进制验证配置 API，确认本地 Agent 已监听、后端可写入，并保留原 manifest。回滚时删除 `--tracing-config-file`、volumeMount 与 volume 即可。采样率不要直接设为 `1000000`；应根据 API QPS、Span 大小、Tempo 写入量和保留周期逐步提高。
+
+Kubernetes 当前文档中的配置 API 已升级为 `apiserver.config.k8s.io/v1`，旧版本不能直接照抄新版本示例。本文的 v1alpha1 示例针对 Kubernetes 1.30；集群升级后应跟随目标版本重新校验。
+
+## 10. 多控制面集群的部署方式
 
 单控制面环境可以把一个 Collector 调度到 control-plane 节点，通过 `status.hostIP` 抓取本机控制面端点。多控制面环境要分开考虑两类数据：
 
@@ -351,7 +450,7 @@ Controller Manager 的 workqueue depth 使用 Top 10 展示积压最多的控制
 
 可选架构是“一个集群状态 Deployment + 一个控制面 DaemonSet + 一个全节点 DaemonSet”。每类 Collector 使用不同 `telemetry.pipeline`，Prometheus 中保留 `instance`、`node`、`cluster.name`，再通过 Recording Rule 形成集群级视图。
 
-## 10. 建议增加的告警
+## 11. 建议增加的告警
 
 | 告警 | 起点条件 | 说明 |
 | --- | --- | --- |
@@ -366,7 +465,7 @@ Controller Manager 的 workqueue depth 使用 Top 10 展示积压最多的控制
 
 阈值应使用各集群的历史分位数和错误预算校准，表中的条件只表示告警方向。
 
-## 11. 生产落地检查表
+## 12. 生产落地检查表
 
 - 为 API Server、Controller Manager、Scheduler 和 etcd 的 metrics 端口设置最小网络访问范围；
 - 使用正确 CA 校验证书，避免长期保留 `insecure_skip_verify`；
@@ -386,3 +485,6 @@ Controller Manager 的 workqueue depth 使用 Top 10 展示积压最多的控制
 - [OpenTelemetry Collector Kubelet Stats Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/kubeletstatsreceiver)
 - [OpenTelemetry Collector Metrics Transform Processor](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/metricstransformprocessor)
 - [Grafana Dashboards](https://grafana.com/docs/grafana/latest/dashboards/)
+- [Kubernetes System Component Traces](https://kubernetes.io/docs/concepts/cluster-administration/system-traces/)
+- [Grafana Tempo: TraceQL](https://grafana.com/docs/tempo/latest/traceql/)
+- [Grafana Tempo deployment modes](https://grafana.com/docs/tempo/latest/set-up-for-tracing/setup-tempo/deploy/)

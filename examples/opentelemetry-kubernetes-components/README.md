@@ -1,6 +1,6 @@
 # OpenTelemetry Kubernetes Components
 
-这个示例让 OpenTelemetry Collector 采集 Kubernetes 控制面、CoreDNS 与集群对象状态，再以 Prometheus 格式暴露给现有监控栈。
+这个示例让 OpenTelemetry Collector 采集 Kubernetes 控制面、CoreDNS 与集群对象状态，再以 Prometheus 格式暴露给现有监控栈；可选的 OTLP 与 Tempo 链路用来查看 Trace 和 Span。
 
 ```text
 API Server ──────────────┐
@@ -9,12 +9,17 @@ Scheduler ───────────────┤
 etcd ────────────────────┼─> OTel Collector ─> /metrics ─> Prometheus ─> Grafana
 CoreDNS ─────────────────┤
 Kubernetes API objects ──┘
+
+Application / API Server ─> OTLP ─> OTel Collector ─> Tempo ─> Grafana Explore
 ```
 
 示例包含：
 
 - `collector.yaml`：Namespace、RBAC、Collector、Service 和 ServiceMonitor；
-- `grafana-dashboard.json`：可导入的 16 面板 Grafana Dashboard。
+- `grafana-dashboard.json`：可导入的 16 面板 Grafana Dashboard；
+- `tempo-demo.yaml`：单实例 Tempo 与 10 GiB PVC，供实验环境保存 Trace；
+- `grafana-tempo-datasource.yaml`：Grafana Tempo 数据源 provisioning 示例；
+- `send-demo-traces.py`：只使用 Python 标准库发送带父子关系的 OTLP/HTTP Span。
 
 ## 适用范围
 
@@ -28,6 +33,8 @@ Kubernetes API objects ──┘
 4. etcd 指标端口 `2381` 已启用且能从 Collector Pod 访问；
 5. CoreDNS 在 `kube-dns.kube-system.svc.cluster.local:9153` 暴露指标；
 6. Prometheus 的 `serviceMonitorSelector` 能选中本示例的 ServiceMonitor。
+
+如需部署 Tempo，集群还应有默认 StorageClass，或者在 `tempo-demo.yaml` 的 PVC 中明确设置 `storageClassName`。示例使用单实例与本地块存储，适合学习和功能验证；生产环境应使用对象存储与高可用拓扑。
 
 不同发行版的监听地址、证书和 Service 名称可能不同。先确认实际参数，再修改清单。
 
@@ -47,7 +54,7 @@ labels:
   release: kube-prometheus-stack
 ```
 
-如果现有 Prometheus 使用其他 selector，先修改标签，然后部署：
+如果现有 Prometheus 使用其他 selector，先修改标签，然后部署指标管道：
 
 ```bash
 kubectl apply -f collector.yaml
@@ -67,6 +74,62 @@ kubectl -n otel-k8s-monitoring logs deploy/otel-k8s-components --tail=100
 kubectl -n otel-k8s-monitoring port-forward service/otel-k8s-components 8889:8889
 curl -fsS http://127.0.0.1:8889/metrics | grep '^otel_k8s_' | head
 ```
+
+## 查看 Trace 与 Span
+
+指标和 Trace 是两条独立的数据流。Prometheus 指标不能自动还原成 Span；应用或 Kubernetes 组件必须实际发送 OTLP Trace。
+
+先部署实验用 Tempo。已有同名 Tempo 时跳过这一步，并修改 Collector exporter 地址：
+
+```bash
+kubectl apply -f tempo-demo.yaml
+kubectl -n otel-k8s-monitoring rollout status deploy/tempo
+kubectl -n otel-k8s-monitoring get pvc/tempo-data
+```
+
+`collector.yaml` 已开放 OTLP/gRPC `4317` 与 OTLP/HTTP `4318`，并将 Trace 发送到 Tempo。向 Collector 发送一组成功与失败的父子 Span：
+
+```bash
+kubectl -n otel-k8s-monitoring port-forward service/otel-k8s-components 4318:4318
+python3 send-demo-traces.py --endpoint http://127.0.0.1:4318/v1/traces --count 20
+```
+
+将 `grafana-tempo-datasource.yaml` 放进 Grafana provisioning 目录，或在 Grafana 的 **Connections → Data sources** 中新增 Tempo，URL 填写：
+
+```text
+http://tempo.otel-k8s-monitoring.svc.cluster.local:3200
+```
+
+打开 **Explore**，选择 Tempo，并用 TraceQL 搜索：
+
+```traceql
+{ resource.service.name = "otel-k8s-span-demo" }
+{ resource.service.name = "otel-k8s-span-demo" && status = error }
+{ resource.service.name = "otel-k8s-span-demo" && duration > 300ms }
+```
+
+进入单条 Trace 后，先看 Root Span 总耗时，再沿瀑布图寻找最长或标红的子 Span；随后展开该 Span，核对 `status`、events、`k8s.operation`、`k8s.resource.kind` 等属性。
+
+### API Server Trace 需要额外配置
+
+抓取 API Server `/metrics` 不会产生 API Server Span。Kubernetes 1.30 的 kube-apiserver 需要读取 `TracingConfiguration`，并通过 `--tracing-config-file` 启用。生产环境建议让控制面节点上的 host-network OTel Agent 监听 `127.0.0.1:4317`，再把 Trace 转发给 Gateway 或 Tempo；采样率先从 0.1%～1% 开始。
+
+Kubernetes 1.30 配置示例：
+
+```yaml
+apiVersion: apiserver.config.k8s.io/v1alpha1
+kind: TracingConfiguration
+endpoint: 127.0.0.1:4317
+samplingRatePerMillion: 10000  # 1%
+```
+
+在 kubeadm 管理的静态 Pod 中，还要把配置文件以 hostPath 挂载到 kube-apiserver，并增加：
+
+```yaml
+- --tracing-config-file=/etc/kubernetes/tracing/tracing-config.yaml
+```
+
+不同 Kubernetes 版本支持的配置 API 版本可能不同。修改静态 Pod 前先用对应版本的 kube-apiserver 验证配置，并保留原 manifest；变更会触发控制面组件重启。
 
 ## 导入 Grafana
 
@@ -118,4 +181,5 @@ otel_k8s_otelcol_process_memory_rss
 
 ```bash
 kubectl delete -f collector.yaml
+kubectl delete -f tempo-demo.yaml
 ```
