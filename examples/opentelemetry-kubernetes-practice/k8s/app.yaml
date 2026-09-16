@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-demo
+  namespace: otel-practice
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: checkout-demo
+  template:
+    metadata:
+      labels:
+        app: checkout-demo
+    spec:
+      containers:
+        - name: app
+          image: REPLACE_WITH_IMAGE
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - {name: OTEL_SERVICE_NAME, value: checkout-demo}
+            - {name: SERVICE_VERSION, value: "1.0.0"}
+            - {name: DEPLOYMENT_ENVIRONMENT, value: lab}
+            - name: K8S_POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: http://otel-collector:4318/v1/traces
+            - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+              value: http://otel-collector:4318/v1/metrics
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {cpu: 500m, memory: 384Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-demo
+  namespace: otel-practice
+spec:
+  selector:
+    app: checkout-demo
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

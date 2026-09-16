@@ -1,0 +1,196 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector
+  namespace: otel-practice
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-practice-collector
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "namespaces", "nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets", "deployments", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-practice-collector
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-practice-collector
+subjects:
+  - kind: ServiceAccount
+    name: otel-collector
+    namespace: otel-practice
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: otel-practice
+data:
+  collector.yaml: |
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+      basicauth/langfuse:
+        client_auth:
+          username: ${env:LANGFUSE_PUBLIC_KEY}
+          password: ${env:LANGFUSE_SECRET_KEY}
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 384
+        spike_limit_mib: 96
+      k8s_attributes:
+        auth_type: serviceAccount
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.uid
+          - sources:
+              - from: connection
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.deployment.name
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.node.name
+      resource/common:
+        attributes:
+          - key: telemetry.pipeline
+            value: kubernetes-gateway
+            action: upsert
+      batch:
+        timeout: 5s
+        send_batch_size: 512
+
+    exporters:
+      debug:
+        verbosity: basic
+      prometheus:
+        endpoint: 0.0.0.0:8889
+        namespace: otel_demo
+      otlp_http/langfuse:
+        endpoint: ${env:LANGFUSE_OTLP_ENDPOINT}
+        headers:
+          x-langfuse-ingestion-version: "4"
+        auth:
+          authenticator: basicauth/langfuse
+
+    service:
+      extensions: [health_check, basicauth/langfuse]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, k8s_attributes, resource/common, batch]
+          exporters: [debug, otlp_http/langfuse]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, k8s_attributes, resource/common, batch]
+          exporters: [prometheus]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, k8s_attributes, resource/common, batch]
+          exporters: [debug]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: otel-practice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      serviceAccountName: otel-collector
+      containers:
+        - name: collector
+          image: otel/opentelemetry-collector-contrib:0.160.0
+          args: ["--config=/conf/collector.yaml"]
+          env:
+            - name: LANGFUSE_OTLP_ENDPOINT
+              value: http://langfuse-web.langfuse.svc.cluster.local:3000/api/public/otel
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-credentials
+                  key: public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-credentials
+                  key: secret-key
+          ports:
+            - {name: otlp-grpc, containerPort: 4317}
+            - {name: otlp-http, containerPort: 4318}
+            - {name: prom-export, containerPort: 8889}
+            - {name: health, containerPort: 13133}
+          readinessProbe:
+            httpGet: {path: /, port: health}
+          livenessProbe:
+            httpGet: {path: /, port: health}
+          resources:
+            requests: {cpu: 100m, memory: 192Mi}
+            limits: {cpu: "1", memory: 512Mi}
+          volumeMounts:
+            - name: config
+              mountPath: /conf
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: otel-practice
+  labels:
+    app: otel-collector
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - {name: otlp-grpc, port: 4317, targetPort: otlp-grpc}
+    - {name: otlp-http, port: 4318, targetPort: otlp-http}
+    - {name: metrics, port: 8889, targetPort: prom-export}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-practice
+  namespace: otel-practice
+spec:
+  selector:
+    matchLabels:
+      app: otel-collector
+  endpoints:
+    - port: metrics
+      interval: 15s

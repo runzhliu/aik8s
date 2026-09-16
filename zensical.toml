@@ -107,6 +107,7 @@ nav = [
       {"GPU Notebook 平台与存储" = "ai-k8s/development/gpu-notebook-platform.md"},
       {"MLOps 与平台工程" = "ai-k8s/mlops.md"},
       {"GPU、训练与推理可观测性" = "ai-k8s/observability.md"},
+      {"OpenTelemetry Kubernetes 应用与实战" = "ai-k8s/practices/opentelemetry-kubernetes-practice.md"},
       {"AI 平台安全与治理" = "ai-k8s/security-governance.md"},
       {"性能基准与回归" = "ai-k8s/benchmarking.md"},
       {"平台运维与升级" = "ai-k8s/platform-operations.md"},

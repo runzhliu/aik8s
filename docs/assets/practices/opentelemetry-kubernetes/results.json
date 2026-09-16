@@ -1,0 +1,40 @@
+{
+  "captured_at": "2026-09-16T04:40:35Z",
+  "environment": {
+    "kubernetes_server": "v1.30.4",
+    "collector": "otel/opentelemetry-collector-contrib:0.160.0",
+    "application_replicas": 2,
+    "prometheus_target_up": 1
+  },
+  "workload": {
+    "normal_requests": 20,
+    "slow_requests": 1,
+    "error_requests": 1
+  },
+  "traces": {
+    "trace_count": 22,
+    "span_count": 87,
+    "health_probe_traces": 0,
+    "minimum_latency_ms": 80,
+    "maximum_latency_ms": 903,
+    "normal_trace_observations": 4,
+    "error_trace_observations": 3
+  },
+  "prometheus": {
+    "average_latency_ms": {
+      "normal": 138.55,
+      "slow": 900.65,
+      "error": 78.80
+    },
+    "histogram_p95_ms": {
+      "normal": 242.5,
+      "slow": 987.5,
+      "error": 98.75
+    }
+  },
+  "notes": [
+    "The workload validates telemetry completeness; it is not a service performance benchmark.",
+    "The slow and error modes each contain one sample, so their P95 values only validate the histogram pipeline.",
+    "Internal hostnames, IP addresses, trace IDs, pod UIDs and credentials were removed."
+  ]
+}

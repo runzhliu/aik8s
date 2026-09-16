@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: checkout-demo-load-
+  namespace: otel-practice
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: load
+          image: curlimages/curl:8.17.0
+          command: ["sh", "-ec"]
+          args:
+            - |
+              for i in $(seq 1 20); do
+                curl -fsS "http://checkout-demo:8080/work?mode=ok"
+              done
+              curl -fsS "http://checkout-demo:8080/work?mode=slow"
+              curl -sS "http://checkout-demo:8080/work?mode=error" || true
