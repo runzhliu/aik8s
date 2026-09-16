@@ -1,0 +1,68 @@
+# Lab values for langfuse/langfuse chart 1.5.41 (Langfuse 3.x).
+# Generate every REPLACE_* value independently. Fill a private copy and keep
+# that copy out of Git. Select a StorageClass that retains data on your cluster.
+langfuse:
+  salt:
+    value: REPLACE_WITH_RANDOM_SALT
+  encryptionKey:
+    value: REPLACE_WITH_64_HEX_CHARACTERS
+  nextauth:
+    url: http://127.0.0.1:13000
+    secret:
+      value: REPLACE_WITH_RANDOM_NEXTAUTH_SECRET
+  features:
+    telemetryEnabled: false
+  web:
+    resources:
+      requests: {cpu: 300m, memory: 1Gi}
+      limits: {cpu: "2", memory: 4Gi}
+  worker:
+    resources:
+      requests: {cpu: 300m, memory: 1Gi}
+      limits: {cpu: "2", memory: 4Gi}
+
+postgresql:
+  auth:
+    username: postgres
+    password: REPLACE_WITH_POSTGRES_PASSWORD
+    database: postgres_langfuse
+  primary:
+    persistence:
+      storageClass: REPLACE_WITH_RETAIN_STORAGE_CLASS
+      size: 8Gi
+
+redis:
+  auth:
+    username: default
+    password: REPLACE_WITH_REDIS_PASSWORD
+  primary:
+    persistence:
+      storageClass: REPLACE_WITH_RETAIN_STORAGE_CLASS
+      size: 2Gi
+
+clickhouse:
+  auth:
+    username: default
+    password: REPLACE_WITH_CLICKHOUSE_PASSWORD
+  clusterEnabled: false
+  replicaCount: 1
+  persistence:
+    storageClass: REPLACE_WITH_RETAIN_STORAGE_CLASS
+    size: 10Gi
+  zookeeper:
+    enabled: false
+
+s3:
+  bucket: langfuse
+  accessKeyId:
+    value: minio
+  secretAccessKey:
+    value: REPLACE_WITH_MINIO_PASSWORD
+  auth:
+    rootUser: minio
+    rootPassword: REPLACE_WITH_MINIO_PASSWORD
+  mode: standalone
+  defaultBuckets: langfuse
+  persistence:
+    storageClass: REPLACE_WITH_RETAIN_STORAGE_CLASS
+    size: 8Gi

@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: langgraph-observability
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: langgraph-demo-credentials
+  namespace: langgraph-observability
+type: Opaque
+stringData:
+  public-key: REPLACE_WITH_LANGFUSE_PUBLIC_KEY
+  secret-key: REPLACE_WITH_LANGFUSE_SECRET_KEY
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-demo
+  namespace: langgraph-observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: langgraph-demo
+  template:
+    metadata:
+      labels:
+        app: langgraph-demo
+    spec:
+      containers:
+        - name: app
+          image: REPLACE_WITH_IMAGE
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: LANGFUSE_HOST
+              value: http://langfuse-web.langgraph-observability.svc.cluster.local:3000
+            - name: LANGFUSE_BASE_URL
+              value: http://langfuse-web.langgraph-observability.svc.cluster.local:3000
+            - name: LANGFUSE_PUBLIC_URL
+              value: http://127.0.0.1:13000
+            - name: LANGFUSE_PROJECT_ID
+              value: langgraph-demo
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langgraph-demo-credentials
+                  key: public-key
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langgraph-demo-credentials
+                  key: secret-key
+            - name: LANGFUSE_TRACING_ENVIRONMENT
+              value: kubernetes-demo
+            - name: LANGFUSE_RELEASE
+              value: langgraph-demo-v1
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 160Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: langgraph-demo
+  namespace: langgraph-observability
+spec:
+  selector:
+    app: langgraph-demo
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

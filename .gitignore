@@ -33,5 +33,6 @@ vip/
 
 # Test plans are local working notes, never public documentation.
 /.local/test-plans/
+/.local/langgraph-langfuse-demo/
 **/*test-plan.md
 **/*benchmark-plan.md

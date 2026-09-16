@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LangChain × LangGraph × Langfuse 完整 Demo</title>
+  <style>
+    :root { --ink:#172033; --muted:#64748b; --line:#dbe3ef; --blue:#4f46e5; --green:#16a34a; --red:#dc2626; --bg:#f6f8fc; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; color:var(--ink); background:var(--bg); }
+    .shell { max-width:1180px; margin:0 auto; padding:32px 22px 60px; }
+    .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:22px; }
+    h1 { margin:0 0 8px; font-size:32px; letter-spacing:-.5px; }
+    .lead { margin:0; color:var(--muted); line-height:1.7; }
+    .badge { padding:8px 12px; border:1px solid #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:999px; white-space:nowrap; font-weight:700; }
+    .panel { background:white; border:1px solid var(--line); border-radius:18px; box-shadow:0 12px 35px rgba(36,52,82,.07); padding:22px; margin-top:18px; }
+    label { display:block; font-weight:700; margin-bottom:8px; }
+    textarea { width:100%; min-height:92px; resize:vertical; border:1px solid #cbd5e1; border-radius:12px; padding:14px; font:inherit; outline:none; }
+    textarea:focus { border-color:#818cf8; box-shadow:0 0 0 3px #e0e7ff; }
+    .examples { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+    .linkbtn { border:0; background:transparent; color:#4f46e5; cursor:pointer; padding:2px; }
+    .controls { display:flex; justify-content:space-between; gap:18px; align-items:end; margin-top:18px; flex-wrap:wrap; }
+    .scenario-group { display:flex; gap:10px; flex-wrap:wrap; }
+    .scenario { border:1px solid #cbd5e1; background:white; color:#334155; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:700; }
+    .scenario.active { color:#4338ca; background:#eef2ff; border-color:#818cf8; }
+    #run { border:0; border-radius:11px; background:var(--blue); color:white; padding:12px 24px; font-weight:800; font-size:15px; cursor:pointer; min-width:150px; }
+    #run:disabled { opacity:.55; cursor:wait; }
+    .section-title { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-bottom:18px; }
+    .section-title h2 { font-size:19px; margin:0; }
+    .section-title span { color:var(--muted); font-size:13px; }
+    .flow { display:grid; grid-template-columns:1fr 34px 1fr 34px 1fr 34px 1fr; align-items:stretch; }
+    .arrow { display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:23px; }
+    .node { border:1px solid var(--line); border-radius:14px; padding:15px; min-height:132px; position:relative; transition:.25s; background:#fbfdff; }
+    .node .num { width:27px; height:27px; display:inline-grid; place-items:center; border-radius:8px; background:#e2e8f0; font-size:13px; font-weight:800; }
+    .node h3 { font-size:16px; margin:12px 0 5px; }
+    .node p { color:var(--muted); margin:0; font-size:13px; line-height:1.5; }
+    .node .time { position:absolute; top:15px; right:14px; font:700 12px ui-monospace,monospace; color:#64748b; }
+    .node.running { border-color:#818cf8; box-shadow:0 0 0 3px #eef2ff; transform:translateY(-2px); }
+    .node.running .num { background:#4f46e5; color:white; animation:pulse 1s infinite; }
+    .node.ok { border-color:#86efac; background:#f0fdf4; }
+    .node.ok .num { background:#16a34a; color:white; }
+    .node.error { border-color:#fca5a5; background:#fef2f2; }
+    .node.error .num { background:#dc2626; color:white; }
+    @keyframes pulse { 50% { opacity:.5; } }
+    .result-grid { display:grid; grid-template-columns:1.5fr 1fr; gap:18px; }
+    .answer { white-space:pre-wrap; line-height:1.75; min-height:118px; background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:15px; }
+    .metrics { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .metric { border:1px solid var(--line); border-radius:12px; padding:13px; }
+    .metric small { display:block; color:var(--muted); margin-bottom:6px; }
+    .metric strong { font:800 17px ui-monospace,monospace; overflow-wrap:anywhere; }
+    .trace { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; padding:13px; background:#eef2ff; border-radius:12px; color:#3730a3; }
+    .trace a { color:white; background:#4f46e5; text-decoration:none; padding:8px 12px; border-radius:9px; font-weight:800; white-space:nowrap; }
+    .hint { padding:14px 16px; border-left:4px solid #818cf8; background:#f5f3ff; color:#4c1d95; line-height:1.65; border-radius:0 10px 10px 0; }
+    .stack { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:18px; }
+    .stack-card { border:1px solid var(--line); border-radius:13px; padding:14px; background:#fff; }
+    .stack-card b { display:block; margin-bottom:5px; }
+    .stack-card span { color:var(--muted); font-size:13px; line-height:1.5; }
+    .tech { display:inline-block; margin-top:9px; padding:3px 7px; border-radius:6px; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:800; }
+    @media(max-width:850px) { .flow,.stack { grid-template-columns:1fr; gap:10px; } .arrow { transform:rotate(90deg); height:22px; } .result-grid { grid-template-columns:1fr; } .hero { align-items:flex-start; flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div><h1>LangChain × LangGraph × Langfuse</h1><p class="lead">一个请求同时经过组件链、状态图和可观测平台，完整展示 Agent 从执行到排障的过程。</p></div>
+      <div class="badge">运行于 Kubernetes</div>
+    </header>
+
+    <div class="stack">
+      <div class="stack-card"><b>LangChain · 组件层</b><span>Prompt、StructuredTool、Runnable 模型接口与 OutputParser</span></div>
+      <div class="stack-card"><b>LangGraph · 编排层</b><span>共享 State、条件路由、节点转换和错误传播</span></div>
+      <div class="stack-card"><b>Langfuse · 可观测层</b><span>Trace、节点输入输出、耗时瀑布与错误定位</span></div>
+    </div>
+
+    <section class="panel">
+      <label for="question">给 Agent 一个任务</label>
+      <textarea id="question">LangGraph 和 Langfuse 分别解决什么问题？</textarea>
+      <div class="examples">示例：
+        <button class="linkbtn" data-q="LangGraph 和 Langfuse 分别解决什么问题？">技术问答</button>
+        <button class="linkbtn" data-q="帮我查一下订单什么时候送达">订单工具</button>
+        <button class="linkbtn" data-q="今天的天气怎么样？">天气工具</button>
+      </div>
+      <div class="controls">
+        <div><label>选择一条可观察路径</label><div class="scenario-group">
+          <button class="scenario active" data-value="normal">正常调用</button>
+          <button class="scenario" data-value="slow">慢调用</button>
+          <button class="scenario" data-value="failure">工具失败</button>
+        </div></div>
+        <button id="run">运行 Agent</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title"><h2>LangGraph 执行路径</h2><span id="flowStatus">等待运行</span></div>
+      <div class="flow">
+        <article class="node" data-node="classify"><span class="num">1</span><span class="time">—</span><h3>意图分类</h3><p>Prompt → Runnable → Parser</p><span class="tech">LangChain</span></article><div class="arrow">→</div>
+        <article class="node" data-node="tool"><span class="num">2</span><span class="time">—</span><h3>条件路由与工具</h3><p>知识库 / 订单 / 天气三选一</p><span class="tech">LangGraph + Tool</span></article><div class="arrow">→</div>
+        <article class="node" data-node="compose"><span class="num">3</span><span class="time">—</span><h3>生成回答</h3><p>Prompt → Model → Parser</p><span class="tech">LangChain</span></article><div class="arrow">→</div>
+        <article class="node" data-node="safety"><span class="num">4</span><span class="time">—</span><h3>安全检查</h3><p>输出前完成规则检查</p><span class="tech">LangGraph</span></article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title"><h2>结果与 Trace</h2><span>每次点击都会写入 Langfuse</span></div>
+      <div class="result-grid">
+        <div><label>Agent 输出</label><div id="answer" class="answer">运行后在这里显示结果。</div></div>
+        <div>
+          <div class="metrics"><div class="metric"><small>总耗时</small><strong id="duration">—</strong></div><div class="metric"><small>状态</small><strong id="status">—</strong></div></div>
+          <div class="trace"><div><small>Langfuse Trace ID</small><div id="traceId">—</div></div><a id="traceLink" href="http://127.0.0.1:13000" target="_blank">打开 Trace</a></div>
+        </div>
+      </div>
+    </section>
+    <p class="hint"><b>怎么观察：</b>先运行“正常调用”，再分别运行“慢调用”和“工具失败”。打开 Langfuse Trace，对比 LangChain 子链、LangGraph 节点和工具调用的耗时与错误位置。</p>
+  </main>
+  <script>
+    let scenario = 'normal';
+    const nodes = [...document.querySelectorAll('.node')];
+    document.querySelectorAll('.scenario').forEach(btn => btn.onclick = () => { document.querySelectorAll('.scenario').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); scenario=btn.dataset.value; });
+    document.querySelectorAll('[data-q]').forEach(btn => btn.onclick = () => document.querySelector('#question').value=btn.dataset.q);
+    function resetNodes(){ nodes.forEach(n=>{ n.className='node'; n.querySelector('.time').textContent='—'; }); }
+    document.querySelector('#run').onclick = async () => {
+      const run=document.querySelector('#run'), question=document.querySelector('#question').value.trim(); if(!question) return;
+      resetNodes(); run.disabled=true; run.textContent='运行中…'; nodes[0].classList.add('running'); document.querySelector('#flowStatus').textContent='LangGraph 正在执行';
+      document.querySelector('#answer').textContent='等待 Agent 返回…';
+      try {
+        const resp=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,scenario})});
+        const data=await resp.json(); resetNodes();
+        (data.events||[]).forEach(e=>{ const el=document.querySelector(`[data-node="${e.node}"]`); if(el){el.classList.add(e.status);el.querySelector('.time').textContent=`${e.duration_ms} ms`;el.querySelector('p').textContent=e.detail||el.querySelector('p').textContent;} });
+        if(data.status==='error'){ const failed=nodes.find(n=>!n.classList.contains('ok')&&!n.classList.contains('error')); if(failed) failed.classList.add('error'); }
+        document.querySelector('#answer').textContent=data.status==='ok'?data.answer:`调用失败：${data.error}`;
+        document.querySelector('#duration').textContent=`${data.duration_ms} ms`; document.querySelector('#status').textContent=data.status==='ok'?'成功':'失败';
+        document.querySelector('#status').style.color=data.status==='ok'?'#16a34a':'#dc2626'; document.querySelector('#traceId').textContent=data.trace_id||'等待上报';
+        document.querySelector('#traceLink').href=data.trace_url; document.querySelector('#flowStatus').textContent=data.status==='ok'?'执行完成':'已在 Trace 中记录错误';
+      } catch(e) { document.querySelector('#answer').textContent=`页面请求失败：${e}`; document.querySelector('#flowStatus').textContent='请求失败'; }
+      finally { run.disabled=false; run.textContent='运行 Agent'; }
+    };
+    const autoRun = new URLSearchParams(location.search).get('autorun');
+    if (['normal','slow','failure'].includes(autoRun)) {
+      const button = document.querySelector(`.scenario[data-value="${autoRun}"]`);
+      button.click();
+      setTimeout(() => document.querySelector('#run').click(), 250);
+    }
+  </script>
+</body>
+</html>
