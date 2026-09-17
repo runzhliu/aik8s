@@ -216,9 +216,86 @@ def render_failure_recovery() -> None:
     image.save(OUT / "failure-recovery.png", optimize=True)
 
 
+def render_checkpoint_storage() -> None:
+    image, draw = canvas()
+    heading(
+        draw,
+        "Checkpoint 分层存储：快恢复与持久恢复分开设计",
+        "本地层降低训练停顿，共享层聚合完整版本，对象存储覆盖集群级故障",
+    )
+
+    columns = [
+        (
+            48,
+            "1  本地 NVMe",
+            "每个 Rank 独立写入",
+            ["分钟级高频保存", "最低写入延迟", "节点损坏时可能丢失"],
+            ORANGE,
+            ORANGE_LIGHT,
+        ),
+        (
+            448,
+            "2  RWX / 并行文件系统",
+            "多 Rank 汇聚与完整性检查",
+            ["保存模型与优化器分片", "生成 Manifest 与校验和", "发布 COMMITTED 标志"],
+            PURPLE,
+            PURPLE_LIGHT,
+        ),
+        (
+            848,
+            "3  对象存储",
+            "不可变持久恢复点",
+            ["覆盖 Worker Group 故障", "版本化 latest.json", "支持跨集群恢复与归档"],
+            GREEN,
+            GREEN_LIGHT,
+        ),
+    ]
+
+    for index, (x1, title, subtitle, items, accent, light) in enumerate(columns):
+        x2 = x1 + 304
+        rounded(draw, (x1, 125, x2, 371), fill=WHITE, outline=accent, radius=20, width=2)
+        draw.rounded_rectangle((x1 + 18, 145, x2 - 18, 187), radius=13, fill=light)
+        center_text(draw, (x1 + 18, 145, x2 - 18, 187), title, font(18, bold=True), accent)
+        draw.text((x1 + 22, 210), subtitle, font=font(16, bold=True), fill=INK)
+        for item_index, item in enumerate(items):
+            cy = 260 + item_index * 40
+            draw.ellipse((x1 + 23, cy - 2, x1 + 31, cy + 6), fill=accent)
+            draw.text((x1 + 43, cy - 11), item, font=font(14), fill=MUTED)
+        if index < len(columns) - 1:
+            arrow(draw, (x2 + 12, 247), (columns[index + 1][0] - 12, 247), color=MUTED, width=3)
+
+    draw.text((49, 414), "发布顺序", font=font(21, bold=True), fill=INK)
+    draw.text((150, 418), "任何一步失败都不能更新 latest.json", font=font(15), fill=MUTED)
+
+    stages = ["写唯一 Step", "完成全部 Shard", "校验大小与哈希", "发布 COMMITTED", "更新 latest 指针"]
+    stage_x = [48, 272, 496, 720, 944]
+    colors = [BLUE, BLUE, PURPLE, GREEN, GREEN]
+    lights = [BLUE_LIGHT, BLUE_LIGHT, PURPLE_LIGHT, GREEN_LIGHT, GREEN_LIGHT]
+    for index, (label, x1, accent, light) in enumerate(zip(stages, stage_x, colors, lights)):
+        rounded(draw, (x1, 466, x1 + 176, 548), fill=WHITE, outline=LINE, radius=15)
+        draw.ellipse((x1 + 13, 488, x1 + 43, 518), fill=light, outline=accent, width=2)
+        center_text(draw, (x1 + 13, 488, x1 + 43, 518), str(index + 1), font(14, bold=True), accent)
+        draw.text((x1 + 53, 491), label, font=font(14, bold=True), fill=INK)
+        if index < len(stages) - 1:
+            arrow(draw, (x1 + 184, 507), (stage_x[index + 1] - 10, 507), color=MUTED, width=3)
+
+    rounded(draw, (48, 573, 1152, 617), fill=RED_LIGHT, outline=RED_LIGHT, radius=12, width=1)
+    center_text(
+        draw,
+        (48, 573, 1152, 617),
+        "恢复只认已经提交且校验通过的版本；临时目录、残缺 Shard 和仅完成 CPU Staging 的版本一律跳过",
+        font(15, bold=True),
+        RED,
+    )
+    footer(draw, "对象存储没有 POSIX 目录原子重命名语义：先上传不可变对象，再用小型完成标志提交整个版本")
+    OUT.mkdir(parents=True, exist_ok=True)
+    image.save(OUT / "checkpoint-storage.png", optimize=True)
+
+
 def main() -> None:
     render_training_stack()
     render_failure_recovery()
+    render_checkpoint_storage()
 
 
 if __name__ == "__main__":

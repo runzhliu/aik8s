@@ -192,7 +192,7 @@ Ray 的价值在于把数据处理、训练、Tune、批推理和后训练 Actor
 
 恢复程序只能选择已经发布并验证的版本，不能按目录名最大值直接猜“最新”。异步保存还要区分“训练线程已经返回”和“远端数据已经持久化”，两者之间发生故障时，本次 Checkpoint 仍可能不可用。
 
-## 7. 两级 Checkpoint 架构
+## 7. 分层 Checkpoint 架构
 
 单一存储很难同时满足快和可靠。生产训练常使用两级或三级结构：
 
@@ -204,7 +204,361 @@ Ray 的价值在于把数据处理、训练、Tune、批推理和后训练 Actor
 
 本地保存不能只复制到同一故障域。例如同一机箱、同一电源域或同一机架同时失效时，本地副本也可能一起消失。对象存储路径还要隔离不同 Run，禁止两个训练任务同时把 `latest` 写向同一目录。
 
-## 8. 节点故障后的标准恢复流程
+## 8. Checkpoint 到底存在哪里
+
+存储选择决定了保存耗时，也决定了能覆盖哪一级故障。先根据恢复目标选择介质，再优化速度。
+
+| 存储 | 多节点访问 | 性能特点 | 能覆盖的故障 | 适合用途 |
+| --- | --- | --- | --- | --- |
+| Pod `emptyDir` / 节点 NVMe | 默认只在本节点 | 延迟最低、带宽最高 | 进程或容器重启；节点损坏时会丢失 | 高频临时版本、异步保存的 Staging |
+| HostPath / Local PV | 绑定节点 | 接近本地盘 | Pod 重建；不能覆盖节点故障 | 受控环境中的本地快速恢复 |
+| 块存储 PVC（RWO/RWOP） | 通常单节点挂载 | 延迟稳定，吞吐取决于卷规格 | 节点替换后可重新挂载 | 单节点训练、每个 Worker 独立卷 |
+| RWX 文件系统 | 多节点同时挂载 | 使用方便，易受元数据和小文件影响 | Worker 或节点故障 | 多 Rank 分片直接保存、短期共享 Staging |
+| 并行文件系统 | 多节点并发 | 高带宽，需做好条带和元数据规划 | 节点与 Worker Group 故障 | 大规模同步/异步分片 Checkpoint |
+| 对象存储 | 通过 API 访问 | 吞吐扩展好，不提供 POSIX 目录语义 | 整个训练组、节点池甚至集群故障 | 持久恢复点、归档和跨集群恢复 |
+
+Kubernetes 的 AccessMode 不能被想当然地理解：`ReadWriteOnce` 表示单节点读写，同一节点上的多个 Pod 仍可能同时访问；需要严格限制为单 Pod 时应评估 CSI 支持的 `ReadWriteOncePod`。多机训练若让所有 Rank 写同一路径，通常需要 RWX、并行文件系统，或者直接使用支持分布式写入的对象存储后端。参考：[Kubernetes Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
+
+![Checkpoint 的分层存储与发布路径](/assets/training/distributed-training-recovery/checkpoint-storage.png)
+
+### 三种常见落地方式
+
+**小中型 DDP：** Rank 0 把模型、优化器等公共状态写入 RWX/PVC，每个 Rank 另存自己的 RNG 和数据消费状态；保存成功后发布完成标志。实现简单，适合作为第一条可靠路径。
+
+**FSDP/ZeRO/Megatron：** 所有 Rank 并行写分片到 RWX 或并行文件系统，协调 Rank 在全部分片完成后发布 Manifest。再由独立上传进程把完整目录复制到对象存储。这样训练进程不必直接承担远端小文件和重试逻辑。
+
+**超大规模训练：** 每个 Rank 高频写本地盘，按故障域把副本复制到另一台节点；每隔较长时间生成一次对象存储持久版本。恢复时先尝试同一 Worker Group 的本地副本，再尝试跨节点副本，最后回退远端版本。
+
+## 9. 目录、Manifest 与原子发布
+
+Checkpoint 路径应由 Run 和 Attempt 隔离，Step 目录一旦发布就不再覆盖：
+
+```text
+checkpoints/
+└── team-a/model-x/run-20260917-001/
+    ├── run.json
+    ├── steps/
+    │   ├── step-000012000/
+    │   │   ├── model/
+    │   │   │   ├── __0_0.distcp
+    │   │   │   └── __1_0.distcp
+    │   │   ├── rank-state/rank-00000.pt
+    │   │   ├── manifest.json
+    │   │   └── COMMITTED
+    │   └── step-000012500.tmp-attempt-03/
+    ├── latest.json
+    └── attempts/attempt-03.json
+```
+
+`manifest.json` 至少应记录以下内容：
+
+```json
+{
+  "schema_version": 1,
+  "run_id": "run-20260917-001",
+  "step": 12000,
+  "world_size": 32,
+  "parallelism": {"dp": 4, "tp": 4, "pp": 2, "ep": 1},
+  "framework": {"name": "pytorch", "version": "<exact-version>"},
+  "image_digest": "sha256:<digest>",
+  "code_commit": "<git-commit>",
+  "dataset_snapshot": "<immutable-dataset-version>",
+  "files": [
+    {"path": "model/__0_0.distcp", "bytes": 123456, "sha256": "<checksum>"}
+  ],
+  "created_at": "2026-09-17T12:00:00Z"
+}
+```
+
+在 POSIX 文件系统上，可以把全部内容写到同一文件系统中的临时目录，关闭文件并完成 Barrier 后，用原子 `rename` 发布正式目录。在对象存储中不要模拟目录重命名：对象 Key 本质上是独立对象，复制再删除既慢也不是事务。更稳妥的顺序是：
+
+1. 上传带唯一 Run/Step 的不可变分片；
+2. 对每个对象核对大小和独立的 SHA-256 等校验值；
+3. 上传 `manifest.json`；
+4. 最后写入很小的 `COMMITTED` 对象；
+5. 使用带版本或条件写的 `latest.json` 指向该 Step；
+6. 恢复端只接受存在 `COMMITTED` 且 Manifest 校验通过的目录。
+
+`latest.json` 只是加速查找的指针，不是事实来源。它损坏或指向无效版本时，恢复器应按 Step 倒序扫描，并回退到上一个通过校验的版本。
+
+对象存储的 ETag 在分段上传、加密和不同实现中不一定等于内容 MD5，不应被当成通用内容校验和。建议启用 Bucket Versioning 或等价能力保护 `latest.json` 和 Manifest，并给训练身份最小权限：训练任务只能写自己的 Run 前缀，恢复任务只读指定前缀，GC 使用单独身份。静态加密、传输加密、访问审计和跨故障域副本也应纳入存储基线。
+
+### 容量怎么估算
+
+以 Adam 类优化器和 BF16 参数为例，粗略计算一份完整训练状态：
+
+```text
+BF16 模型参数       2 byte / parameter
+FP32 Master Weight  4 byte / parameter
+Adam 一阶、二阶矩   8 byte / parameter
+合计约             14 byte / parameter
+```
+
+如果还保存 BF16 梯度，接近 16 byte/parameter；分片索引、对齐、额外 Buffer 和版本差异还会增加空间。一个 70B 模型按 14 byte/parameter 估算约为 980 GB，一次保留 3 个完整版本就接近 3 TB。生产容量建议按实测单版本大小乘以保留数量，再增加 20%—30% 的临时写入、重试和碎片余量。
+
+不是每个 Checkpoint 都要永久保留。常见策略是保留最近 3—5 个已验证版本、每天一个版本、每个里程碑或最佳评估版本；GC 先标记待删除，再确认没有活跃恢复任务引用，最后删除对象和 Manifest。
+
+## 10. DDP 的可恢复保存实践
+
+普通 DDP 的模型与优化器状态通常在各 Rank 保持一致，公共状态可以由 Rank 0 保存；RNG、Sampler 和数据 Watermark 属于 Rank 本地状态，需要逐 Rank 保存。下面展示共享 POSIX 文件系统上的核心结构，异常处理与指标上报可按平台补充：
+
+```python
+import hashlib
+import json
+import os
+import random
+from pathlib import Path
+
+import numpy as np
+import torch
+import torch.distributed as dist
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def save_ddp_checkpoint(root, step, attempt_id, model, optimizer, scheduler, scaler, data_state):
+    rank = dist.get_rank()
+    world = dist.get_world_size()
+    tmp = Path(root) / f"step-{step:012d}.tmp-{attempt_id}"
+    final = Path(root) / f"step-{step:012d}"
+
+    if rank == 0:
+        tmp.mkdir(parents=True, exist_ok=False)
+        (tmp / "rank-state").mkdir()
+    dist.barrier()
+
+    # 每个 Rank 都保存自身的随机数和数据消费位置。
+    torch.save(
+        {
+            "rank": rank,
+            "torch_rng": torch.get_rng_state(),
+            "cuda_rng": torch.cuda.get_rng_state_all(),
+            "numpy_rng": np.random.get_state(),
+            "python_rng": random.getstate(),
+            "data_state": data_state,
+        },
+        tmp / "rank-state" / f"rank-{rank:05d}.pt",
+    )
+
+    if rank == 0:
+        module = model.module if hasattr(model, "module") else model
+        torch.save(
+            {
+                "step": step,
+                "model": module.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "scheduler": scheduler.state_dict(),
+                "scaler": scaler.state_dict() if scaler else None,
+            },
+            tmp / "training.pt",
+        )
+    dist.barrier()
+
+    if rank == 0:
+        files = sorted(path for path in tmp.rglob("*") if path.is_file())
+        manifest = {
+            "step": step,
+            "world_size": world,
+            "files": [
+                {
+                    "path": str(path.relative_to(tmp)),
+                    "bytes": path.stat().st_size,
+                    "sha256": sha256(path),
+                }
+                for path in files
+            ],
+        }
+        (tmp / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        (tmp / "COMMITTED").write_text("ok\n", encoding="utf-8")
+        if final.exists():
+            raise FileExistsError(f"immutable checkpoint already exists: {final}")
+        os.rename(tmp, final)  # 临时目录与正式目录必须位于同一文件系统。
+    dist.barrier()
+```
+
+实际恢复时按以下顺序执行：
+
+1. Rank 0 查找最新的 `COMMITTED` 目录并验证 Manifest；
+2. 把选中的路径广播给所有 Rank；
+3. 所有 Rank 加载公共状态，各自加载对应的 `rank-state`；
+4. 恢复 Optimizer、Scheduler、Scaler、RNG 和数据游标；
+5. Barrier 后执行一个短的验证 Step，再进入正式训练。
+
+```python
+def restore_ddp_checkpoint(path, model, optimizer, scheduler, scaler):
+    rank = dist.get_rank()
+    common = torch.load(Path(path) / "training.pt", map_location="cpu", weights_only=False)
+    local = torch.load(
+        Path(path) / "rank-state" / f"rank-{rank:05d}.pt",
+        map_location="cpu",
+        weights_only=False,
+    )
+
+    module = model.module if hasattr(model, "module") else model
+    module.load_state_dict(common["model"])
+    optimizer.load_state_dict(common["optimizer"])
+    scheduler.load_state_dict(common["scheduler"])
+    if scaler and common["scaler"] is not None:
+        scaler.load_state_dict(common["scaler"])
+
+    torch.set_rng_state(local["torch_rng"])
+    torch.cuda.set_rng_state_all(local["cuda_rng"])
+    np.random.set_state(local["numpy_rng"])
+    random.setstate(local["python_rng"])
+    dist.barrier()
+    return common["step"], local["data_state"]
+```
+
+这段代码适合解释正确边界，不应未经压测直接用于 TB 级模型。还要根据实际 PyTorch 版本评估 `weights_only`、序列化格式、文件和父目录 `fsync`、异常广播和安全加载策略。示例中的 `weights_only=False` 只能用于受信任、自有且访问受控的训练状态；不要加载来源不明的 Pickle Checkpoint。若 World Size 改变，旧 Rank 的 RNG 和数据状态不能按编号机械套用，应重新定义数据分区并使用支持重分片的 Checkpoint 格式。
+
+### 数据游标比 Epoch 更重要
+
+只保存 `epoch=3` 不能说明已经消费到哪条数据。数据状态至少要能回答：数据集版本、Shard、样本或 Token Watermark、当前 Epoch 内偏移、Shuffle Seed，以及梯度累积到了第几个 Microbatch。做不到精确续跑时，应明确选择“从本 Epoch 开头重放”，并把重复样本数量纳入 RPO。
+
+## 11. FSDP 与 PyTorch DCP 实践
+
+FSDP 不适合先把所有分片聚合到 Rank 0 再 `torch.save`。DCP 可以由多 Rank 并行保存，并在加载时根据已经初始化的新模型布局重分片：
+
+```python
+import torch.distributed.checkpoint as dcp
+from torch.distributed.checkpoint.state_dict import get_state_dict, set_state_dict
+
+
+def save_fsdp_checkpoint(path, model, optimizer):
+    model_state, optim_state = get_state_dict(model, optimizer)
+    dcp.save(
+        {"model": model_state, "optimizer": optim_state},
+        checkpoint_id=path,
+    )
+
+
+def load_fsdp_checkpoint(path, model, optimizer):
+    # 模型和优化器必须先按新的 DeviceMesh / World Size 初始化。
+    model_state, optim_state = get_state_dict(model, optimizer)
+    state = {"model": model_state, "optimizer": optim_state}
+    dcp.load(state, checkpoint_id=path)
+    set_state_dict(
+        model,
+        optimizer,
+        model_state_dict=state["model"],
+        optim_state_dict=state["optimizer"],
+    )
+```
+
+Step、Scheduler、RNG 和数据游标仍需作为应用状态保存，不能因为 DCP 成功写出了模型分片就省略。DCP 的文件系统 Writer 假设目标是空目录或不存在的目录，并依赖文件创建语义；存储后端、框架版本和跨拓扑加载都必须按目标环境验证。[PyTorch DCP](https://docs.pytorch.org/docs/main/distributed.checkpoint.html) 当前还提供 `async_save`，但只有后台上传真正完成后才能发布 `COMMITTED`，不能把“数据已经 Staging 到 CPU”当成远端持久化完成。
+
+DeepSpeed 的 `save_checkpoint` 必须由所有 Rank 调用，Megatron Distributed Checkpoint 也需要全组参与。框架提供的 `latest`、Tracker 或 Metadata 文件可以作为内部实现的一部分，但平台层仍应记录 Run、Attempt、对象清单和完成状态，避免升级框架后失去恢复证据。
+
+DeepSpeed 的基本调用方式如下，`client_state` 用于保存训练循环自己的 Step、数据位置和配置摘要：
+
+```python
+tag = f"step-{global_step:012d}"
+engine.save_checkpoint(
+    checkpoint_root,
+    tag=tag,
+    client_state={"global_step": global_step, "data_state": data_state},
+)
+
+load_path, client_state = engine.load_checkpoint(checkpoint_root, tag=tag)
+if load_path is None:
+    raise RuntimeError(f"failed to restore {tag}")
+```
+
+所有 Rank 必须进入保存调用，否则会在同步处挂住。ZeRO-3 下不要假设一个已经分片并继续训练的 Engine 可以在原地无条件重新加载；按目标 DeepSpeed 版本验证重新初始化 Engine 后恢复的流程。参考：[DeepSpeed Model Checkpointing](https://deepspeed.readthedocs.io/en/stable/model-checkpointing.html)
+
+## 12. Kubernetes 上的存储与恢复实践
+
+下面的挂载方式表达一个常见组合：本地盘负责快速 Staging，RWX PVC 保存短期共享恢复点，再由上传器把已经提交的版本同步到对象存储。
+
+```yaml
+spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: trainer
+          env:
+            - name: LOCAL_CHECKPOINT_DIR
+              value: /checkpoint/local
+            - name: SHARED_CHECKPOINT_DIR
+              value: /checkpoint/shared
+          volumeMounts:
+            - name: checkpoint-local
+              mountPath: /checkpoint/local
+            - name: checkpoint-shared
+              mountPath: /checkpoint/shared
+      volumes:
+        - name: checkpoint-local
+          emptyDir: {}
+        - name: checkpoint-shared
+          persistentVolumeClaim:
+            claimName: training-checkpoint-rwx
+```
+
+上传对象存储最好由独立进程处理，并且只处理出现 `COMMITTED` 的 Step。它可以是同 Pod Sidecar、独立 Deployment 或按版本创建的短任务：
+
+- Sidecar 延迟低，但训练 Pod 被强制删除时也会一起消失；
+- 独立上传器不会与训练容器同生共死，更适合可靠搬运；
+- 直接使用框架的对象存储 Writer 可以减少中间层，但必须验证多 Rank 协调、限流、重试和一致性语义。
+
+恢复 Pod 启动时，可以由 Init Container 把选定版本下载到本地缓存，Trainer 再并行加载；也可以从共享文件系统直接读取。无论哪种方式，都不要在 Init Container 中盲目取路径名最大的目录，而要运行同一套 Manifest 校验和回退逻辑。
+
+CSI VolumeSnapshot 可以保护整个卷，但默认只能说明存储块在某个时刻被截取，不能自动保证多个 Rank 的应用状态一致。若要把 Snapshot 当作恢复点，仍应先让训练进程完成 Barrier、刷新文件并发布 Manifest，再触发 Snapshot；否则它只能作为灾难恢复材料，不能直接承诺精确续训。
+
+### 一份恢复 Runbook
+
+1. 确认旧 Worker Group 已经退出，不存在继续写同一 Run 的残留 Rank；
+2. 根据 XID、Node 状态、RDMA 和存储日志决定是否隔离原节点；
+3. 从 `latest.json` 开始校验，失败则回退上一个已提交版本；
+4. 建立满足拓扑条件的新 Worker Group；
+5. 先初始化模型、Optimizer、并行组和目标 Sharding；
+6. 加载模型与优化器，再加载 Scheduler、Scaler、RNG 和数据状态；
+7. 核对恢复 Step、World Size、全局 Batch 和 Dataset Snapshot；
+8. 运行 5—20 个观察 Step，确认 Loss、梯度范数、吞吐和 Collective 正常；
+9. 记录丢失 Step、下载/加载时间、排队时间和最终 RTO；
+10. 新 Checkpoint 成功提交后，才允许 GC 清理故障前的版本。
+
+### 监控哪些指标
+
+| 指标 | 作用 |
+| --- | --- |
+| `checkpoint_last_success_timestamp_seconds` | 判断距离上一次有效恢复点有多久 |
+| `checkpoint_save_duration_seconds` | 观察保存 P50/P95/P99 和 I/O 退化 |
+| `checkpoint_bytes_total` | 估算吞吐、容量和异常小文件 |
+| `checkpoint_save_failures_total` | 发现写入、校验或发布失败 |
+| `checkpoint_validation_failures_total` | 发现缺 Shard、Checksum 或格式错误 |
+| `checkpoint_fallback_total` | 统计最新版本不可用而发生的回退 |
+| `training_recovery_duration_seconds` | 衡量端到端 RTO |
+| `training_recovery_lost_steps` | 衡量实际 RPO |
+
+告警阈值不应只看保存失败。即使没有报错，`time() - checkpoint_last_success_timestamp_seconds` 超过计划间隔的两倍，也说明已经失去预期恢复能力。异步保存还应监控排队深度和未完成版本数，防止后台 I/O 越积越多，最终耗尽主机内存或本地盘。
+
+如果计划间隔通过 Label 暴露为秒数，可以从下面的 PromQL 思路开始，再按指标标签调整：
+
+```promql
+time() - max by (run_id) (checkpoint_last_success_timestamp_seconds)
+  > 2 * max by (run_id) (checkpoint_planned_interval_seconds)
+```
+
+### 恢复验收不能只看进程重新 Running
+
+至少核对以下证据：
+
+- 恢复后的第一个 Step 等于 Manifest 记录值，而不是从零开始；
+- Optimizer State 非空，LR 与恢复前相同；
+- Dataset Snapshot、Sampler Watermark 和已处理 Token 正确；
+- 在约定窗口内，Loss 与梯度范数没有异常跳变；
+- 各 Rank 的 Step 一致，没有部分 Rank 偷跑；
+- 新 Attempt 写出的第一个 Checkpoint 可以再次独立恢复；
+- 与无故障基线相比，最终评估结果处于预先定义的容差内。
+
+## 13. 节点故障后的标准恢复流程
 
 一次自动恢复可以拆成八个步骤：
 
@@ -219,7 +573,7 @@ Ray 的价值在于把数据处理、训练、Tune、批推理和后训练 Actor
 
 自动化应保留每次 Attempt 的节点、Rank、Checkpoint、错误分类和恢复耗时。Job 最终 Completed 不能覆盖前几次失败记录。
 
-## 9. 相同卡数恢复与缩容恢复
+## 14. 相同卡数恢复与缩容恢复
 
 ### 相同 World Size
 
@@ -247,15 +601,15 @@ Ray 的价值在于把数据处理、训练、Tune、批推理和后训练 Actor
 
 “能改卡数启动”不等于“训练语义不变”。缩容后的吞吐、全局 Batch、优化器更新频率和数据顺序都可能变化，必须对比无故障基线的 Loss 与最终评估。
 
-## 10. Kubernetes 上如何组合
+## 15. Kubernetes 上如何组合
 
-### 10.1 Gang Scheduling
+### 15.1 Gang Scheduling
 
 多机任务应在完整资源满足后一起启动，避免部分 Worker 占着 GPU 等待其余 Rank。Kubeflow Trainer 可以对接 Kueue、Volcano 等调度方案；JobSet 和 Volcano Job 也能表达整组失败与重启策略。
 
 Kueue 负责配额、优先级、准入和拓扑；训练控制器负责创建 Worker；训练框架负责进程组和 Checkpoint。三者不要互相越权。
 
-### 10.2 整组重启策略
+### 15.2 整组重启策略
 
 JobSet 的 FailurePolicy 可以按子 Job 失败原因选择 `RestartJobSet`、`RestartJob` 或直接失败；Volcano Job 可在 `PodFailed`、`PodEvicted` 等事件上执行 `RestartJob`。同步训练通常以整组重启作为安全默认值。
 
@@ -276,11 +630,11 @@ spec:
 
 参考：[JobSet Failure Policy](https://jobset.sigs.k8s.io/docs/tasks/failure_policy/)、[Volcano Job Policy](https://volcano.sh/docs/v1.13.0/userguide/user_guide_how_to_use_job_policy/)
 
-### 10.3 抢占和优雅退出
+### 15.3 抢占和优雅退出
 
 Pod 收到 SIGTERM 后可以触发一次紧急保存，但不能把它当成唯一保障：抢占通知可能很短，节点也可能直接掉电。建议同时使用周期性持久 Checkpoint，并让紧急保存超时后主动退出，避免无限占用 Terminating Pod。
 
-### 10.4 故障节点隔离
+### 15.4 故障节点隔离
 
 自动重试之前至少检查：
 
@@ -291,7 +645,7 @@ Pod 收到 SIGTERM 后可以触发一次紧急保存，但不能把它当成唯�
 
 硬件故障应由 Node Problem Detector、GPU Operator、DCGM 或独立健康控制器转成 Label/Taint，再由调度器排除。训练脚本不应自己修改 Node。
 
-## 11. RPO、RTO 与 Checkpoint 间隔
+## 16. RPO、RTO 与 Checkpoint 间隔
 
 - **RPO**：故障后最多丢失多少训练进度。周期性保存时，上限通常接近 Checkpoint 间隔；异步保存未提交的部分不算有效恢复点。
 - **RTO**：从故障发生到训练重新稳定产出 Step 的时间。
@@ -323,7 +677,7 @@ Checkpoint 越频繁，丢失的训练步数越少，但 I/O、暂停和存储�
 - 重新排队耗时与坏节点重复命中率；
 - 恢复前后 Step Time、Loss 和数据 Watermark 差异。
 
-## 12. 必须做的故障演练
+## 17. 必须做的故障演练
 
 | 演练 | 注入方法 | 合格标准 |
 | --- | --- | --- |
@@ -340,7 +694,44 @@ Checkpoint 越频繁，丢失的训练步数越少，但 I/O、暂停和存储�
 
 一次恢复成功只能证明存在可行路径。生产验收应在不同训练阶段重复注入，并覆盖保存过程中故障、刚发布后故障和加载过程中故障。
 
-## 13. 常见反模式
+### 一个最小可重复实验
+
+可以先用较小模型完成如下闭环，再扩大到正式训练：
+
+1. 固定数据集 Snapshot、Seed、World Size 和镜像，运行一条不中断基线；
+2. 每 50 Step 保存一次，在 Step 135 左右删除一个 Worker Pod；
+3. 确认旧 World 的其他 Rank 退出，控制器没有留下继续占卡的孤儿进程；
+4. 新 Attempt 从 Step 100 的有效版本恢复，数据 Watermark 与 Manifest 一致；
+5. 观察至少 20 Step，比较基线与恢复路径的 Loss、梯度范数和学习率；
+6. 等 Step 150 产生新的有效 Checkpoint，再次重启并验证它能被加载；
+7. 制造一个缺少 `COMMITTED` 或缺少一个 Shard 的 Step 200 目录；
+8. 确认恢复器拒绝 Step 200，并自动回退 Step 150；
+9. 连续注入三次故障，确认超过预算后任务停止并告警；
+10. 汇总丢失 Step、Checkpoint 耗时、重新排队时间、加载时间和端到端 RTO。
+
+在隔离的测试命名空间中，可以用下面的命令触发 Pod 级故障。节点断电、RDMA 阻断和 GPU XID 演练影响面更大，应使用专门故障节点和变更窗口。
+
+```bash
+kubectl delete pod <worker-pod> \
+  -n <test-namespace> \
+  --grace-period=0 \
+  --force
+```
+
+结果记录至少包含以下字段，避免只留下“恢复成功”的结论：
+
+| 字段 | 示例含义 |
+| --- | --- |
+| Run / Attempt | 区分原训练和每次重启 |
+| 故障时间与首个失败 Rank | 判断检测延迟和根因顺序 |
+| 故障节点、GPU、XID/RDMA 证据 | 判断是否需要隔离节点 |
+| 选择的 Checkpoint 与回退次数 | 证明恢复器选对版本 |
+| 保存 Step / 恢复 Step / 首个新 Step | 计算实际丢失进度 |
+| 调度、下载、加载、验证耗时 | 拆解 RTO 瓶颈 |
+| 恢复前后 Loss、LR、数据 Watermark | 验证训练语义 |
+| 新版本再次加载结果 | 避免恢复后只能继续跑、却不能再次恢复 |
+
+## 18. 常见反模式
 
 - 只保存模型权重，却宣称支持续训；
 - Checkpoint 写在故障节点的 HostPath，且没有远端副本；
@@ -354,7 +745,7 @@ Checkpoint 越频繁，丢失的训练步数越少，但 I/O、暂停和存储�
 - 为追求恢复速度只保留本地版本，没有跨故障域副本；
 - 自动恢复后不核对 Step、数据 Watermark 和 Loss。
 
-## 14. 分规模的建议
+## 19. 分规模的建议
 
 ### 1—8 GPU
 
@@ -372,19 +763,23 @@ Checkpoint 越频繁，丢失的训练步数越少，但 I/O、暂停和存储�
 
 可以评估 Ray Train 或 Horovod Elastic，但要先定义允许变化的并行维度。模型并行组通常要求固定拓扑，最容易弹性的往往只是数据并行副本。弹性不应以破坏 Batch、数据消费和收敛为代价。
 
-## 15. 生产检查表
+## 20. 生产检查表
 
 - [ ] 已明确训练框架、Launcher、训练控制器、队列和存储各自职责；
 - [ ] 失败恢复的单位是 Rank、Worker Group 还是整个 Job，行为已验证；
 - [ ] Checkpoint 包含模型、优化器、调度器、Scaler、RNG、Step 和数据游标；
 - [ ] 多 Rank 保存使用 Manifest、校验和和原子发布协议；
+- [ ] Step 目录不可变，`latest` 只作为指针且能够自动回退；
 - [ ] 至少有一个 Checkpoint 位于训练节点故障域之外；
+- [ ] 已测量单版本大小、保存带宽、加载带宽、容量余量和 GC 策略；
+- [ ] 对象存储已配置版本保护、最小权限、加密和访问审计；
 - [ ] 同 World Size 恢复已经成为上线硬门槛；
 - [ ] 跨 World Size 恢复单独验证了重分片、Batch、LR 和数据语义；
 - [ ] Gang Scheduling 不会让部分 Worker 长期占卡；
 - [ ] XID/RDMA/节点故障可以自动隔离，用户错误不会无限重试；
 - [ ] 抢占、强杀、节点宕机、网络中断和坏 Checkpoint 均做过演练；
 - [ ] 记录 MTTD、RPO、RTO、丢失 Step、排队时间和恢复成功率；
+- [ ] 监控最新有效 Checkpoint 年龄、异步队列和回退次数；
 - [ ] 每次 Attempt 的节点、Rank、错误与 Checkpoint 均可追溯；
 - [ ] 恢复后的 Loss、数据 Watermark 和最终模型质量与基线一致。
 
@@ -400,6 +795,7 @@ Checkpoint 越频繁，丢失的训练步数越少，但 I/O、暂停和存储�
 - [Orbax CheckpointManager](https://orbax.readthedocs.io/en/latest/api_reference/checkpoint.checkpoint_manager.html)
 - [Elastic Horovod](https://horovod.readthedocs.io/en/latest/elastic_include.html)
 - [Ray Train Fault Tolerance](https://docs.ray.io/en/latest/train/user-guides/fault-tolerance.html)
+- [Kubernetes Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 - [Kubeflow Trainer Runtime Guide](https://trainer.kubeflow.org/en/latest/operator-guides/runtime.html)
 - [JobSet Failure Policy](https://jobset.sigs.k8s.io/docs/tasks/failure_policy/)
 - [Volcano Job](https://volcano.sh/docs/concepts/volcanojob/)
