@@ -43,6 +43,7 @@ nav = [
     ]},
     {"分布式训练" = [
       {"分布式训练平台" = "ai-k8s/distributed-training.md"},
+      {"多机多卡训练框架与故障恢复" = "ai-k8s/training/distributed-training-frameworks-recovery.md"},
       {"SFT 入门：概念与名词" = "ai-k8s/training/sft-concepts.md"},
       {"Kubernetes 领域 SFT 社区实践" = "ai-k8s/training/kubernetes-domain-sft-community.md"},
       {"SFT 训练实战：从单卡 LoRA 到 DeepSeek V4" = "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md"},
