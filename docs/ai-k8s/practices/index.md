@@ -18,6 +18,7 @@ last_reviewed: 2026-09-18
 - [AI 集群事故复盘方法](incident-review.md)
 - [数百个 Kubernetes 集群的稳定性建设](kubernetes-fleet-reliability.md)
 - [万节点 Kubernetes 集群优化实战：控制面、etcd、调度与网络](large-scale-kubernetes-optimization.md)
+- [Kube-apiserver 负载均衡实战：HTTP/2、TLS 终结与四层/七层选型](kube-apiserver-load-balancing.md)
 - [APF 隔离实战：零席位 Reject 为什么仍会放行](apf-isolation-case.md)
 
 ## 性能、成本与容量

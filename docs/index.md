@@ -85,7 +85,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 | 建设 Ray 大模型平台 | [Ray 训练与推理](ai-k8s/ray-llm-platform.md) → [分布式训练](ai-k8s/distributed-training.md) → [可靠性](ai-k8s/reliability.md) |
 | 建设 LLM 在线推理平台 | [推理平台总览](ai-k8s/llm-inference.md) → [引擎选型](ai-k8s/inference/engines.md) → [Serving 框架](ai-k8s/inference/serving-frameworks.md) → [API 中转与网关选型](ai-k8s/inference/llm-api-relay-gateway-overview.md) → [智能路由](ai-k8s/inference/gateway-routing.md) → [Higress 实战](ai-k8s/inference/higress-ai-gateway.md) |
 | 建设 RAG 或 Agent 服务 | [Agent 现状与趋势](ai-k8s/rag-agent/agent-landscape-2026.md) → [Agent Harness](ai-k8s/rag-agent/agent-harness-technology-overview.md) → [HarnessRouter](ai-k8s/rag-agent/harnessrouter-overview.md) → [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md) → [Agent Sandbox 选型](ai-k8s/rag-agent/agent-sandbox-selection.md) → [安全治理](ai-k8s/security-governance.md) |
-| 负责稳定性、成本和容量 | [可观测性](ai-k8s/observability.md) → [万节点集群优化](ai-k8s/practices/large-scale-kubernetes-optimization.md) → [多集群稳定性](ai-k8s/practices/kubernetes-fleet-reliability.md) → [成本与容量](ai-k8s/cost-capacity.md) |
+| 负责稳定性、成本和容量 | [可观测性](ai-k8s/observability.md) → [万节点集群优化](ai-k8s/practices/large-scale-kubernetes-optimization.md) → [API Server 负载均衡](ai-k8s/practices/kube-apiserver-load-balancing.md) → [多集群稳定性](ai-k8s/practices/kubernetes-fleet-reliability.md) → [成本与容量](ai-k8s/cost-capacity.md) |
 
 ## 核心专题
 
@@ -94,6 +94,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - [Kubernetes 如何承载 AI](ai-k8s/foundations/kubernetes-for-ai.md)
 - [AI 集群架构设计](ai-k8s/cluster/architecture.md)
 - [万节点 Kubernetes 集群优化实战](ai-k8s/practices/large-scale-kubernetes-optimization.md)
+- [Kube-apiserver 负载均衡实战](ai-k8s/practices/kube-apiserver-load-balancing.md)
 - [GPU 节点软件栈](ai-k8s/cluster/gpu-node-stack.md)
 - [多厂商异构加速器](ai-k8s/accelerators/heterogeneous-accelerators.md)
 - [Device Plugin、CDI 与 DRA](ai-k8s/accelerators/device-management.md)

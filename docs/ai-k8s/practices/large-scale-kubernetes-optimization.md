@@ -103,7 +103,7 @@ AWS EKS 的 Ultra-Scale 能力达到 10 万节点，但它对 Kubernetes 对象�
 
 短期手段是采用先扩后缩的 API Server 发布策略，让新实例 Ready 并完成缓存预热后再下线旧实例，同时限制一次退出的实例数。长期需要请求级均衡时，可以评估七层 Kubernetes API Gateway。字节开源的 [KubeGateway](https://github.com/kubewharf/kubegateway) 能解析 user、verb、resource 等请求属性，在 HTTP 请求层做路由、限流、降级和上游健康检查，并通过 HTTP/2 多路复用收敛上游连接。[字节 2 万节点 GOPS 分享](https://www.fxbaogao.com/detail/4642533)
 
-API Gateway 进入控制面后也成为新的关键依赖。上线门禁必须覆盖长 Watch、exec/log 流式连接、证书与 Impersonation、审计身份、Gateway 故障旁路和升级中的连接迁移。若只为修复一次连接倾斜就直接引入复杂网关，新增风险可能大于收益。
+API Gateway 进入控制面后也成为新的关键依赖。上线门禁必须覆盖长 Watch、exec/log 流式连接、证书与 Impersonation、审计身份、Gateway 故障旁路和升级中的连接迁移。若只为修复一次连接倾斜就直接引入复杂网关，新增风险可能大于收益。四层、七层、TLS 终结与 GOAWAY 的具体取舍可继续阅读 [Kube-apiserver 负载均衡实战](kube-apiserver-load-balancing.md)。
 
 ### 3.3 HA 进程就绪，不代表控制循环已经就绪
 
