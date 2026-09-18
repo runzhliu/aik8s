@@ -186,10 +186,65 @@ def rollout_evidence():
     img.save(OUT / "rollout-and-evidence-gates.png", quality=95)
 
 
+def scale_out_rebalance():
+    img, d = canvas(
+        "API Server 扩容后，重新均衡要主动管理连接生命周期",
+        "生产 Runbook · 新实例先预热，再接流量；已有 HTTP/2 连接通过 GOAWAY 或逐台排空迁移",
+    )
+    steps = [
+        ("1  建立基线", ["记录各实例 QPS", "连接 / CPU / P99"], BLUE),
+        ("2  启动新实例", ["核对配置与证书", "readyz 连续通过"], TEAL),
+        ("3  加入服务池", ["先低权重接流", "观察错误与尾延迟"], PURPLE),
+        ("4  迁移旧连接", ["GOAWAY 自然轮换", "或旧实例逐台排空"], ORANGE),
+        ("5  收敛验收", ["请求与压力回预算", "无 LIST / 429 风暴"], RED),
+    ]
+    xs = [44, 270, 496, 722, 948]
+    for i, (title, lines, color) in enumerate(steps):
+        x = xs[i]
+        rounded(d, (x, 142, x + 202, 306), fill=PANEL)
+        d.rounded_rectangle((x + 16, 160, x + 186, 196), 13, fill=color)
+        label(d, (x + 101, 178), title, 17, "#FFFFFF", True, "mm")
+        for j, line in enumerate(lines):
+            label(d, (x + 22, 222 + j * 31), line, 16, MUTED)
+        if i < len(steps) - 1:
+            arrow(d, (x + 202, 224), (xs[i + 1], 224), LINE, 4)
+
+    rounded(d, (44, 352, 585, 626), fill="#FFFFFF")
+    label(d, (70, 378), "L4 TCP 入口", 23, BLUE, True)
+    l4_rows = [
+        ("加入", "新实例只获得新建 TCP 连接"),
+        ("迁移", "已有连接要等 GOAWAY、断开或重启"),
+        ("排空", "旧后端逐台 Drain，不能同时洗牌"),
+        ("验收", "连接均衡后还要核对请求与 CPU"),
+    ]
+    for i, (name, detail) in enumerate(l4_rows):
+        y = 426 + i * 43
+        d.rounded_rectangle((70, y, 138, y + 29), 10, fill=BLUE if i != 1 else ORANGE)
+        label(d, (104, y + 15), name, 15, "#FFFFFF", True, "mm")
+        label(d, (158, y + 5), detail, 16, MUTED)
+
+    rounded(d, (615, 352, 1156, 626), fill="#FFFFFF")
+    label(d, (641, 378), "L7 请求级入口", 23, PURPLE, True)
+    l7_rows = [
+        ("加入", "按 0 → 10% → 50% → 100% 放量"),
+        ("迁移", "新请求立刻参与分配"),
+        ("长流", "现有 Watch 仍等断线后重建"),
+        ("验收", "检查身份、重试、路由和后端连接池"),
+    ]
+    for i, (name, detail) in enumerate(l7_rows):
+        y = 426 + i * 43
+        d.rounded_rectangle((641, y, 709, y + 29), 10, fill=PURPLE if i != 2 else ORANGE)
+        label(d, (675, y + 15), name, 15, "#FFFFFF", True, "mm")
+        label(d, (729, y + 5), detail, 16, MUTED)
+    OUT.mkdir(parents=True, exist_ok=True)
+    img.save(OUT / "scale-out-rebalance-runbook.png", quality=95)
+
+
 def main():
     connection_granularity()
     tls_boundaries()
     rollout_evidence()
+    scale_out_rebalance()
     print(f"generated assets in {OUT}")
 
 

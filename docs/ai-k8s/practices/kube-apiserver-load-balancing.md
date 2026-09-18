@@ -1,6 +1,6 @@
 ---
 title: Kube-apiserver 负载均衡实战：HTTP/2、TLS 终结与四层/七层选型
-description: 从连接复用、TLS 身份边界、健康检查、滚动升级和请求治理出发，对比 kube-apiserver 四层与七层负载均衡方案及生产验证方法
+description: 从连接复用、TLS 身份边界、扩缩容重新均衡和策略选择出发，对比 kube-apiserver 四层与七层负载均衡方案及生产验证方法
 status: stable
 last_reviewed: 2026-09-18
 ---
@@ -134,7 +134,115 @@ L4 中使用 least-connections，通常比只按源地址哈希更适合长连�
 
 因此我不会把“后端连接数相等”作为最终成功标准。真正要看的是分实例请求率、返回字节、inflight、CPU、内存和尾延迟是否一起回到预算。
 
-## 5. 什么时候值得上七层 API Gateway
+### 4.5 扩容 API Server 后，怎样让流量真正重新均衡
+
+把第四台 API Server 加进 LB，只会影响**新连接**。原来落在前三台上的 HTTP/2 连接不会因为后端数量变化主动迁移。生产扩容要同时处理实例就绪、LB 放量和旧连接轮换。
+
+变更前先确认实际存在几条访问路径：
+
+- kubelet、外部控制器和运维 kubeconfig 是否访问统一的 `controlPlaneEndpoint`；
+- 集群内客户端是否通过 `kubernetes.default.svc` 访问，由 Service Endpoint 和 kube-proxy 形成另一条 L4 路径；
+- controller-manager、scheduler 或本机 Agent 是否直连 `127.0.0.1`、节点地址或 node-local LB；
+- 监控看板能否按 API Server 实例区分上述来源。
+
+只扩容外部 LB 后端，无法改变直连和 Service 路径的流量。先把来源分清楚，才能解释为什么 LB 已经有四个后端，仍有一部分请求固定在旧实例。
+
+kubeadm 的高可用文档推荐在控制平面节点前使用 TCP 转发 LB，并要求 LB 地址与 `ControlPlaneEndpoint` 一致；文档中的 TCP 端口探测适合安装引导，运行阶段还应增加本文前面所述的 `/readyz` 和连接生命周期门禁。[kubeadm 高可用控制面](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/)
+
+新实例进入服务池前还要核对：服务证书覆盖相同的 LB DNS/IP，Client CA、ServiceAccount Key、Encryption Provider、审计、Admission 配置、Runtime Config 和 Feature Gate 与现有实例一致；它连接的是预期的 etcd 集群，并且版本偏差符合 Kubernetes 策略。`/readyz` 连续通过只能证明当前检查项就绪，不能代替配置一致性检查。
+
+我采用下面的扩容顺序：
+
+| 阶段 | 操作 | 必须观察的证据 | 停止条件 |
+| --- | --- | --- | --- |
+| 建基线 | 记录至少一个稳定窗口内的分实例 QPS、连接、CPU、P99、429、LIST/WATCH 和 etcd 延迟 | 基线时间范围和发布前快照 | 指标缺失或实例标签无法区分 |
+| 启动 | 新 API Server 暂不接生产流量，直接访问后端完成证书、版本、API、etcd 和 `/readyz?verbose` 检查 | readiness、启动日志、配置差异 | 证书、配置或 watch cache 未就绪 |
+| 加入 | L4 先注册为健康后端；L7 先设为 0 或很低权重，再逐级放量 | 新实例收到探测和小比例真实请求 | 认证、授权、审计或协议结果不一致 |
+| 预热 | 观察缓存、内存、CPU、P99 和 etcd Range；不要用一次 GET 代替预热验收 | 新实例指标进入正常区间 | LIST/429/etcd 延迟快速抬升 |
+| 迁移 | 使用既有 GOAWAY 自然轮换，或把旧后端逐台 Drain 后受控断开连接 | 重连速率、TLS 握手、Watch 恢复、LIST 峰值 | P99、429、reset 或 etcd 压力越过预算 |
+| 收敛 | 恢复统一权重，至少跨过一个业务高峰继续观察 | 请求份额和资源压力都回到目标区间 | 只有连接数均衡，QPS/CPU 仍明显倾斜 |
+
+<img src="/assets/practices/kube-apiserver-load-balancing/scale-out-rebalance-runbook.png" alt="API Server 扩容、接流和旧 HTTP/2 连接重新均衡的生产步骤" width="1200">
+
+#### L4 的两种连接迁移方式
+
+**渐进迁移**适合没有紧迫容量风险的场景。扩容前已经启用并验证过较低的 `--goaway-chance`，新实例加入后等待连接自然轮换。优点是重连比较平滑，代价是无法保证在一个固定短窗口内达到均衡。这个参数是 API Server 启动参数，应提前纳入控制面基线；扩容时首次启用会把参数发布和容量变更叠加在一起。
+
+**受控洗牌**用于旧实例已经接近容量上限、需要尽快让新实例分担流量的场景。操作时一次只处理一个旧后端：
+
+1. 把旧后端设为 Drain，从普通的新连接选择中移除；如果配置了持久性规则，还要单独确认是否仍会命中；
+2. 等待普通短连接和请求自然结束，确认其他实例仍有容量；
+3. 通过 API Server 优雅退出，或在已经验证客户端重连能力后，受控终止该后端的剩余连接；
+4. 客户端重连时，LB 会在包括新实例在内的健康池中重新选择；
+5. 旧实例恢复 Ready 并重新加入后，再处理下一台。
+
+以 HAProxy Runtime API 为例，操作语义可以写成下面这样：
+
+```bash
+# 停止把新连接分配给 api1；现有连接仍然保留
+echo "set server kube_api/api1 state drain" \
+  | socat stdio /run/haproxy/admin.sock
+
+# 仅在已经验证客户端重连和 Watch 恢复后使用：强制结束 api1 会话
+echo "shutdown sessions server kube_api/api1" \
+  | socat stdio /run/haproxy/admin.sock
+
+# api1 恢复并通过门禁后重新接流量
+echo "set server kube_api/api1 state ready" \
+  | socat stdio /run/haproxy/admin.sock
+```
+
+`drain`只停止普通的新连接选择，不会搬走已有连接；`shutdown sessions server`会立即终止该后端上的会话，应当视为故障注入级操作，不能对多个后端同时执行。HAProxy Runtime API 的修改只保存在运行内存，持久配置和自动化状态必须同步更新。[HAProxy Drain 语义](https://www.haproxy.com/documentation/haproxy-configuration-manual/new/latest/management/) · [shutdown sessions server](https://www.haproxy.com/documentation/haproxy-runtime-api/reference/shutdown-sessions-server/)
+
+云 LB 的“后端摘除”“连接排空”“连接终止”经常是三个不同选项，具体语义要在测试环境抓连接确认。只看到后端权重变为 0，不能推断旧 HTTP/2 连接已经迁移。
+
+#### 扩容后的验收不能只看四等分
+
+四个后端并不一定应该各占 25%。权重、可用区就近策略、客户端访问路径和请求成本都会改变合理比例。我会同时计算：
+
+```text
+请求份额_i = instance_i QPS / 总 QPS
+连接份额_i = instance_i 活跃连接 / 总活跃连接
+压力份额_i = instance_i CPU 或 inflight / 总压力
+```
+
+如果连接份额接近，但请求和 CPU 仍然倾斜，说明少量热连接承载了更多 Stream，继续调整 L4 算法作用有限。如果 QPS 接近而 CPU 倾斜，应继续按 verb、resource、响应大小、Admission 和 GC 查请求成本。
+
+### 4.6 缩容比扩容更需要排空
+
+缩容时先把目标实例从新流量选择中移除，再等待短请求结束，最后执行 API Server 的优雅关闭。长 Watch 不会因为权重为 0 自动消失，需要给出最大排空时间，并验证客户端按 resourceVersion 恢复。
+
+如果使用 stacked etcd，移除控制平面节点还涉及 etcd 成员与多数派，必须作为独立变更处理。不要把“从 LB 删除后端”“停止 kube-apiserver”和“移除 etcd 成员”合并成一个不可回滚脚本。
+
+## 5. 负载均衡策略应该怎么选
+
+算法选择必须先写清层级。在 TCP 模式中，HAProxy 文档里的 round-robin、leastconn 和 source 选择的是新连接；在 HTTP 模式或专用 L7 Gateway 中，算法才可能按请求执行。[HAProxy Backend 算法](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/proxying-essentials/configuration-basics/backends/)
+
+| 策略 | 决策单位 | 适合场景 | 在 API Server 前的局限 |
+| --- | --- | --- | --- |
+| L4 round-robin | 新 TCP 连接轮询 | 后端同规格，连接持续时间和请求量相近 | 长连接建立后不再参与轮询；热连接仍会造成倾斜 |
+| L4 leastconn | 新连接给当前连接较少的后端 | Watch、gRPC 等长连接较多，连接寿命差异明显 | 连接数不代表 Stream 数、QPS 或请求成本 |
+| L4 source hash | 按源地址固定后端 | 明确要求连接亲和，且来源足够分散 | NAT、节点出口或少数控制器会形成热点；扩缩容映射也会变化 |
+| weighted round-robin | 按权重分配新连接或请求 | 后端规格不同、金丝雀或新实例慢启动 | L4 权重不影响已有连接；权重应来自实测容量 |
+| random / P2C | 随机取候选，再选较轻后端 | 后端较多，希望降低全量扫描和羊群效应 | 仍取决于“较轻”使用连接还是 active request 衡量 |
+| L7 round-robin | 每个新 HTTP 请求 | 同规格 API Server，先追求可解释和稳定 | 长 Watch 建立后仍长期占用选中的实例 |
+| L7 least-request | 选择 active request 较少的后端 | 普通请求耗时差异较大 | Watch 会长期计为 active request，应分流或单独建池验证 |
+| locality-aware | 优先同可用区，再跨区失败转移 | 多可用区、跨区时延或带宽成本明显 | 本地优先可能牺牲全局均衡，区域故障时要验证剩余容量 |
+
+Envoy 的 least-request 默认可使用两个随机候选再选择 active request 较少的后端，也就是 P2C；不同权重时还会把配置权重和 active request 组合计算。[Envoy Least Request](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancers) 这类算法适合短请求，但直接把 Kubernetes 长 Watch 与普通 GET 混在一个池里，active request 指标可能长期被 Watch 占据。
+
+我的默认选择是：
+
+- **三到五台同规格 API Server、保留 L4：** 从 leastconn 开始，同时启用 readiness 摘流、优雅退出和经过验证的低概率 GOAWAY；如果连接寿命高度一致，round-robin 也可以作为更容易解释的基线。
+- **来源集中在少数 NAT 或节点出口：** 避免 source hash。它会把“来源少”直接放大成“后端热点”。
+- **新旧规格混部：** 使用权重，但先用同一请求模型测出每种实例的可持续 QPS、P99 和 CPU，权重不要直接按核数比例填写。
+- **七层首次上线：** 同规格后端先用 weighted round-robin 和慢启动，确认 Watch 与 Upgrade 协议后，再评估 least-request 或资源路由。
+- **Watch 占比高：** 把长流和普通请求分别统计；采用 L7 时可为 Watch 设置独立路由或上游池，避免它干扰普通请求的 active-request 判断。
+- **跨可用区：** 优先本地只是第一层策略，还要保留跨区故障转移，并按单区失效后的剩余容量设计 APF、限流和后端权重。
+
+策略变更也需要金丝雀。L4 只能通过一小部分入口或客户端组验证；“给新后端 10% 权重”表示约 10% 的新连接选择机会，不等于 10% 请求。L7 可以更接近按请求的 10%，仍要把长 Watch 单独统计。
+
+## 6. 什么时候值得上七层 API Gateway
 
 下面四类需求同时出现两类以上，七层方案通常开始有价值：
 
@@ -156,7 +264,7 @@ L4 中使用 least-connections，通常比只按源地址哈希更适合长连�
 
 七层限流也不能替代 API Priority and Fairness。网关适合在入口丢弃明显异常或按租户执行粗粒度预算；APF 位于 API Server 内部，理解 Kubernetes 请求分类、seat 和公平排队，应继续承担过载时保护关键控制循环的职责。[API Priority and Fairness](https://kubernetes.io/docs/concepts/cluster-administration/flow-control/)
 
-## 6. 不要让网关自动重试掩盖不确定写入
+## 7. 不要让网关自动重试掩盖不确定写入
 
 控制面入口最危险的默认功能之一，是对所有 5xx 或连接断开自动重试。
 
@@ -170,7 +278,7 @@ L4 中使用 least-connections，通常比只按源地址哈希更适合长连�
 
 如果网关已把写请求送到 API Server，随后只是在返回途中断线，网关无法知道写入是否提交。再次发送可能造成重复操作、冲突或覆盖。安全做法是把失败如实交给客户端，同时保留 Audit-ID、请求 UID、上游实例和重试决策，便于确认最终状态。
 
-## 7. 不同方案的效果应该怎样比较
+## 8. 不同方案的效果应该怎样比较
 
 公开案例可用于判断方向，但不能拼成一张“谁快多少”的排行榜，因为硬件、对象规模、QPS、请求分布和测试版本并不相同。
 
@@ -185,9 +293,9 @@ L4 中使用 least-connections，通常比只按源地址哈希更适合长连�
 
 <img src="/assets/practices/kube-apiserver-load-balancing/rollout-and-evidence-gates.png" alt="kube-apiserver 入口优化的发布、故障和安全验收门禁" width="1200">
 
-## 8. 一套可执行的压测与故障验证
+## 9. 一套可执行的压测与故障验证
 
-### 8.1 负载模型
+### 9.1 负载模型
 
 不要只用 `kubectl get pods` 循环。至少建立四组独立负载：
 
@@ -200,7 +308,7 @@ L4 中使用 least-connections，通常比只按源地址哈希更适合长连�
 
 再叠加三种事件：滚动重启一个 API Server、强制摘除一个后端、恢复一个冷实例。成功标准不能只写“请求成功率 99.9%”，还要定义最大单实例负载偏差、P99 预算、429 上限、Watch 恢复时间和连接重新收敛时间。
 
-### 8.2 核心指标
+### 9.2 核心指标
 
 下面的 PromQL 用于建立视角，标签需按实际采集配置调整：
 
@@ -234,7 +342,7 @@ API Server 指标还要与 LB/网关指标放在同一时间轴：前后端连�
 
 阈值不应照搬。短时间偏差可以接受，关键是故障或发布后能在既定时间内重新收敛，而且尾延迟、错误率和 etcd 压力没有同步恶化。
 
-## 9. 生产落地顺序
+## 10. 生产落地顺序
 
 ### 阶段一：把现状量出来
 
@@ -252,7 +360,7 @@ API Server 指标还要与 LB/网关指标放在同一时间轴：前后端连�
 
 先迁移可回退、以读为主的自动化客户端，再迁移控制器和节点组件。每批都同时比较直连/L4 旁路和 L7 指标。网关规则、证书和身份映射应版本化，变更要有静态校验、金丝雀和自动回滚。
 
-## 10. 最终选型建议
+## 11. 最终选型建议
 
 | 集群情况 | 建议方案 |
 | --- | --- |
@@ -270,7 +378,11 @@ API Server 指标还要与 LB/网关指标放在同一时间轴：前后端连�
 - [kube-apiserver 参数参考](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/)
 - [Kubernetes API Server 健康检查](https://kubernetes.io/docs/reference/using-api/health-checks/)
 - [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
+- [kubeadm 高可用控制面](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/)
 - [API Priority and Fairness](https://kubernetes.io/docs/concepts/cluster-administration/flow-control/)
+- [HAProxy Backend 算法](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/proxying-essentials/configuration-basics/backends/)
+- [HAProxy Runtime API](https://www.haproxy.com/documentation/haproxy-runtime-api/)
+- [Envoy Load Balancing](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancers)
 - [KubeGateway](https://github.com/kubewharf/kubegateway)
 - [KubeGateway: A customized seven-layer Load Balancer for kube-apiserver](https://www.cncf.io/blog/2023/01/26/kubegateway-a-customized-seven-layer-load-balancer-for-kube-apiserver/)
 - [阿里万节点 Kubernetes 控制面实践](https://developer.aliyun.com/article/720966)
