@@ -1,6 +1,6 @@
 ---
 title: 万节点 Kubernetes 集群优化实战：控制面、etcd、调度与网络
-description: 从社区大规模集群案例出发，拆解万节点 Kubernetes 的容量模型、etcd 优化、API 治理、调度网络和规模验证方法
+description: 结合阿里、字节与海外公开案例，拆解万节点 Kubernetes 的控制面、etcd、调度、网络、运维风控和规模验证方法
 status: stable
 last_reviewed: 2026-09-18
 ---
@@ -70,7 +70,98 @@ AWS EKS 的 Ultra-Scale 能力达到 10 万节点，但它对 Kubernetes 对象�
 
 这些案例放在一起，我得到的判断是：**先确认超大集群能减少多少真实碎片，再决定是否承担更大的恢复单元。** 如果收益只来自“集群数字更大”，多集群通常更稳妥。
 
-## 3. 先给控制面建立服务目标
+## 3. 从阿里和字节的公开实践中提炼运行经验
+
+国际案例说明了超大集群可以做到多大，阿里和字节的分享则更接近日常运行：控制面滚动升级后为何一台 API Server 被打满、Controller 主备切换为何仍要几分钟、一个 DaemonSet Agent 为什么能拖垮整个集群、离线任务进入后元数据压力为什么会突然放大。
+
+这里需要先说明版本边界。阿里的万节点控制面文章来自 2019 年，部分改进后来已经进入 Kubernetes 上游；字节的 2 万节点分享来自 2024 年，其中 KubeGateway、KubeBrain 和 Gödel Scheduler 属于深度定制方案。我的做法不是复制当年的 patch，而是把它们还原成今天仍然成立的问题，再选择当前版本能够提供的实现。
+
+### 3.1 压测要还原对象形态和重启过程
+
+阿里在万节点规划中使用 1 万 Node、20 万 Pod、100 万对象作为目标模型，并用 Kubemark 模拟 1 万 kubelet。最初测试中，Pod 调度延迟达到 10 秒量级，同时出现 etcd 读写延迟、Pod/Node 查询可能导致后端 OOM、Controller 重启恢复数分钟和调度吞吐不足等问题。[阿里巴巴万级 Kubernetes 控制面优化](https://developer.aliyun.com/article/719079)
+
+这组数字的价值不在于提供一份固定规格，而在于提醒我：**节点、Pod 和对象必须分别建模。** 一万个几乎空闲的模拟节点，无法代表一万个运行大量 CRD、Webhook 和 Agent 的生产节点。我的规模测试会拆成三张负载画像：
+
+| 画像 | 要还原的内容 | 重点证据 |
+| --- | --- | --- |
+| 稳态对象 | Node、Pod、Lease、Service、EndpointSlice、Secret 与主要 CRD 的数量和大小 | API/etcd 内存、LIST 大小、Watch 事件率 |
+| 业务变化 | 发布、弹性、Job 批量创建、status 更新、Event 和删除 | 写 QPS、调度吞吐、队列积压、Webhook 延迟 |
+| 冷启动与恢复 | API Server、Controller、Scheduler、Agent 和节点批量重连 | LIST 风暴、缓存同步时间、峰值内存、恢复到 SLO 的时间 |
+
+蚂蚁的分享进一步指出，标准压测容易漏掉生产扩展：一个不规范的 DaemonSet 客户端或者慢 Webhook，在万节点环境中足以把 API Server 推向崩溃。[蚂蚁金服万节点集群实践](https://developer.aliyun.com/article/710825) 因此，压测包必须包含生产中的 DaemonSet、Operator、Webhook、审计和监控链路；只测原生控制面最多证明上游基线能够运行。
+
+### 3.2 四层负载均衡解决不了长连接倾斜
+
+阿里和字节都遇到了多实例 API Server 负载不均衡。client-go 会复用 HTTP/2/TLS 长连接；API Server 滚动升级或单实例重启后，先恢复的实例可能承接大量长期连接，后恢复的实例长时间接不到相同比例的请求。普通四层 LB 只在建连时选择后端，连接不重建，增加 LB 本身不会重新分配已有流量。
+
+我会先从四组指标确认问题，再决定是否引入网关：
+
+1. 分实例比较请求率、CPU、内存、inflight 和 Watch 数；
+2. 比较前端连接数、HTTP/2 stream 数和客户端来源；
+3. 把不均衡开始时间与 API Server rollout、故障和证书更新对齐；
+4. 对照业务 verb/resource，区分少量大 LIST 与普通请求数量倾斜。
+
+短期手段是采用先扩后缩的 API Server 发布策略，让新实例 Ready 并完成缓存预热后再下线旧实例，同时限制一次退出的实例数。长期需要请求级均衡时，可以评估七层 Kubernetes API Gateway。字节开源的 [KubeGateway](https://github.com/kubewharf/kubegateway) 能解析 user、verb、resource 等请求属性，在 HTTP 请求层做路由、限流、降级和上游健康检查，并通过 HTTP/2 多路复用收敛上游连接。[字节 2 万节点 GOPS 分享](https://www.fxbaogao.com/detail/4642533)
+
+API Gateway 进入控制面后也成为新的关键依赖。上线门禁必须覆盖长 Watch、exec/log 流式连接、证书与 Impersonation、审计身份、Gateway 故障旁路和升级中的连接迁移。若只为修复一次连接倾斜就直接引入复杂网关，新增风险可能大于收益。
+
+### 3.3 HA 进程就绪，不代表控制循环已经就绪
+
+Controller 或 Scheduler 备实例虽然处于运行状态，Informer cache 可能尚未同步；主实例故障后再由冷备执行全量 LIST 和反序列化，切换仍会持续数分钟，并在最脆弱的时候给 API Server 和 etcd 增加负载。
+
+阿里的方案是提前启动备实例的 Informer，主实例升级时主动释放 Leader Lease，让已经预热的备实例接管。其分享报告升级切换中断降到 2 秒以内，异常故障则主要等待默认 15 秒的 Leader Lease 到期；这是当时目标环境的结果，不能直接当成其他集群的 SLO。[阿里 Controller failover 实践](https://developer.aliyun.com/article/719079)
+
+在自己的平台里，我会把控制器 readiness 拆成四项：进程存活、关键 Informer `HasSynced`、本地 resourceVersion 接近 API Server 进度、取得领导权后代表性队列能够推进。热备会增加 Watch 和内存，因此只给关键控制器使用，并把主备副本的重复缓存计入容量。
+
+API Server 也需要类似门禁。字节分享过 Cache NotReady 时拒绝大 LIST，以及把满足条件的读取引导到 cache，目标是避免冷实例一边初始化缓存，一边接受新的全量读取。当前版本还可以结合 WatchList、consistent reads from cache 和 etcd RangeStream，但核心规则没有变化：**缓存完成同步之前，不让实例承接最昂贵的流量。**
+
+### 3.4 元数据存储的演进顺序比最终架构更有价值
+
+阿里的 etcd 方案经历了外部存储、按资源拆分多个 etcd、再到定位 bbolt page 分配问题的多轮演进。第一版引入 Tair 提升容量，却增加了运维复杂度并改变一致性风险；后续才通过资源路由和底层存储优化继续推进。这个过程提醒我，替换存储后端会把“容量问题”扩展成“一致性、Watch、备份和升级问题”。
+
+字节在离线业务进入后观察到 10 到 20 倍的元数据存储压力，随后构建 KubeBrain，把 Kubernetes 所需的 MVCC、CAS 和 Watch 语义适配到 ByteKV 等分布式 KV 后端；公开案例报告过 1 万节点、40 万以上容器以及 5000 容器 10 秒内 Gang 拉起的结果。[字节融合调度实践](https://developer.volcengine.com/articles/7317093690483638281) [KubeBrain](https://github.com/kubewharf/kubebrain) 也明确把水平扩展作为目标。
+
+我不会把这理解成“万节点必须替换 etcd”。实施顺序仍然是：治理写入和大对象 → 专用硬件 → cache/list/watch 优化 → Event 或热点资源拆分 → 评估自定义存储。走到最后一步时，验收范围至少包括：
+
+- 线性一致读、CAS 与事务边界；
+- resourceVersion 单调性、Watch 顺序、断线续传与历史压缩；
+- TTL/Lease、分页、大对象和慢消费者；
+- 故障注入、网络分区、主从切换与不确定写入结果；
+- 快照、跨版本升级、回滚、数据校验与 Kubernetes 全链路恢复。
+
+KubeBrain 仓库公开的 TODO 仍列有一致性关键场景和 Jepsen 测试等工作。这个信息很重要：开源项目展示了架构方向，不等于任何版本都可以直接替换生产 etcd。选型时要核对正在使用的 commit、后端和已经完成的测试，不能只引用分享中的峰值数字。
+
+### 3.5 调度吞吐来自减少重复工作
+
+阿里分享的两个思路是把相似 Pending Pod 归为等价类，复用过滤和打分结果；候选节点很多时采用松弛随机化，找到足够可行节点后停止继续扫描。字节开源的 [Gödel Scheduler](https://github.com/kubewharf/godel-scheduler) 则使用乐观并发优化过滤与打分，并引入 Unit/Pod 两层语义处理批任务和 Gang Scheduling。
+
+这些实践让我不会先把 scheduler 并发参数调大。更有效的顺序通常是：识别相同约束的批量 Pod → 缓存或复用重复计算 → 减少无关事件导致的重新入队 → 对简单任务使用更轻的 profile → 在可接受的放置质量下减少候选节点 → 最后调整并发。每一步都要同时看吞吐和碎片，防止短期调得快、长期把可用大块资源切碎。
+
+### 3.6 超大集群需要能够阻止正确程序做出错误规模的动作
+
+阿里 ASI 的运维复盘披露过几个很有代表性的事故：正常 Kubelet 升级导致近千业务 Pod 重建，错误判断触发 300 多节点业务驱逐，非标操作批量删除服务。后续方案对 Pod、Service、Node 等关键资源按 1 分钟、5 分钟、1 小时和 24 小时设置操作令牌，结合 UserAgent 限流和 APF，并用持续探针参与发布阻断。[阿里 ASI 全托管运维实践](https://developer.aliyun.com/article/847757)
+
+这类经验比“多部署几套监控”更接近万节点稳定性的核心。我的自动化工作流会同时设置：
+
+- **对象预算**：限制一次和一个窗口内可删除、驱逐、更新的 Node/Pod/Service 数；
+- **故障域预算**：分别约束集群、可用区、节点池和同一业务副本组；
+- **调用方预算**：按 ServiceAccount/UserAgent、verb 和 resource 统计并限流；
+- **推进门禁**：业务探针、控制面指标和观测完整性全部满足才扩大批次；
+- **独立刹车**：异常扩大、指标失联或执行状态不明时停止新增动作；
+- **有状态确认**：数据库、中间件、Flink 和训练任务把可中断条件提供给平台，自愈系统不自行猜测。
+
+我会把这些经验落到排障表，而不是保留成架构名词：
+
+| 现场表现 | 容易做出的第一反应 | 我先核对的证据 | 优先动作 |
+| --- | --- | --- | --- |
+| 一台 API Server 满载，其他实例很空 | 再加实例 | 分实例连接、stream、请求率和 rollout 时间线 | 先扩后缩、连接/请求级重平衡，再评估七层网关 |
+| 控制面重启后持续 OOM | 继续加内存 | Cache ready、全量 LIST、resourceVersion、客户端重试 | 冷启动限流、缓存同步门禁、错峰重启 |
+| Controller 切换要几分钟 | 缩短 Leader Lease | Informer 同步与反序列化时间、队列恢复 | 关键控制器热备预热，随后再调 Lease |
+| etcd DB 与写延迟持续增长 | 扩大 quota | 写入 Top N、对象大小、历史与碎片率 | 治理 status/Event，compact/defrag，必要时按资源拆分 |
+| Scheduler 吞吐不足 | 提高并发 | 插件耗时、重复约束、无效重试和碎片 | 复用计算、分 profile、减少候选节点 |
+| 自愈一次影响数百节点 | 增加判断规则 | 动作窗口、故障域、业务副本和停止条件 | 多层操作预算、探针门禁与独立熔断 |
+
+## 4. 先给控制面建立服务目标
 
 优化需要围绕用户可感知的结果。只看 CPU 利用率，很容易把排队、拒绝和客户端重试遗漏掉。我会把控制面目标分成四层：
 
@@ -83,11 +174,11 @@ AWS EKS 的 Ultra-Scale 能力达到 10 万节点，但它对 Kubernetes 对象�
 
 规模压测前先固定版本、特性门和客户端配置，保存 API Server、scheduler、controller-manager、etcd、CNI、CSI、DNS 以及关键控制器的资源与参数。否则一次测试结论无法解释，也无法用于升级回归。
 
-## 4. API Server：先治理客户端，再增加实例
+## 5. API Server：先治理客户端，再增加实例
 
 增加 API Server 实例能够分担无状态请求和 Watch 连接，但无法消除写入最终落到 etcd、每个控制器重复 Watch、Webhook 串行阻塞等问题。我会按以下顺序处理。
 
-### 4.1 让 LIST/WATCH 具备边界
+### 5.1 让 LIST/WATCH 具备边界
 
 - 控制器使用共享 informer/cache，避免每次协调都直接 LIST；仅缓存需要的资源、Namespace 和字段。
 - WATCH 断线时使用退避，并允许 `BOOKMARK`；不要让所有客户端在同一秒重新全量 LIST。
@@ -96,7 +187,7 @@ AWS EKS 的 Ultra-Scale 能力达到 10 万节点，但它对 Kubernetes 对象�
 
 `controller-runtime` 的缓存会隐藏 LIST/WATCH 成本。一个 Reconcile 中看似普通的 `List()`，如果没有限定范围，可能把某类资源全部装进进程内存。控制器副本扩展前，应统计每个副本缓存的对象数、内存和 Watch 流量，而不是只看 Reconcile 并发。[Controller-runtime cache 说明](https://kubernetes.io/blog/2026/07/29/controller-runtime-cache-explained/)
 
-### 4.2 用 APF 保护关键控制循环
+### 5.2 用 APF 保护关键控制循环
 
 API Priority and Fairness 可以按用户、ServiceAccount、verb、resource 和 Namespace 分类请求，隔离并发份额并对部分请求排队。它适合防止批量 LIST、平台脚本或异常控制器挤占 kubelet 与核心控制器请求，但配置必须经过命中验证和压测。[APF 官方文档](https://kubernetes.io/docs/concepts/cluster-administration/flow-control/)
 
@@ -104,23 +195,23 @@ API Priority and Fairness 可以按用户、ServiceAccount、verb、resource 和
 
 APF 不会降低一个巨大 LIST 自身的成本，也不会保护已经进入 etcd 的错误写入。限流后客户端如果无退避地重试，还可能制造更大流量，因此客户端请求预算与服务端策略要一起改。
 
-### 4.3 缩短准入链路
+### 5.3 缩短准入链路
 
 准入 Webhook 每次被调用都位于 API 写入关键路径。应缩小匹配资源和 Namespace，使用 `matchConditions` 排除无需处理的对象，设置短而明确的超时，提供多副本和反亲和，并避免 Webhook 修改自己依赖的对象形成循环。简单校验优先考虑 CEL 等内置能力。[Admission Webhook 最佳实践](https://kubernetes.io/docs/concepts/cluster-administration/admission-webhooks-good-practices/)
 
 `failurePolicy` 不能统一设成 `Ignore` 或 `Fail`：安全边界通常需要失败关闭，可用性辅助能力可能允许失败放行。决定应写进威胁模型和故障演练，而不是在事故时临时切换。
 
-### 4.4 把节点加入与组件重启做成批次
+### 5.4 把节点加入与组件重启做成批次
 
 节点启动会产生注册、Lease、状态、DaemonSet Pod、CNI/CSI 和监控 Agent 等一串请求。一次投入数百或数千节点，会让各控制循环同时加速。加入过程需要固定每批节点数、批间观察时间和自动停止条件；DaemonSet rollout、控制器重启和节点扩容也应避免叠在同一窗口。
 
-## 5. etcd：优化的是写入路径和恢复能力
+## 6. etcd：优化的是写入路径和恢复能力
 
 etcd 是 Kubernetes 一致状态的底座。一次写入要进入 WAL、通过 Raft 多数派提交，再应用到后端存储。磁盘抖动、成员间网络延迟、CPU 饥饿或大范围读取都可能表现成 API Server 尾延迟。我的优化原则是先减负，再保证硬件，随后维护数据库，最后才考虑拆分。
 
 <img src="/assets/practices/large-scale-kubernetes-optimization/etcd-optimization-loop.png" alt="etcd 优化顺序：减少写放大、隔离资源、压缩和碎片整理、恢复演练、按资源拆分" width="1200">
 
-### 5.1 先找出谁在写
+### 6.1 先找出谁在写
 
 扩大磁盘和 quota 前，先从 API Server 指标与审计日志按 `resource`、`verb`、`user` 和 `userAgent` 统计写入。常见问题包括：
 
@@ -133,7 +224,7 @@ etcd 是 Kubernetes 一致状态的底座。一次写入要进入 WAL、通过 R
 
 处理这些源头通常比调整 etcd 参数更有效。状态更新应比较新旧值，只在变化时写入；高频时序数据进入监控系统；历史记录放到对象存储或数据库；Event 设置符合排障窗口的 TTL；CRD 把频繁变化和长期配置拆开。
 
-### 5.2 给 etcd 独立、可预测的资源
+### 6.2 给 etcd 独立、可预测的资源
 
 etcd 对持久化延迟非常敏感。我会优先使用专用本地 NVMe/SSD，避免与日志、容器镜像和高吞吐业务共享 I/O；为进程保留 CPU 和内存，禁止 swap；成员间网络选择低延迟、低丢包路径，并让所有成员使用一致的 heartbeat 与 election 参数。[etcd tuning](https://etcd.io/docs/v3.6/tuning/)
 
@@ -154,13 +245,13 @@ heartbeat 不应靠猜。etcd 建议按成员间 RTT 设置为约 0.5 到 1.5 �
 
 etcd 3.6 把 `snapshot-count` 默认值从 10 万降到 1 万，以减少保留的 Raft 历史和内存；这也说明跨版本照搬旧配置会失去新版本的默认优化。[etcd 3.6 发布说明](https://etcd.io/blog/2025/announcing-etcd-3.6/) 所有成员应使用同一组 Raft 时间参数，配置文件、命令行和环境变量的优先级也要统一，避免实际生效值与配置仓库不一致。[etcd 3.6 配置参考](https://etcd.io/docs/v3.6/op-guide/configuration/)
 
-### 5.3 quota 不是容量扩展方案
+### 6.3 quota 不是容量扩展方案
 
 etcd 默认后端配额为 2 GiB，官方对常规环境建议的上限是 8 GiB，并会对更大的配置发出警告。这个数字不是 Kubernetes 万节点集群的统一答案；它提示的是 etcd 的设计目标仍是保存小规模、可放入内存的元数据。[etcd system limits](https://etcd.io/docs/v3.6/dev-guide/limit/)
 
 生产配额应根据对象增长率、compaction 周期、碎片率、快照和恢复时间实测，并预留处理峰值的余量。数据库逼近 quota 时直接扩大上限，可能把对象泄漏变成更慢的恢复。我的告警通常会先在容量占比进入观察区间时定位增长资源，再在更高区间限制非关键写入；阈值要按写入速度和处置时间推导，不照抄固定百分比。
 
-### 5.4 compaction 与 defragmentation 是两件事
+### 6.4 compaction 与 defragmentation 是两件事
 
 MVCC compaction 删除旧 revision 的逻辑历史，降低仍需要保留的历史范围；defragmentation 重建后端文件，才会把空洞空间返还给文件系统。只做 compaction，磁盘文件大小未必下降；只做 defrag，又无法治理历史版本持续增长。[etcd maintenance](https://etcd.io/docs/v3.6/op-guide/maintenance/)
 
@@ -174,7 +265,7 @@ MVCC compaction 删除旧 revision 的逻辑历史，降低仍需要保留的历
 
 在线 defrag 会阻塞目标成员的读写，不能用 CronJob 同时对全部成员执行。维护频率应由碎片增长率决定，而不是每天固定运行一次。
 
-### 5.5 先把 etcd 看板做完整
+### 6.5 先把 etcd 看板做完整
 
 以下指标名来自 etcd 的稳定 Prometheus 指标；具体发行版可能增加标签，查询前应先检查目标版本 `/metrics`。[etcd metrics](https://etcd.io/docs/v3.6/metrics/)
 
@@ -221,7 +312,7 @@ sum by (instance) (
 
 旧版 etcd FAQ 曾给出 WAL fsync P99 小于 10 ms、backend commit P99 小于 25 ms 的排障参考值，但硬件、版本和负载都在变化。我会把它们当成发现慢盘的起点，再以目标集群正常窗口的分位数和 API SLO 建立基线，而不是把两条数值写成不变的生产承诺。[etcd FAQ 的磁盘排障说明](https://etcd.io/docs/v3.5/faq/)
 
-### 5.6 什么时候拆分 etcd
+### 6.6 什么时候拆分 etcd
 
 Kubernetes API Server 支持通过 `--etcd-servers-overrides` 把指定 group/resource 路由到另一组 etcd。官方大集群指南首先建议考虑把 Event 存入单独的 etcd，因为 Event 频繁写入且业务恢复价值与声明式对象不同。[kube-apiserver 参数](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/#options)
 
@@ -235,7 +326,7 @@ Kubernetes API Server 支持通过 `--etcd-servers-overrides` 把指定 group/re
 
 AWS 的 10 万节点案例把资源类型分布到多个 etcd 集群，是定制控制面的结果。自建集群不能只复制“多套 etcd”这一层，而忽略路由、恢复和运维系统。
 
-### 5.7 备份成功不等于可以恢复
+### 6.7 备份成功不等于可以恢复
 
 快照至少要记录 revision、hash、大小、etcd 版本、加密配置和保存时间，并用 `etcdutl snapshot status` 做完整性检查。恢复演练要关闭或隔离 API Server 写入，使用匹配版本的工具恢复，再重启控制面并完成 API、控制器和业务验收。[etcd snapshot](https://etcd.io/docs/v3.6/tasks/operator/how-to-save-database/)
 
@@ -243,7 +334,7 @@ AWS 的 10 万节点案例把资源类型分布到多个 etcd 集群，是定制
 
 我会分别记录三个时间：得到可用快照需要多久、恢复出 API 需要多久、业务协调完成需要多久。只报告 `etcdutl restore` 命令耗时，无法说明集群 RTO。
 
-### 5.8 新版读取优化解决什么问题
+### 6.8 新版读取优化解决什么问题
 
 Kubernetes 1.37 配合 etcd 3.7 后，可以使用默认开启的 Beta 特性 `EtcdRangeStream`。传统 unary `Range` 要在 etcd 内存中先组装完整响应；RangeStream 按值大小自适应分块，并让 API Server 边接收边解码，降低大资源集合在 watch cache 初始化和直接 LIST 时的内存峰值。可通过下面的计数确认流式读取确实发生：[Kubernetes 1.37 RangeStream](https://kubernetes.io/blog/2026/09/01/kubernetes-v1-37-etcd-range-stream/)
 
@@ -253,7 +344,7 @@ sum(rate(etcd_request_duration_seconds_count{operation="listStream"}[5m]))
 
 RangeStream 改善大范围读取的内存行为，对高频 `status` 更新、Event、Lease、慢盘和 Raft 提交没有直接帮助。升级前仍需完成 etcd 版本兼容、回滚和规模测试；指标为零时，应检查 etcd 是否达到 3.7，以及 API Server 是否实际启用了对应 feature gate。
 
-## 6. 调度器：减少无意义计算，保留放置质量
+## 7. 调度器：减少无意义计算，保留放置质量
 
 调度瓶颈通常落在队列、过滤、打分、扩展点或外部调度组件之一。优化前先按插件看耗时和失败原因，特别关注拓扑、亲和性、卷绑定和自定义 extender。简单批处理和复杂在线服务可以使用不同 scheduler profile，减少不需要的插件。
 
@@ -269,7 +360,7 @@ RangeStream 改善大范围读取的内存行为，对高频 `status` 更新、E
 
 只在空集群测每秒调度量，会掩盖长期运行后的碎片。压测数据需要包含真实节点标签、污点、资源分布、卷与拓扑约束，并在 50% 到 80% 利用率区间重复测试。
 
-## 7. 网络与 DNS：控制对象传播，不只看数据面带宽
+## 8. 网络与 DNS：控制对象传播，不只看数据面带宽
 
 超大集群中的网络问题分两类：业务包是否能转发，以及网络控制对象能否及时收敛。Service、EndpointSlice、NetworkPolicy、路由和 DNS 记录的更新速度都要测量。
 
@@ -281,7 +372,7 @@ RangeStream 改善大范围读取的内存行为，对高频 `status` 更新、E
 
 DaemonSet 是常见放大器。10 个每节点 Agent 在一万节点上就是 10 万个 Pod；如果每个 Agent 都直接轮询 API Server，控制面压力会随节点数一起增长。优先让 Agent 读取节点本地数据，通过分层聚合器汇总，并对上报频率和失败重试设预算。
 
-## 8. 用分层测试接近万节点
+## 9. 用分层测试接近万节点
 
 生产规模不能靠一次满载测试证明。测试体系需要从控制面模拟逐步走向真实节点：
 
@@ -305,7 +396,7 @@ DaemonSet 是常见放大器。10 个每节点 Agent 在一万节点上就是 10
 
 Cloudflare 曾使用 KubeVirt 创建包含数百节点和数千 Pod 的虚拟 Kubernetes 集群来发现只在规模下出现的问题。这种方法很适合 CI 中的控制面回归，但仍需要真实网络和节点测试补齐边界。[Cloudflare KubeVirt 规模测试](https://blog.cloudflare.com/leveraging-kubernetes-virtual-machines-with-kubevirt/)
 
-## 9. 一套可执行的扩容节奏
+## 10. 一套可执行的扩容节奏
 
 我会把目标规模拆成“容量门禁”，而不是预先承诺某天直接达到一万节点。以下比例是方法示例，不是通用生产参数：
 
@@ -319,7 +410,7 @@ Cloudflare 曾使用 KubeVirt 创建包含数百节点和数千 Pod 的虚拟 Ku
 
 每次推进只改变一个主要变量，并保留配置、代码版本、原始指标和失败样本。规模实验中的失败不是需要删除的噪声，而是下一阶段门禁的来源。
 
-## 10. 生产检查单
+## 11. 生产检查单
 
 ### 架构
 
@@ -355,7 +446,7 @@ Cloudflare 曾使用 KubeVirt 创建包含数百节点和数千 Pod 的虚拟 Ku
 - [ ] 模拟节点结论没有替代真实 kubelet、CNI 和 CSI 测试；
 - [ ] 稳态、变更、弹性、故障和恢复均有原始证据与停止条件。
 
-## 11. 我最终会怎么选
+## 12. 我最终会怎么选
 
 对于通用企业平台，我更愿意先把单集群控制在上游和自身持续验证的范围内，用多集群减少故障半径，再通过统一调度与容量视图解决碎片。对于 AI/HPC 场景，如果一台节点通常只运行一个大 Pod、调度约束相对稳定，而且拆集群会显著损失大规模作业的可用节点集合，我才会认真评估 5000 节点以上的单集群。
 
@@ -372,3 +463,11 @@ Cloudflare 曾使用 KubeVirt 创建包含数百节点和数千 Pod 的虚拟 Ku
 - [OpenAI：Scaling Kubernetes to 7,500 Nodes](https://openai.com/index/scaling-kubernetes-to-7500-nodes/)
 - [Uber：Migrating the Compute Platform to Kubernetes](https://www.uber.com/us/en/blog/migrating-ubers-compute-platform-to-kubernetes-a-technical-journey/)
 - [AWS：Amazon EKS Ultra-Scale Clusters](https://aws.amazon.com/blogs/containers/under-the-hood-amazon-eks-ultra-scale-clusters/)
+- [阿里巴巴：万级规模 Kubernetes 控制面性能优化](https://developer.aliyun.com/article/719079)
+- [蚂蚁金服：从零到破万节点的 Kubernetes 集群实践](https://developer.aliyun.com/article/710825)
+- [阿里巴巴 ASI：超大规模 Kubernetes 全托管运维体系](https://developer.aliyun.com/article/847757)
+- [字节跳动：Kubernetes 集群 2 万以上节点性能优化分享](https://www.fxbaogao.com/detail/4642533)
+- [字节跳动：从混合部署到融合调度](https://developer.volcengine.com/articles/7317093690483638281)
+- [KubeWharf：KubeGateway](https://github.com/kubewharf/kubegateway)
+- [KubeWharf：KubeBrain](https://github.com/kubewharf/kubebrain)
+- [KubeWharf：Gödel Scheduler](https://github.com/kubewharf/godel-scheduler)

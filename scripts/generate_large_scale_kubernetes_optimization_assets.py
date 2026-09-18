@@ -54,6 +54,22 @@ def arrow(draw, start, end, color=MUTED, width=4):
     draw.polygon(points, fill=color)
 
 
+def edge_label(draw, center, value, color=MUTED):
+    """Place a compact label over an edge without colliding with the line."""
+    cx, cy = center
+    bbox = draw.textbbox((0, 0), value, font=font(13, True))
+    tw = bbox[2] - bbox[0]
+    dbox = (cx - tw / 2 - 8, cy - 12, cx + tw / 2 + 8, cy + 12)
+    draw.rounded_rectangle(dbox, 9, fill=BG)
+    text(draw, (cx, cy), value, 13, color, True, "mm")
+
+
+def double_arrow(draw, start, end, color=MUTED, width=4):
+    """Draw a bidirectional edge for request/response or watch flows."""
+    arrow(draw, start, end, color=color, width=width)
+    arrow(draw, end, start, color=color, width=width)
+
+
 def canvas(title, subtitle):
     img = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(img)
@@ -96,12 +112,17 @@ def pressure_model():
         "写放大、碎片与慢 Range 会累积",
         "增加成员不能增加写入容量",
     ], TEAL)
-    arrow(d, (330, 226), (446, 226))
-    arrow(d, (742, 226), (858, 226))
-    arrow(d, (600, 318), (600, 376))
-    arrow(d, (858, 279), (754, 424), color=ORANGE)
+    # Nodes and controllers only interact with etcd through kube-apiserver.
+    double_arrow(d, (330, 240), (446, 240), color=BLUE)
+    edge_label(d, (388, 210), "心跳 / Watch", BLUE)
+
+    double_arrow(d, (754, 240), (858, 240), color=ORANGE)
+    edge_label(d, (806, 210), "请求 / Watch", ORANGE)
+
+    double_arrow(d, (600, 318), (600, 376), color=TEAL)
+    edge_label(d, (666, 347), "读写 / 结果", TEAL)
     rounded(d, (52, 580, 1148, 640), fill="#EAF0FF", outline="#C7D5FF")
-    text(d, (600, 610), "容量模型 = 对象数量 × 变更频率 × Watch 扇出 × 单次请求成本 × 峰值系数", 23, BLUE, True, "mm")
+    text(d, (600, 610), "控制面压力 ≈ 对象数量 × 变更频率 × Watch 扇出 × 单次请求成本 × 峰值系数", 23, BLUE, True, "mm")
     img.save(OUT / "control-plane-pressure.png", quality=95)
 
 
@@ -146,9 +167,9 @@ def choice_model():
     for i, (name, detail1, detail2) in enumerate(gates):
         x = 76 + i * 268
         d.rounded_rectangle((x, 530, x + 244, 600), 12, fill="#F3F6FC", outline=LINE)
-        text(d, (x + 14, 541), name, 16, BLUE, True)
-        text(d, (x + 14, 565), detail1, 13, MUTED)
-        text(d, (x + 14, 584), detail2, 13, MUTED)
+        text(d, (x + 14, 540), name, 17, BLUE, True)
+        text(d, (x + 14, 565), detail1, 14, MUTED)
+        text(d, (x + 14, 585), detail2, 14, MUTED)
     img.save(OUT / "ten-thousand-node-choice.png", quality=95)
 
 
