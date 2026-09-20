@@ -19,6 +19,7 @@ last_reviewed: 2026-09-18
 - [数百个 Kubernetes 集群的稳定性建设](kubernetes-fleet-reliability.md)
 - [万节点 Kubernetes 集群优化实战：控制面、etcd、调度与网络](large-scale-kubernetes-optimization.md)
 - [Kube-apiserver 负载均衡实战：HTTP/2、TLS 终结与四层/七层选型](kube-apiserver-load-balancing.md)
+- [Koordinator Webhook 多副本证书竞态实战：从每秒 60 次 409 到共享 CA 收敛](koordinator-webhook-multireplica-cert-race.md)
 - [APF 隔离实战：零席位 Reject 为什么仍会放行](apf-isolation-case.md)
 
 ## 性能、成本与容量

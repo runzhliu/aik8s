@@ -168,6 +168,7 @@ nav = [
       {"数百个集群的稳定性建设" = "ai-k8s/practices/kubernetes-fleet-reliability.md"},
       {"万节点 Kubernetes 集群优化实战" = "ai-k8s/practices/large-scale-kubernetes-optimization.md"},
       {"Kube-apiserver 负载均衡实战" = "ai-k8s/practices/kube-apiserver-load-balancing.md"},
+      {"Koordinator Webhook 多副本证书竞态实战" = "ai-k8s/practices/koordinator-webhook-multireplica-cert-race.md"},
       {"APF 隔离、排队与恢复实测" = "ai-k8s/practices/apf-isolation-case.md"},
       {"国内外 GPU 云选型" = "ai-k8s/practices/cloud-gpu-selection.md"},
       {"国产 GPU/NPU 实践" = "ai-k8s/practices/domestic-accelerators.md"},

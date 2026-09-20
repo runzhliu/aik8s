@@ -34,5 +34,6 @@ vip/
 # Test plans are local working notes, never public documentation.
 /.local/test-plans/
 /.local/langgraph-langfuse-demo/
+/.local/koordinator-webhook-cert-race/
 **/*test-plan.md
 **/*benchmark-plan.md
