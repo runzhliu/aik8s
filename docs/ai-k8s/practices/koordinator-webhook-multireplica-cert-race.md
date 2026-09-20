@@ -31,7 +31,11 @@ last_reviewed: 2026-09-20
 | PUT 409 | 60.1 次/秒 | 应为 0 |
 | PUT 200 | 22.3 次/秒 | 稳定期也应接近 0 |
 
+<img src="/assets/practices/koordinator-webhook-cert-race/grafana-webhook-conflicts-sanitized.png" alt="共享 CA 切换前后 WebhookConfiguration 请求与 API Server 409 构成的真实 Grafana 曲线，内部标识已脱敏" width="1200">
+
 每秒 60 次 409 不是普通业务对象的偶发并发更新，而是多个控制器在争抢同一组集群级配置对象。继续增加控制器副本只会放大冲突。
+
+右图还回答了一个关键问题：这些 409 到底是不是普通控制器冲突。修复前，Webhook 配置 PUT 409 约占全部 API Server 409 的 98.5%；修复后 Webhook 409 归零，总 409 只剩约 0.36/s。异常冲突的来源和修复对象能够直接对应起来。
 
 下面是变更窗口内的真实 Grafana 曲线。API Server 总 QPS 从 1,071.1/s 降到 774.8/s，写请求从 501.0/s 降到 397.7/s，读请求从 570.1/s 降到 377.1/s。
 
@@ -187,6 +191,10 @@ openssl x509 -in cert.pem -noout -subject -issuer -dates
 | API 核心请求 P99 | 144.7 ms | 152.6 ms | 没有改善 |
 | API 5xx / 429 | 0 / 0 | 0 / 0 | 服务可用性保持稳定 |
 
+<img src="/assets/practices/koordinator-webhook-cert-race/grafana-apiserver-cpu-latency-sanitized.png" alt="共享 CA 切换前后 API Server CPU 与核心请求 P99 的真实 Grafana 曲线，内部标识已脱敏" width="1200">
+
+把 CPU 与 P99 放在一起看，可以避免只挑有利指标。API Server CPU 汇总下降了 20.3%，但核心请求 P99 从 144.7 ms 增至 152.6 ms。写放大确实消失了，控制面的其他延迟来源仍然存在。
+
 Pod 和配置层面的验收结果是：
 
 - 8/8 个副本 Ready，重启次数为 0；
@@ -198,7 +206,13 @@ Pod 和配置层面的验收结果是：
 
 ## 6. etcd 压力下降了，但还不能宣布问题解决
 
-删除写放大后，etcd CPU 和 Slow Apply 都有所回落：
+删除写放大后，etcd 成员汇总 Put 与 CPU 同时回落：
+
+<img src="/assets/practices/koordinator-webhook-cert-race/grafana-etcd-load-sanitized.png" alt="共享 CA 切换前后 etcd 成员汇总 Put 与 CPU 的真实 Grafana 曲线，内部标识已脱敏" width="1200">
+
+成员汇总 Put 从 1,775.3/s 降到 1,543.3/s，etcd CPU 从 4.38 核降到 3.55 核。两条曲线方向一致，但变化并非在切换点形成垂直断崖，因此只能说明压力在变更后回落，不能把全部降幅都归因于证书修复。
+
+Slow Apply 也有所回落：
 
 <img src="/assets/practices/koordinator-webhook-cert-race/grafana-etcd-slow-apply-sanitized.png" alt="共享 CA 切换前后 etcd Slow Apply 的真实 Grafana 曲线，内部标识已脱敏" width="1200">
 
