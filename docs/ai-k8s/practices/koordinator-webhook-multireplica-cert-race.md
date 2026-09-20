@@ -16,6 +16,10 @@ last_reviewed: 2026-09-20
 
 这次修复没有更换 Koordinator，也没有扩容 API Server 或 etcd。我们先预置一套共享证书，把证书 Writer 显式切换为 Secret 模式，再滚动更新 8 个副本。变更后，WebhookConfiguration 的 PUT 和 409 都降为 0，直接写放大被消除。
 
+这里有一个决定问题边界的环境背景：**这个集群没有为该 Webhook 调用链提供可由 API Server 使用的 Kubernetes Service 入口。** 标准 Kubernetes 部署通常在 `clientConfig.service` 中引用 Webhook Service，由集群内 Service 网络完成发现和转发；本环境受历史架构和网络路径限制，需要经过内部负载均衡组件访问 Webhook，因此配置了 `webhook_host`。这是一项环境适配，不是标准 Kubernetes Webhook 部署方式。
+
+问题也因此不能概括成“Koordinator Webhook 多副本一定会发生证书竞态”。更准确的触发条件是：非标准的外部 Host 访问路径、本次镜像对证书 Writer 的默认选择，以及多副本共同维护全局 `caBundle` 三者叠加。其他环境若使用标准 Service 路径、显式共享证书，或由唯一控制器维护 CA，不会自然复现这次问题。本文的通用价值在于排查方法：从异常 API 请求定位写入对象，再核对多副本证书、对象版本、Leader 边界和全局配置所有权。
+
 > 本文来自真实生产处理。集群名、域名、IP、实例名、账号和内部系统导航均已删除或替换；Grafana 图片保留原始曲线、坐标和时间关系，没有重绘数据。
 
 ## 1. 先看最有辨识度的指标
@@ -54,7 +58,9 @@ Koordinator 的 Webhook 不只提供 Admission HTTP 服务，还需要准备服�
 | `fs` | 每个 Pod 的本地文件系统 | 每个副本可能得到不同 CA |
 | `secret` | Kubernetes Secret | 所有副本读取同一份 CA 和服务端证书 |
 
-当部署配置了外部 Webhook Host，又没有显式指定 Writer 时，本次镜像选择了文件 Writer。8 个 Pod 的临时目录彼此隔离，于是每个副本都生成自己的 CA。与此同时，证书与 WebhookConfiguration 同步逻辑并不只在 Leader 上执行，各副本都尝试把自己的 CA 写入同一个全局对象。
+本次之所以配置外部 Webhook Host，是因为该环境无法让 API Server 通过标准 Kubernetes Service 路径访问 Webhook，只能借助内部负载均衡入口完成转发。`webhook_host` 解决的是这个特殊环境中的可达性问题；它不应被当作通用部署模板。
+
+在这一前提下，当部署配置了外部 Webhook Host，又没有显式指定 Writer 时，本次镜像选择了文件 Writer。8 个 Pod 的临时目录彼此隔离，于是每个副本都生成自己的 CA。与此同时，证书与 WebhookConfiguration 同步逻辑并不只在 Leader 上执行，各副本都尝试把自己的 CA 写入同一个全局对象。
 
 ```text
 koord-manager-1 ── CA-1 ─┐
@@ -72,7 +78,7 @@ koord-manager-8 ── CA-8 ─┘
 
 如果 Webhook 配置了 `failurePolicy: Ignore`，TLS 错误或调用失败时请求可能继续执行。这降低了 Webhook 故障阻塞业务的风险，却也意味着部分对象可能没有经过预期的变更或校验。Kubernetes 官方把 `Ignore` 定义为调用错误时放行，把 `Fail` 定义为调用错误时拒绝；两者都需要结合业务语义设计，而不是简单选择“可用性更高”的一项。[Dynamic Admission Control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) · [Admission Webhook Good Practices](https://kubernetes.io/docs/concepts/cluster-administration/admission-webhooks-good-practices/)
 
-需要强调的是，这个结论针对本次运行镜像和部署参数，不能据此认定所有 Koordinator 版本都会出现同样问题。当前社区代码仍展示了文件 Writer 与 Secret Writer 的选择逻辑，Secret Writer 会把证书保存在 Kubernetes Secret 中；实际处理时仍应核对自己镜像内的二进制、Helm Values 和源码版本。[Koordinator Webhook Controller 源码](https://github.com/koordinator-sh/koordinator/blob/main/pkg/webhook/util/controller/webhook_controller.go) · [Koordinator writer package](https://pkg.go.dev/github.com/koordinator-sh/koordinator/pkg/webhook/util/writer)
+需要强调的是，这个结论针对本次运行镜像、非标准访问路径和部署参数，不能据此认定所有 Koordinator 版本都会出现同样问题。当前社区代码仍展示了文件 Writer 与 Secret Writer 的选择逻辑，Secret Writer 会把证书保存在 Kubernetes Secret 中；实际处理时仍应核对自己镜像内的二进制、Helm Values 和源码版本。[Koordinator Webhook Controller 源码](https://github.com/koordinator-sh/koordinator/blob/main/pkg/webhook/util/controller/webhook_controller.go) · [Koordinator writer package](https://pkg.go.dev/github.com/koordinator-sh/koordinator/pkg/webhook/util/writer)
 
 ## 3. 定位时建立的证据链
 
