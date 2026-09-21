@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "model": "Qwen/Qwen-Image-2.1",
+  "hardware": "1x NVIDIA L20 48 GB per engine run",
+  "request": {
+    "width": 1024,
+    "height": 1024,
+    "steps": 40,
+    "warmup": 2,
+    "measured": 10
+  },
+  "results": [
+    {
+      "engine": "sglang",
+      "concurrency": 1,
+      "attempted": 10,
+      "succeeded": 10,
+      "failed": 0,
+      "wall_seconds": 257.98845538590103,
+      "images_per_minute": 2.3256854617874883,
+      "p50_seconds": 25.704999405890703,
+      "p90_seconds": 26.060996873304248,
+      "p95_seconds": 26.197195128537714,
+      "p99_seconds": 26.197195128537714
+    },
+    {
+      "engine": "sglang",
+      "concurrency": 2,
+      "attempted": 10,
+      "succeeded": 10,
+      "failed": 0,
+      "wall_seconds": 257.38594354037195,
+      "images_per_minute": 2.3311296325935054,
+      "p50_seconds": 51.475716361775994,
+      "p90_seconds": 51.52669960167259,
+      "p95_seconds": 51.58937951736152,
+      "p99_seconds": 51.58937951736152
+    },
+    {
+      "engine": "sglang",
+      "concurrency": 4,
+      "attempted": 10,
+      "succeeded": 10,
+      "failed": 0,
+      "wall_seconds": 257.6011070990935,
+      "images_per_minute": 2.3291825363514187,
+      "p50_seconds": 102.99457235168666,
+      "p90_seconds": 103.11617371626198,
+      "p95_seconds": 103.12712186295539,
+      "p99_seconds": 103.12712186295539
+    },
+    {
+      "engine": "vllm-omni",
+      "concurrency": 1,
+      "attempted": 10,
+      "succeeded": 10,
+      "failed": 0,
+      "wall_seconds": 297.6375376461074,
+      "images_per_minute": 2.0158747607749774,
+      "p50_seconds": 29.253639237955213,
+      "p90_seconds": 30.816652281209826,
+      "p95_seconds": 30.862877930514514,
+      "p99_seconds": 30.862877930514514
+    },
+    {
+      "engine": "vllm-omni",
+      "concurrency": 2,
+      "attempted": 10,
+      "succeeded": 10,
+      "failed": 0,
+      "wall_seconds": 292.10836005583405,
+      "images_per_minute": 2.0540322772183415,
+      "p50_seconds": 58.34292608872056,
+      "p90_seconds": 58.437091778963804,
+      "p95_seconds": 58.54691310226917,
+      "p99_seconds": 58.54691310226917
+    },
+    {
+      "engine": "vllm-omni",
+      "concurrency": 4,
+      "attempted": 10,
+      "succeeded": 10,
+      "failed": 0,
+      "wall_seconds": 292.02623662073165,
+      "images_per_minute": 2.054609910887043,
+      "p50_seconds": 116.78517453372478,
+      "p90_seconds": 116.82407796289772,
+      "p95_seconds": 116.92202673386782,
+      "p99_seconds": 116.92202673386782
+    }
+  ],
+  "resource_peaks": {
+    "sglang": {
+      "gpu_util_percent": 100,
+      "framebuffer_gb": 32.8,
+      "power_w": 351,
+      "temperature_c": 79
+    },
+    "vllm-omni": {
+      "gpu_util_percent": 100,
+      "framebuffer_gb": 40.4,
+      "power_w": 355,
+      "temperature_c": 78
+    }
+  },
+  "source_summary_sha256": [
+    {
+      "engine": "sglang",
+      "case": "1024-c1",
+      "sha256": "4d4f4e9df96a21d925f5d26e64c97fdaee7376fa1d34cb4ff8075d5b7d4bda09"
+    },
+    {
+      "engine": "sglang",
+      "case": "1024-c2",
+      "sha256": "5b54b5497f4d535072385b417c3f28c9a9d84d82ae9c81f1f348f503d8934d7e"
+    },
+    {
+      "engine": "sglang",
+      "case": "1024-c4",
+      "sha256": "f0ce80447dd6c85f0c7fe53b2ba9c066cd725cf32660e8a16eacc2eca7ca7852"
+    },
+    {
+      "engine": "vllm-omni",
+      "case": "1024-c1",
+      "sha256": "52c8626e947c1cfe678703b030b6a98bff5ba678bf3382666f521936659dff25"
+    },
+    {
+      "engine": "vllm-omni",
+      "case": "1024-c2",
+      "sha256": "391f9a7d60714075637d173f4ea4c589b26b78eb222400aae2364fdc42035ef2"
+    },
+    {
+      "engine": "vllm-omni",
+      "case": "1024-c4",
+      "sha256": "d1bf943c2af06f9cd7c1d8e8c907083960e4f4e73e774b38479720a59ebb79df"
+    }
+  ]
+}

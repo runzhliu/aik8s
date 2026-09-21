@@ -140,6 +140,7 @@ nav = [
       {"MiniMax-M3：部署故障与修复" = "ai-k8s/practices/minimax-m3-h20-deployment-fixes.md"},
       {"MiniMax H3：H20-3e 音视频实测" = "ai-k8s/practices/minimax-h3-h20-benchmark.md"},
       {"MiniMax-Music3 + 大模型作词" = "ai-k8s/practices/minimax-music3-sglang-omni.md"},
+      {"Qwen-Image-2.1：单卡 L20 双引擎实测" = "ai-k8s/practices/qwen-image21-l20-benchmark.md"},
       {"Qwen3.8-2.4T-A95B-FP8 Day 0：32×H20-3e 实测" = "ai-k8s/practices/qwen38-a95b-h20-day0.md"},
       {"Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录" = "ai-k8s/practices/qwen38-27b-day0.md"},
       {"GLM-5.2 FP8 H20 AIBrix + vLLM 实测" = "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"},

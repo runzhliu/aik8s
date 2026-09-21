@@ -24,6 +24,7 @@ last_reviewed: 2026-09-18
 
 ## 性能、成本与容量
 
+- [Qwen-Image-2.1：单卡 L20 的 SGLang 与 vLLM-Omni 实测](qwen-image21-l20-benchmark.md)
 - [Qwen3.8-2.4T-A95B-FP8 Day 0：32×H20-3e 的 SGLang 部署与压测](qwen38-a95b-h20-day0.md)
 - [MiniMax-M3：八卡 H20 上的 SGLang 与 vLLM 实测](minimax-m3-h20-benchmark.md)
 - [MiniMax H3 H20-3e 实测：完整音视频生成、双引擎与持久化验收](minimax-h3-h20-benchmark.md)
