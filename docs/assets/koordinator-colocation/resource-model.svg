@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">混部资源模型</title>
+  <desc id="desc">在线业务申请量、预测保留、实际使用和可借给批任务的资源关系</desc>
+  <defs>
+    <linearGradient id="reclaim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ede9fe"/><stop offset="1" stop-color="#f5f3ff"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#334155" flood-opacity="0.10"/></filter>
+    <style>
+      text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}
+      .muted{fill:#6b7690}.small{font-size:18px}.label{font-size:20px;font-weight:600}.card{fill:#fff;stroke:#d8dfec;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1200" height="675" fill="#f7f9fd"/>
+  <text x="64" y="66" font-size="34" font-weight="700">混部不是把“空闲”全部借出去</text>
+  <text x="64" y="100" class="muted" font-size="18">资源回收 = 真实使用之上的安全预测，再加一条随时可退让的批任务通道</text>
+
+  <g filter="url(#shadow)"><rect x="56" y="130" width="750" height="480" rx="20" class="card"/></g>
+  <line x1="112" y1="190" x2="112" y2="544" stroke="#aeb9cc" stroke-width="1.5"/>
+  <line x1="112" y1="544" x2="760" y2="544" stroke="#aeb9cc" stroke-width="1.5"/>
+  <g class="muted small">
+    <text x="75" y="548">0</text><text x="69" y="462">25%</text><text x="69" y="376">50%</text><text x="69" y="290">75%</text><text x="58" y="202">100%</text>
+    <text x="115" y="579">00:00</text><text x="303" y="579">06:00</text><text x="491" y="579">12:00</text><text x="679" y="579">18:00</text>
+  </g>
+  <g stroke="#e8ecf3" stroke-width="1">
+    <line x1="112" y1="458" x2="760" y2="458"/><line x1="112" y1="372" x2="760" y2="372"/><line x1="112" y1="286" x2="760" y2="286"/><line x1="112" y1="200" x2="760" y2="200"/>
+  </g>
+  <line x1="112" y1="200" x2="760" y2="200" stroke="#77839a" stroke-width="3" stroke-dasharray="10 8"/>
+  <path d="M112 361 C180 350 220 300 274 322 S365 398 420 354 S511 270 568 306 S664 397 760 339 L760 200 L112 200 Z" fill="url(#reclaim)"/>
+  <path d="M112 361 C180 350 220 300 274 322 S365 398 420 354 S511 270 568 306 S664 397 760 339" fill="none" stroke="#7656d6" stroke-width="4"/>
+  <path d="M112 433 C160 420 190 377 234 402 S313 470 356 440 S415 375 462 418 S531 456 574 405 S647 358 688 409 S731 452 760 421" fill="none" stroke="#1266e3" stroke-width="4"/>
+  <path d="M112 544 L112 433 C160 420 190 377 234 402 S313 470 356 440 S415 375 462 418 S531 456 574 405 S647 358 688 409 S731 452 760 421 L760 544 Z" fill="#dceaff" opacity="0.9"/>
+  <g class="small">
+    <line x1="138" y1="164" x2="176" y2="164" stroke="#77839a" stroke-width="3" stroke-dasharray="8 6"/><text x="186" y="170">在线申请 / Limit</text>
+    <line x1="342" y1="164" x2="380" y2="164" stroke="#7656d6" stroke-width="4"/><text x="390" y="170">预测保留 / Reservation</text>
+    <line x1="630" y1="164" x2="668" y2="164" stroke="#1266e3" stroke-width="4"/><text x="678" y="170">实际使用</text>
+  </g>
+  <rect x="532" y="225" width="190" height="54" rx="12" fill="#fff" stroke="#cfc5f6"/>
+  <text x="551" y="249" class="label" fill="#6548c7">可借资源</text><text x="551" y="270" class="muted" font-size="15">预测保留与申请量之间</text>
+  <rect x="500" y="470" width="220" height="46" rx="12" fill="#fff" stroke="#bfd6fb"/>
+  <text x="520" y="499" class="label" fill="#1266e3">在线业务真实使用</text>
+
+  <g filter="url(#shadow)"><rect x="838" y="130" width="306" height="480" rx="20" class="card"/></g>
+  <text x="872" y="179" font-size="24" font-weight="700">资源借还的三道约束</text>
+  <g>
+    <circle cx="886" cy="239" r="22" fill="#e8f1ff"/><text x="879" y="247" font-size="22" font-weight="700" fill="#1266e3">1</text>
+    <text x="924" y="232" class="label">预测留余量</text><text x="924" y="260" class="muted small">不能把 Request − Usage</text><text x="924" y="284" class="muted small">直接视为可售容量</text>
+  </g>
+  <g>
+    <circle cx="886" cy="355" r="22" fill="#f0ebff"/><text x="879" y="363" font-size="22" font-weight="700" fill="#7656d6">2</text>
+    <text x="924" y="348" class="label">借用方可退让</text><text x="924" y="376" class="muted small">批任务接受压制、驱逐、</text><text x="924" y="400" class="muted small">重试或 Checkpoint</text>
+  </g>
+  <g>
+    <circle cx="886" cy="471" r="22" fill="#e7f8f2"/><text x="879" y="479" font-size="22" font-weight="700" fill="#078a6c">3</text>
+    <text x="924" y="464" class="label">在线 SLO 先行</text><text x="924" y="492" class="muted small">越界时停止新借用，并在</text><text x="924" y="516" class="muted small">秒级归还节点资源</text>
+  </g>
+  <rect x="870" y="550" width="240" height="38" rx="10" fill="#eef2f8"/>
+  <text x="990" y="576" text-anchor="middle" font-size="17" font-weight="600" fill="#526079">预测会错，保护必须生效</text>
+</svg>

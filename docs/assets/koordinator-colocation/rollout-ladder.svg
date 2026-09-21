@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Koordinator 混部五阶段落地路线</title>
+  <desc id="desc">从建立基线到持续容量工程的五阶段灰度路线</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8190a9"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#334155" flood-opacity="0.10"/></filter>
+    <style>text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}.muted{fill:#6b7690}.stage{font-size:17px;font-weight:700}.h{font-size:23px;font-weight:700}.b{font-size:17px}.card{fill:#fff;stroke:#d9e0ec;stroke-width:1.5}</style>
+  </defs>
+  <rect width="1200" height="675" fill="#f7f9fd"/>
+  <text x="64" y="66" font-size="34" font-weight="700">混部要逐级放大，每一步都能退出</text>
+  <text x="64" y="100" class="muted" font-size="18">先证明在线保护，再开放 CPU 回收；内存、多调度器和长任务放在后面验证</text>
+
+  <path d="M145 420 L1055 420" stroke="#bac4d5" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="150" width="204" height="230" rx="18" class="card"/>
+    <rect x="276" y="150" width="204" height="230" rx="18" class="card"/>
+    <rect x="498" y="150" width="204" height="230" rx="18" class="card"/>
+    <rect x="720" y="150" width="204" height="230" rx="18" class="card"/>
+    <rect x="942" y="150" width="204" height="230" rx="18" class="card"/>
+  </g>
+  <g>
+    <rect x="76" y="174" width="82" height="30" rx="15" fill="#e8f1ff"/><text x="117" y="195" text-anchor="middle" class="stage" fill="#1266e3">阶段 0</text>
+    <text x="76" y="244" class="h">建立基线</text>
+    <text x="76" y="280" class="b muted">业务周期与峰谷</text><text x="76" y="308" class="b muted">在线 P99 / P999</text><text x="76" y="336" class="b muted">节点压力与批吞吐</text>
+  </g>
+  <g>
+    <rect x="298" y="174" width="82" height="30" rx="15" fill="#f0ebff"/><text x="339" y="195" text-anchor="middle" class="stage" fill="#7656d6">阶段 1</text>
+    <text x="298" y="244" class="h">只做保护</text>
+    <text x="298" y="280" class="b muted">QoS 与 CPU/NUMA</text><text x="298" y="308" class="b muted">Memory QoS</text><text x="298" y="336" class="b muted">暂不开放回收</text>
+  </g>
+  <g>
+    <rect x="520" y="174" width="82" height="30" rx="15" fill="#e7f8f2"/><text x="561" y="195" text-anchor="middle" class="stage" fill="#078a6c">阶段 2</text>
+    <text x="520" y="244" class="h">CPU 小流量</text>
+    <text x="520" y="280" class="b muted">短、幂等、可重试</text><text x="520" y="308" class="b muted">独立节点池灰度</text><text x="520" y="336" class="b muted">SLO 越界自动退出</text>
+  </g>
+  <g>
+    <rect x="742" y="174" width="82" height="30" rx="15" fill="#fff3e5"/><text x="783" y="195" text-anchor="middle" class="stage" fill="#d76b00">阶段 3</text>
+    <text x="742" y="244" class="h">扩大资源维度</text>
+    <text x="742" y="280" class="b muted">干扰矩阵</text><text x="742" y="308" class="b muted">内存 / I/O / 网络</text><text x="742" y="336" class="b muted">资源兑现率</text>
+  </g>
+  <g>
+    <rect x="964" y="174" width="82" height="30" rx="15" fill="#ffe9ed"/><text x="1005" y="195" text-anchor="middle" class="stage" fill="#c9435d">阶段 4+</text>
+    <text x="964" y="244" class="h">持续容量工程</text>
+    <text x="964" y="280" class="b muted">训练 / Spark / YARN</text><text x="964" y="308" class="b muted">统一账本与 Checkpoint</text><text x="964" y="336" class="b muted">周期复盘与再校准</text>
+  </g>
+  <g fill="#fff" stroke="#8190a9" stroke-width="3"><circle cx="156" cy="420" r="10"/><circle cx="378" cy="420" r="10"/><circle cx="600" cy="420" r="10"/><circle cx="822" cy="420" r="10"/><circle cx="1044" cy="420" r="10"/></g>
+
+  <rect x="54" y="470" width="1092" height="136" rx="18" fill="#edf2fb" stroke="#cfd9ea"/>
+  <text x="82" y="510" font-size="22" font-weight="700" fill="#314368">每一级共同的放行门槛</text>
+  <g class="b">
+    <circle cx="90" cy="549" r="5" fill="#1266e3"/><text x="108" y="556">在线 SLO 无显著回退</text>
+    <circle cx="330" cy="549" r="5" fill="#7656d6"/><text x="348" y="556">指标和资源账本保持新鲜</text>
+    <circle cx="610" cy="549" r="5" fill="#078a6c"/><text x="628" y="556">压制、驱逐与恢复演练通过</text>
+    <circle cx="920" cy="549" r="5" fill="#d76b00"/><text x="938" y="556">净收益为正</text>
+  </g>
+  <text x="82" y="586" class="muted" font-size="17">任一门槛失败：停止新借用 → 归还资源 → 保留证据 → 调整策略后重新灰度</text>
+</svg>
