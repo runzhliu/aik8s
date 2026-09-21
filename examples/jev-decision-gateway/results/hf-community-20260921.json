@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "provider": "hf-community",
+  "created_at": "2026-09-21T17:34:48+0800",
+  "dataset": "/Users/oscar01.liu/workspace/personal/vibe/aik8s/examples/jev-decision-gateway/fixtures/tickets.jsonl",
+  "summary": {
+    "attempted": 20,
+    "successful": 2,
+    "route_accuracy": 1.0,
+    "urgent_accuracy": 1.0,
+    "route_brier": 0.0272,
+    "urgent_brier": 0.0841,
+    "route_ece_10_bins": 0.118,
+    "latency_ms": {
+      "mean": 3434.5,
+      "p50": 3434.5,
+      "p95": 4873.2,
+      "max": 5033.1
+    },
+    "by_language": {
+      "zh": {
+        "n": 2,
+        "route_accuracy": 1.0,
+        "urgent_accuracy": 1.0
+      }
+    },
+    "selective_route": [
+      {
+        "threshold": 0.5,
+        "coverage": 1.0,
+        "route_accuracy": 1.0
+      },
+      {
+        "threshold": 0.7,
+        "coverage": 1.0,
+        "route_accuracy": 1.0
+      },
+      {
+        "threshold": 0.8,
+        "coverage": 1.0,
+        "route_accuracy": 1.0
+      },
+      {
+        "threshold": 0.85,
+        "coverage": 0.5,
+        "route_accuracy": 1.0
+      },
+      {
+        "threshold": 0.9,
+        "coverage": 0.5,
+        "route_accuracy": 1.0
+      },
+      {
+        "threshold": 0.95,
+        "coverage": 0.0,
+        "route_accuracy": null
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "zh-billing-duplicate",
+      "language": "zh",
+      "text": "信用卡被重复扣款两次，请今天帮我处理，我担心还会继续扣费。",
+      "expected_route": "billing",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "pngwn/system-one-qwen3.5-4b-scorer",
+        "route": "billing",
+        "route_probabilities": {
+          "billing": 0.8194,
+          "technical": 0.04,
+          "sales": 0.0152,
+          "other": 0.1254
+        },
+        "route_confidence": 0.8194,
+        "urgent_probability": 0.6002,
+        "latency_ms": 5033.1,
+        "provider_latency_ms": 1320.7,
+        "disclosure": "trained with option sets capped at 16; headline test numbers: accuracy 0.705, ECE 0.046, ~112 ms at <=16 options; baseline generated with thinking disabled"
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-billing-refund",
+      "language": "zh",
+      "text": "上个月购买的套餐不再需要了，请问如何申请退款？",
+      "expected_route": "billing",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "pngwn/system-one-qwen3.5-4b-scorer",
+        "route": "billing",
+        "route_probabilities": {
+          "billing": 0.9446,
+          "technical": 0.007,
+          "sales": 0.0252,
+          "other": 0.0232
+        },
+        "route_confidence": 0.9446,
+        "urgent_probability": 0.0919,
+        "latency_ms": 1835.9,
+        "provider_latency_ms": 209.2,
+        "disclosure": "trained with option sets capped at 16; headline test numbers: accuracy 0.705, ECE 0.046, ~112 ms at <=16 options; baseline generated with thinking disabled"
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-billing-invoice",
+      "language": "zh",
+      "text": "发票上的公司抬头写错了，麻烦重新开一张。",
+      "expected_route": "billing",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "zh-billing-payout",
+      "language": "zh",
+      "text": "结算款三天没有到账，今天必须给供应商付款。",
+      "expected_route": "billing",
+      "expected_urgent": true,
+      "error": "0"
+    },
+    {
+      "id": "zh-billing-plan-charge",
+      "language": "zh",
+      "text": "我取消了会员为什么这个月还在扣费？",
+      "expected_route": "billing",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "zh-tech-outage",
+      "language": "zh",
+      "text": "生产接口全部返回 503，客户现在无法下单，请立即处理。",
+      "expected_route": "technical",
+      "expected_urgent": true,
+      "error": "0"
+    },
+    {
+      "id": "zh-tech-login",
+      "language": "zh",
+      "text": "升级浏览器后无法登录管理后台，但旧浏览器还能使用。",
+      "expected_route": "technical",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "zh-tech-security",
+      "language": "zh",
+      "text": "账号疑似被盗，陌生设备正在登录，请马上冻结会话。",
+      "expected_route": "technical",
+      "expected_urgent": true,
+      "error": "0"
+    },
+    {
+      "id": "zh-tech-integration",
+      "language": "zh",
+      "text": "Webhook 偶尔丢消息，暂时没有影响生产，想请你们帮忙排查。",
+      "expected_route": "technical",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "zh-tech-import",
+      "language": "zh",
+      "text": "CSV 导入到 80% 就报错，我们今晚要完成数据迁移。",
+      "expected_route": "technical",
+      "expected_urgent": true,
+      "error": "0"
+    },
+    {
+      "id": "zh-sales-quote",
+      "language": "zh",
+      "text": "我们准备采购 500 个账号，请提供企业版报价。",
+      "expected_route": "sales",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "zh-sales-upgrade",
+      "language": "zh",
+      "text": "明天发布新产品，需要今天完成企业套餐升级。",
+      "expected_route": "sales",
+      "expected_urgent": true,
+      "error": "0"
+    },
+    {
+      "id": "zh-sales-trial",
+      "language": "zh",
+      "text": "能否安排一次产品演示，并开通两周试用？",
+      "expected_route": "sales",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "en-sales-contract",
+      "language": "en",
+      "text": "Our procurement window closes today. Please send the enterprise contract before 5 PM.",
+      "expected_route": "sales",
+      "expected_urgent": true,
+      "error": "0"
+    },
+    {
+      "id": "en-sales-pricing",
+      "language": "en",
+      "text": "What is the annual price for 120 seats and SSO?",
+      "expected_route": "sales",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "zh-other-greeting",
+      "language": "zh",
+      "text": "你好，我刚注册，先来打个招呼。",
+      "expected_route": "other",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "zh-other-feedback",
+      "language": "zh",
+      "text": "新版界面很好看，搜索也比以前快了，谢谢团队。",
+      "expected_route": "other",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "en-other-careers",
+      "language": "en",
+      "text": "Where can I apply for an engineering role at your company?",
+      "expected_route": "other",
+      "expected_urgent": false,
+      "error": "0"
+    },
+    {
+      "id": "en-other-press",
+      "language": "en",
+      "text": "I am a journalist looking for your press contact for a story due tonight.",
+      "expected_route": "other",
+      "expected_urgent": true,
+      "error": "0"
+    },
+    {
+      "id": "zh-other-ambiguous",
+      "language": "zh",
+      "text": "在吗？我有一个问题，但是还没想好怎么描述。",
+      "expected_route": "other",
+      "expected_urgent": false,
+      "error": "0"
+    }
+  ]
+}

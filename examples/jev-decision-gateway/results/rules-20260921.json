@@ -1,0 +1,559 @@
+{
+  "schema_version": 1,
+  "provider": "rules",
+  "created_at": "2026-09-21T17:29:50+0800",
+  "dataset": "/Users/oscar01.liu/workspace/personal/vibe/aik8s/examples/jev-decision-gateway/fixtures/tickets.jsonl",
+  "summary": {
+    "attempted": 20,
+    "successful": 20,
+    "route_accuracy": 0.95,
+    "urgent_accuracy": 1.0,
+    "route_brier": 0.11,
+    "urgent_brier": 0.01,
+    "route_ece_10_bins": 0.1,
+    "latency_ms": {
+      "mean": 0.0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "max": 0.1
+    },
+    "by_language": {
+      "en": {
+        "n": 4,
+        "route_accuracy": 1.0,
+        "urgent_accuracy": 1.0
+      },
+      "zh": {
+        "n": 16,
+        "route_accuracy": 0.9375,
+        "urgent_accuracy": 1.0
+      }
+    },
+    "selective_route_confidence": [
+      {
+        "threshold": 0.5,
+        "coverage": 1.0,
+        "route_accuracy": 0.95
+      },
+      {
+        "threshold": 0.7,
+        "coverage": 1.0,
+        "route_accuracy": 0.95
+      },
+      {
+        "threshold": 0.8,
+        "coverage": 1.0,
+        "route_accuracy": 0.95
+      },
+      {
+        "threshold": 0.85,
+        "coverage": 1.0,
+        "route_accuracy": 0.95
+      },
+      {
+        "threshold": 0.9,
+        "coverage": 0.0,
+        "route_accuracy": null
+      },
+      {
+        "threshold": 0.95,
+        "coverage": 0.0,
+        "route_accuracy": null
+      }
+    ],
+    "selective_route_probability": [
+      {
+        "threshold": 0.5,
+        "coverage": 1.0,
+        "route_accuracy": 0.95
+      },
+      {
+        "threshold": 0.7,
+        "coverage": 1.0,
+        "route_accuracy": 0.95
+      },
+      {
+        "threshold": 0.8,
+        "coverage": 1.0,
+        "route_accuracy": 0.95
+      },
+      {
+        "threshold": 0.85,
+        "coverage": 1.0,
+        "route_accuracy": 0.95
+      },
+      {
+        "threshold": 0.9,
+        "coverage": 0.0,
+        "route_accuracy": null
+      },
+      {
+        "threshold": 0.95,
+        "coverage": 0.0,
+        "route_accuracy": null
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "zh-billing-duplicate",
+      "language": "zh",
+      "text": "信用卡被重复扣款两次，请今天帮我处理，我担心还会继续扣费。",
+      "expected_route": "billing",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "billing",
+        "route_probabilities": {
+          "billing": 0.85,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.9,
+        "latency_ms": 0.072,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-billing-refund",
+      "language": "zh",
+      "text": "上个月购买的套餐不再需要了，请问如何申请退款？",
+      "expected_route": "billing",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "billing",
+        "route_probabilities": {
+          "billing": 0.85,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.006,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-billing-invoice",
+      "language": "zh",
+      "text": "发票上的公司抬头写错了，麻烦重新开一张。",
+      "expected_route": "billing",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "billing",
+        "route_probabilities": {
+          "billing": 0.85,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.004,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-billing-payout",
+      "language": "zh",
+      "text": "结算款三天没有到账，今天必须给供应商付款。",
+      "expected_route": "billing",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "billing",
+        "route_probabilities": {
+          "billing": 0.85,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.9,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-billing-plan-charge",
+      "language": "zh",
+      "text": "我取消了会员为什么这个月还在扣费？",
+      "expected_route": "billing",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "other",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.85
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": false,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-tech-outage",
+      "language": "zh",
+      "text": "生产接口全部返回 503，客户现在无法下单，请立即处理。",
+      "expected_route": "technical",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "technical",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.85,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.9,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-tech-login",
+      "language": "zh",
+      "text": "升级浏览器后无法登录管理后台，但旧浏览器还能使用。",
+      "expected_route": "technical",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "technical",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.85,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-tech-security",
+      "language": "zh",
+      "text": "账号疑似被盗，陌生设备正在登录，请马上冻结会话。",
+      "expected_route": "technical",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "technical",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.85,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.9,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-tech-integration",
+      "language": "zh",
+      "text": "Webhook 偶尔丢消息，暂时没有影响生产，想请你们帮忙排查。",
+      "expected_route": "technical",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "technical",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.85,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-tech-import",
+      "language": "zh",
+      "text": "CSV 导入到 80% 就报错，我们今晚要完成数据迁移。",
+      "expected_route": "technical",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "technical",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.85,
+          "sales": 0.05,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.9,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-sales-quote",
+      "language": "zh",
+      "text": "我们准备采购 500 个账号，请提供企业版报价。",
+      "expected_route": "sales",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "sales",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.85,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-sales-upgrade",
+      "language": "zh",
+      "text": "明天发布新产品，需要今天完成企业套餐升级。",
+      "expected_route": "sales",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "sales",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.85,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.9,
+        "latency_ms": 0.002,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-sales-trial",
+      "language": "zh",
+      "text": "能否安排一次产品演示，并开通两周试用？",
+      "expected_route": "sales",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "sales",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.85,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "en-sales-contract",
+      "language": "en",
+      "text": "Our procurement window closes today. Please send the enterprise contract before 5 PM.",
+      "expected_route": "sales",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "sales",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.85,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.9,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "en-sales-pricing",
+      "language": "en",
+      "text": "What is the annual price for 120 seats and SSO?",
+      "expected_route": "sales",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "sales",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.85,
+          "other": 0.05
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-other-greeting",
+      "language": "zh",
+      "text": "你好，我刚注册，先来打个招呼。",
+      "expected_route": "other",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "other",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.85
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-other-feedback",
+      "language": "zh",
+      "text": "新版界面很好看，搜索也比以前快了，谢谢团队。",
+      "expected_route": "other",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "other",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.85
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "en-other-careers",
+      "language": "en",
+      "text": "Where can I apply for an engineering role at your company?",
+      "expected_route": "other",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "other",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.85
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "en-other-press",
+      "language": "en",
+      "text": "I am a journalist looking for your press contact for a story due tonight.",
+      "expected_route": "other",
+      "expected_urgent": true,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "other",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.85
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.9,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    },
+    {
+      "id": "zh-other-ambiguous",
+      "language": "zh",
+      "text": "在吗？我有一个问题，但是还没想好怎么描述。",
+      "expected_route": "other",
+      "expected_urgent": false,
+      "prediction": {
+        "model": "keyword-rules-v1",
+        "route": "other",
+        "route_probabilities": {
+          "billing": 0.05,
+          "technical": 0.05,
+          "sales": 0.05,
+          "other": 0.85
+        },
+        "route_confidence": 0.85,
+        "urgent_probability": 0.1,
+        "latency_ms": 0.003,
+        "route_top_probability": 0.85
+      },
+      "route_correct": true,
+      "urgent_correct": true
+    }
+  ]
+}

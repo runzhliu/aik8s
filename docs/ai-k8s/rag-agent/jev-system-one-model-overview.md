@@ -159,6 +159,22 @@ flowchart LR
 - **概率校准能否复现。** 置信度是产品核心，但目前缺少覆盖不同语言、领域、分布漂移和对抗输入的第三方大规模复测。
 - **闭源 API 与数据边界。** SDK 开源不等于模型开放。隐私、数据驻留、供应商故障和版本漂移都需要额外设计。
 
+### 微信公众号里最近在讨论什么
+
+2026 年 9 月 21 日用“Jev TypeSafe”检索微信公众号公开索引时，搜索页给出约 808 条结果。这个数字包含转载、近似标题和聚合内容，不能理解为 808 篇独立研究。首页样本已经能看出三种叙事：
+
+| 讨论方式 | 首页样本 | 值得保留的判断 |
+| --- | --- | --- |
+| 产品介绍 | “Jev 与 TypeSafe AI System One Models 研究报告”“深入解读 Jev” | 帮助读者理解“不生成，只决策”，但性能数字大多来自厂商材料 |
+| 速度与成本传播 | “凭什么快 200 倍、便宜 400 倍”“Jev 模型的价值” | 说明 Agent 开发者确实在寻找廉价决策层；倍数不能脱离任务、模型和计费口径复用 |
+| 质疑与实测 | “多方核实能不能信”“Jev 模型实测” | 开始关注准确率、中文效果、边界输入和是否只是分类器，这是更接近落地的问题 |
+
+公众号传播中最容易遗漏的是**覆盖率**：当系统只让高置信度样本自动通过时，准确率通常会上升，但转人工比例也会上升。生产选型不能只写“准确率 95%”，还要回答这个准确率覆盖了多少流量、剩余流量由谁处理、错误动作的代价是什么。
+
+[一篇第三方中文小样本对照](https://www.jxxy.net/ai/articles/yibie-2101553680889598094/)用 40 条客服消息测试 Jev 和开源 Laya，报告 Jev 为 31/40、平均端到端延迟 588 ms，Laya 为 23/40、7.6 ms，并尝试用级联保留准确率、减少云端调用。这个结果适合用来设计自己的实验，不足以构成通用排行：样本只有 40 条，类别定义、标注一致性、硬件和预热条件也会显著影响结果。
+
+[LangChain 的 Jev-as-a-Judge 实验](https://www.langchain.com/blog/jev-agent-evals-langsmith)提供了另一种落地方式：对五条固定 Agent 轨迹各重复判断 100 次。在这组很窄的二元评估中，Jev 的 500 次判断都与人工标签一致，平均每次 0.44 秒、0.00035 美元，连续评分方差也低于几个生成模型。作者同时明确说明实验很早期。五个固定案例适合验证重复性，不足以证明跨任务准确率；生产评估仍应扩大样本和错误类型。
+
 [Vercel 的发布后统计](https://vercel.com/blog/ai-gateway-jev-model-launch)显示，Jev 在接入 AI Gateway 后 24 小时内触达近 13% 的付费团队；[其公开榜单](https://vercel.com/ai-gateway/leaderboards/models)在 9 月 20 日显示 Jev 的请求占比和团队触达率快速上升。这说明开发者正在大量试验，但首周请求数不能证明长期留存、准确率或生产价值。大量低成本短请求也会天然推高请求份额，因此不能直接拿它和生成模型的 Token 份额比较。
 
 ## 5. “不能幻觉”究竟成立到哪一层
@@ -293,11 +309,49 @@ Jev 是否值得引入，不应由几个 Demo 决定。建议准备三条基线�
 | 并发 | 1、目标常态、目标峰值 |
 | 故障 | 429、超时、5xx、返回版本改变、网络断开 |
 
+### 一个可以直接运行的 Decision Gateway Demo
+
+仓库中的 [`examples/jev-decision-gateway`](https://github.com/runzhliu/aik8s/tree/main/examples/jev-decision-gateway) 提供了一套最小实现。它用 20 条中英文合成客服工单，同时判断处理团队和是否紧急，并保留每个选项的完整概率。执行器再根据阈值选择自动路由或人工复核。
+
+同一套评测接口目前支持四个后端：关键词规则、TypeSafe 官方 `jev-1.13.0`、`pngwn/system-one-qwen3.5-4b-scorer` 和 Apache-2.0 的 Laya。官方后端必须从环境变量读取 API Key；社区模型的结果不会标成 Jev。
+
+2026 年 9 月 21 日的公开模型实测结果如下：
+
+| 路径 | 完成样本 | 路由准确率 | 紧急判断准确率 | 路由 Brier | 路由 ECE | 模型侧 P50 / P95 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 关键词规则 | 20 / 20 | 95% | 100% | 0.110 | 0.100 | 小于 0.1 ms |
+| Laya 公开 CPU Space | 20 / 20 | 60% | 90% | 0.521 | 0.222 | 227 / 438 ms |
+| Qwen3.5-4B Scorer Space | 2 / 20 | 不统计 | 不统计 | 不统计 | 不统计 | 仅完成 Smoke Test |
+| 官方 Jev 1.13.0 | 未执行 | — | — | — | — | 等待独立 API 凭据 |
+
+Laya 的公网端到端 P50 为 3.82 秒、P95 为 6.50 秒，明显高于模型回包中的 227/438 ms。两者并不矛盾：前者包含免费 Space 排队、容器调度和网络，后者是应用报告的模型计算时间。生产测试必须同时保留这两个口径。
+
+Laya 的路由结果还展示了置信度门禁的代价：以最高选项概率 0.5 为自动处理阈值时，只覆盖 20% 样本，这部分四条都正确；阈值提高到 0.7 后只剩 10% 覆盖。样本太少，100% 不能外推为真实准确率，但它清楚地说明“提高阈值”会把大量请求送去人工或备用模型。
+
+Qwen3.5-4B Scorer 在匿名 Hugging Face ZeroGPU 配额耗尽前完成了两条真实请求，其中一条将重复扣款路由到 `billing`，最高概率 0.819；另一条退款请求的最高概率为 0.945。两条结果只证明调用链可用。脚本会保留失败样本和原始分母，不用两条成功结果计算正式成绩。
+
+规则基线的高分也不能当成模型胜负：合成样本故意保留了清晰关键词，主要用于检查数据和指标管道。下一步应换成脱敏真实工单，隐藏显式关键词，增加多意图、未知类别、错别字、拒绝回答和跨语言表达，再把官方 Jev、Laya 与现有业务规则放在同一份冻结测试集上。
+
 ### 发布门槛
 
 不要只比较平均准确率。每个业务场景都应明确：关键少数类 Recall 下限、可接受的误执行率、低置信度人工比例、P95/P99 延迟、故障时行为和每千次正确决策成本。达标后先 Shadow，只记录建议而不驱动动作；再 Canary 到低风险流量，最后才扩大自动化范围。
 
-## 10. 目前最需要等待的证据
+## 10. Hugging Face 上有 Jev 模型吗
+
+截至 2026 年 9 月 21 日，Hugging Face 上没有 TypeSafe AI 官方发布的 Jev 权重。搜索结果中已经出现多个带 `jev` 或 `system-one` 标签的模型、Space 和数据集，但它们属于社区复现、接口适配或调用官方 API 的应用，不能写成“开源 Jev”。
+
+| 项目 | 实际内容 | 使用时要注意什么 |
+| --- | --- | --- |
+| [`pngwn/system-one-qwen3.5-4b-scorer`](https://huggingface.co/pngwn/system-one-qwen3.5-4b-scorer) | Qwen3.5-4B-Base、LoRA、标量评分头和温度校准；对每个候选项打分 | Jev-style 社区模型，许可证为 CC BY-NC 4.0，不是 TypeSafe 权重 |
+| [`convaiinnovations/laya`](https://huggingface.co/convaiinnovations/laya) | 421M 参数的非自回归决策模型，支持 Choice、Score 和 Noul，权重使用 Apache-2.0 | 模型卡给出 RLCD、校准和多语言版本信息；发布很新，模型卡结果仍需独立复测 |
+| [`jasonkneen/open-jev`](https://huggingface.co/spaces/jasonkneen/open-jev) | 展示状态前缀复用、候选分支并行评分，并与生成 JSON 的 Qwen Instruct 对比 | Space 使用上面的社区 Scorer；适合研究推理路径，不代表复现了 Jev 训练方法 |
+| [`C-Tianyu/NanoJev`](https://huggingface.co/C-Tianyu/NanoJev) | 基于 Qwen3-0.6B 的动作决策实验 | 训练目标集中在迷宫、Snake、ViZDoom 等窄任务，不能外推为通用决策能力 |
+| [`cua-ai/cua-s1-forms`](https://huggingface.co/cua-ai/cua-s1-forms) | 面向 GUI 表单操作的单次选项评分器 | 场景专用模型；接口与 Jev 相似，任务覆盖不同 |
+| [`Drenel/plek-1`](https://huggingface.co/Drenel/plek-1) | 声称实现 Jev-style 非自回归选项评分 | 含自定义代码，部署前需要代码审计并独立复测模型卡中的性能与校准结论 |
+
+这些项目证明“给状态、问题和候选项打分”并不依赖某一家 API，也为自托管实验提供了起点。它们目前无法回答官方 Jev 的参数规模、RLCD 训练方法和性能结果能否复现。选型时应把三类对象分开：官方 Jev 托管 API、TypeSafe 的 LLM Adapter、社区 Jev-style 权重。
+
+## 11. 目前最需要等待的证据
 
 Jev 的产品形态很有启发性，但下面这些问题仍没有足够公开材料回答：
 
@@ -311,7 +365,7 @@ Jev 的产品形态很有启发性，但下面这些问题仍没有足够公开�
 
 官方 GitHub 目前公开的是 [SDK、Agent Skill 和 System One Adapter](https://github.com/typesafe-ai)。其中 Adapter 用传统 LLM 模拟相同的客户端接口，适合验证编程模型或做备用路径，但它不是 Jev 的开源实现。看到“可替换 Client”时，不能据此推断 Jev 权重已经开放。
 
-## 11. 怎样判断是否该用
+## 12. 怎样判断是否该用
 
 适合优先试验 Jev 的任务通常同时具备这些特征：输入是文本或可文本化状态，输出集合有限，判断频率高，等待生成文本的延迟不可接受，错误可以被阈值、复核和独立 Verifier 控制。
 
@@ -333,5 +387,11 @@ Jev 真正值得关注的地方，不在于给分类器起了一个新名字，�
 - [Vercel：Jev is the fastest-adopted model in AI Gateway history](https://vercel.com/blog/ai-gateway-jev-model-launch)
 - [Vercel AI Gateway Model Leaderboard](https://vercel.com/ai-gateway/leaderboards/models)
 - [Hacker News：Introducing System One Models and Jev](https://news.ycombinator.com/item?id=49717558)
+- [Hugging Face：System One Qwen3.5 4B Scorer](https://huggingface.co/pngwn/system-one-qwen3.5-4b-scorer)
+- [Hugging Face：Laya System One Decision Model](https://huggingface.co/convaiinnovations/laya)
+- [Hugging Face Space：Open Jev](https://huggingface.co/spaces/jasonkneen/open-jev)
+- [Hugging Face：NanoJev](https://huggingface.co/C-Tianyu/NanoJev)
+- [LangChain：Jev-as-a-Judge for Agent Evals](https://www.langchain.com/blog/jev-agent-evals-langsmith)
+- [搜狗微信公开索引：Jev TypeSafe](https://weixin.sogou.com/weixin?type=2&query=Jev%20TypeSafe)
 - [Guo et al.：On Calibration of Modern Neural Networks](https://arxiv.org/abs/1706.04599)
 - [Silva Filho et al.：Classifier Calibration Survey](https://arxiv.org/abs/2112.10327)
