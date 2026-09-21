@@ -101,6 +101,8 @@ Koordinator 的核心组件各自处理不同时间尺度的问题：
 
 这也解释了为什么只安装 `koord-scheduler` 不能称为完整混部：调度器只决定初始位置，运行数小时后的负载变化必须由节点侧反馈控制。
 
+节点侧如何把策略落实到 cgroup、`resctrl` 和容器运行时，可继续阅读[《Koordlet 与 Runtime Hook：节点资源隔离原理》](koordinator-node-qos-runtime-hooks.md)。
+
 ## 4. 四个关键机制
 
 ### 4.1 动态资源账本
@@ -347,4 +349,3 @@ Koordinator 不是 Kueue、Volcano 或 Cluster Autoscaler 的简单替代：Kueu
 - [Google：Large-scale cluster management at Google with Borg](https://research.google/pubs/large-scale-cluster-management-at-google-with-borg/)
 - [Alibaba Cluster Trace Program](https://github.com/alibaba/clusterdata)
 - [CNCF：Gödel Scheduler open-sourced](https://www.cncf.io/blog/2024/04/02/godel-scheduler-open-sourced-a-unified-scheduler-for-online-and-offline-workloads/)
-

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Koordinator Runtime Hook 三种模式</title>
+  <desc id="desc">比较 Standalone、CRI Proxy 和 NRI 的调用路径、时序与故障边界</desc>
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#71809a"/></marker>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#26364f" flood-opacity="0.10"/></filter>
+    <style>
+      text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}.muted{fill:#65728b}.inverse{fill:#fff}.head{font-size:24px;font-weight:700}.body{font-size:17px}.box{fill:#fff;stroke:#d9e1ee;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1200" height="675" fill="#f7f9fd"/>
+  <text x="60" y="64" font-size="34" font-weight="700">Runtime Hook 的差别，在于何时进入容器生命周期</text>
+  <text x="60" y="100" class="muted" font-size="18">三种模式能表达相似策略，但启动竞态、故障范围和运维成本不同</text>
+
+  <g filter="url(#s)">
+    <rect x="52" y="145" width="344" height="404" rx="22" class="box"/>
+    <rect x="428" y="145" width="344" height="404" rx="22" class="box"/>
+    <rect x="804" y="145" width="344" height="404" rx="22" class="box"/>
+  </g>
+
+  <rect x="52" y="145" width="344" height="64" rx="22" fill="#edf3ff"/><rect x="52" y="187" width="344" height="22" fill="#edf3ff"/>
+  <text x="80" y="185" class="head" fill="#2563eb">Standalone</text>
+  <rect x="80" y="245" width="122" height="54" rx="12" fill="#fff" stroke="#bcd0fb"/><text x="141" y="278" text-anchor="middle" class="body">kubelet</text>
+  <rect x="246" y="245" width="122" height="54" rx="12" fill="#fff" stroke="#bcd0fb"/><text x="307" y="278" text-anchor="middle" class="body">runtime</text>
+  <path d="M202 272 H238" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="163" y="338" width="122" height="54" rx="12" fill="#172e69"/><text x="224" y="371" text-anchor="middle" font-size="17" class="inverse">koordlet</text>
+  <path d="M307 299 C307 323 279 341 286 352" fill="none" stroke="#71809a" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#a)"/>
+  <text x="80" y="435" class="body" font-weight="700">异步发现后再写入</text>
+  <text x="80" y="465" class="body muted">改动最小，但容器可能先运行</text>
+  <text x="80" y="493" class="body muted">适合最终一致的周期策略</text>
+  <rect x="80" y="514" width="166" height="26" rx="13" fill="#fff1e8"/><text x="163" y="533" text-anchor="middle" font-size="14" fill="#c55d11">存在启动时间窗口</text>
+
+  <rect x="428" y="145" width="344" height="64" rx="22" fill="#f1edff"/><rect x="428" y="187" width="344" height="22" fill="#f1edff"/>
+  <text x="456" y="185" class="head" fill="#7555d9">CRI Proxy</text>
+  <rect x="456" y="245" width="88" height="54" rx="12" fill="#fff" stroke="#cbbdf7"/><text x="500" y="278" text-anchor="middle" class="body">kubelet</text>
+  <rect x="556" y="245" width="88" height="54" rx="12" fill="#7555d9"/><text x="600" y="278" text-anchor="middle" font-size="16" class="inverse">Proxy</text>
+  <rect x="656" y="245" width="88" height="54" rx="12" fill="#fff" stroke="#cbbdf7"/><text x="700" y="278" text-anchor="middle" class="body">runtime</text>
+  <path d="M544 272 H548" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/><path d="M644 272 H648" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="539" y="338" width="122" height="54" rx="12" fill="#172e69"/><text x="600" y="371" text-anchor="middle" font-size="17" class="inverse">koordlet</text>
+  <path d="M600 299 V330" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="456" y="435" class="body" font-weight="700">代理 CRI 请求，同步处理</text>
+  <text x="456" y="465" class="body muted">可在创建前注入，但改写 CRI 链路</text>
+  <text x="456" y="493" class="body muted">代理成为节点关键路径的一部分</text>
+  <rect x="456" y="514" width="190" height="26" rx="13" fill="#fff1e8"/><text x="551" y="533" text-anchor="middle" font-size="14" fill="#c55d11">故障可能阻塞容器创建</text>
+
+  <rect x="804" y="145" width="344" height="64" rx="22" fill="#e6f8f3"/><rect x="804" y="187" width="344" height="22" fill="#e6f8f3"/>
+  <text x="832" y="185" class="head" fill="#07876a">NRI</text>
+  <rect x="832" y="245" width="112" height="54" rx="12" fill="#fff" stroke="#a8dfd1"/><text x="888" y="278" text-anchor="middle" class="body">kubelet</text>
+  <rect x="1004" y="245" width="112" height="54" rx="12" fill="#fff" stroke="#a8dfd1"/><text x="1060" y="278" text-anchor="middle" class="body">runtime</text>
+  <path d="M944 272 H996" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="999" y="338" width="122" height="54" rx="12" fill="#07876a"/><text x="1060" y="371" text-anchor="middle" font-size="17" class="inverse">NRI 插件</text>
+  <path d="M1060 299 V330" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="832" y="435" class="body" font-weight="700">运行时原生回调插件</text>
+  <text x="832" y="465" class="body muted">同步修改 OCI Spec 与资源</text>
+  <text x="832" y="493" class="body muted">不改变 kubelet 的 CRI 端点</text>
+  <rect x="832" y="514" width="222" height="26" rx="13" fill="#e7f8f2"/><text x="943" y="533" text-anchor="middle" font-size="14" fill="#067b62">新部署优先评估运行时支持</text>
+
+  <rect x="176" y="585" width="848" height="42" rx="21" fill="#edf1f8"/>
+  <text x="600" y="612" text-anchor="middle" font-size="17" font-weight="600" fill="#56647d">NRI 改善调用时机；cgroup、resctrl 与内核能力仍决定隔离是否真正生效</text>
+</svg>

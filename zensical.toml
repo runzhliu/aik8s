@@ -33,6 +33,7 @@ nav = [
     {"队列、弹性与容量" = [
       {"队列、公平共享与多租户" = "ai-k8s/queue-multitenancy.md"},
       {"Koordinator 与在线离线混部" = "ai-k8s/scheduling/koordinator-colocation.md"},
+      {"Koordlet 与 Runtime Hook 节点隔离" = "ai-k8s/scheduling/koordinator-node-qos-runtime-hooks.md"},
       {"AI 工作负载弹性伸缩" = "ai-k8s/scheduling/autoscaling.md"},
       {"GPU 成本与容量规划" = "ai-k8s/cost-capacity.md"},
     ]},

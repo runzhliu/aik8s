@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Koordlet 对应的 Linux 资源执行面</title>
+  <desc id="desc">CPU、内存、缓存、块 I/O 和网络 QoS 分别落到不同内核机制</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#71809a"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#26364f" flood-opacity="0.10"/></filter>
+    <style>
+      text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}.muted{fill:#65728b}.inverse{fill:#fff}.inverse-muted{fill:#dce7ff}.h{font-size:22px;font-weight:700}.b{font-size:16px}.card{fill:#fff;stroke:#dbe2ef;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1200" height="675" fill="#f7f9fd"/>
+  <text x="60" y="64" font-size="34" font-weight="700">一个 QoS 策略，最终落到五类执行面</text>
+  <text x="60" y="100" class="muted" font-size="18">Koordlet 负责翻译与协调；资源边界由 Linux 内核、硬件与 CNI 共同执行</text>
+
+  <rect x="194" y="130" width="812" height="70" rx="20" fill="#172e69"/>
+  <text x="600" y="160" text-anchor="middle" font-size="22" font-weight="700" class="inverse">Pod QoS · 注解 · NodeSLO · 节点能力</text>
+  <text x="600" y="187" text-anchor="middle" font-size="16" class="inverse-muted">Runtime Hook 创建时注入 ｜ Reconciler 运行中校正</text>
+  <path d="M600 200 V236" stroke="#71809a" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="45" y="250" width="206" height="260" rx="19" class="card"/>
+    <rect x="271" y="250" width="206" height="260" rx="19" class="card"/>
+    <rect x="497" y="250" width="206" height="260" rx="19" class="card"/>
+    <rect x="723" y="250" width="206" height="260" rx="19" class="card"/>
+    <rect x="949" y="250" width="206" height="260" rx="19" class="card"/>
+  </g>
+
+  <rect x="45" y="250" width="206" height="58" rx="19" fill="#eaf1ff"/><rect x="45" y="286" width="206" height="22" fill="#eaf1ff"/>
+  <text x="148" y="286" text-anchor="middle" class="h" fill="#2563eb">CPU</text>
+  <text x="67" y="344" class="b" font-weight="700">cgroup + 调度器</text>
+  <text x="67" y="378" class="b muted">weight / shares</text>
+  <text x="67" y="405" class="b muted">quota / burst</text>
+  <text x="67" y="432" class="b muted">CPUSet / NUMA</text>
+  <text x="67" y="459" class="b muted">Core Scheduling</text>
+  <text x="67" y="488" font-size="14" fill="#9a5c11">依赖内核与拓扑</text>
+
+  <rect x="271" y="250" width="206" height="58" rx="19" fill="#eeeaff"/><rect x="271" y="286" width="206" height="22" fill="#eeeaff"/>
+  <text x="374" y="286" text-anchor="middle" class="h" fill="#7555d9">内存</text>
+  <text x="293" y="344" class="b" font-weight="700">memory cgroup</text>
+  <text x="293" y="378" class="b muted">min / low 保护</text>
+  <text x="293" y="405" class="b muted">high 节流回收</text>
+  <text x="293" y="432" class="b muted">max / OOM</text>
+  <text x="293" y="459" class="b muted">回收与驱逐</text>
+  <text x="293" y="488" font-size="14" fill="#9a5c11">不可压缩，要有止损</text>
+
+  <rect x="497" y="250" width="206" height="58" rx="19" fill="#e6f8f3"/><rect x="497" y="286" width="206" height="22" fill="#e6f8f3"/>
+  <text x="600" y="286" text-anchor="middle" class="h" fill="#07876a">缓存 / 带宽</text>
+  <text x="519" y="344" class="b" font-weight="700">resctrl + CPU 硬件</text>
+  <text x="519" y="378" class="b muted">CAT：LLC ways</text>
+  <text x="519" y="405" class="b muted">MBA：内存带宽</text>
+  <text x="519" y="432" class="b muted">CLOSID / tasks</text>
+  <text x="519" y="459" class="b muted">缓存命中反馈</text>
+  <text x="519" y="488" font-size="14" fill="#9a5c11">依赖 CPU 与 resctrl</text>
+
+  <rect x="723" y="250" width="206" height="58" rx="19" fill="#fff0df"/><rect x="723" y="286" width="206" height="22" fill="#fff0df"/>
+  <text x="826" y="286" text-anchor="middle" class="h" fill="#d56a00">块 I/O</text>
+  <text x="745" y="344" class="b" font-weight="700">blkio / io cgroup</text>
+  <text x="745" y="378" class="b muted">weight 相对份额</text>
+  <text x="745" y="405" class="b muted">IOPS / 带宽上限</text>
+  <text x="745" y="432" class="b muted">设备 major:minor</text>
+  <text x="745" y="459" class="b muted">队列与延迟反馈</text>
+  <text x="745" y="488" font-size="14" fill="#9a5c11">先解析真实底层设备</text>
+
+  <rect x="949" y="250" width="206" height="58" rx="19" fill="#ffe8eb"/><rect x="949" y="286" width="206" height="22" fill="#ffe8eb"/>
+  <text x="1052" y="286" text-anchor="middle" class="h" fill="#d83c55">网络</text>
+  <text x="971" y="344" class="b" font-weight="700">CNI + tc / eBPF</text>
+  <text x="971" y="378" class="b muted">队列与优先级</text>
+  <text x="971" y="405" class="b muted">Pod / 节点带宽</text>
+  <text x="971" y="432" class="b muted">整形与统计</text>
+  <text x="971" y="459" class="b muted">丢包 / 重传反馈</text>
+  <text x="971" y="488" font-size="14" fill="#9a5c11">数据路径决定能力</text>
+
+  <rect x="92" y="560" width="1016" height="52" rx="18" fill="#edf1f8"/>
+  <text x="600" y="592" text-anchor="middle" font-size="18" font-weight="600" fill="#56647d">先验证节点能力，再下发策略；最终用实际内核状态和业务 SLO 证明生效</text>
+</svg>
