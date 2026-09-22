@@ -100,8 +100,6 @@ vLLM-Omni 可以继续测试 `--max-num-seqs N` 请求级批处理，以及实�
 | 2752×1536 | 140.5 s | 140.7 s | FAIL 0/3 | 163.3 s |
 | 1536×2752 | 140.4 s | 140.7 s | FAIL 0/3 | 163.3 s |
 
-![七种原生 2K 画幅结果](assets/qwen-image21-l20/extended-native-matrix.png)
-
 SGLang 默认配置完成了 5/7 个画幅；vLLM-Omni Preview 默认配置七档都在解码阶段显存不足。开启 Tiling 后，两套引擎都达到 **7/7、每档 3/3 成功**。
 
 七档平均 P50 分别为 SGLang **143.1 秒**、vLLM-Omni **165.9 秒**。SGLang 已经能够通过的五档，打开 Tiling 只增加约 0.2～0.4 秒。对单卡 L20 来说，Tiling 更像应该默认验收的稳定性参数。
@@ -109,6 +107,8 @@ SGLang 默认配置完成了 5/7 个画幅；vLLM-Omni Preview 默认配置七�
 ![2K 原生生成与 2048 编辑实际输出](assets/qwen-image21-l20/extended-2k-samples.png)
 
 ## 图片编辑：1 张、4 张、10 张参考图
+
+官方模型卡给出的能力上限是 10 张参考图，但模型能力、服务接口和单卡显存并不是一回事。因此测试按 1、4、10 张逐级增加：1 张验证基本编辑链路，4 张验证多图排列与语义保留，10 张验证官方上限能否穿过当前 Runtime 的接口和显存边界。这个实验要回答的是“部署后真正能接收多少张”，而不只是模型文件本身支持多少张。
 
 | 引擎与配置 | 1 图 1024 | 4 图 1024 | 10 图 1024 | 1 图 2048 |
 | --- | ---: | ---: | ---: | ---: |
@@ -123,34 +123,19 @@ SGLang 的 10 图请求进入了去噪阶段，随后尝试额外分配 322 MiB 
 
 4 图样例保留了四种颜色与 1～4 的排列；单图样例里的数字被处理成偏图形化的竖条。HTTP 成功、PNG 可解码和尺寸正确，只能证明链路通过，不能替代视觉语义验收。
 
-## Grafana 里，单张 L20 已经吃满
-
-SGLang 场次 GPU 利用率峰值为 100%，显存峰值 32.8 GB，功耗峰值 351 W，温度峰值 79℃。
+## 运行时资源记录
 
 ![SGLang 单卡 L20 看板](assets/qwen-image21-l20/grafana-sglang-overview-light.png)
 
-vLLM-Omni 同样达到 100% GPU 利用率，显存峰值为 40.4 GB、功耗峰值 355 W、温度峰值 78℃。当前 Preview Runtime 比 SGLang 多占约 **7.6 GB** 显存。
-
 ![vLLM-Omni 单卡 L20 看板](assets/qwen-image21-l20/grafana-vllm-overview-light.png)
-
-| 资源峰值 | SGLang | vLLM-Omni |
-| --- | ---: | ---: |
-| GPU 利用率 | 100% | 100% |
-| 显存 | 32.8 GB | 40.4 GB |
-| 功耗 | 351 W | 355 W |
-| 温度 | 79℃ | 78℃ |
-
-Grafana 的完整窗口包含加载、预热、正式请求和结束阶段。这里用峰值做容量保护，不把离散采样当成逐请求能耗。
-
-到了连续 2K 与编辑矩阵，显存边界进一步收紧：SGLang 峰值 **45.2 GB**，vLLM-Omni 峰值 **45.0 GB**；功耗峰值分别为 357 W 和 363 W，GPU 利用率峰值均为 100%。这两个窗口也包含失败用例触发 OOM 前的资源状态，适合用来设置容量保护。
 
 ![SGLang 2K 与编辑矩阵显存](assets/qwen-image21-l20/grafana-sglang-2k-memory-light.png)
 
 ![vLLM-Omni 2K 与编辑矩阵显存](assets/qwen-image21-l20/grafana-vllm-2k-memory-light.png)
 
-## 家庭显卡能不能跑
+## 消费级显卡能不能跑
 
-家庭部署也要区分“能加载”“能生成一张”和“能连续运行”。48 GB 显存可以直接运行完整 BF16 Pipeline；32 GB 消费卡更可能需要 VAE Tiling、组件卸载或量化；24 GB 及以下通常还要更激进的 CPU Offload。这是根据 L20 实测峰值做出的容量判断，不是消费卡性能实测。
+消费级显卡部署也要区分“能加载”“能生成一张”和“能连续运行”。48 GB 显存可以直接运行完整 BF16 Pipeline；32 GB 消费卡更可能需要 VAE Tiling、组件卸载或量化；24 GB 及以下通常还要更激进的 CPU Offload。这是根据 L20 实测峰值做出的容量判断，不是消费卡性能实测。
 
 Hugging Face 上已经出现多种社区量化，但 Qwen 官方仓库当前仍是 BF16。几条路线的差别很大：
 
@@ -161,9 +146,9 @@ Hugging Face 上已经出现多种社区量化，但 Qwen 官方仓库当前仍�
 | W4A4 NVFP4 | 社区作者报告常驻约 21.53 GB，RTX 5090 生成 1024×1024、40 步约 7.65 秒 | RTX 50 系 Blackwell |
 | MLX 4-bit | 10.7 GB 的 Text-to-Image Pack | Apple Silicon 早期试验 |
 
-这里最容易踩的坑，是把量化权重文件大小当成整条 Pipeline 的显存。Qwen3-VL 文本编码器、VAE、Attention 工作区和解码峰值仍然存在；一些版本还依赖尚未发布的分支或专用 Kernel。家庭部署要连同 Runtime、组件精度和编辑能力一起选。
+这里最容易踩的坑，是把量化权重文件大小当成整条 Pipeline 的显存。Qwen3-VL 文本编码器、VAE、Attention 工作区和解码峰值仍然存在；一些版本还依赖尚未发布的分支或专用 Kernel。消费级显卡部署要连同 Runtime、组件精度和编辑能力一起选。
 
-![家庭显卡部署路径](assets/qwen-image21-l20/home-gpu-deployment.png)
+![消费级显卡部署路径](assets/qwen-image21-l20/home-gpu-deployment.png)
 
 RTX 5090 有 32 GB GDDR7，仍低于本文部分 BF16 配置的 L20 峰值。W4A4 的社区数据说明它有机会把运行集压进显存，却不能把社区量化的速度和质量当成官方结论。除了显存，还要准备足够的系统内存和高速 NVMe。个人创作更适合从 Diffusers 或 ComfyUI 入手；需要局域网 API、批量队列和统一监控时，再增加服务层。
 

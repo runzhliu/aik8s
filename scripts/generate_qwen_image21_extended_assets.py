@@ -200,7 +200,7 @@ def safety_pipeline(output: Path):
 def home_gpu_guide(output: Path, sglang_peak_gb: float, vllm_peak_gb: float):
     image = Image.new("RGB", (1200, 675), BG)
     draw = ImageDraw.Draw(image)
-    text(draw, (52, 33), "家庭部署：先按显存档位选目标，再谈速度", 35, bold=True)
+    text(draw, (52, 33), "消费级显卡：先按显存档位选目标，再谈速度", 35, bold=True)
     text(draw, (53, 83), f"L20 实测峰值：SGLang {sglang_peak_gb:.1f} GB；vLLM-Omni {vllm_peak_gb:.1f} GB", 19, MUTED)
     cards = [
         ("48 GB", "完整 BF16 起点", "先跑 1024 与 C1\n2K 必须验证 VAE 峰值\nTiling 仍是稳定性参数", GREEN),
