@@ -74,6 +74,7 @@ nav = [
       {"2026 Agent 现状与趋势" = "ai-k8s/rag-agent/agent-landscape-2026.md"},
       {"Agent Harness 技术综述" = "ai-k8s/rag-agent/agent-harness-technology-overview.md"},
       {"Agent 评估方法综述" = "ai-k8s/rag-agent/agent-evaluation-overview.md"},
+      {"Harbor Agent 评测框架综述" = "ai-k8s/rag-agent/harbor-agent-evaluation-framework.md"},
       {"Jev System One 决策模型综述" = "ai-k8s/rag-agent/jev-system-one-model-overview.md"},
       {"HarnessRouter 综述" = "ai-k8s/rag-agent/harnessrouter-overview.md"},
       {"Agent Memory 技术综述" = "ai-k8s/rag-agent/agent-memory-technology-overview.md"},
