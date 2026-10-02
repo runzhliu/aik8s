@@ -108,7 +108,7 @@ vLLM 场次使用 `0.1.dev19754+g3a0914114` 与 NCCL `2.30.7`。这次四台 NVM
 
 两个引擎的模型 ID、算术、完整流式、独立 Reasoning、`reasoning_effort=low/medium/xhigh`、多轮记忆和 Tool Call 回灌全部通过。OpenWebUI 复用已有实例，以 OpenAI-compatible Connection 分别注册后完成真实对话；截图和对话导出与 API 收据一起保存。
 
-![OpenWebUI 中的真实多轮对话](../../assets/practices/qwen38-a95b-h20/openwebui-sglang-chat-light.png)
+![SGLang 在 OpenWebUI 中的真实两轮对话](../../assets/practices/qwen38-a95b-h20/openwebui-sglang-multiturn-light.png)
 
 ![vLLM 接入 OpenWebUI 后的真实对话](../../assets/practices/qwen38-a95b-h20/openwebui-vllm-chat-light.png)
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
+import time
 from typing import Optional
 import urllib.error
 import urllib.request
@@ -13,6 +15,14 @@ import urllib.request
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:30000/v1").rstrip("/")
 MODEL = os.getenv("MODEL", "qwen38-a95b-fp8")
 TIMEOUT = int(os.getenv("TIMEOUT", "1800"))
+MAX_TOKENS = int(os.getenv("MAX_TOKENS", "4096"))
+TRACE_FILE = os.getenv("TRACE_FILE")
+
+
+def trace(value: dict) -> None:
+    if TRACE_FILE:
+        with Path(TRACE_FILE).open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"at": time.time(), **value}, ensure_ascii=False) + "\n")
 
 
 def request(method: str, path: str, payload: Optional[dict] = None) -> dict:
@@ -23,12 +33,24 @@ def request(method: str, path: str, payload: Optional[dict] = None) -> dict:
         method=method,
         headers={"Content-Type": "application/json", "Authorization": "Bearer EMPTY"},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"HTTP {exc.code} {path}: {body}") from exc
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as response:
+                result = json.loads(response.read().decode("utf-8"))
+                trace({"path": path, "request": payload, "attempt": attempt + 1, "response": result})
+                return result
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            trace({"path": path, "request": payload, "attempt": attempt + 1,
+                   "http_status": exc.code, "error_body": body})
+            if exc.code not in (429, 502, 503, 504) or attempt == 2:
+                raise RuntimeError(f"HTTP {exc.code} {path}: {body}") from exc
+        except urllib.error.URLError as exc:
+            trace({"path": path, "request": payload, "attempt": attempt + 1, "error": str(exc)})
+            if attempt == 2: raise
+        # No protocol remapping without a verified Qwen-specific mapping.
+        time.sleep(2 ** attempt)
+    raise AssertionError("unreachable")
 
 
 def assistant_message(response: dict) -> dict:
@@ -44,7 +66,7 @@ def chat(messages: list[dict], **extra: object) -> dict:
         "messages": messages,
         "stream": False,
         "temperature": 0,
-        "max_tokens": 1024,
+        "max_tokens": MAX_TOKENS,
     }
     payload.update(extra)
     return request("POST", "/chat/completions", payload)
@@ -55,138 +77,98 @@ def reasoning_text(message: dict) -> str:
 
 
 def stream_chat() -> tuple[str, str]:
-    payload = {
-        "model": MODEL,
-        "messages": [{"role": "user", "content": "用一句话解释什么是 Kubernetes。"}],
-        "stream": True,
-        "temperature": 0,
-        "max_tokens": 1024,
-    }
-    req = urllib.request.Request(
-        f"{BASE_URL}/chat/completions",
-        data=json.dumps(payload).encode("utf-8"),
-        method="POST",
-        headers={"Content-Type": "application/json", "Authorization": "Bearer EMPTY"},
-    )
-    content_parts: list[str] = []
-    reasoning_parts: list[str] = []
+    payload = {"model": MODEL, "messages": [{"role": "user", "content": "计算 37×19，只回答数字。"}],
+               "stream": True, "stream_options": {"include_usage": True},
+               "temperature": 0, "max_tokens": MAX_TOKENS}
+    req = urllib.request.Request(f"{BASE_URL}/chat/completions", data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json", "Authorization": "Bearer EMPTY"})
+    content, reasoning = [], []
+    done = False; usage = None
+    trace({"path": "/chat/completions", "request": payload, "stream_started": True})
+    # A partial stream is never retried and counted as a new successful response.
     with urllib.request.urlopen(req, timeout=TIMEOUT) as response:
         for raw in response:
-            line = raw.decode("utf-8", errors="replace").strip()
-            if not line.startswith("data: ") or line == "data: [DONE]":
-                continue
-            event = json.loads(line[6:])
-            choices = event.get("choices") or []
-            if not choices:
-                continue
-            delta = choices[0].get("delta") or {}
-            content_parts.append(delta.get("content") or "")
-            reasoning_parts.append(
-                delta.get("reasoning_content") or delta.get("reasoning") or ""
-            )
-    return "".join(content_parts), "".join(reasoning_parts)
+            trace({"stream_raw": raw.decode("utf-8", errors="replace")})
+            line = raw.decode("utf-8").strip()
+            if not line.startswith("data:"): continue
+            data = line[5:].strip()
+            if data == "[DONE]": done = True; continue
+            event = json.loads(data)
+            if event.get("error"): raise AssertionError("SSE error event")
+            if event.get("usage"): usage = event["usage"]
+            for choice in event.get("choices", []):
+                delta = choice.get("delta", {})
+                content.append(delta.get("content") or "")
+                reasoning.append(delta.get("reasoning_content") or delta.get("reasoning") or "")
+    assert done and usage and usage.get("completion_tokens", 0) > 0, "incomplete SSE/usage"
+    final = "".join(content)
+    assert final.strip() == "703", "stream final answer incorrect"
+    return final, "".join(reasoning)
 
 
 def main() -> int:
-    models = request("GET", "/models")
-    advertised = [item.get("id") for item in models.get("data", [])]
-    if MODEL not in advertised:
-        raise AssertionError(f"{MODEL!r} not found in /v1/models: {advertised}")
-
-    math_message = assistant_message(
-        chat([{"role": "user", "content": "计算 37×19，最终答案必须包含 703。"}])
-    )
-    if "703" not in (math_message.get("content") or ""):
-        raise AssertionError(f"deterministic math result is wrong: {math_message}")
-    if not reasoning_text(math_message):
-        raise AssertionError(f"reasoning trace is missing: {math_message}")
-    if "<think>" in (math_message.get("content") or ""):
-        raise AssertionError(f"raw thinking leaked into final content: {math_message}")
-
-    effort_results = {}
-    for effort in ("low", "medium", "xhigh"):
-        message = assistant_message(
-            chat(
-                [{"role": "user", "content": "只回答：12 的平方是多少？"}],
-                reasoning_effort=effort,
-                max_tokens=1024,
-            )
-        )
-        if "144" not in (message.get("content") or ""):
-            raise AssertionError(f"reasoning_effort={effort} returned wrong answer: {message}")
-        effort_results[effort] = {
-            "content": message.get("content"),
-            "has_reasoning": bool(reasoning_text(message)),
-        }
-
-    first = assistant_message(
-        chat([{"role": "user", "content": "记住代号 amber-417，只回复已记住。"}])
-    )
-    second = assistant_message(
-        chat(
-            [
-                {"role": "user", "content": "记住代号 amber-417，只回复已记住。"},
-                first,
-                {"role": "user", "content": "刚才的代号是什么？只回复代号。"},
-            ],
-            max_tokens=256,
-        )
-    )
-    if "amber-417" not in (second.get("content") or "").lower():
-        raise AssertionError(f"multi-turn memory result is wrong: {second}")
-
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "get_weather",
-                "description": "查询城市天气",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "city": {"type": "string"},
-                        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-                    },
-                    "required": ["city", "unit"],
-                },
-            },
-        }
-    ]
-    tool_message = assistant_message(
-        chat(
-            [{"role": "user", "content": "调用工具查询北京天气，单位用摄氏度。"}],
-            tools=tools,
-            tool_choice="auto",
-        )
-    )
-    tool_calls = tool_message.get("tool_calls") or []
-    if not tool_calls:
-        raise AssertionError(f"structured tool call missing: {tool_message}")
-    arguments = tool_calls[0].get("function", {}).get("arguments")
-    if isinstance(arguments, str):
-        arguments = json.loads(arguments)
-    if not isinstance(arguments, dict) or "北京" not in str(arguments.get("city")):
-        raise AssertionError(f"tool arguments are invalid: {arguments}")
-
-    stream_content, stream_reasoning = stream_chat()
-    if not stream_content or not stream_reasoning:
-        raise AssertionError("streaming did not return both reasoning and final content")
-
-    result = {
-        "status": "PASS",
-        "model": MODEL,
-        "models_endpoint": "PASS",
-        "math": {"content": math_message.get("content"), "has_reasoning": True},
-        "reasoning_effort": effort_results,
-        "multi_turn": second.get("content"),
-        "tool_call": tool_calls[0],
-        "streaming": {
-            "content_chars": len(stream_content),
-            "reasoning_chars": len(stream_reasoning),
-        },
-    }
+    result = {"status": "RUNNING", "model": MODEL, "basic_gate_passed": False, "cases": {}}
+    def check(name, fn):
+        try:
+            value = fn(); result["cases"][name] = {"status": "PASS", "result": value}; return True
+        except Exception as exc:
+            result["cases"][name] = {"status": "FAILED", "error": str(exc)}; return False
+        finally:
+            if os.getenv("RESULT_FILE"):
+                path = Path(os.environ["RESULT_FILE"]); path.parent.mkdir(parents=True, exist_ok=True)
+                temp = path.with_suffix(".tmp"); temp.write_text(json.dumps(result, ensure_ascii=False, indent=2)); temp.replace(path)
+    def models():
+        advertised = [x["id"] for x in request("GET", "/models").get("data", [])]
+        assert MODEL in advertised, "model ID missing"
+        return advertised
+    def math():
+        msg = assistant_message(chat([{ "role": "user", "content": "计算 37×19，只回答数字。"}]))
+        assert (msg.get("content") or "").strip() == "703", "incorrect final answer"
+        assert "<think>" not in msg["content"], "raw reasoning leaked"
+        return msg
+    basic = check("models", models)
+    basic = check("math", math) and basic
+    basic = check("complete_sse", stream_chat) and basic
+    result["basic_gate_passed"] = basic
+    if basic:
+        def reasoning():
+            msg = result["cases"]["math"]["result"]
+            assert reasoning_text(msg), "reasoning trace missing"
+            return {"has_reasoning": True}
+        check("reasoning", reasoning)
+        for effort in ["low", "medium", "xhigh"]:
+            def run_effort(effort=effort):
+                msg = assistant_message(chat([{ "role":"user", "content":"只回答：12 的平方是多少？"}], reasoning_effort=effort))
+                assert (msg.get("content") or "").strip() == "144", "effort answer incorrect"
+                return {"effort": effort, "has_reasoning": bool(reasoning_text(msg))}
+            check("reasoning_effort_" + effort, run_effort)
+        def multi():
+            messages = [{"role":"user", "content":"记住代号 amber-417，只回复已记住。"}]
+            messages += [assistant_message(chat(messages)), {"role":"user", "content":"刚才的代号是什么？只回复代号。"}]
+            msg = assistant_message(chat(messages))
+            assert (msg.get("content") or "").strip() == "amber-417", "multi-turn answer incorrect"
+            return msg
+        check("multi_turn", multi)
+        def tool():
+            tools = [{"type":"function", "function":{"name":"get_weather", "description":"查询城市天气",
+                "parameters":{"type":"object", "properties":{"city":{"type":"string"},"unit":{"type":"string","enum":["celsius","fahrenheit"]}}, "required":["city","unit"]}}}]
+            messages = [{"role":"user", "content":"调用工具查询北京天气，单位用摄氏度。"}]
+            msg = assistant_message(chat(messages, tools=tools, tool_choice="auto"))
+            call = msg["tool_calls"][0]
+            assert call["function"]["name"] == "get_weather", "wrong tool name"
+            args = call["function"]["arguments"]
+            if isinstance(args, str): args = json.loads(args)
+            assert args["city"] in ("北京", "Beijing") and args["unit"] == "celsius", "wrong arguments"
+            final = assistant_message(chat(messages + [msg, {"role":"tool", "tool_call_id":call["id"],
+                "content":json.dumps({"city":"北京", "temperature":23, "unit":"celsius"}, ensure_ascii=False)}], tools=tools))
+            assert "23" in (final.get("content") or ""), "tool result not used"
+            return {"tool_call":call, "mock_result_final":final}
+        check("tool_round_trip", tool)
+    result["status"] = "PASS" if basic and all(x["status"] == "PASS" for x in result["cases"].values()) else "PARTIAL" if basic else "FAILED"
+    if os.getenv("RESULT_FILE"):
+        Path(os.environ["RESULT_FILE"]).write_text(json.dumps(result, ensure_ascii=False, indent=2))
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0
+    return 0 if basic else 1
 
 
 if __name__ == "__main__":

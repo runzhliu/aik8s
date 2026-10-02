@@ -14,11 +14,28 @@ from transformers import AutoTokenizer
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:30000/v1").rstrip("/")
 MODEL = os.getenv("MODEL", "qwen38-a95b-fp8")
 TOKENIZER = os.getenv("TOKENIZER", "/models-nvme/Qwen3.8-2.4T-A95B-FP8/v1")
-TARGET_TOKENS = int(os.getenv("TARGET_TOKENS", "32640"))
+MAX_CONTEXT = int(os.getenv("MAX_CONTEXT", "32768"))
+MAX_TOKENS = int(os.getenv("MAX_TOKENS", "2048"))
+TARGET_TOKENS = int(os.getenv("TARGET_TOKENS", str(MAX_CONTEXT - MAX_TOKENS - 64)))
 DEPTH = float(os.getenv("DEPTH", "0.5"))
 TIMEOUT = int(os.getenv("TIMEOUT", "3600"))
 MARKER = os.getenv("MARKER", f"jade-{TARGET_TOKENS}-{int(DEPTH * 100)}-7319")
 OUTPUT_FILE = os.getenv("OUTPUT_FILE")
+
+
+def token_count(encoded) -> int:
+    """Count IDs across Transformers list/Tensor/BatchEncoding return shapes."""
+    if hasattr(encoded, "input_ids"):
+        encoded = encoded.input_ids
+    elif isinstance(encoded, dict):
+        encoded = encoded["input_ids"]
+    if hasattr(encoded, "tolist"):
+        encoded = encoded.tolist()
+    if encoded and isinstance(encoded[0], (list, tuple)):
+        if len(encoded) != 1:
+            raise ValueError("expected one rendered chat prompt")
+        encoded = encoded[0]
+    return len(encoded)
 
 
 def main() -> int:
@@ -47,12 +64,20 @@ def main() -> int:
         + tokenizer.encode(suffix, add_special_tokens=False)
     )
     prompt = tokenizer.decode(prompt_ids, skip_special_tokens=True)
+    messages = [{"role": "user", "content": prompt}]
+    # Count the re-encoded text and actual chat template, including generation
+    # prefix. The raw filler token count alone understates API context usage.
+    rendered_ids = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True)
+    rendered_token_count = token_count(rendered_ids)
+    if rendered_token_count + MAX_TOKENS > MAX_CONTEXT:
+        raise ValueError(f"chat tokens {rendered_token_count} + output {MAX_TOKENS} exceed context {MAX_CONTEXT}")
 
     payload = {
         "model": MODEL,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": messages,
         "temperature": 0,
-        "max_tokens": 256,
+        "max_tokens": MAX_TOKENS,
+        "reasoning_effort": "low",
     }
     req = urllib.request.Request(
         f"{BASE_URL}/chat/completions",
@@ -64,16 +89,20 @@ def main() -> int:
         result = json.loads(response.read().decode("utf-8"))
     message = result["choices"][0]["message"]
     content = message.get("content") or ""
-    passed = MARKER.lower() in content.lower()
+    passed = content.strip().strip('`"\'').lower() == MARKER.lower()
     output = {
         "status": "PASS" if passed else "FAIL",
         "model": MODEL,
         "target_tokens": TARGET_TOKENS,
-        "actual_prompt_tokens": len(prompt_ids),
+        "actual_prompt_tokens": rendered_token_count,
+        "raw_text_tokens": len(tokenizer.encode(prompt, add_special_tokens=False)),
+        "max_context": MAX_CONTEXT,
+        "max_output_tokens": MAX_TOKENS,
         "depth": DEPTH,
         "marker": MARKER,
         "content": content,
         "usage": result.get("usage"),
+        "response": result,
     }
     rendered = json.dumps(output, ensure_ascii=False, indent=2)
     print(rendered)

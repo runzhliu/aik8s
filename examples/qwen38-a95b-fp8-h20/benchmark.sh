@@ -15,6 +15,7 @@ MAX_CONTEXT="${MAX_CONTEXT:-32768}"
 FLUSH_CACHE="${FLUSH_CACHE:-1}"
 FLUSH_RETRIES="${FLUSH_RETRIES:-180}"
 FLUSH_RETRY_DELAY="${FLUSH_RETRY_DELAY:-2}"
+RESUME="${RESUME:-0}"
 
 die() {
   echo "error: $*" >&2
@@ -128,8 +129,15 @@ executed=0
       )
       echo "RUN label=${RUN_LABEL} case=${case_id} repeat=${repeat}/${repeats} input=${input_tokens} output=${output_tokens} concurrency=${concurrency}"
       if [ "${EXECUTE}" = "1" ]; then
+        if [ "${RESUME}" = "1" ] && [ -f "${RESULTS_DIR}/${filename}" ]; then
+          python3 "${SCRIPT_DIR}/validate_benchmark_result.py" "${RESULTS_DIR}/${filename}" "${num_prompts}" "${output_tokens}"
+          echo "RESUME_VALIDATED case=${case_id} repeat=${repeat}"
+          repeat=$((repeat + 1))
+          continue
+        fi
         flush_cache
         "${command[@]}"
+        python3 "${SCRIPT_DIR}/validate_benchmark_result.py" "${RESULTS_DIR}/${filename}" "${num_prompts}" "${output_tokens}"
         executed=$((executed + 1))
       else
         print_command "${command[@]}"

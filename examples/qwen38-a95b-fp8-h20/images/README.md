@@ -13,20 +13,20 @@ Registry-to-Registry 复制，不经过本地 VPN，也不在中转机展开完�
 ## 内网交付 Tag
 
 ```text
-<STAGING_REGISTRY>/vip/llm-serving-sglang:qwen38-cu130-amd64-20260903
-<STAGING_REGISTRY>/vip/llm-serving-vllm:qwen38-cu130-amd64-20260903
+<STAGING_REGISTRY>/<NAMESPACE>/llm-serving-sglang:qwen38-cu130-amd64-20260903
+<STAGING_REGISTRY>/<NAMESPACE>/llm-serving-vllm:qwen38-cu130-amd64-20260903
 ```
 
-生产和 gd5c 集群使用同名仓库与 Tag。正式 Manifest 在同步完成后引用目标 Registry，并在
+生产与测试集群使用同名仓库与 Tag。正式 Manifest 在同步完成后引用目标 Registry，并在
 首次零 GPU 探针中记录目标实际 Digest。
 
 | 目标 | SGLang | vLLM | 状态 |
 | --- | --- | --- | --- |
 | staging | 已核验 amd64、构建 Commit 和目标 Digest | 已核验 amd64、构建 Commit 和目标 Digest | Completed |
 | production | staging → production 成功 | staging → production 成功 | Completed |
-| gd5c | 节点实拉并运行版本探针成功 | 节点实拉并运行版本探针成功 | Verified |
+| test cluster | 节点实拉并运行版本探针成功 | 节点实拉并运行版本探针成功 | Verified |
 
-gd5c 节点实际解析到的 Image ID：
+测试节点实际解析到的 Image ID：
 
 ```text
 SGLang sha256:cbcd855fe525c4cde74b119c3755831f46209adfd4584801d51ce044924432ef
@@ -35,7 +35,7 @@ vLLM   sha256:d392f621bb3e372ecc09f0b0cb88099afe9fa05d37a0450de45eeb8c12b6787e
 
 vLLM 目标 Digest 与上游 amd64 Manifest 一致。SGLang 在 Registry 复制后 Manifest Digest
 发生变化；进一步比较上游与 staging 的 config Digest、层数和全部 layer Digest，组合校验值
-一致，因此差异来自 Manifest 表达，不是镜像内容变化。gd5c 实拉大小分别约为 17.53GB 和
+一致，因此差异来自 Manifest 表达，不是镜像内容变化。测试节点实拉大小分别约为 17.53GB 和
 7.59GB，版本探针输出为 `sglang=0.0.0+qwen38.20260812.4e51ffc` 与
 `vllm=0.1.dev19754+g3a0914114`。
 

@@ -30,6 +30,11 @@ __pycache__/
 /examples/minimax-h3-h20/k8s/
 # Private local notes
 vip/
+/AGENTS.md
+/.local/
+
+# Qwen node inventories, manifests and live prewarm state
+/examples/qwen38-a95b-fp8-h20/results/
 
 # Test plans are local working notes, never public documentation.
 /.local/test-plans/
