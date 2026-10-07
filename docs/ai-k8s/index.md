@@ -119,6 +119,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [Agent 评估方法综述](rag-agent/agent-evaluation-overview.md)：任务成功、工具轨迹、故障恢复、安全、成本和人工介入的评分方法。
 - [Harbor Agent 评测框架综述](rag-agent/harbor-agent-evaluation-framework.md)：Task、Agent Adapter、隔离环境、Verifier、Rollout 及 Kubernetes 生产化。
 - [Jev System One 决策模型综述](rag-agent/jev-system-one-model-overview.md)：不生成文本的概率决策接口、置信度、Agent 路由、社区争议、生产架构与评估方法。
+- [Jev 每周回顾](rag-agent/jev-weekly-review.md)：按周追踪官方版本、独立评测、社区权重与 Agent 应用，保留历史结果与判断。
 - [HarnessRouter 综述](rag-agent/harnessrouter-overview.md)：UHP、统一 Harness API、Cloud 与 Community Edition、安全边界、成本及与模型网关的关系。
 - [DeepSeek Harness GitHub 仓库深度解析](rag-agent/deepseek-harness-repository-analysis.md)：源码目录、Cordis 插件树、Profile 与 Bundle、Agent Loop、事件溯源会话和能力 seam。
 - [DeepSeek Harness Docker、Compose 与 Helm 部署实战](rag-agent/deepseek-harness-runtime-containerization.md)：多架构镜像、EROFS 修复、状态持久化、StatefulSet、Helm 与安全暴露边界。

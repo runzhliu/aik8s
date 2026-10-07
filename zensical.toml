@@ -76,6 +76,7 @@ nav = [
       {"Agent 评估方法综述" = "ai-k8s/rag-agent/agent-evaluation-overview.md"},
       {"Harbor Agent 评测框架综述" = "ai-k8s/rag-agent/harbor-agent-evaluation-framework.md"},
       {"Jev System One 决策模型综述" = "ai-k8s/rag-agent/jev-system-one-model-overview.md"},
+      {"Jev 每周回顾" = "ai-k8s/rag-agent/jev-weekly-review.md"},
       {"HarnessRouter 综述" = "ai-k8s/rag-agent/harnessrouter-overview.md"},
       {"Agent Memory 技术综述" = "ai-k8s/rag-agent/agent-memory-technology-overview.md"},
       {"Langfuse 与 LangGraph 技术综述" = "ai-k8s/rag-agent/langfuse-langgraph-overview.md"},
