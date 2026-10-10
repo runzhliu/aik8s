@@ -54,6 +54,7 @@ last_reviewed: 2026-09-26
 - [8 卡节点的四卡任务，如何避免拿到跨 NUMA 的碎片 GPU](gpu-topology-fragmentation-scheduling.md)
 - [GPU 资源银行与潮汐推理平台实践蓝图](gpu-resource-bank-tidal-platform.md)
 - [Kueue 与 Volcano 对比实验](kueue-vs-volcano.md)
+- [Volcano 调度器不是万能钥匙：企业落地的配置、边界与排障](volcano-scheduler-enterprise-limits.md)
 - [Kubernetes 还是 Slurm](kubernetes-vs-slurm.md)
 - [在 KubeVirt 上运行 Kubernetes：架构边界、生产设计与 AI 场景取舍](../cluster/kubevirt-guest-kubernetes.md)
 - [KubeVirt 单节点桌面实战：本地盘、CDI 与浏览器 noVNC](kubevirt-local-desktop-lab.md)
