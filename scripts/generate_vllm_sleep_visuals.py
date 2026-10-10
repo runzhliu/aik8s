@@ -2,9 +2,8 @@
 """Deterministic Sleep Mode charts; inputs contain measurements, no estimates."""
 import json,math,sys
 from pathlib import Path
-from PIL import Image,ImageDraw,ImageOps
 from generate_minimax_m3_visuals_v2 import header,footer,txt,center,INK,MUTED,LINE,BLUE,ORANGE
-from generate_glm53_day1_wechat_covers import LANDSCAPE_BACKGROUND,SQUARE_BACKGROUND,add_horizontal_panel,add_square_panel
+from generate_vllm_sleep_brand_covers import main as generate_covers
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'docs/assets/practices/vllm-sleep-l20'
 WECHAT=ROOT/'articles/wechat/assets/vllm-sleep-l20'
@@ -37,21 +36,7 @@ def measured():
     im.save(OUT/'restart-vs-wake.png',optimize=True)
 
 def covers():
-    WECHAT.mkdir(parents=True,exist_ok=True)
-    for square,source,name in [(False,LANDSCAPE_BACKGROUND,'cover.png'),(True,SQUARE_BACKGROUND,'cover-square.png')]:
-        size=(900,900) if square else (900,383)
-        im=ImageOps.fit(Image.open(source).convert('RGB'),size,method=Image.Resampling.LANCZOS)
-        im=add_square_panel(im) if square else add_horizontal_panel(im);d=ImageDraw.Draw(im)
-        x=58 if square else 46;white='#F6FAFF';muted='#BCD2EB';accent='#FFB46A'
-        txt(d,x,52 if square else 34,'L20 · TWO MODELS · SLEEP / WAKE',21 if square else 15,fill=muted,latin=True)
-        txt(d,x,119 if square else 86,'vLLM Sleep',68 if square else 44,fill=white,bold=True,latin=True)
-        txt(d,x,213 if square else 148,'单卡双模型实测',48 if square else 32,fill=white,bold=True)
-        y=310 if square else 214;w=330 if square else 259;h=58 if square else 42
-        d.rounded_rectangle((x,y,x+w,y+h),h//2,fill=accent)
-        center(d,(x,y,x+w,y+h),'显存 · 恢复 · DRA',27 if square else 20,fill='#542A0F',bold=True)
-        txt(d,x,407 if square else 284,'从引擎恢复到设备共享',25 if square else 17,fill=muted)
-        txt(d,x,475 if square else 335,'AIK8S.RUN',20 if square else 13,fill=muted,latin=True)
-        im.save(WECHAT/name,optimize=True)
+    generate_covers()
 
 if __name__=='__main__':
     if '--covers-only' not in sys.argv:measured()

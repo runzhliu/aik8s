@@ -1,0 +1,15 @@
+{
+  "layout_reference": "articles/wechat/assets/minimax-m3-h20/brand-cover/",
+  "layout": "Light background, left title, simple right-side device tiles; independently composed square variant",
+  "palette_scope": "Editorial orange for the vLLM series, not a claim of official corporate brand colors",
+  "editorial_palette": {
+    "background": "#FFF8F2",
+    "ink": "#382B25",
+    "muted": "#8A7364",
+    "accent": "#B95016",
+    "line": "#EDCCB8"
+  },
+  "source": "scripts/generate_vllm_sleep_brand_covers.py",
+  "main_cover": "cover.png",
+  "sharing_cover": "cover-square.png"
+}
