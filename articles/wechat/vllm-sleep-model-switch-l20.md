@@ -34,7 +34,7 @@ vLLM 的 Sleep Mode 让模型暂时交出大部分显存，保留已初始化的
 | A | 55.63 s | 1.86 s | 14.91 s |
 | B | 36.05 s | 0.24 s | 2.17 s |
 
-![重启与唤醒](assets/vllm-sleep-l20/restart-vs-wake.png)
+![重启与唤醒](assets/vllm-sleep-l20/v2/restart-vs-wake.png)
 
 首次启动 A 用了 219.20 秒，B 为 84.06 秒；表中重启取随后 2 次的中位数，Level 1 为 5 次，Level 2 为 3 次。重启发生在同一个 Pod 中，镜像已经就绪，编译缓存可以复用；这里没有把镜像拉取与 Kubernetes 调度时间算进重启。
 
@@ -55,11 +55,11 @@ A 运行时物理显存约 33.05 GiB，B 运行时约 8.31 GiB，两者都休眠
 
 19 次实际交接之外，还有 1 次双模型均休眠后的初始激活，后者不混入方向统计。
 
-![显存与运行状态](assets/vllm-sleep-l20/grafana-switch.png)
+![休眠交出显存](assets/vllm-sleep-l20/v2/grafana-switch.png)
 
 这组模型没有做同时唤醒或并发共存对照。按独立测量估算，显存合计可能仍在 L20 容量内；本次数据关注温备恢复与交接成本，不用于比较这组模型串行切换和并行共存的性价比。
 
-状态与显存曲线对应，能看到谁正在使用这张卡。Level 1 的代价是 CPU 内存：休眠模型的权重需要留在主机上。图中的 RSS 按进程求和，含共享页重复计量，规划容器内存还应看 cgroup 实际占用。
+Level 1 的代价是 CPU 内存：休眠模型的权重需要留在主机上。进程 RSS 求和可能重复计入共享页，规划容器内存还应看 cgroup 实际占用。
 
 ## 恢复后，还能保持原来的吞吐吗
 
@@ -76,17 +76,17 @@ A 运行时物理显存约 33.05 GiB，B 运行时约 8.31 GiB，两者都休眠
 | B后 C1 | 175.89 | 19.19 | 5.57 |
 | B后 C4 | 657.60 | 39.30 | 5.88 |
 
-![恢复耗时与短时吞吐](assets/vllm-sleep-l20/grafana-timing.png)
+![恢复前后的 C4 输出吞吐](assets/vllm-sleep-l20/v2/grafana-timing.png)
 
 前/后指 Level 1 恢复前后；每格 16/16 条性能请求成功。吞吐为两轮中位数，P95 为两轮成功请求合并后计算，最近秩法。TTFT 是首 Token 延迟，TPOT 是每输出 Token 的平均时间。每配置只有 16 个性能请求，适合检查恢复前后是否发生明显退化，不能替代长时间容量验收。
 
-![C4 首 Token 与每 Token 时间](assets/vllm-sleep-l20/grafana-latency.png)
+![C4 首 Token 与每 Token 时间](assets/vllm-sleep-l20/v2/grafana-latency.png)
 
 延迟曲线是 C4 请求的一分钟滑动均值，与表中的整轮 P95 分开阅读。128 条性能请求与 42 条正确性请求均完成。
 
 正确性提示词是“只回答一个数字，不要解释：3 加 4 等于多少？”，要求完整输出 7、结束标记和有效 usage。性能提示词是“用中文简要解释 Kubernetes 的 Pod 和 Deployment 的关系。”，采用 ignore_eos 固定输出工作量，不用于回答质量评分。
 
-![真实交互样例](assets/vllm-sleep-l20/openwebui-chat-light.png)
+![真实交互样例](assets/vllm-sleep-l20/v2/openwebui-chat-light.png)
 
 这张聊天界面截图来自独立的 1.7B 交互验证，未混入正式性能统计。
 

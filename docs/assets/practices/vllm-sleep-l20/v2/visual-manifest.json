@@ -1,0 +1,118 @@
+{
+  "style": "MiniMax M3 v2",
+  "dimensions": [
+    1200,
+    675
+  ],
+  "measurement_sha256": "853d0aa28f6f3b4a8273e6eb11a9410e3b8acbdeee68da1249005359a44f3486",
+  "measurements": [
+    {
+      "figure": "restart-vs-wake.png",
+      "model": "A",
+      "mode": "进程重启",
+      "n": 2,
+      "median": 55.62885317578912,
+      "min": 54.133458437398076,
+      "max": 57.12424791418016,
+      "p95": 57.12424791418016
+    },
+    {
+      "figure": "restart-vs-wake.png",
+      "model": "B",
+      "mode": "进程重启",
+      "n": 2,
+      "median": 36.054832791443914,
+      "min": 36.051797261461616,
+      "max": 36.05786832142621,
+      "p95": 36.05786832142621
+    },
+    {
+      "figure": "restart-vs-wake.png",
+      "model": "A",
+      "mode": "Level 1",
+      "n": 5,
+      "median": 1.8620264418423176,
+      "min": 1.8463675044476986,
+      "max": 1.875916856341064,
+      "p95": 1.875916856341064
+    },
+    {
+      "figure": "restart-vs-wake.png",
+      "model": "B",
+      "mode": "Level 1",
+      "n": 5,
+      "median": 0.23873963579535484,
+      "min": 0.23714125622063875,
+      "max": 0.2664509965106845,
+      "p95": 0.2664509965106845
+    },
+    {
+      "figure": "restart-vs-wake.png",
+      "model": "A",
+      "mode": "Level 2",
+      "n": 3,
+      "median": 14.907669715583324,
+      "min": 14.75079134106636,
+      "max": 14.910213840194046,
+      "p95": 14.910213840194046
+    },
+    {
+      "figure": "restart-vs-wake.png",
+      "model": "B",
+      "mode": "Level 2",
+      "n": 3,
+      "median": 2.1740154651924968,
+      "min": 2.1732194339856505,
+      "max": 2.198166118003428,
+      "p95": 2.198166118003428
+    }
+  ],
+  "captures": [
+    {
+      "figure": "grafana-switch.png",
+      "source": "switch.png",
+      "sha256": "ecd83821c39cacab9500a7a3dff3b284a7480ea02786c8da5de22c48cad6a27c",
+      "dimensions": [
+        1404,
+        524
+      ]
+    },
+    {
+      "figure": "grafana-timing.png",
+      "source": "timing.png",
+      "sha256": "bd9ba11d67a14be9e0a0de459781fca74691b48989543eb2871dfcb7dd0773db",
+      "dimensions": [
+        1404,
+        524
+      ]
+    },
+    {
+      "figure": "grafana-latency.png",
+      "source": "ttft.png",
+      "sha256": "ebd8c27261c4579692ba23a2007783b0411d2e9d0ecfbaf62ad7d04d145bde58",
+      "dimensions": [
+        668,
+        524
+      ]
+    },
+    {
+      "figure": "grafana-latency.png",
+      "source": "tpot.png",
+      "sha256": "420e9376cd3cf8cf6b3ffd563c0e69561550cfdbf6825e91e2639609e17ed799",
+      "dimensions": [
+        668,
+        524
+      ]
+    },
+    {
+      "figure": "openwebui-chat-light.png",
+      "source_sha256": "89ff78f9c6f4684751cc76798cf63f8b86fb44718962b1540d1bada654edcf3e",
+      "crop": [
+        132,
+        40,
+        1145,
+        302
+      ]
+    }
+  ]
+}

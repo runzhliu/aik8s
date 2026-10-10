@@ -59,7 +59,7 @@ Level 1 把完整权重备份留在主机内存。它适合稍后还要继续使
 
 还要把“第一次休眠”单独考虑：27B 模型首次 Level 1 休眠用了 **18.47 秒**，后续四次为 1.33—1.34 秒；1.7B 模型首次为 2.07 秒，后续四次为 0.17—0.19 秒。本轮没有对主机内存分配和传输开销分别剖析，因此后续切换的数字不能替代首次休眠成本。
 
-![restart-vs-wake](../../assets/practices/vllm-sleep-l20/restart-vs-wake.png)
+![进程重启与两种休眠恢复的首 Token 等待](../../assets/practices/vllm-sleep-l20/v2/restart-vs-wake.png)
 
 ### 交替运行时显存如何变化
 
@@ -74,9 +74,9 @@ Level 1 把完整权重备份留在主机内存。它适合稍后还要继续使
 
 这组模型没有做同时唤醒或并发共存的对照。按独立测量估算，两套模型的显存需求合计可能仍在 L20 容量之内，实际共存还要调整并验证初始化预算。本文验证的是温备恢复与互斥交接，不能据此判断这组模型必须依靠 Sleep 才能部署，或串行切换比并行共存更划算。
 
-![grafana-switch](../../assets/practices/vllm-sleep-l20/grafana-switch.png)
+![休眠和唤醒期间的 GPU 物理显存](../../assets/practices/vllm-sleep-l20/v2/grafana-switch.png)
 
-图中 A 为 27B FP8，B 为 1.7B BF16；状态 1 为引擎完全唤醒，0 为休眠。显存是这张物理 GPU 的总使用量。主机内存图按引擎及其子进程 RSS 求和，可能重复计入共享页；它解释内存迁移趋势，不能直接作为 Pod 内存限额的依据。曲线按固定历史窗口查询，Prometheus 每 2 秒采集，极短的切换低谷可能落在两个采样点之间。
+图中显存是这张物理 GPU 的总使用量，展示 A、B 交替唤醒期间约 33 GiB 与 8 GiB 的变化，以及两者都休眠时的低谷。曲线按固定历史窗口查询，Prometheus 每 2 秒采集，极短的切换低谷可能落在两个采样点之间。
 
 ### 恢复后的短时吞吐
 
@@ -93,11 +93,11 @@ Level 1 把完整权重备份留在主机内存。它适合稍后还要继续使
 
 每个阶段每个并发配置为 8 请求×2 轮。吞吐列为两轮中位数；P95 由这两轮成功请求合并计算。该负载输入很短、固定输出 128 token，不能据此推断长上下文或长期运行表现。
 
-![grafana-timing](../../assets/practices/vllm-sleep-l20/grafana-timing.png)
+![恢复前后的 C4 输出吞吐](../../assets/practices/vllm-sleep-l20/v2/grafana-timing.png)
 
-图中的恢复耗时是最近一次已完成操作的 Gauge，线段保持表示读数尚未更新，不能把水平线看作持续发生相同耗时的请求。吞吐曲线也表示最近完成的一轮，而非瞬时解码速率。
+图中蓝色为 A，橙色为 B；实线为恢复前，虚线为恢复后。曲线记录最近完成一轮的吞吐 Gauge，线段保持表示读数尚未更新，并非瞬时解码速率。
 
-![C4 请求延迟的滑动均值](../../assets/practices/vllm-sleep-l20/grafana-latency.png)
+![C4 首 Token 与每输出 Token 时间的滑动均值](../../assets/practices/vllm-sleep-l20/v2/grafana-latency.png)
 
 这张图使用客户端直方图的 `sum/count` 计算一分钟滑动平均，只选择 C4 性能请求。图中均值与表格的整轮 P95 口径不同；两个模型的恢复前后分别形成两段曲线。模型 A 的性能提示词为 26 token，模型 B 为 25 token。
 
@@ -257,4 +257,4 @@ Sleep 的价值在于保留引擎初始化成果，使低频模型可以较快�
 
 Qwen3-1.7B 接入既有聊天界面，使用真实请求解释 Pod 与 Deployment 的关系。该样例独立于 170 条正式请求，只验证交互路径，不作为吞吐或 TTFT 的测量来源。
 
-![openwebui-chat-light](../../assets/practices/vllm-sleep-l20/openwebui-chat-light.png)
+![Qwen3-1.7B 的真实交互样例](../../assets/practices/vllm-sleep-l20/v2/openwebui-chat-light.png)
