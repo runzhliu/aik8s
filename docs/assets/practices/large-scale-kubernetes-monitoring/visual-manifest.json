@@ -1,0 +1,54 @@
+[
+  {
+    "path": "docs/assets/practices/large-scale-kubernetes-scheduler/scheduling-path.png",
+    "kind": "conceptual",
+    "size": [
+      1200,
+      675
+    ],
+    "sha256": "f23cb320929f72cce2e19570f23db0c03d6168c79ec0004d984b5c4dc365d5ba"
+  },
+  {
+    "path": "docs/assets/practices/large-scale-kubernetes-scheduler/search-and-quality.png",
+    "kind": "conceptual",
+    "size": [
+      1200,
+      675
+    ],
+    "sha256": "e8c1fd7689a8988ddd872bab04df405e02e3091d60901e94cc862116cf265951"
+  },
+  {
+    "path": "docs/assets/practices/large-scale-kubernetes-monitoring/local-and-central.png",
+    "kind": "conceptual",
+    "size": [
+      1200,
+      675
+    ],
+    "sha256": "68d41a51228f452aab11416bbf9dcfafb4f786cde0b482c7d30280156acbd3ba"
+  },
+  {
+    "path": "docs/assets/practices/large-scale-kubernetes-monitoring/selection-path.png",
+    "kind": "conceptual",
+    "size": [
+      1200,
+      675
+    ],
+    "sha256": "cf82de1c3b01ed10455c60f09b5b3380f9810bff85b740a90eb500299da090e6"
+  },
+  {
+    "path": "docs/assets/practices/large-scale-kubernetes-monitoring/resource-count-evidence.png",
+    "kind": "real-screenshot-crop",
+    "size": [
+      1200,
+      675
+    ],
+    "sha256": "e6d24de8b217268be9016cd21e8c1881d169dcd32a21e635aa77bd96b4d81d40",
+    "crop": [
+      887,
+      102,
+      1484,
+      550
+    ],
+    "source_sha256": "311ebd51759239269b7e111e01c3fb5e2b827ef8a6cee982eba61e5bed322dac"
+  }
+]

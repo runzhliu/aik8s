@@ -46,6 +46,8 @@ last_reviewed: 2026-09-26
 
 ## 平台和调度
 
+- [大规模 Kubernetes 监控方案：Prometheus、VictoriaMetrics、Thanos 与 Mimir](large-scale-kubernetes-monitoring-tsdb.md)
+- [大规模 Kubernetes 调度器优化：队列、插件、搜索与并行架构](large-scale-kubernetes-scheduler-optimization.md)
 - [OpenTelemetry × Grafana：观测 Kubernetes 控制面与集群状态](opentelemetry-kubernetes-components-grafana.md)
 - [大模型时代 GPU 开发平台踩坑记](gpu-notebook-platform-evolution.md)
 - [8 卡节点的四卡任务，如何避免拿到跨 NUMA 的碎片 GPU](gpu-topology-fragmentation-scheduling.md)

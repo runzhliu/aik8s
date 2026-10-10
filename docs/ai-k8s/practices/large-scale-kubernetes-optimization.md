@@ -20,6 +20,8 @@ last_reviewed: 2026-09-18
 
 这篇文章关注单集群扩大的工程方法。数百个独立集群的发布、配置和灾备治理，可继续阅读 [数百个 Kubernetes 集群的稳定性建设](kubernetes-fleet-reliability.md)。
 
+调度与监控的具体配置、指标及选型分别展开在 [大规模 Kubernetes 调度器优化](large-scale-kubernetes-scheduler-optimization.md) 和 [大规模 Kubernetes 监控与时序数据库选型](large-scale-kubernetes-monitoring-tsdb.md)。
+
 ## 1. 节点数不是容量模型
 
 Kubernetes 节点默认每 10 秒更新一次 `Lease`。一万节点仅心跳就形成大约 1000 次 Lease 更新/秒；这还没有计算 Pod 生命周期、Event、控制器状态更新和业务 CRD。节点状态本身默认在变化时或每 5 分钟更新一次，Lease 才是高频健康信号。[Node heartbeat](https://kubernetes.io/docs/reference/node/node-status/#heartbeats)
