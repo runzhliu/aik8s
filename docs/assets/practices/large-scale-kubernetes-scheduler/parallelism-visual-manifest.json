@@ -1,0 +1,14 @@
+{
+  "kind": "conceptual diagram; no benchmark values",
+  "path": "docs/assets/practices/large-scale-kubernetes-scheduler/parallelism-and-sharding.png",
+  "size": [
+    1200,
+    675
+  ],
+  "sha256": "992bc3c2737d2bed3862574de147b49d7c40f83925caed29cdf376c2e2df507d",
+  "generator": "scripts/generate_scheduler_parallelism_visual.py",
+  "sources": [
+    "https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/",
+    "https://kubernetes.io/docs/concepts/scheduling-eviction/running-multiple-schedulers/"
+  ]
+}
