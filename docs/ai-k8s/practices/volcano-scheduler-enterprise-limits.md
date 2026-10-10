@@ -1,111 +1,118 @@
 ---
-title: Volcano 调度器不是万能钥匙：企业落地的配置、边界与排障
-description: 从 Gang、Queue、设备拓扑和扩容联动出发，解释 Volcano 能解决什么、哪些企业问题还需其他组件，以及如何验证调度配置与故障路径
+title: Volcano 功能很多，为什么企业里还是调不顺？
+description: 从资源视图、任务分级、跨部门抢占共识与前置埋点出发，讨论 Volcano 调度和重调度落地的业务前提
 status: evolving
 last_reviewed: 2026-10-11
 ---
 
-# Volcano 调度器不是万能钥匙：企业落地的配置、边界与排障
+# Volcano 功能很多，为什么企业里还是调不顺？
 
-一个训练平台接入 Volcano 后，八个 Worker 终于可以按 Gang 语义一起争取资源，不再由几个先启动的 Pod 长时间占着 GPU 等其他成员。接着业务提出三个要求：四卡任务必须拿到同一 NUMA 域的 GPU；队列没有额度时别让自动扩容器盲目加机器；借用的 GPU 要能收回，但被收回的训练作业不能丢掉几个小时的进度。
+设想一家企业把训练、推理和离线作业放进同一个 GPU 集群。平台团队看中 Volcano 的 Gang、Queue、公平共享、抢占和回收：希望八个 Worker 不再只跑两个，空闲 GPU 可以借给别的部门，高优先级任务来时还能拿回资源。功能清单看起来正中痛点。
 
-这三个要求都和“调度”有关，却不是装上 Volcano 就自然满足。第一个要求要看**逐设备拓扑信息和最终设备分配**；第二个涉及**队列状态怎样传递给扩容器**；第三个还涉及**驱逐后的训练恢复**。Volcano 擅长批作业、Queue 和 Gang，但它不是训练平台所有控制回路的总开关。
+真正上线前，业务却问了几个更难的问题：这批 H20 到底属于谁，哪部分可以借？在线推理扩容与正在跑的训练作业，谁的优先级更高？部门 B 借了部门 A 的卡，A 要用时允许中断 B 的哪类任务、提前多久通知、损失的训练进度谁承担？
 
-下面的场景是架构分析，不是本仓库已经完成的 Volcano 生产事故复盘或性能测试。功能与配置举例依据 Volcano **v1.15.3** 发布标签（2026 年 9 月 30 日发布）的文档和 Helm 默认配置；其他版本、发行版与插件组合需单独核对。
+这些问题没有答案，调度器就算正确执行了抢占，也可能被业务认定为一次事故。**Volcano 能执行资源规则，不能替企业决定什么规则是公平、可接受、可恢复的。** 这才是本文要讨论的落地门槛，而不只是某个插件如何配置。
 
-## 它真正解决了什么
+以下部门和任务场景用于解释设计取舍，不是发生过的生产事故，也没有虚构吞吐或利用率收益。涉及 Volcano 行为的配置核对以 **v1.15.3** 发布标签为基线；具体效果仍以目标集群的工作负载和配置验证。
 
-Volcano 是一套面向批处理、AI 与 HPC 的 Kubernetes 调度系统，不只是替 kube-scheduler 改个 Score。其 Job、PodGroup、Queue 和调度器共同描述：**一组任务什么时候有资格开始、资源怎样在队列之间分配、每个 Pod 落到哪里。**
+## 功能清单之前，先画出业务和资源的地图
 
-| 企业问题 | Volcano 提供的抓手 | 成立的前提 |
+Volcano 的能力是真实的：PodGroup 与 Gang 可以避免多 Pod 作业只启动一部分，Queue 能承载资源共享策略，调度 action 和插件还能组合优先级、回填、回收等机制。[Volcano 调度配置说明](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_configure_scheduler.md)列出了 action、tier、plugin 的工作关系。但这些机制的输入，不能只是“我们一共有多少张 GPU”。
+
+一个能做决策的资源视图至少需要分清：
+
+| 需要知道的事实 | 不清楚时会发生什么 | 谁提供或维护 |
 | --- | --- | --- |
-| 八个 Worker 不能只跑两个 | PodGroup 最小成员/资源要求与 `gang` 插件 | 所有成员正确归组，最小资源定义符合训练真实需求 |
-| 部门之间共享 GPU | Queue、DRF/Proportion 或 Capacity 策略、Reclaim | 明确借用与回收规则，作业能承受被驱逐 |
-| 批任务与在线任务争资源 | Priority、Preempt、Reclaim、节点约束 | 显式保护在线工作负载，量化抢占影响 |
-| 节点/机架网络局部性 | 拓扑相关能力及其数据源 | 目标版本和部署确实提供所需拓扑标签/数据 |
+| GPU 型号、UUID、MIG/整卡状态、故障与维护状态 | 把数量够误判为任务一定能运行 | 硬件、节点与设备管理团队 |
+| CPU、内存、RDMA、NUMA、机架、存储与镜像可达性 | 调到有卡的节点，应用却启动失败或跑得慢 | 平台与基础设施团队 |
+| 每个资源池的可分配量、部门保证量、借用量、硬上限 | “空闲可借”与“本部门随时要用”同时成立 | 容量负责人和部门 Owner |
+| Pod/Job → Queue → 部门/成本中心 → 业务服务的归属 | 看得到卡被占，解释不了谁在用、为何占用 | 提交平台、业务系统与 FinOps |
+| 任务的最低资源、最晚开始时间、运行时长与恢复能力 | 无法判断等待、回填或回收哪个代价更小 | 业务和训练/推理负责人 |
 
-这也是 Volcano 值得用的地方：在大量多 Pod 作业、队列借用和批调度策略已经成为平台核心需求时，统一的调度控制面可以比逐个 Job 拼接临时规则更清晰。问题不在于“功能少”，而在于**功能覆盖的层，与企业想保证的最终结果经常不是同一层**。[Volcano 官方概览](https://volcano.sh/docs/)；[v1.15.3 调度配置说明](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_configure_scheduler.md)。
+这里的“视图”不是要求另造一个万能 CMDB。最小可用做法是把节点与设备库存、Queue/Job 归属、资源申请和实际占用用稳定 ID 串起来，并记录数据更新与失效时间。`nvidia.com/gpu: 4` 只表示整数资源需求；它不自动表示是哪四张卡、是否在同一个 NUMA 域。Volcano 社区的 [GPU NUMA Issue #4998](https://github.com/volcano-sh/volcano/issues/4998)就讨论了标准整卡 GPU 在节点内拓扑上的这类边界；具体见[四卡任务与 GPU 碎片](gpu-topology-fragmentation-scheduling.md)。
 
-## 第一处边界：Gang 不等于作业一定能跑完
+更重要的是，资源视图必须让**业务侧也看得懂**：一个 Queue 等了多久，是 GPU 数量不足、指定型号不足，还是本部门额度已满？这三种原因会产生不同的扩容、借用和预算决策。没有可解释的库存和归属，插件越多，争议越难厘清。
 
-Gang 的目标是避免一组 Pod 只有一部分被调度占用资源。可是“八个 Pod 能一起获得调度机会”与“八个训练进程都健康启动、完成通信并持续训练”之间，还隔着镜像拉取、存储挂载、设备插件分配、RDMA 网络、NCCL/HCCL 初始化和失败恢复。
+## 优先级不是一个整数，而是一份业务承诺
 
-假设一组八个 Worker 满足 PodGroup 的最小成员要求，随后一个节点上的容器因驱动异常退出。Gang 不能替应用保存 checkpoint，也不会替训练框架修复通信状态。平台仍要确定：整组重启还是局部重启、什么时候释放其他 Worker 的 GPU、多久恢复、恢复后是否重复计算已完成的数据。Volcano Job 的策略可以响应部分作业事件，但“调度成功”不能直接写成“训练可靠性已解决”。[Volcano Job Policy](https://volcano.sh/docs/v1.13.0/userguide/user_guide_how_to_use_job_policy/)；[训练框架与恢复专题](../training/distributed-training-frameworks-recovery.md)。
+常见的第一步是给任务打上“在线 / 训练 / 开发”标签，再把在线任务设成最高优先级。这样的分类有帮助，但仍不足以直接打开抢占：在线服务是否已有足够冗余？生产训练是不是也有交付截止时间？小规模紧急实验能否打断一项已运行六小时、尚未保存 checkpoint 的作业？
 
-更容易忽略的是 `minMember` 与真实启动门槛不一定相同。如果最小成员数配小，形式上能进队列，应用仍因缺少必要 Rank 而等待；配得过大，又可能在资源短缺时长期排队。检验时记录**作业提交→整组就绪时间**和已占用但未开始计算的 GPU 时间，而不是只看第一个 Pod 的 `Running`。
+建议由业务、平台和容量负责人共同确定一张决策表，而不是让每个提交者自行填 `PriorityClass`：
 
-## 第二处边界：选到了节点，不等于拿到了对的 GPU
+| 任务类别示例 | 允许等待多久 | 能否被中断 | 可恢复前提 | 对借用资源的要求 |
+| --- | --- | --- | --- | --- |
+| 有明确 SLO 的在线推理 | 由服务 SLO 倒推 | 通常要保持可用副本与容量底线 | 副本可迁移、流量能摘除 | 不以依赖可随时被回收的卡作为唯一容量 |
+| 有交付期限的分布式训练 | 结合交付时间与整组启动时间 | 经业务确认后，部分时段可中断 | Checkpoint 可用且恢复经验证 | 最低整组资源必须可获得 |
+| 无明确截止时间的离线/开发任务 | 可接受较长等待 | 可作为借用与回收候选 | 数据和中间状态可重建 | 标记为借入容量并展示可能的中断 |
 
-例如一台八卡节点分成两个四卡 NUMA 域，空闲 GPU 分散为每域两张。四卡任务在整数资源视角仍可能看到 `nvidia.com/gpu: 4`；如果实际拿到跨域设备，通信性能可能退化。传统 Device Plugin 模式下，调度器选节点与 kubelet 分配具体 GPU 是两个决策。**Queue 和 Gang 都不能自动给出“同一 NUMA 域四张卡”的硬保证。**
+这是讨论模板，**不是推荐所有企业都按这个顺序抢占**。最终要把“紧急”定义成有审批、有有效期、有预算和审计记录的服务等级，防止所有部门把自己的任务都标成最高优先级。不同部门还需约定：可借用比例、召回条件、通知窗口、工作日与非工作日规则、补偿或成本归属，以及谁有权在事故中暂停自动回收。
 
-Volcano 社区的 [GPU NUMA topology-aware scheduling Issue #4998](https://github.com/volcano-sh/volcano/issues/4998)说明其 `numa-aware` 插件主要处理 CPU NUMA，对标准 GPU 设备 NUMA 的处理仍有待补齐；[v1.15.3 调度配置说明](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_configure_scheduler.md)也把 `numaaware` 的作用描述为 CPU NUMA。这个结论针对所讨论的**标准整卡 GPU 同 NUMA 硬约束**，并非断言 Volcano 不支持 GPU、没有 vGPU 能力或不能处理跨节点网络拓扑。
+Volcano 能依据配置和对象状态做 Queue 排序、抢占与回收，但无法凭 `priority: 1000` 判断这份任务承诺是否已得到业务认可。**技术上的合法驱逐，不等于组织上的合理驱逐。**
 
-可选择的补充路径包括：由 Device Plugin 尽量优选设备、由 kubelet Topology Manager 作节点侧准入，或评估具有逐设备拓扑信息的调度/分配方案与 DRA；每条路径都要验证“只有跨域四张空卡时，任务会不会拒绝退化组合”。具体能力和版本差异见[四卡任务与 NUMA 碎片分析](gpu-topology-fragmentation-scheduling.md)。
+## 借卡与重调度，先谈中断损失，再谈利用率
 
-## 第三处边界：队列等待与扩容，未必说着同一种语言
+假设部门 A 的 GPU 暂时空闲，部门 B 的训练借来跑。A 恢复需求时，平台有能力把卡收回。容量看板可能因此很漂亮，但对 B 来说，一次驱逐的真实代价是：已训练但尚未落盘的进度、Checkpoint 写入时间、重新排队、镜像和数据重新加载、分布式通信重新建立，以及恢复后是否还在有效交付窗口内。
 
-企业常见规则是：租户没额度时只排队，节点确实不足且有额度时才扩容。这需要扩容器区分“队列策略拒绝”和“当前节点库存不足”，不能把所有 Pending 都当成需要买机器。
+因此，“支持回收”要拆成一份双方认可的契约：
 
-Volcano v1.15 的 [Scheduling Gates Queue Admission 指南](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_use_scheduling_gates_queue_admission.md)写明了问题：队列额度不足也可能使 Pod 被标记为 Unschedulable，触发不必要的扩容。它提供基于 Kubernetes `schedulingGates` 的改进，但要求 v1.15+、启用 `SchedulingGatesQueueAdmission` Alpha feature gate、Webhook 与调度器配合、配置 `capacity` 插件，并对 Pod 显式 opt-in。这个官方方案本身就说明：**调度器内部知道队列状态，不代表 Cluster Autoscaler/Karpenter 已正确理解。**
+1. **哪些卡能借？** 保证量、可借余量、不可动用的在线安全底线和维护预留分别是多少？
+2. **哪些任务能借？** 是否只允许可恢复的批任务进入可回收容量；长训练能否在指定时间窗内借用？
+3. **什么时候还？** 原部门提交什么级别的需求才触发回收，多久前通知，等待 checkpoint 的最长宽限期是多少？
+4. **还不了怎么办？** Checkpoint 失败、存储不可用或被驱逐任务无法恢复时，由谁处置、是否停用自动回收？
+5. **怎么核算收益？** 除 GPU-hours 外，还要比较有效训练时间、重算损失和 SLO 违约；不能只靠集群利用率证明策略成功。
 
-该指南还标出了一个生产边界：移除 Gate 后，如果 Pod 仍因节点不足而无法调度，它会继续持有预留的队列容量；当时没有为这份预留实现超时。因此不能简单宣称“开了 Gate 就解决了所有无效扩容和额度占用”。没有满足这些前提的老版本，不应抄 v1.15 的配置当成已生效功能。
+在 Volcano v1.15.3 Helm 默认配置中，actions 是 `enqueue, allocate, backfill`，插件包含 `proportion`，但**没有默认启用 `reclaim` 或 `preempt` action**。[默认调度配置](https://github.com/volcano-sh/volcano/blob/v1.15.3/installer/helm/chart/volcano/config/volcano-scheduler.conf)。官方 [Capacity 插件指南](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_use_capacity_plugin.md)要求用 `capacity` 替代冲突的 `proportion`，并启用 `reclaim`，才能按该指南演示额度借还；`enqueue` 与回收/抢占的相互作用也需要逐项验证。[v1.15 Actions 说明](https://github.com/volcano-sh/website/blob/master/versioned_docs/version-v1.15.0/Scheduler/Actions.md)。
 
-## 功能丰富，为什么配置会变成排障成本
+这不是“把 `reclaim` 加到字符串里就完成产品需求”。即使技术规则已生效，业务没有定义可回收任务、宽限期和恢复责任，越高效的回收反而可能制造越频繁的业务冲突。
 
-Volcano 的调度配置不是一个“开启 Gang”开关。v1.15.3 Helm 默认调度配置按顺序执行 `enqueue, allocate, backfill` 三个 action，加载 `priority`、`gang`、`conformance`、`overcommit`、`drf`、`predicates`、`proportion`、`nodeorder`、`binpack` 等插件，并分为两个 tier。[发布标签中的默认配置](https://github.com/volcano-sh/volcano/blob/v1.15.3/installer/helm/chart/volcano/config/volcano-scheduler.conf)。
+## 要让高级特性丝滑，埋点必须在上线前
 
-顺序和组合会影响结果。官方[配置指南](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_configure_scheduler.md)解释：action 决定调度流水线，插件在 session 中注册函数；多个插件可以注册同类判断函数，一个拒绝结果可能令后续判断不再执行。`backfill`、`preempt`、`reclaim` 也不是同一种动作。看见 Queue 有 `deserved`，并不能推断当前已启用 `capacity` 和 `reclaim`。
+很多团队是在调度策略上线后，才发现报表只能显示 Pod Pending 和 GPU 利用率；到时再追问“谁抢了谁、为什么、损失多少”，缺少必要的关联数据。调度、重调度与异构资源调度应共享一条可审计的决策链：
 
-具体到“两个部门借卡并归还”：v1.15.3 的 [Capacity 插件指南](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_use_capacity_plugin.md)要求启用 `capacity`、移除与之冲突的 `proportion`，并启用 `reclaim` action，才能按其示例实现回收。默认 Helm 配置是 `proportion` 且没有 `reclaim`；`preempt` 也没有默认启用。**照着 Capacity Queue 字段填额度，却不改调度流水线，不会得到文档中的借用与回收行为。** 而且加入 `reclaim` 也不是“一定能抢回”：还要考虑 Job 是否已经入队、队列和作业是否具备被回收条件、驱逐后能否重新推进。[v1.15 Actions 指南](https://github.com/volcano-sh/website/blob/master/versioned_docs/version-v1.15.0/Scheduler/Actions.md)还提示 `enqueue` 与 `preempt`/`reclaim` 的交互可能改变预期行为。不同发行版可能修改默认配置，上线应以实际 ConfigMap 与镜像为准。
+```text
+业务请求与 Owner → 任务类别 / SLO / 可中断性 → Queue / 配额 / 优先级
+        → 调度与设备分配 → 运行状态 → 回收/重启 → 业务结果
+```
 
-| 看到的现象 | 不要立即下结论 | 先核对 |
-| --- | --- | --- |
-| Pod Pending、节点还有 GPU | “Gang 算法坏了” | `schedulerName`、Queue、PodGroup 最小门槛、节点硬约束、设备库存 |
-| 借用可以，归还不发生 | “Queue 配置没有用” | 使用 Capacity 还是 Proportion、`reclaim` 是否启用、队列 `reclaimable` |
-| 一提交任务就扩容 | “加节点是正确的” | 是队列额度限制还是节点真的不足、目标版本是否支持 Gate 联动 |
-| 高优先级任务迟迟不运行 | “PriorityClass 不生效” | 抢占 action/插件、可驱逐对象、Gang 完整性、目标节点是否可行 |
-| 调度成功、训练性能下降 | “调度器已经做了拓扑感知” | 实际 GPU UUID/NUMA/NVLink、设备分配方、网络与应用指标 |
+至少在提交入口统一工作负载 ID、部门/成本中心、资源类型与型号、任务最小成员数、截止时间或 SLO、Checkpoint 能力和恢复入口（不记录敏感的数据路径）。调度阶段记录入队、拒绝、节点选择、PodGroup 状态、抢占/回收的触发方与受影响方；运行阶段关联 GPU UUID、实际使用和整组 Ready 时间；恢复阶段记录 checkpoint 成功率、恢复耗时和被迫重算的有效计算量。**计量不等于把所有业务字段都塞进 Prometheus 标签**：队列和资源池用低基数标签，逐作业 ID、操作人和审批理由进入结构化事件或审计日志。
 
-这里的复杂性是**自由组合带来的验证成本**，不是说 Volcano 完全不可观测，也不是“多配置几个 YAML 就一定出错”。官方提供 PodGroup/Queue 状态、事件、调度器日志和指标；但一个 Pending 作业可能同时受队列、整组门槛、节点过滤、卷和设备约束影响，单看 `kubectl describe pod` 的最后一条 Event 不一定能定责。官方的 [PodGroup condition reason 设计](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/design/podgroup-condition-reason.md)专门区分入队拒绝与调度失败，正说明诊断原因需要在不同阶段准确表达。
+Volcano v1.15.3 的源码提供 `volcano_schedule_attempts_total{result}`、action/plugin 耗时以及 Queue 标量资源分配等指标：[调度器指标定义](https://github.com/volcano-sh/volcano/blob/v1.15.3/pkg/scheduler/metrics/metrics.go)、[Queue 指标定义](https://github.com/volcano-sh/volcano/blob/v1.15.3/pkg/scheduler/metrics/queue.go)。这些指标能解释调度器工作量，却不能单独回答业务的“从提交到训练真正开始用了多久”，更不能替业务计算 checkpoint 丢失的有效训练时间。目标集群仍要以真实 `/metrics` 核对是否暴露和标签口径。
 
-## 排查一个 Pending 作业，按四层收集证据
+同样，异构资源不是在 Queue 里多加一个型号名字就完成：GPU 型号、MIG/整卡、RDMA 与 NUMA 能力要有一致的库存与需求表达，Pod 被选中节点后的实际设备分配也应回写观测链路。需要同一 GPU 拓扑域的硬约束时，还要验证设备分配组件能否严格满足；不能把跨节点拓扑策略误当成节点内 GPU 分配保证。
 
-第一层是**路由与对象关系**。记录 Pod 的 `spec.schedulerName`、所属 Job/PodGroup、Queue，列出 `kubectl get pod -A -o wide`、`kubectl get podgroups.scheduling.volcano.sh -A` 和 `kubectl get queues.scheduling.volcano.sh`；对具体 Pod/PodGroup/Queue 执行 `kubectl describe`，查看 condition、Event 与最小成员数。CRD 名称和字段用当前集群 `kubectl api-resources` 核实。一个 Gang 因只满足七个而等待，可能正是预期行为，不应把所有 Pending 都视为调度器故障。
+## 排障难，有时是策略没定义清楚
 
-第二层是**生效配置**。读取部署所用的调度器 ConfigMap（官方默认 Helm release 名为 `volcano` 时常见名称是 `volcano-system/volcano-scheduler-configmap`），核对 `actions`、`tiers`、插件参数与当前调度器镜像版本；不要用 GitHub `main` 分支的示例替代实际部署版本。Helm 模板的 ConfigMap 名称取决于 release 名，也可能通过 override 或自定义 `--scheduler-conf` 换成另一份配置，应先检查实际挂载。[v1.15.3 Helm 调度器模板](https://github.com/volcano-sh/volcano/blob/v1.15.3/installer/helm/chart/volcano/templates/scheduler.yaml)。对“借用/回收”尤其要检查 `capacity` 与 `proportion` 是否误混、`reclaim` 是否开启、队列额度和优先级对象是否匹配。[v1.15.3 Capacity 指南](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_use_capacity_plugin.md)。
+一个任务 Pending，技术排查需要依次确认 `schedulerName`、Job/PodGroup 的最小成员与状态、Queue 额度和状态、调度器生效的 action/plugin、节点与设备库存、PVC 和污点约束，再看调度器日志、事件与扩容器行为。官方 [PodGroup condition reason 设计](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/design/podgroup-condition-reason.md)专门区分未入队与调度失败；二者表面都是“没跑起来”，责任和解决方式却不同。
 
-第三层是**真实供给与绑定**。检查节点 allocatable/requests、污点、亲和性、PVC 拓扑、设备插件与资源声明；区分“八个 Pod 的总卡数够”与“满足每个 Pod 的节点和拓扑组合存在”。Pod 有了 `spec.nodeName` 但应用没 Ready，应转向 kubelet、容器运行时、卷、驱动与训练通信排查，不能继续把所有耗时算给 scheduler。
+v1.15.3 的 [调度器配置指南](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_configure_scheduler.md)还说明：action 的顺序和插件在 tier 中注册的判断函数会影响结果，一个拒绝判断可能让后续插件不再执行。这是可组合能力的代价，不能只翻一条 Pod Event 就判断“Volcano 不行”。
 
-第四层是**控制循环**。按时间线关联调度器日志、PodGroup/Queue condition、Pod Event、扩容器日志与 Volcano `/metrics`。重点观察入队拒绝、调度失败、成功绑定的数量，按 Queue 的资源请求/分配、action/session 耗时及抢占/回收事件复原决策。v1.15.3 源码定义了 `volcano_schedule_attempts_total{result}`、`volcano_action_scheduling_latency_milliseconds{action}`、`volcano_plugin_scheduling_latency_milliseconds{plugin,OnSession}` 和 `volcano_queue_allocated_scalar_resources{queue_name,resource}` 等指标；前几项反映的是尝试、action、插件耗时，不能当成提交到应用 Ready 的端到端时间，毫秒单位也不能直接按秒画图。[调度器指标定义](https://github.com/volcano-sh/volcano/blob/v1.15.3/pkg/scheduler/metrics/metrics.go)；[Queue 指标定义](https://github.com/volcano-sh/volcano/blob/v1.15.3/pkg/scheduler/metrics/queue.go)。指标是否暴露、标签与采集范围仍以目标版本真实 `/metrics` 为准，不把[早期 metrics 设计文档](https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/design/metrics.md)中的全部指标当作现成监控承诺。
+但排障还有另一半不在日志里：如果没有人事先定义等待上限、谁能借卡、是否准许抢占、应用怎样恢复，**排出“被哪条策略挡住”仍不足以判断“这条策略应不应该存在”。** 平台需要把业务规则版本、审批记录和生效配置与调度事件放在同一条时间线上，否则团队最终只能争论算法，不知道争论的其实是组织内的资源契约。
 
-## 怎么决定要不要用、怎么安全落地
+## 平台负责人先交付什么，再启用什么
 
-如果企业主要是单 Pod 在线服务或简单 GPU Job，已经能用 Kubernetes 节点亲和性、PriorityClass 与现有调度器解决，先别为“以后也许需要 Gang”切换所有业务。若核心需求是作业准入、租户配额而不想替换 Pod 放置链路，可以评估 Kueue 与现有调度器组合；若确实需要统一的批作业 Gang、队列和抢占策略，再认真评估 Volcano。**Kueue 与 Volcano 不是所有场景的一对一替代品**；两者组合时必须明确谁负责准入、Suspend、PodGroup 和抢占，避免重复控制。[Kueue Overview](https://kueue.sigs.k8s.io/docs/overview/)；[对比实验设计](kueue-vs-volcano.md)。
+一个务实的落地顺序是：
 
-真正的验收应覆盖这些反例：
+1. **盘清资源与业务画像。** 建立按型号、拓扑、健康与部门归属可查询的资源视图；统计队列等待、作业长度和在线负载波峰，不先假设大家都适合抢占。
+2. **签下优先级和借还规则。** 与业务部门确认保证量、借用上限、受保护工作负载、通知/宽限期和事故仲裁方式。没有跨部门共识时，先做可视化和手动审批借用，而不是直接开自动驱逐。
+3. **把可恢复性做成准入条件。** 未验证 checkpoint 的长任务先别放入可抢占队列；对不同框架分别验证保存、重启、模型/数据状态恢复与最坏损失。
+4. **先埋点后优化。** 保留提交→入队→整组运行→完成，以及回收→重新入队→恢复的时间线；用业务完成时间、有效 GPU-hours、SLO 和损失衡量结果。
+5. **小范围打开能力。** 先用 Gang 处理确有整组资源要求的任务，再在两个达成共识的部门试点借还；根据真实需求选择 Proportion 或 Capacity、回收 action 和异构设备方案，不把整套“高级插件”一次性切给全公司。
+6. **演练不理想的结果。** 七个成员有资源而第八个没有、借出的卡突然要归还、指定型号缺货、checkpoint 失败、调度器或设备插件升级；验收正确等待、正确告警和可恢复，而不只是 Pod 最终 Running。
 
-1. 一个八成员任务只具备七个成员的资源时，不能让先启动的成员长期占卡；整组资源可用后要按时启动。
-2. 两个部门互借 GPU 后回收，量化被驱逐作业的 checkpoint 损失、重新排队与恢复时间，而不是只统计队列用量。
-3. 节点已满、队列额度耗尽和缺指定 GPU 型号时，分别触发正确的等待或扩容行为。
-4. 节点只有跨 NUMA 的碎片 GPU 时，硬拓扑需求不得被“节点上有四张卡”掩盖。
-5. 调度器、Webhook 或扩容器故障和升级期间，PodGroup/Queue 不会卡在无人处理的状态；能回滚到已验证的配置。
+主要是作业准入与配额、且希望沿用现有 kube-scheduler 的团队，可以对比 Kueue；大量批任务和多 Pod 作业、确实需要统一 Gang 与调度策略时，Volcano 仍可能是合适的核心组件。这不是替换名单，更不意味着换一个组件就可以跳过业务治理。[Kueue 与 Volcano 对比实验设计](kueue-vs-volcano.md)只给出测试维度，不是已测得的优劣排名。已有 Volcano 的平台，也无需因某个 GPU 拓扑缺口贸然更换整套调度系统；可以在明确对象所有权后补上设备级分配与观测链路。
 
-每项测试保存提交时间、队列状态、PodGroup 条件、Pod Event、调度配置快照和作业实际启动/恢复时间。先在单个队列与专用节点池灰度，明确 `schedulerName` 及应用模板的切换范围。回退前处理仍由 Volcano 管理的 Pending Pod；换掉新任务模板不会自动让旧 Pod 改由默认调度器接管。
-
-已经稳定运行 Volcano Job/Queue 的平台，也不必因一个设备拓扑用例就整体迁移调度系统。让 Volcano 保留 Queue/Gang 职责，单独补齐设备级信息和分配约束，可能比替换整个控制面更稳妥；但组合方案也要验证对象所有权、版本兼容与失败恢复。
-
-Volcano 的价值不在于替企业把所有复杂性抹掉，而是给批调度提供一套可组合的控制面。**它能解决一组 Pod 怎样竞争资源，但不能独自保证具体设备拓扑、扩容策略、训练容错和业务公平契约。** 把这些边界写清，再用真实任务验证插件组合和失败路径，才是让调度器服务企业问题，而不是让企业问题迁就调度器。
+**平台负责人最容易犯的错，是把调度器的高级特性当作业务设计的替代品。** Volcano 可以让 Queue、Gang、回填和回收更可控；但资源归属、优先级共识、中断成本和设备事实必须由企业自己定义，并提前形成可验证的数据链。提前量花在这些地方，后面的调度、重调度和异构资源管理，才有机会真正顺滑。
 
 参考资料：
 
-Volcano v1.15.3 调度器默认配置：https://github.com/volcano-sh/volcano/blob/v1.15.3/installer/helm/chart/volcano/config/volcano-scheduler.conf
+Volcano v1.15.3 默认调度配置：https://github.com/volcano-sh/volcano/blob/v1.15.3/installer/helm/chart/volcano/config/volcano-scheduler.conf
 
-Volcano 调度器配置指南：https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_configure_scheduler.md
+Volcano Scheduler 配置指南：https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_configure_scheduler.md
 
-Volcano Capacity 插件指南：https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_use_capacity_plugin.md
+Volcano Capacity 插件使用指南：https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_use_capacity_plugin.md
 
 Volcano Scheduling Gates Queue Admission：https://github.com/volcano-sh/volcano/blob/v1.15.3/docs/user-guide/how_to_use_scheduling_gates_queue_admission.md
 
-Volcano GPU NUMA Issue #4998：https://github.com/volcano-sh/volcano/issues/4998
+Kubernetes Pod Priority 与抢占：https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
 
-延伸阅读：[Kubernetes 调度器扩展](../scheduling/kubernetes-scheduler-extensions.md)、[GPU 与异构资源调度](../gpu-scheduling.md)。
+延伸阅读：[GPU 资源银行与潮汐推理平台实践蓝图](gpu-resource-bank-tidal-platform.md)、[GPU 与异构资源调度](../gpu-scheduling.md)。
