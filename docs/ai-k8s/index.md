@@ -83,6 +83,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 ### 网络、数据与模型制品
 
 - [RDMA 与 AI 高速网络](rdma-networking.md)：InfiniBand、RoCE、GPUDirect、NCCL 和逐层排障。
+- [Contiv、OVS 与 Cilium 串联网络实战](practices/contiv-ovs-cilium-network.md)：VLAN 组网、Socket LB 与 kube-proxy 的数据路径边界。
 - [AI 数据、存储与缓存](data-storage.md)：对象存储、共享文件、本地 NVMe、数据加载与缓存层级。
 - [大数据 on Kubernetes](data/big-data-on-kubernetes.md)：Spark、Flink、Kafka、Trino、Lakehouse、Operator、队列调度，以及训练与 RAG 数据链路。
 - [模型制品、分发与缓存](data/model-artifacts.md)：格式、版本、OCI Modelcar、跨地域复制、P2P、节点缓存、流式加载和冷启动。

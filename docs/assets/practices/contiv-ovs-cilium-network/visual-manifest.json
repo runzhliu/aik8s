@@ -1,0 +1,40 @@
+{
+  "generator": "scripts/generate_contiv_ovs_network_visuals.py",
+  "privacy": "Only synthetic example identifiers; no raw evidence embedded.",
+  "figures": [
+    {
+      "path": "docs/assets/practices/contiv-ovs-cilium-network/responsibilities.png",
+      "kind": "explanatory diagram, not screenshot",
+      "description": "Observed chaining and division of responsibilities; gateway plugin details are environment-specific.",
+      "size": [
+        1200,
+        675
+      ],
+      "sha256": "8c05354baaa1c5561c229b2d50c72e8cf109d33559b576a5ce53b4ef59f9cc96"
+    },
+    {
+      "path": "docs/assets/practices/contiv-ovs-cilium-network/netfilter-paths.png",
+      "kind": "explanatory diagram, not screenshot",
+      "description": "Conditional packet paths explaining iptables compatibility, not a reproduced kube-proxy incident.",
+      "size": [
+        1200,
+        675
+      ],
+      "sha256": "1f4ddaa32c3836c33badee163c44641fc7cf13cbd2b4115406bbd4d163183931"
+    },
+    {
+      "path": "docs/assets/practices/contiv-ovs-cilium-network/socket-lb-evidence.png",
+      "kind": "explanatory diagram, not screenshot",
+      "description": "Sanitized explanation of request log, runtime status, BPF map and actual packet-header observations.",
+      "size": [
+        1200,
+        675
+      ],
+      "sha256": "49b3b746f45dfaf9320242813dca68d85502ff5719c01b3dcedea5cdff4d6921"
+    }
+  ],
+  "sources": [
+    "https://docs.openvswitch.org/en/latest/faq/issues/",
+    "https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/"
+  ]
+}

@@ -39,6 +39,7 @@ nav = [
     ]},
     {"网络、数据与模型制品" = [
       {"RDMA 与 AI 高速网络" = "ai-k8s/rdma-networking.md"},
+      {"Contiv、OVS 与 Cilium 串联网络实战" = "ai-k8s/practices/contiv-ovs-cilium-network.md"},
       {"AI 数据、存储与缓存" = "ai-k8s/data-storage.md"},
       {"大数据 on Kubernetes" = "ai-k8s/data/big-data-on-kubernetes.md"},
       {"模型制品、分发与缓存" = "ai-k8s/data/model-artifacts.md"},
