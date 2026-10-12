@@ -17,6 +17,8 @@ OpenClaw 已经不只是一个聊天机器人：它把消息渠道、Agent Runti
 
 如果希望把 OpenClaw 的 Shell、文件、PTY 和代码执行下沉到独立 MicroVM，并验证断网、traffic token、Pause / Resume、Snapshot、Rollback 与 Clone，参见[用 CubeSandbox 增强 OpenClaw 与 DSH：企业安全执行面实战](cubesandbox-openclaw-dsh-enterprise-practice.md)。
 
+OpenClaw 官方组织下的 OpenClaw Enterprise 项目提供了独立的 Agent 管理控制面。关于它已经实现的身份、部署版本、持久化协调机制，以及 Kubernetes 部署和隔离限制，参见[OpenClaw Enterprise 项目分析](openclaw-enterprise-control-plane.md)。本文继续讨论原版 OpenClaw 作为平台底座的边界。
+
 ## 1. OpenClaw 提供了什么
 
 OpenClaw 官方将其定义为连接聊天应用与 AI Agent 的自托管 Gateway。一个常驻 Gateway 负责渠道连接、会话、路由和节点控制；CLI、Web UI、桌面端和移动节点通过它工作。参考：[OpenClaw 官方文档](https://docs.openclaw.ai/)、[Gateway Architecture](https://docs.openclaw.ai/architecture)。
