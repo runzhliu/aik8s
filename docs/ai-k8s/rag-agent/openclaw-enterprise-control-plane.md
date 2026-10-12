@@ -151,7 +151,13 @@ OCE 通过自己的 API 和持久化资源模型管理 Agent，Kubernetes 驱动
 
 ## 8. Kubernetes 部署：有 Helm，但前置条件不轻
 
-截至本文快照，官方 Kubernetes 安装文档要求 **Kubernetes 1.35 或更高版本、IPv4 连通性，以及能够执行 NetworkPolicy 的 CNI（Container Network Interface，容器网络接口）实现**。这是当前文档给出的部署基线；不能据此推导旧版本集群也已被验证兼容。[Kubernetes 前置条件][k8s-setup]。
+截至本文快照，官方 Kubernetes 安装文档列出的支持基线是 **Kubernetes 1.35 或更高版本、IPv4 连通性，以及能够执行 NetworkPolicy 的 CNI（Container Network Interface，容器网络接口）实现**。[Kubernetes 前置条件][k8s-setup]。
+
+**1.35 是支持与 CI 验证基线，不是控制面启动的硬拦截条件。** Kubernetes Compute 的 `preflight()` 读取 API Server 版本；低于 `1.35.0` 时返回 `KUBERNETES_VERSION_BELOW_MINIMUM` 警告，API 和 Worker 记录 `compute.preflight-warning` 后继续启动。Chart 也没有设置 `kubeVersion` 来拒绝旧版安装。源码测试中还明确检查了 1.34 返回警告而不阻断认证访问的行为。[驱动要求][k8s-driver]、[版本检查源码][k8s-source]、[对应测试定义][version-test]、[Chart 元信息][chart]。
+
+因此，1.30、1.34 等已有集群可以作为兼容性验证对象，不需要先修改源码绕过版本检查；但“没有版本拦截”不代表完整功能已经兼容。应分别核对 Envoy Gateway、Gateway API 与 cert-manager 的版本组合，以及网络策略、存储和实际 Agent 的部署、模型请求、工具与工作区链路。本文没有执行这些旧版集群测试，不能将其列为已验证部署环境。
+
+另一个独立条件是：当前 Kubernetes 驱动要求一个集群专用于一个 OCE Installation，明确未支持共享集群。即使版本满足 1.35，也不应把在现有共享业务集群中安装直接视为官方支持的生产路径。[驱动部署边界][k8s-driver]。
 
 | 类别 | 需要提前准备的内容 |
 | --- | --- |
@@ -298,6 +304,8 @@ OpenClaw Enterprise 最有价值的地方，是把 Agent 从一组配置文件�
 [revisions]: https://github.com/openclaw/openclaw-enterprise/blob/b195e54e9b0ce98ead2b2306015a5209325e837b/docs/guides/topics/agent-revisions.md
 [queue-source]: https://github.com/openclaw/openclaw-enterprise/blob/b195e54e9b0ce98ead2b2306015a5209325e837b/packages/occ/src/state/postgres-work-queue.ts
 [k8s-source]: https://github.com/openclaw/openclaw-enterprise/blob/b195e54e9b0ce98ead2b2306015a5209325e837b/apps/controller/src/drivers/compute/kubernetes/index.ts
+[k8s-driver]: https://github.com/openclaw/openclaw-enterprise/blob/b195e54e9b0ce98ead2b2306015a5209325e837b/docs/reference/drivers/kubernetes-compute.md
+[version-test]: https://github.com/openclaw/openclaw-enterprise/blob/b195e54e9b0ce98ead2b2306015a5209325e837b/tests/conformance/kubernetes-preflight.test.mjs
 [driver-design]: https://github.com/openclaw/openclaw-enterprise/blob/b195e54e9b0ce98ead2b2306015a5209325e837b/docs/design/drivers.md
 [driver-selection]: https://github.com/openclaw/openclaw-enterprise/blob/b195e54e9b0ce98ead2b2306015a5209325e837b/docs/reference/drivers/selection.md
 [compute-matrix]: https://github.com/openclaw/openclaw-enterprise/blob/b195e54e9b0ce98ead2b2306015a5209325e837b/docs/reference/drivers/compute-matrix.md
