@@ -1,0 +1,3 @@
+# OCE Agent 实际运行演示
+校验串：OCE_DEMO_7F3A91
+任务：在 Kubernetes 中创建文件并读回验证。

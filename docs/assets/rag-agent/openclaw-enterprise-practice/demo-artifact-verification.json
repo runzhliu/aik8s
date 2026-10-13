@@ -1,0 +1,8 @@
+{
+  "observedAt": "2026-10-13",
+  "file": "oce-demo-7f3a91.md",
+  "bytes": 117,
+  "sha256": "e440f725c09ac0bdfe857c0a1b53747779e329ebf0d6d7b6d49d5eecc32e49d6",
+  "nonce": "OCE_DEMO_7F3A91",
+  "verification": "Read directly from the serving Agent Pod after native UI write/read tools completed."
+}
