@@ -16,6 +16,7 @@ from email.utils import format_datetime
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin
+from zoneinfo import ZoneInfo
 
 
 SITE_TITLE = "AI/LLM on Kubernetes 基础设施"
@@ -23,6 +24,14 @@ SITE_DESCRIPTION = "GPU、大数据、调度、训练、推理、RAG、Agent 与
 AUTHOR_NAME = "runzhliu"
 AUTHOR_URL = "https://github.com/runzhliu"
 FEED_MARKER = "<!-- AIK8S distribution metadata -->"
+ARTICLE_DATES_PATTERN = re.compile(
+    r"\n?<!-- AIK8S article dates -->.*?<!-- /AIK8S article dates -->\n?",
+    re.DOTALL,
+)
+ARTICLE_HEADING_PATTERN = re.compile(
+    r"(<article\b[^>]*>.*?</h1\s*>)", re.IGNORECASE | re.DOTALL
+)
+DISPLAY_TIMEZONE = ZoneInfo("Asia/Shanghai")
 HEAD_END_PATTERN = re.compile(r"</head\s*>", re.IGNORECASE)
 TITLE_PATTERN = re.compile(r"<title>(.*?)</title>", re.IGNORECASE | re.DOTALL)
 DESCRIPTION_PATTERN = re.compile(
@@ -111,7 +120,11 @@ def load_git_history(repo_root: Path, docs_dir: Path) -> dict[str, list[datetime
     try:
         docs_path = str(docs_dir.relative_to(repo_root))
         result = subprocess.run(
-            ["git", "log", "--format=__AIK8S_COMMIT__%cI", "--name-only", "--", docs_path],
+            [
+                "git", "-c", "core.quotepath=false", "log", "--reverse",
+                "--format=__AIK8S_COMMIT__%cI", "--name-status", "--find-renames",
+                "--", docs_path,
+            ],
             cwd=repo_root,
             check=True,
             capture_output=True,
@@ -126,7 +139,14 @@ def load_git_history(repo_root: Path, docs_dir: Path) -> dict[str, list[datetime
                 except ValueError:
                     current_date = None
             elif current_date is not None and line.strip():
-                history.setdefault(line.strip(), []).append(current_date)
+                change = line.split("\t")
+                if len(change) == 3 and change[0].startswith("R"):
+                    old_path, new_path = change[1:]
+                    previous = history.pop(old_path, [])
+                    history.setdefault(new_path, []).extend(previous)
+                    history[new_path].append(current_date)
+                elif len(change) == 2:
+                    history.setdefault(change[1], []).append(current_date)
     except (OSError, subprocess.CalledProcessError, ValueError):
         return {}
     return history
@@ -350,21 +370,48 @@ def structured_data(item: FeedItem, source: str, site_url: str, image_url: str) 
     return '  <script type="application/ld+json">' + payload.replace("</", "<\\/") + "</script>\n"
 
 
+def inject_article_dates(source: str, item: FeedItem | None) -> str:
+    source = ARTICLE_DATES_PATTERN.sub("\n", source)
+    if item is None or item.is_index:
+        return source
+    heading = ARTICLE_HEADING_PATTERN.search(source)
+    if heading is None:
+        raise ValueError(f"missing article heading for {item.url}")
+    dates = []
+    for label, timestamp in (("创建于", item.published), ("更新于", item.updated)):
+        local = timestamp.astimezone(DISPLAY_TIMEZONE)
+        dates.append(
+            f'  <span>{label} <time datetime="{timestamp.isoformat()}" '
+            f'title="{local:%Y-%m-%d %H:%M:%S}（北京时间）">{local:%Y-%m-%d}</time></span>'
+        )
+    block = (
+        '\n<!-- AIK8S article dates -->\n'
+        '<div class="aik8s-article-dates" role="group" aria-label="文章创建与更新时间">\n'
+        + "\n".join(dates)
+        + '\n</div>\n<!-- /AIK8S article dates -->\n'
+    )
+    return source[:heading.end()] + block + source[heading.end():].lstrip("\n")
+
+
 def inject_metadata(path: Path, site_url: str, items_by_url: dict[str, FeedItem]) -> bool:
-    source = path.read_text(encoding="utf-8")
+    original = path.read_text(encoding="utf-8")
+    canonical_match = CANONICAL_PATTERN.search(original)
+    canonical = canonical_match.group(1).strip() if canonical_match else site_url
+    item = items_by_url.get(normalize_url(canonical)) if canonical_match else None
+    source = inject_article_dates(original, item)
     if FEED_MARKER in source:
-        return False
+        if source == original:
+            return False
+        path.write_text(source, encoding="utf-8")
+        return True
     head_end = HEAD_END_PATTERN.search(source)
     if head_end is None:
         raise ValueError(f"missing </head> in {path}")
 
     title_match = TITLE_PATTERN.search(source)
     description_match = DESCRIPTION_PATTERN.search(source)
-    canonical_match = CANONICAL_PATTERN.search(source)
     title = html.unescape(title_match.group(1).strip()) if title_match else SITE_TITLE
     description = html.unescape(description_match.group(1).strip()) if description_match else SITE_DESCRIPTION
-    canonical = canonical_match.group(1).strip() if canonical_match else site_url
-    item = items_by_url.get(normalize_url(canonical)) if canonical_match else None
     if item:
         title = item.title
         description = item.description

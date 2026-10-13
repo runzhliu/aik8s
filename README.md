@@ -56,6 +56,11 @@ TechArticle/BreadcrumbList 结构化数据，并注入站点统计脚本：
 make build-production
 ```
 
+文章标题下显示创建与更新日期，按北京时间展示。创建日期取文件首次进入 Git
+历史的时间（追踪文件重命名），更新日期沿用页面元数据的口径，取最近一次文件提交
+与 `last_reviewed` 中较晚的时间。日期在生产构建的 `build_distribution.py` 步骤生成，
+不会因单纯重新构建站点而变化；本地查看日期效果可执行 `make build-production`。
+
 ## 订阅、分享与评论
 
 - RSS：<https://aik8s.run/rss.xml>

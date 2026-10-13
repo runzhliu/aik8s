@@ -97,7 +97,8 @@
     bar.appendChild(commentsLink);
 
     var heading = article.querySelector("h1");
-    if (heading && heading.nextSibling) heading.parentNode.insertBefore(bar, heading.nextSibling);
+    var anchor = article.querySelector(".aik8s-article-dates") || heading;
+    if (anchor) anchor.parentNode.insertBefore(bar, anchor.nextSibling);
     else article.insertBefore(bar, article.firstChild);
   }
 
