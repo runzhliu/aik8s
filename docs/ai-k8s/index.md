@@ -117,6 +117,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [2026 年 AI Agent 现状、实现原理与趋势](rag-agent/agent-landscape-2026.md)：主流编程、浏览器与企业 Agent 的产品格局、实现原理、框架、风险和演进方向。
 - [Agent Harness 技术综述](rag-agent/agent-harness-technology-overview.md)：Agent Loop、上下文、工具、状态恢复、沙箱、权限、验证与 Kubernetes 生产架构。
+- [ChatGPT Dots 技术解析](rag-agent/chatgpt-dots-overview.md)：发布时间、持续职责、记忆、云端与本地执行、Codex 协作，以及企业权限和 Kubernetes 接入建议。
 - [Agent 评估方法综述](rag-agent/agent-evaluation-overview.md)：任务成功、工具轨迹、故障恢复、安全、成本和人工介入的评分方法。
 - [Harbor Agent 评测框架综述](rag-agent/harbor-agent-evaluation-framework.md)：Task、Agent Adapter、隔离环境、Verifier、Rollout 及 Kubernetes 生产化。
 - [Jev System One 决策模型综述](rag-agent/jev-system-one-model-overview.md)：不生成文本的概率决策接口、置信度、Agent 路由、社区争议、生产架构与评估方法。
