@@ -131,6 +131,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - [大模型时代的 GPU Notebook 平台与存储选型](ai-k8s/development/gpu-notebook-platform.md)
 - [2026 年 AI Agent 现状、实现原理与趋势](ai-k8s/rag-agent/agent-landscape-2026.md)
 - [Agent Harness 技术综述](ai-k8s/rag-agent/agent-harness-technology-overview.md)
+- [Agent 长任务中断续跑原理与社区实践](ai-k8s/rag-agent/agent-long-running-durable-execution.md)
 - [HarnessRouter 综述](ai-k8s/rag-agent/harnessrouter-overview.md)
 - [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md)
 - [Agent Sandbox 选型与架构分析](ai-k8s/rag-agent/agent-sandbox-selection.md)

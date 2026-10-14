@@ -1,0 +1,93 @@
+{
+  "cases": [
+    {
+      "failpoint": "before-effect",
+      "first_exit_code": 86,
+      "interrupted": {
+        "next": [
+          "write_draft"
+        ],
+        "node_executions": {
+          "plan": 1,
+          "write_draft": 1
+        },
+        "state": {
+          "plan": "Create one simulated draft, then verify its receipt.",
+          "run_id": "public-demo-001"
+        },
+        "tool_effects": 0
+      },
+      "completed": {
+        "next": [],
+        "node_executions": {
+          "finish": 1,
+          "plan": 1,
+          "write_draft": 2
+        },
+        "state": {
+          "finished": true,
+          "plan": "Create one simulated draft, then verify its receipt.",
+          "receipt": "draft-7854be0b31d5",
+          "run_id": "public-demo-001"
+        },
+        "tool_effects": 1
+      },
+      "crash_log": [
+        "EXECUTE plan",
+        "EXECUTE write_draft",
+        "CRASH before tool effect"
+      ],
+      "resume_log": [
+        "EXECUTE write_draft",
+        "TOOL committed receipt draft-7854be0b31d5",
+        "EXECUTE finish"
+      ]
+    },
+    {
+      "failpoint": "after-effect",
+      "first_exit_code": 86,
+      "interrupted": {
+        "next": [
+          "write_draft"
+        ],
+        "node_executions": {
+          "plan": 1,
+          "write_draft": 1
+        },
+        "state": {
+          "plan": "Create one simulated draft, then verify its receipt.",
+          "run_id": "public-demo-001"
+        },
+        "tool_effects": 1
+      },
+      "completed": {
+        "next": [],
+        "node_executions": {
+          "finish": 1,
+          "plan": 1,
+          "write_draft": 2
+        },
+        "state": {
+          "finished": true,
+          "plan": "Create one simulated draft, then verify its receipt.",
+          "receipt": "draft-7854be0b31d5",
+          "run_id": "public-demo-001"
+        },
+        "tool_effects": 1
+      },
+      "crash_log": [
+        "EXECUTE plan",
+        "EXECUTE write_draft",
+        "TOOL committed receipt draft-7854be0b31d5",
+        "CRASH after effect commit, before graph checkpoint"
+      ],
+      "resume_log": [
+        "EXECUTE write_draft",
+        "TOOL reuse receipt draft-7854be0b31d5",
+        "EXECUTE finish"
+      ]
+    }
+  ],
+  "verification": "passed",
+  "scope": "Local deterministic fixture, no LLM or remote API"
+}
