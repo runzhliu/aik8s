@@ -182,22 +182,174 @@ hiroute agents list --output json
 hiroute sessions status --output json
 ```
 
-### 8.2 Worker 提交标识要提前保留
+### 8.2 从任务提交到取回结果：按一次真实操作走完整流程
 
-官方提供的任务提交方式包含 `submission-key`，用于在响应不确定时查询原提交。下面是命令结构示例，需要替换已发布计划 ID 和目录：
+**本次 Docker 环境通过 CLI 提交任务。** 本地浏览器里的只读证据页用于查看记录，不能在页面中填写任务后点击运行。这里先演示手动使用 Worker；主 Agent 通过工具自动委派，是建立好同一套计划与依赖之后的另一种入口。
+
+本节从已就绪的 `hiroute-dsh-lab` 容器开始。操作前需要已有模型来源、选好的 Worker 执行器，以及一份开启任务委派并已发布的计划。本次使用 DSH 和通过工具调用验证的 `lab-deepseek-adapted` 计划；自己部署时，应从查询结果复制本实例的 plan ID，不能照抄另一实例产生的 ID。单独请求模型 API 只会运行模型推理，不会创建 Worker 任务。
+
+#### 第一步：进入容器，找到可以提交的计划
+
+在**本机终端**执行：
+
+```sh
+docker exec -it hiroute-dsh-lab sh
+```
+
+进入后，下面的 `hiroute` 命令都在**容器内**执行：
+
+```sh
+hiroute worker plans --output json
+```
+
+返回的 `data.plans[]` 中，主要看这些字段：
+
+| 字段 | 本次选中的值 | 用来做什么 |
+| --- | --- | --- |
+| `display_name` | `lab-deepseek-adapted` | 识别已配置的计划 |
+| `agent_plan_id` | `plan/7e1400f339532c4ca314a2d4` | 传给提交命令的 `--plan` |
+| `harness` | `deepseek_harness` | 该计划由 DSH 执行 |
+| `protocol` | `responses` | DSH 访问本地 HiRoute 的协议 |
+| `availability` | `ready` | 当前具备 Worker 提交条件 |
+
+`--plan` 接收的是 **plan ID**；表里的显示名和模型别名有各自用途，不能随意互换。`ready` 也不代表所有上游工具协议都已验证，本次选用的是后面实测通过的适配计划。[任务路由与依赖要求](https://github.com/higress-group/HiRoute/blob/v0.3.1/apps/website/content/guides/task-routing.zh.md)
+
+#### 第二步：准备项目目录与提示词
+
+继续在容器内执行：
+
+```sh
+PLAN_ID='plan/7e1400f339532c4ca314a2d4'
+WORK_DIR='/workspace/submission-demo'
+SUBMISSION_KEY='article-submit-demo-20261015-01'
+
+mkdir -p "$WORK_DIR"
+cat > "$WORK_DIR/task.txt" <<'TASK'
+在当前工作目录创建 arithmetic.py，实现 add(a, b) 返回 a+b。
+创建 test_arithmetic.py，使用 unittest 编写两个测试，分别覆盖正数和负数。
+运行 python3 -m unittest -v，最后说明创建的文件和测试结果。
+只操作当前工作目录。
+TASK
+```
+
+`WORK_DIR` 是 **Worker 看见的容器目录**，并不是本机同名路径。`task.txt` 保存任务要求；生成的代码与测试文件也放在这个目录。下面使用本次真实演示的标识；在现成演示容器中发起新任务时，应更换 `SUBMISSION_KEY`，同一次提交的查询或重试则保留原值。
+
+![实际查询 Worker 计划并读取任务提示词文件](../../assets/rag-agent/hiroute/lab-submission-prepare.png)
+
+#### 第三步：执行提交命令
 
 ```sh
 hiroute worker exec \
-  --plan <PLAN_ID> \
-  --cwd /absolute/path/to/project \
-  --title "检查解析器回归" \
-  --submission-key parser-check-001 \
-  -- "定位失败原因，完成最小修复并运行相关测试"
-
-hiroute worker status --submission parser-check-001 --operation start
+  --plan "$PLAN_ID" \
+  --cwd "$WORK_DIR" \
+  --title "提交演示：加法与单元测试" \
+  --run-timeout 180 \
+  --no-wait \
+  --submission-key "$SUBMISSION_KEY" \
+  --file "$WORK_DIR/task.txt" \
+  --output json
 ```
 
-连接中断后，应先查同一次提交，而不是换一个 key 再启动。新任务才使用新的标识。[任务提交与查询](https://github.com/higress-group/HiRoute/blob/v0.3.1/apps/website/content/guides/task-routing.zh.md)
+| 参数 | 含义 |
+| --- | --- |
+| `--plan` | 使用哪份已发布计划，由它确定执行 Agent 与模型路由 |
+| `--cwd` | 在哪个项目目录执行任务 |
+| `--file` | 从哪个 UTF-8 文件读取任务正文 |
+| `--title` | 给任务列表使用的名称；具体工作要求仍在正文里 |
+| `--no-wait` | 提交后立即返回任务位置，执行在后台继续 |
+| `--run-timeout 180` | 本次执行最多运行 180 秒 |
+| `--submission-key` | 本次提交的幂等标识，响应丢失时用于定位原任务 |
+
+短任务也可以把正文直接放在 `--` 后面；`--file` 和这种写法二选一：
+
+```sh
+hiroute worker exec \
+  --plan "$PLAN_ID" --cwd "$WORK_DIR" \
+  --run-timeout 60 --no-wait \
+  --submission-key 'inspect-add-demo-001' \
+  --output json \
+  -- '读取 arithmetic.py，解释 add 的实现，不修改文件。'
+```
+
+本次提交的 `data` 回执包含：
+
+```json
+{
+  "submission_state": "accepted",
+  "submission_key": "article-submit-demo-20261015-01",
+  "task_id": "task/3eecdf577fd6009019d377bc64ab46c8",
+  "run_id": "run/451f963155adf1604310c8417a8c283f",
+  "run_state": "accepted",
+  "replayed": false
+}
+```
+
+**`accepted` 表示已经接收，任务此时还没执行完。** `task_id` 标识整项任务，`run_id` 标识这一轮执行；后续 Continue 会保留 task，但创建新的 run。
+
+![真实提交命令与 accepted 回执，包含任务 ID 和执行 ID](../../assets/rag-agent/hiroute/lab-submission-submit.png)
+
+#### 第四步：查看进度、等待结束、读取结果
+
+先按提交标识查询，尤其适合提交时终端断连、没有看到回执的情况：
+
+```sh
+hiroute worker status \
+  --submission "$SUBMISSION_KEY" --operation start --output json
+```
+
+把自己回执里的 ID 保存下来。下面两个值是本次截图中的真实值：
+
+```sh
+TASK_ID='task/3eecdf577fd6009019d377bc64ab46c8'
+RUN_ID='run/451f963155adf1604310c8417a8c283f'
+
+hiroute worker status --run "$RUN_ID" --output json
+hiroute worker read --run "$RUN_ID" --output json
+hiroute worker wait --run "$RUN_ID" --wait-timeout 10 --output json
+hiroute worker result --run "$RUN_ID" --output json
+```
+
+这四条命令分别用于看状态、读已保存进展、有界等待和取结果。`wait` 返回仍在运行，或 `timed_out=true`，只说明这次等待结束，不代表任务失败或被取消；任务运行上限由提交时的 `--run-timeout` 控制。很早查询进展时也可能暂时没有可读内容，继续按同一个 run 查询即可。
+
+本次记录依次经过 `accepted → preparing → running → succeeded`。最后再独立检查文件和测试，而不是只看 Agent 自己说“完成”：
+
+```sh
+ls -l "$WORK_DIR/arithmetic.py" "$WORK_DIR/test_arithmetic.py"
+python3 -m unittest discover -s "$WORK_DIR" -v
+```
+
+真实验收为 **2 项测试通过，退出码 0**。对应的完整提交与查询记录另存为[脱敏操作记录](../../assets/rag-agent/hiroute/submission-evidence.json)。
+
+![同一个执行 ID 的运行状态、最终成功状态与独立单元测试输出](../../assets/rag-agent/hiroute/lab-submission-result.png)
+
+#### 第五步：继续原任务，或取消当前执行
+
+需要在原有会话上继续修改时，使用 `continue`，并明确指定该 task **当前最新的 run**：
+
+```sh
+hiroute worker continue \
+  --task "$TASK_ID" --expected-latest-run "$RUN_ID" \
+  --cwd "$WORK_DIR" --run-timeout 180 --no-wait \
+  --submission-key 'add-demo-continue-001' --output json \
+  -- '增加 subtract(a,b)，把测试扩展到四项并重新运行。'
+```
+
+新的回执仍属于原 task，但会返回新的 `run_id`。后续查询以及下一次 Continue 要使用这个新值；不要一直拿第一轮的 run 当作 latest run。后面的实测章节展示了实际完成的 Continue 与重启后继续执行。
+
+如果要停止某一轮，使用精确的 run ID：
+
+```sh
+hiroute worker cancel --run "$RUN_ID" --output json
+hiroute worker status --run "$RUN_ID" --output json
+```
+
+取消会停止该轮执行，但已生成的文件仍需自己核对。需要把产物取回本机时，先 `exit` 离开容器，再在本机终端执行：
+
+```sh
+docker cp hiroute-dsh-lab:/workspace/submission-demo ./submission-demo-result
+```
+
+这就完成了从准备输入、提交、查询到取回交付物的基本流程。[0.3.1 CLI 合同](https://github.com/higress-group/HiRoute/blob/v0.3.1/docs/standalone-cli.zh-CN.md)
 
 ### 8.3 Docker 实测：接上 DSH 之后，哪些能力真正跑通了
 

@@ -1,0 +1,115 @@
+{
+  "captured_at": "2026-10-15 21:47:23 +0800",
+  "provenance": "Actual HiRoute CLI submission transcript displayed in the lab read-only evidence viewer; not an official HiRoute graphical interface.",
+  "views": {
+    "submission-prepare": {
+      "title": "第 1 步 · 选择执行计划，准备任务文本",
+      "subtitle": "在本机终端执行 docker exec；工作目录和任务文件位于容器内",
+      "captured_at": "2026-10-15 21:47:23 +0800",
+      "blocks": [
+        {
+          "title": "可提交的 Worker 计划（摘录选中项）",
+          "command": "docker exec hiroute-dsh-lab hiroute worker plans --output json",
+          "text": "{\n  \"agent_plan_id\": \"plan/7e1400f339532c4ca314a2d4\",\n  \"alias\": \"hiroute-lab-deepseek-adapted\",\n  \"display_name\": \"lab-deepseek-adapted\",\n  \"purpose\": \"Isolated Docker integration lab\",\n  \"harness\": \"deepseek_harness\",\n  \"protocol\": \"responses\",\n  \"availability\": \"ready\",\n  \"reason\": null\n}"
+        },
+        {
+          "title": "任务文件的真实内容",
+          "command": "docker exec hiroute-dsh-lab cat \\\n  /workspace/submission-demo/task.txt",
+          "text": "在当前工作目录创建 arithmetic.py，实现 add(a, b) 返回 a+b。创建 test_arithmetic.py，使用 unittest 编写两个测试，分别覆盖正数和负数。运行 python3 -m unittest -v，最后说明创建的文件和测试结果。只操作当前工作目录。"
+        }
+      ]
+    },
+    "submission-submit": {
+      "title": "第 2 步 · 真正提交任务的命令与回执",
+      "subtitle": "--file 指定任务文本，--cwd 指定项目目录；--no-wait 提交后立即返回",
+      "captured_at": "2026-10-15 21:47:23 +0800",
+      "blocks": [
+        {
+          "title": "本机执行的完整提交命令",
+          "command": "# 实际执行命令，按参数换行显示",
+          "text": "docker exec hiroute-dsh-lab hiroute worker exec \\\n  --plan plan/7e1400f339532c4ca314a2d4 \\\n  --cwd /workspace/submission-demo \\\n  --title \"提交演示：加法与单元测试\" \\\n  --run-timeout 180 \\\n  --no-wait \\\n  --submission-key article-submit-demo-20261015-01 \\\n  --file /workspace/submission-demo/task.txt \\\n  --output json"
+        },
+        {
+          "title": "原始响应中的 data 字段",
+          "command": "hiroute worker exec → .data",
+          "text": "{\n  \"schema\": \"hiroute.worker-command-data/v1\",\n  \"operation\": \"exec\",\n  \"submission_state\": \"accepted\",\n  \"submission_key\": \"article-submit-demo-20261015-01\",\n  \"task_id\": \"task/3eecdf577fd6009019d377bc64ab46c8\",\n  \"run_id\": \"run/451f963155adf1604310c8417a8c283f\",\n  \"run_state\": \"accepted\",\n  \"title\": \"提交演示：加法与单元测试\",\n  \"replayed\": false,\n  \"timed_out\": false\n}"
+        }
+      ]
+    },
+    "submission-result": {
+      "title": "第 3 步 · 查询执行状态，检查结果和文件",
+      "subtitle": "accepted 是已接收；run_state=succeeded 后，再检查实际文件与测试",
+      "captured_at": "2026-10-15 21:47:23 +0800",
+      "blocks": [
+        {
+          "title": "同一个 run 的执行状态",
+          "command": "docker exec hiroute-dsh-lab hiroute worker wait \\\n  --run run/451f963155adf1604310c8417a8c283f \\\n  --wait-timeout 10 --output json",
+          "text": "{\n  \"查询过程\": {\n    \"task_id\": \"task/3eecdf577fd6009019d377bc64ab46c8\",\n    \"run_id\": \"run/451f963155adf1604310c8417a8c283f\",\n    \"run_state\": \"running\"\n  },\n  \"最终结果\": {\n    \"run_id\": \"run/451f963155adf1604310c8417a8c283f\",\n    \"run_state\": \"succeeded\"\n  }\n}"
+        },
+        {
+          "title": "独立执行单元测试",
+          "command": "docker exec hiroute-dsh-lab python3 -m unittest \\\n  discover -s /workspace/submission-demo -v",
+          "text": "test_add_negative (test_arithmetic.TestAdd.test_add_negative) ... ok\ntest_add_positive (test_arithmetic.TestAdd.test_add_positive) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK\n\nexit_code = 0\n\n生成文件：\narithmetic.py\ntest_arithmetic.py"
+        }
+      ]
+    }
+  },
+  "records": {
+    "01-plans": {
+      "command": "docker exec hiroute-dsh-lab hiroute worker plans --output json",
+      "started_at": 1792072042.8613381,
+      "elapsed_seconds": 0.507,
+      "exit_code": 0,
+      "stdout": "{\"schema_version\":{\"major\":2,\"minor\":0},\"request_id\":\"req_936_1\",\"status\":\"succeeded\",\"data\":{\"schema\":\"hiroute.work-plan-list/v1\",\"plans\":[{\"agent_plan_id\":\"plan/338c3689428be43132a3cf20\",\"alias\":\"hiroute-lab-deepseek-fixed\",\"display_name\":\"lab-deepseek-fixed\",\"purpose\":\"Isolated Docker integration lab\",\"harness\":\"deepseek_harness\",\"protocol\":\"responses\",\"availability\":\"ready\",\"reason\":null},{\"agent_plan_id\":\"plan/7e1400f339532c4ca314a2d4\",\"alias\":\"hiroute-lab-deepseek-adapted\",\"display_name\":\"lab-deepseek-adapted\",\"purpose\":\"Isolated Docker integration lab\",\"harness\":\"deepseek_harness\",\"protocol\":\"responses\",\"availability\":\"ready\",\"reason\":null},{\"agent_plan_id\":\"plan/b295dd581209997d32fa2d77\",\"alias\":\"hiroute-lab-bounded-failover\",\"display_name\":\"lab-bounded-failover\",\"purpose\":\"Isolated Docker integration lab\",\"harness\":\"deepseek_harness\",\"protocol\":\"responses\",\"availability\":\"ready\",\"reason\":null},{\"agent_plan_id\":\"plan/e95c61a3fc01a783434fe2b5\",\"alias\":\"hiroute-lab-deepseek-native\",\"display_name\":\"lab-deepseek-native\",\"purpose\":\"Isolated Docker integration lab\",\"harness\":\"deepseek_harness\",\"protocol\":\"responses\",\"availability\":\"ready\",\"reason\":null}]},\"warnings\":[],\"next_actions\":[]}\n",
+      "stderr": ""
+    },
+    "03-submit": {
+      "command": "docker exec hiroute-dsh-lab hiroute worker exec --plan plan/7e1400f339532c4ca314a2d4 --cwd /workspace/submission-demo --title 提交演示：加法与单元测试 --run-timeout 180 --no-wait --submission-key article-submit-demo-20261015-01 --file /workspace/submission-demo/task.txt --output json",
+      "started_at": 1792072043.551667,
+      "elapsed_seconds": 0.222,
+      "exit_code": 0,
+      "stdout": "{\"schema_version\":{\"major\":2,\"minor\":0},\"request_id\":\"req_950_1\",\"status\":\"succeeded\",\"data\":{\"schema\":\"hiroute.worker-command-data/v1\",\"operation\":\"exec\",\"submission_state\":\"accepted\",\"submission_key\":\"article-submit-demo-20261015-01\",\"task_id\":\"task/3eecdf577fd6009019d377bc64ab46c8\",\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"run_state\":\"accepted\",\"title\":\"提交演示：加法与单元测试\",\"replayed\":false,\"timed_out\":false},\"warnings\":[],\"next_actions\":[{\"command_id\":\"worker.status\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.status.inspect\"},{\"command_id\":\"worker.read\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.progress.read\"},{\"command_id\":\"worker.wait\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"after_revision\":1},\"reason_code\":\"worker.progress.wait\"},{\"command_id\":\"worker.cancel\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"idempotency_key\":null,\"reason\":null},\"reason_code\":\"worker.cancel.confirm_required\"}]}\n",
+      "stderr": ""
+    },
+    "04-status": {
+      "command": "docker exec hiroute-dsh-lab hiroute worker status --submission article-submit-demo-20261015-01 --operation start --output json",
+      "started_at": 1792072043.773739,
+      "elapsed_seconds": 0.123,
+      "exit_code": 0,
+      "stdout": "{\"schema_version\":{\"major\":2,\"minor\":0},\"request_id\":\"req_962_1\",\"status\":\"succeeded\",\"data\":{\"schema\":\"hiroute.worker-command-data/v1\",\"operation\":\"status\",\"submission_state\":\"accepted\",\"task_id\":\"task/3eecdf577fd6009019d377bc64ab46c8\",\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"run_state\":\"preparing\",\"title\":\"提交演示：加法与单元测试\",\"replayed\":false,\"timed_out\":false},\"warnings\":[],\"next_actions\":[{\"command_id\":\"worker.read\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.progress.read\"},{\"command_id\":\"worker.wait\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"after_revision\":3},\"reason_code\":\"worker.progress.wait\"},{\"command_id\":\"worker.status\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.status.inspect\"},{\"command_id\":\"worker.cancel\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"idempotency_key\":null,\"reason\":null},\"reason_code\":\"worker.cancel.confirm_required\"}]}\n",
+      "stderr": ""
+    },
+    "05-wait-10": {
+      "command": "docker exec hiroute-dsh-lab hiroute worker wait --run run/451f963155adf1604310c8417a8c283f --wait-timeout 10 --output json",
+      "started_at": 1792072050.335169,
+      "elapsed_seconds": 0.085,
+      "exit_code": 0,
+      "stdout": "{\"schema_version\":{\"major\":2,\"minor\":0},\"request_id\":\"req_1070_1\",\"status\":\"succeeded\",\"data\":{\"schema\":\"hiroute.worker-command-data/v1\",\"operation\":\"wait\",\"submission_state\":\"accepted\",\"task_id\":\"task/3eecdf577fd6009019d377bc64ab46c8\",\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"run_state\":\"running\",\"replayed\":false,\"timed_out\":false},\"warnings\":[],\"next_actions\":[{\"command_id\":\"worker.read\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.progress.read\"},{\"command_id\":\"worker.wait\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"after_revision\":5},\"reason_code\":\"worker.progress.wait\"},{\"command_id\":\"worker.status\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.status.inspect\"},{\"command_id\":\"worker.cancel\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"idempotency_key\":null,\"reason\":null},\"reason_code\":\"worker.cancel.confirm_required\"}]}\n",
+      "stderr": ""
+    },
+    "06-result": {
+      "command": "docker exec hiroute-dsh-lab hiroute worker result --run run/451f963155adf1604310c8417a8c283f --output json",
+      "started_at": 1792072057.221111,
+      "elapsed_seconds": 0.088,
+      "exit_code": 0,
+      "stdout": "{\"schema_version\":{\"major\":2,\"minor\":0},\"request_id\":\"req_1167_1\",\"status\":\"succeeded\",\"data\":{\"schema\":\"hiroute.worker-command-data/v1\",\"operation\":\"result\",\"submission_state\":\"accepted\",\"task_id\":\"task/3eecdf577fd6009019d377bc64ab46c8\",\"run_id\":\"run/451f963155adf1604310c8417a8c283f\",\"run_state\":\"succeeded\",\"replayed\":false,\"result\":\"完成。\\n\\n## 创建的文件\\n\\n1. **`/workspace/submission-demo/arithmetic.py`**\\n   ```python\\n   def add(a, b):\\n       return a + b\\n   ```\\n\\n2. **`/workspace/submission-demo/test_arithmetic.py`**\\n   ```python\\n   import unittest\\n   from arithmetic import add\\n\\n\\n   class TestAdd(unittest.TestCase):\\n\\n       def test_add_positive(self):\\n           self.assertEqual(add(2, 3), 5)\\n\\n       def test_add_negative(self):\\n           self.assertEqual(add(-2, -3), -5)\\n\\n\\n   if __name__ == \\\"__main__\\\":\\n       unittest.main()\\n   ```\\n\\n## 测试结果\\n\\n运行 `python3 -m unittest -v` 输出：\\n\\n```\\ntest_add_negative (test_arithmetic.TestAdd.test_add_negative) ... ok\\ntest_add_positive (test_arithmetic.TestAdd.test_add_positive) ... ok\\n\\n----------------------------------------------------------------------\\nRan 2 tests in 0.000s\\n\\nOK\\n```\\n\\n两个测试均通过（`OK`），分别覆盖了正数相加（`2 + 3 == 5`）和负数相加（`-2 + -3 == -5`）两种情况。所有操作都只在当前工作目录 `/workspace/submission-demo` 内进行。\",\"timed_out\":false},\"warnings\":[],\"next_actions\":[{\"command_id\":\"worker.result\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.result.read\"},{\"command_id\":\"worker.read\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.progress.read\"},{\"command_id\":\"worker.status\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.status.inspect\"}]}\n",
+      "stderr": ""
+    },
+    "07-progress": {
+      "command": "docker exec hiroute-dsh-lab hiroute worker read --run run/451f963155adf1604310c8417a8c283f --output json",
+      "started_at": 1792072057.309879,
+      "elapsed_seconds": 0.085,
+      "exit_code": 6,
+      "stdout": "{\"schema_version\":{\"major\":2,\"minor\":0},\"request_id\":\"req_1175_1\",\"status\":\"unavailable\",\"warnings\":[],\"next_actions\":[{\"command_id\":\"worker.status\",\"input\":{\"run_id\":\"run/451f963155adf1604310c8417a8c283f\"},\"reason_code\":\"worker.status.inspect\"}],\"error\":{\"code\":\"OBSERVATION_UNAVAILABLE\",\"category\":\"unavailable\",\"message_key\":\"worker.read.unavailable\",\"retryable\":false,\"details_schema\":\"hiroute.error-details/none-v1\"}}\n",
+      "stderr": ""
+    },
+    "08-tests": {
+      "command": "docker exec hiroute-dsh-lab python3 -m unittest discover -s /workspace/submission-demo -v",
+      "started_at": 1792072057.395147,
+      "elapsed_seconds": 0.147,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "test_add_negative (test_arithmetic.TestAdd.test_add_negative) ... ok\ntest_add_positive (test_arithmetic.TestAdd.test_add_positive) ... ok\n\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK\n"
+    }
+  }
+}
