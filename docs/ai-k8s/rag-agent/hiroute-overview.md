@@ -1,6 +1,6 @@
 ---
 title: HiRoute 技术综述：Higress 团队的 Agent 路由与模型协作引擎
-description: 解析 HiRoute 的任务路由、模型路由、Jev 决策、ContextHold、阶段胜任评分与有限故障接力，讨论官方降本实验、Linux 部署和企业 Kubernetes 接入
+description: 解析 HiRoute 的任务路由、模型路由、Jev 决策、ContextHold、阶段胜任评分与有限故障接力，讨论官方降本实验，并记录 Docker 接入 DSH、协议兼容、故障接力与重启续跑实测
 status: evolving
 last_reviewed: 2026-10-15
 ---
@@ -11,7 +11,7 @@ last_reviewed: 2026-10-15
 
 Higress 团队推出的 **HiRoute** 尝试管理这类选择。它在本机提供 Agent 任务委派、模型接入、路由计划和执行记录，让用户继续使用已有 Agent，同时为不同工作选择合适的模型。项目采用 Apache-2.0 许可证，提供桌面应用及无界面的命令行版本。[项目介绍](https://github.com/higress-group/HiRoute)、[开源说明](https://github.com/higress-group/HiRoute/blob/main/news/hiroute-open-source.zh-CN.md)
 
-本文核查时间为 **2026 年 10 月 15 日**。发行情况以正式 Release 为准；机制同时对照 `v0.3.1` 与主分支快照 [`b4c1a927`](https://github.com/higress-group/HiRoute/commit/b4c1a92765bc94d0cfba273316275ba4e4231c78)。下文的实验数据来自上游公开记录，企业接入图为分析建议。
+本文核查时间为 **2026 年 10 月 15 日**。发行情况以正式 Release 为准；机制同时对照 `v0.3.1` 与主分支快照 [`b4c1a927`](https://github.com/higress-group/HiRoute/commit/b4c1a92765bc94d0cfba273316275ba4e4231c78)。第 7 节整理上游实验；第 8.3 节是本文实际完成的 Docker 与 DSH 接入测试。企业接入图为分析建议。
 
 ## 1. 它和 Higress 是什么关系
 
@@ -198,6 +198,89 @@ hiroute worker status --submission parser-check-001 --operation start
 ```
 
 连接中断后，应先查同一次提交，而不是换一个 key 再启动。新任务才使用新的标识。[任务提交与查询](https://github.com/higress-group/HiRoute/blob/v0.3.1/apps/website/content/guides/task-routing.zh.md)
+
+### 8.3 Docker 实测：接上 DSH 之后，哪些能力真正跑通了
+
+这次在独立 Docker 容器中安装 **HiRoute 0.3.1**，接入一个已有的 OpenAI 兼容模型 API，再由 DeepSeek Harness 执行文件操作与测试。容器限制为 **2 vCPU、4 GiB 内存**，使用 Linux ARM64；DSH 为 **0.2.1-alpha.3**，Node.js 为 **24.22.0**。这里验证的是路由与 Agent 集成，不涉及本地模型加载或 GPU 吞吐测试。
+
+安装包固定为官方 `v0.3.1` 的 ARM64 standalone 包，先校验发行清单中的文件名、大小和 SHA-256，再运行官方安装器。容器使用独立 HOME、工作区与证据卷，不挂载宿主机的 Agent 配置。服务以前台 `hiroute service run` 启动，不依赖容器中存在 systemd 用户服务。
+
+| 检查项目 | 本次结果 | 验收依据 |
+| --- | --- | --- |
+| 服务与本地网关 | 通过 | `control_store`、`observation_store`、`gateway` 均为 `ready` |
+| 文本 JSON 与 SSE 流 | 通过 | 返回指定字符串；Responses 流包含 `response.completed` |
+| 原样 Chat → Responses 流式工具调用 | 失败 | 解码器拒绝 `system_fingerprint`，流已开始后中断 |
+| 原样 Responses → Responses 流式工具调用 | 失败 | 原生投影报告 `invalid_lifecycle`，未交付完整终止事件 |
+| Chat 元数据适配后的 DSH Worker | 通过 | 实际创建两个文件，独立复跑 2 项测试通过 |
+| Continue 扩展原任务 | 通过 | 增加 `subtract`，独立复跑 4 项测试通过 |
+| 相同提交重放 | 通过 | `replayed=true`，返回原 task 与原 run |
+| 容器重启后 Continue | 通过 | 原生会话 ID 保持一致，第 3 轮执行后 4 项测试仍通过 |
+| 首选端点 503 后接力 | 通过 | RoutingReceipt 记录两次尝试：503 → 200 |
+| 运行中取消 | 通过 | 状态进入 `cancelled`、`cleanup=complete`，等待进程退出 |
+
+下面四张图截自本地的**只读 CLI 证据查看页**：服务状态和 Worker 结果实时读取实际容器，协议差异与接力记录读取原始实验文件。Linux standalone 没有本次可用的官方 Web Console，因此这些截图不代表 HiRoute Desktop 的界面；内部端点与凭据未导出。[截图对应的脱敏字段快照](../../assets/rag-agent/hiroute/lab-evidence.json)可用于核对显示值。
+
+![HiRoute Docker 服务就绪与文本、工具协议检查的真实结果](../../assets/rag-agent/hiroute/lab-service.png)
+
+#### 先验证完整协议，再让 Agent 干活
+
+第一次接入时，连接检查和普通文本都能成功，但 Worker 没有写出目标文件。顺着 DSH 会话日志查到的错误是：
+
+```text
+OpenAI Responses stream ended before a terminal response event
+```
+
+继续对照原始 SSE 和 HiRoute 诊断事件，问题分成两条路径。
+
+**跨协议路径**中，上游 Chat 流携带 `system_fingerprint`。HiRoute 0.3.1 的诊断记录明确给出 `stage=decode`、`reason=unsupported_field`、`field=system_fingerprint`。部分工具参数已经交付，但结束事件没有送达，DSH 因而拒绝把这一步当作完整工具调用。
+
+**同协议路径**中，上游 Responses 工具流的 `output_item.added` 与最终 `response.completed` 使用了不同的工具 `id` 和 `call_id`。HiRoute 报告 `stage=native_projection`、`reason=invalid_lifecycle`。源码要求同一工具的身份保持连续；这次抓到的身份变化与该检查相符，但不能把所有兼容端点的失败都归到同一个原因。[原生工具身份校验](https://github.com/higress-group/HiRoute/blob/v0.3.1/crates/gateway/src/adapters/response/native_passthrough.rs)
+
+![HiRoute 原始诊断与上游工具身份差异的真实截图](../../assets/rag-agent/hiroute/lab-protocol.png)
+
+为继续验证独立能力，这次在容器内增加了一个**仅监听回环地址的适配层**：Chat SSE 仅删除顶层 `system_fingerprint`，不改模型内容、工具参数、用量、完成原因或 `[DONE]`。原始上游流另外保留。适配后走 Chat → Responses 路径，Worker 才完成后续任务。
+
+因此，表中的 Worker 成功属于**使用这一适配层的结果**，不能写成 0.3.1 对原始 API 的无修改兼容。原样接入的两次失败也仍然计入记录。适配层同时转发已有的内部 HTTP API；它没有把这段上游连接升级成 TLS。正式接入仍应优先提供证书可信的 HTTPS 端点。
+
+#### 文件、测试和原生会话一起验收
+
+首轮交给 DSH 的任务是：
+
+> 在工作区创建 `arithmetic.py`，实现 `add(a, b)`；用 unittest 创建两个测试，包含负数；运行 `python3 -m unittest -v`。
+
+Worker 返回成功后，另外执行一次 unittest，确认真实文件存在且两项测试通过。第二轮通过 `worker continue` 指向**原 task 和明确的 latest run**，新增 `subtract(a, b)`，把测试扩展到四项。第三轮先重启整个实验容器，重新启动回环适配进程，再 Continue 读取已有文件并复跑测试。
+
+三轮的 run 不同，task 相同，原生 DSH 会话 ID 一致；会话日志依次出现第 1、2、3 轮。最终独立验收输出如下：
+
+```text
+test_add_negative ... ok
+test_add_positive ... ok
+test_subtract_negative ... ok
+test_subtract_positive ... ok
+Ran 4 tests
+OK
+```
+
+![Worker 执行、Continue 与容器重启后验收的真实截图](../../assets/rag-agent/hiroute/lab-worker.png)
+
+这个实验验证了**完成一轮之后，服务重启仍能沿原会话继续**。它没有证明正在执行的任意 Shell 命令能在崩溃点继续，也没有验证外部写操作只执行一次。相同提交重放返回原 run，证明的是任务准入去重，不能扩大成业务副作用的全局 Exactly Once。
+
+#### 用受控 503 验证有限接力
+
+另一份固定顺序计划配置两个候选，把 `maximum_attempts` 设为 **2**。先让两个测试端点通过连接检查，再只给实验回环层的首选端点注入 503；共享模型服务本身不作故障操作。
+
+| 尝试 | 上游 HTTP | Receipt 结论 | 后续行为 |
+| --- | ---: | --- | --- |
+| 1 | 503 | `rejected`、`transient` | `disposition=continue` |
+| 2 | 200 | `accepted` | 完整流结束，Worker 返回 `FAILOVER_OK` |
+
+最终请求记录为 `attempts_started=2`、`accepted_attempt_ordinal=2`。第二次请求上游报告输入 **3,159 Token**、输出 **22 Token**，`effective_cost_micros` 为 `null`。未配置可信价格时，这个空值表示金额未知，不能据此认定免费。
+
+![受控 503 后第二候选成功的真实 RoutingReceipt 截图](../../assets/rag-agent/hiroute/lab-failover.png)
+
+这两条候选最终连接同一个实际模型服务，因此这里只验证**候选接力机制**。起初探测多个逻辑模型名称时，响应的 `model` 字段都报告同一个模型，尚不能确认后端发生跨厂商切换。Jev 决策、智能省钱、阶段评分和多模型质量成本对照没有形成实测结论。
+
+这次接入最实用的验收顺序是：文本正确 → 流完整 → 工具参数与身份连续 → 真正执行工具 → 独立验收产物 → 续跑与故障接力。只看到 HTTP 200 或 Worker 提交成功，距离整项任务完成还有几步。
 
 ## 9. 企业和 Kubernetes 中怎样定位
 

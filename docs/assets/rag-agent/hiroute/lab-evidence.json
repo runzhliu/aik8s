@@ -1,0 +1,70 @@
+{
+  "captured_at": "2026-10-15 21:23:55 +0800",
+  "provenance": "Live Docker CLI + saved original wire/receipt evidence. This is a lab evidence viewer, not HiRoute Desktop.",
+  "views": {
+    "service": {
+      "title": "HiRoute 0.3.1 · 容器与协议检查",
+      "subtitle": "Docker / Linux ARM64 · 2 vCPU · 4 GiB · DSH 0.2.1-alpha.3",
+      "blocks": [
+        {
+          "title": "实时服务状态",
+          "command": "hiroute system status --output json | jq .data",
+          "text": "{\n  \"schema\": \"hiroute.system-status/v1\",\n  \"daemon\": \"role_all\",\n  \"local_control\": \"v2.0:authenticated\",\n  \"control_store\": \"ready\",\n  \"observation_store\": \"ready\",\n  \"discovery\": \"ready:1_supported\",\n  \"gateway\": \"ready\",\n  \"setup_revision\": 9,\n  \"recoverable_operations\": 0\n}"
+        },
+        {
+          "title": "协议测试结果",
+          "command": "wire_tests.py → HTTP / terminal",
+          "text": "测试项                HTTP    terminal\n文本 JSON\n  HTTP = 200    terminal = completed\n\n文本 SSE\n  HTTP = 200    terminal = True\n\n工具 SSE 直连\n  HTTP = 200    terminal = True\n\n工具 SSE 经过路由\n  HTTP = 200    terminal = False\n"
+        }
+      ]
+    },
+    "worker": {
+      "title": "真实 Worker · Continue · 重启后续跑",
+      "subtitle": "同一个 task，三个 run；独立执行 unittest 核验产物",
+      "blocks": [
+        {
+          "title": "三次执行的实时状态",
+          "command": "hiroute worker result --run <ID> --output json | jq .data",
+          "text": "[\n  {\n    \"task_id\": \"task/4d8e67cdbbd8846391b91ddf38b12532\",\n    \"run_id\": \"run/534fbfad23cfacfede1b465f23fee4d6\",\n    \"run_state\": \"succeeded\"\n  },\n  {\n    \"task_id\": \"task/4d8e67cdbbd8846391b91ddf38b12532\",\n    \"run_id\": \"run/16cbb3117f3b7ea8ae273c8047e27b50\",\n    \"run_state\": \"succeeded\"\n  },\n  {\n    \"task_id\": \"task/4d8e67cdbbd8846391b91ddf38b12532\",\n    \"run_id\": \"run/97bdcc65a7029e25b2f316d0227b8ad2\",\n    \"run_state\": \"succeeded\"\n  }\n]"
+        },
+        {
+          "title": "独立验收与会话连续性",
+          "command": "python3 -m unittest -v\n# native session journal",
+          "text": "test_add_negative (test_arithmetic.TestAdd.test_add_negative) ... ok\ntest_add_positive (test_arithmetic.TestAdd.test_add_positive) ... ok\ntest_subtract_negative (test_arithmetic.TestSubtract.test_subtract_negative) ... ok\ntest_subtract_positive (test_arithmetic.TestSubtract.test_subtract_positive) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n\nexit_code = 0\n\nnative_session_id = 68647db0-bbc7-4381-afc0-5bd6eb32aa9d\nturns = [1, 2, 3]"
+        }
+      ]
+    },
+    "failover": {
+      "title": "有限故障接力 · 第 1 次 503，第 2 次成功",
+      "subtitle": "受控故障仅注入实验回环端点；两个候选最终使用同一实际模型",
+      "blocks": [
+        {
+          "title": "RoutingReceipt 中的两次尝试",
+          "command": "hiroute sessions receipt <RECEIPT> --output json\n# ordered_facts: attempt_finished",
+          "text": "[\n  {\n    \"ordinal\": 1,\n    \"provider_http_status\": 503,\n    \"outcome\": \"rejected\",\n    \"error_class\": \"transient\",\n    \"disposition\": \"continue\"\n  },\n  {\n    \"ordinal\": 2,\n    \"provider_http_status\": 200,\n    \"outcome\": \"accepted\",\n    \"error_class\": null,\n    \"disposition\": \"accept\"\n  }\n]"
+        },
+        {
+          "title": "请求结论与实际用量",
+          "command": "# request_finished / provider usage / worker result",
+          "text": "{\n  \"request_finished\": {\n    \"outcome\": \"accepted\",\n    \"attempts_started\": 2,\n    \"accepted_attempt_ordinal\": 2\n  },\n  \"usage\": {\n    \"input_tokens\": 3159,\n    \"output_tokens\": 22,\n    \"effective_cost_micros\": null\n  },\n  \"worker\": {\n    \"run_state\": \"succeeded\",\n    \"result\": \"FAILOVER_OK\"\n  }\n}"
+        }
+      ]
+    },
+    "protocol": {
+      "title": "原样接入的协议差异 · 保留失败证据",
+      "subtitle": "直连工具流完整；HiRoute 0.3.1 两条流式工具链路均出现兼容性失败",
+      "blocks": [
+        {
+          "title": "HiRoute 真实诊断事件",
+          "command": "diagnostics → response_failure",
+          "text": "[\n  {\n    \"stage\": \"decode\",\n    \"reason\": \"unsupported_field\",\n    \"field\": \"system_fingerprint\",\n    \"frame_index\": 25,\n    \"received_bytes\": 6811\n  },\n  {\n    \"stage\": \"native_projection\",\n    \"reason\": \"invalid_lifecycle\"\n  }\n]"
+        },
+        {
+          "title": "上游 Responses 工具身份变化",
+          "command": "raw SSE: output_item.added → response.completed",
+          "text": "{\n  \"stream_item\": {\n    \"id\": \"a6055399703493fa\",\n    \"call_id\": \"call_98b5fa072a1333af\",\n    \"name\": \"add\"\n  },\n  \"terminal_item\": {\n    \"id\": \"fc_8b2e0bb311fd3f47\",\n    \"call_id\": \"chatcmpl-tool-b7e72048c802e9b9\",\n    \"name\": \"add\"\n  },\n  \"adapter_for_successful_worker\": \"Chat SSE: remove system_fingerprint only\"\n}"
+        }
+      ]
+    }
+  }
+}
