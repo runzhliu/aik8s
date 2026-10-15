@@ -199,6 +199,9 @@ def collect_items(docs_dir: Path, repo_root: Path, site_url: str) -> list[FeedIt
     items: list[FeedItem] = []
     history_by_path = load_git_history(repo_root, docs_dir)
     for path in sorted(docs_dir.rglob("*.md")):
+        # Asset provenance and repository notes are not published articles.
+        if path.relative_to(docs_dir).parts[0] == "assets" or path.name.lower() == "readme.md":
+            continue
         metadata = parse_front_matter(path)
         title = metadata.get("title")
         description = metadata.get("description")
@@ -459,15 +462,16 @@ def main() -> None:
     if not items:
         parser.error("no feed items found")
 
+    articles = [item for item in items if not item.is_index]
     rss_path = site_dir / "rss.xml"
-    write_rss(items, rss_path, site_url, args.limit)
-    write_atom(items, site_dir / "atom.xml", site_url, args.limit)
+    write_rss(articles, rss_path, site_url, args.limit)
+    write_atom(articles, site_dir / "atom.xml", site_url, args.limit)
     shutil.copyfile(rss_path, site_dir / "feed.xml")
     write_sitemap(items, site_dir / "sitemap.xml")
     items_by_url = {normalize_url(item.url): item for item in items}
     injected = sum(inject_metadata(path, site_url, items_by_url) for path in site_dir.rglob("*.html"))
     print(
-        f"Generated RSS/Atom with {min(len(items), args.limit)} items and Sitemap with "
+        f"Generated RSS/Atom with {min(len(articles), args.limit)} items and Sitemap with "
         f"{len(items)} URLs; enhanced {injected} HTML files"
     )
 

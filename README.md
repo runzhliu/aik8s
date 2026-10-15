@@ -66,6 +66,7 @@ make build-production
 - RSS：<https://aik8s.run/rss.xml>
 - Atom：<https://aik8s.run/atom.xml>
 - 通用 Feed 地址：<https://aik8s.run/feed.xml>
+- 订阅仅包含文章，配图目录、README 说明和栏目首页不作为文章推送；配图仍在正文中正常展示。
 - 每篇文章支持系统分享、复制链接，以及微博、X、LinkedIn、Telegram 和 WhatsApp 分享；移动端可通过系统分享面板转发到微信等已安装应用。
 - 评论使用 [Giscus](https://github.com/giscus/giscus)，内容保存在本仓库的 GitHub Discussions，不需要单独部署服务或数据库。
 
