@@ -81,6 +81,7 @@ nav = [
       {"Jev System One 决策模型综述" = "ai-k8s/rag-agent/jev-system-one-model-overview.md"},
       {"Jev 每周回顾" = "ai-k8s/rag-agent/jev-weekly-review.md"},
       {"HarnessRouter 综述" = "ai-k8s/rag-agent/harnessrouter-overview.md"},
+      {"HiRoute Agent 路由与模型协作" = "ai-k8s/rag-agent/hiroute-overview.md"},
       {"Agent Memory 技术综述" = "ai-k8s/rag-agent/agent-memory-technology-overview.md"},
       {"Langfuse 与 LangGraph 技术综述" = "ai-k8s/rag-agent/langfuse-langgraph-overview.md"},
       {"LangChain、LangGraph 与 Langfuse Kubernetes 实战" = "ai-k8s/rag-agent/langchain-langgraph-langfuse-kubernetes-demo.md"},

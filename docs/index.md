@@ -134,6 +134,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - [ChatGPT Dots 技术解析：常驻智能体、云端电脑与企业应用](ai-k8s/rag-agent/chatgpt-dots-overview.md)
 - [Agent 长任务中断续跑原理与社区实践](ai-k8s/rag-agent/agent-long-running-durable-execution.md)
 - [HarnessRouter 综述](ai-k8s/rag-agent/harnessrouter-overview.md)
+- [HiRoute 技术综述：Higress 团队的 Agent 路由与模型协作引擎](ai-k8s/rag-agent/hiroute-overview.md)
 - [RAG 基础设施](ai-k8s/rag-agent/rag-infrastructure.md)
 - [Agent Sandbox 选型与架构分析](ai-k8s/rag-agent/agent-sandbox-selection.md)
 - [CubeSandbox Kubernetes 部署条件与生产评估](ai-k8s/rag-agent/cubesandbox-kubernetes.md)

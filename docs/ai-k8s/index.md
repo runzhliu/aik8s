@@ -123,6 +123,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [Jev System One 决策模型综述](rag-agent/jev-system-one-model-overview.md)：不生成文本的概率决策接口、置信度、Agent 路由、社区争议、生产架构与评估方法。
 - [Jev 每周回顾](rag-agent/jev-weekly-review.md)：按周追踪官方版本、独立评测、社区权重与 Agent 应用，保留历史结果与判断。
 - [HarnessRouter 综述](rag-agent/harnessrouter-overview.md)：UHP、统一 Harness API、Cloud 与 Community Edition、安全边界、成本及与模型网关的关系。
+- [HiRoute Agent 路由与模型协作](rag-agent/hiroute-overview.md)：Higress 团队的本地路由引擎，解析阶段选模、Jev 决策、上下文保持和企业接入。
 - [DeepSeek Harness GitHub 仓库深度解析](rag-agent/deepseek-harness-repository-analysis.md)：源码目录、Cordis 插件树、Profile 与 Bundle、Agent Loop、事件溯源会话和能力 seam。
 - [DeepSeek Harness Docker、Compose 与 Helm 部署实战](rag-agent/deepseek-harness-runtime-containerization.md)：多架构镜像、EROFS 修复、状态持久化、StatefulSet、Helm 与安全暴露边界。
 - [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](practices/deepseek-harness-kubernetes.md)：all-in-one 浏览器桌面、自研 DSH Plugin、Tailscale 远程入口、状态卷、Cilium 探针冲突和安全边界。
