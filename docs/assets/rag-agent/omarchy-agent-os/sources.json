@@ -1,0 +1,41 @@
+{
+  "reviewed": "2026-10-16",
+  "channel": "public-documentation",
+  "size": [
+    1200,
+    675
+  ],
+  "screenshot_original": "https://github.com/user-attachments/assets/8ed81d7d-751f-4318-9e70-7ca175d22fd5",
+  "screenshot_processing": "Aspect-preserving resize with padding; no content edits.",
+  "generator": "scripts/generate_omarchy_agent_os_assets.py",
+  "assets": [
+    {
+      "file": "product-map.png",
+      "purpose": "比较四类产品管理对象",
+      "evidence": "官方项目文档的分类归纳",
+      "kind": "diagram",
+      "sha256": "6860c34056019fdfc367473d727d10204f8829ce5c49fa6a90824ec2841cb5ea"
+    },
+    {
+      "file": "task-workflow.png",
+      "purpose": "解释桌面任务的检查与恢复",
+      "evidence": "本文提出的工作流程",
+      "kind": "diagram",
+      "sha256": "d46cd2662d2bb32e13b66d914a77544d987a692ca46493025cc7379d4eaa6ee7"
+    },
+    {
+      "file": "enterprise-integration.png",
+      "purpose": "解释桌面与 Kubernetes 的职责",
+      "evidence": "本文提出的企业架构",
+      "kind": "diagram",
+      "sha256": "b45a2d03c10bfc671f5bd9a01dcc93ea58aa082df3106026aea38e71296ff78f"
+    },
+    {
+      "file": "official-quattro-desktop.png",
+      "purpose": "展示 Quattro 桌面形态",
+      "evidence": "https://github.com/omacom/omarchy/releases/tag/v4.0.0",
+      "kind": "upstream-screenshot",
+      "sha256": "10172ac286fa5e91ff7fa8f0c22574ca5ddcb48952b7c7beca369e1e3f838b8c"
+    }
+  ]
+}

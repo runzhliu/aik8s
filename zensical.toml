@@ -75,6 +75,7 @@ nav = [
       {"RAG 基础设施" = "ai-k8s/rag-agent/rag-infrastructure.md"},
       {"2026 Agent 现状与趋势" = "ai-k8s/rag-agent/agent-landscape-2026.md"},
       {"Agent Harness 技术综述" = "ai-k8s/rag-agent/agent-harness-technology-overview.md"},
+      {"Omarchy Linux 与 Agent OS 综述" = "ai-k8s/rag-agent/omarchy-agent-os-overview.md"},
       {"Agent 长任务中断续跑" = "ai-k8s/rag-agent/agent-long-running-durable-execution.md"},
       {"Agent 评估方法综述" = "ai-k8s/rag-agent/agent-evaluation-overview.md"},
       {"Harbor Agent 评测框架综述" = "ai-k8s/rag-agent/harbor-agent-evaluation-framework.md"},
