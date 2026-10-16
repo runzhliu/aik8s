@@ -1,3 +1,10 @@
+<div class="md-header__option aik8s-view-toggle">
+  <a href="{{ 'timeline.html' | url }}" class="md-header__button md-icon"
+     data-aik8s-timeline aria-label="{{ 'Browse article timeline' if config.theme.language == 'en' else '按时间线浏览文章' }}"
+     title="{{ 'Article timeline' if config.theme.language == 'en' else '文章时间线' }}">
+    {% include ".icons/material/history.svg" %}
+  </a>
+</div>
 <div class="md-header__option">
   <div class="md-select">
     <button class="md-header__button md-icon" aria-label="{{ lang.t('select.language') }}">

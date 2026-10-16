@@ -1,0 +1,54 @@
+/* The timeline uses the same theme tokens as the documentation. */
+.aik8s-view-toggle { flex-shrink: 0; }
+.aik8s-view-toggle .md-header__button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+body[data-aik8s-view="timeline"] .md-sidebar--secondary,
+body[data-aik8s-view="timeline"] .md-path { display: none; }
+.aik8s-timeline__count {
+  color: var(--md-default-fg-color--light);
+  font-size: .75rem;
+}
+.md-typeset .aik8s-timeline h2 { margin: 1.8rem 0 .8rem; }
+.md-typeset .aik8s-timeline ol {
+  border-left: 2px solid var(--md-default-fg-color--lightest);
+  list-style: none;
+  margin: 0 0 0 .3rem;
+  padding: 0 0 0 1rem;
+}
+.md-typeset .aik8s-timeline li {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: .6rem;
+  margin: 0;
+  padding: .65rem 0;
+  position: relative;
+}
+.aik8s-timeline li::before {
+  background: var(--md-accent-fg-color);
+  border: 2px solid var(--md-default-bg-color);
+  border-radius: 50%;
+  content: "";
+  height: .5rem;
+  left: -1.32rem;
+  position: absolute;
+  top: 1rem;
+  width: .5rem;
+}
+.aik8s-timeline time {
+  color: var(--md-default-fg-color--light);
+  font-size: .7rem;
+  font-variant-numeric: tabular-nums;
+  padding-top: .12rem;
+}
+.aik8s-timeline a { font-weight: 600; overflow-wrap: anywhere; }
+.md-typeset .aik8s-timeline li p {
+  color: var(--md-default-fg-color--light);
+  font-size: .7rem;
+  line-height: 1.6;
+  margin: .25rem 0 0;
+}
+@media (max-width: 600px) {
+  .md-typeset .aik8s-timeline li { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
+}

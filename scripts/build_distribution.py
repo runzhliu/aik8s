@@ -456,6 +456,127 @@ def inject_metadata(path: Path, site_url: str, items_by_url: dict[str, FeedItem]
     return True
 
 
+def without_page_toc(source: str) -> str:
+    """Remove whole TOC trees, including nested navs, without reserializing HTML."""
+    class TocParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.lines = [0] + [match.end() for match in re.finditer(r'\n', source)]
+            self.depth = 0
+            self.start = 0
+            self.ranges = []
+
+        def position(self):
+            line, column = self.getpos()
+            return self.lines[line - 1] + column
+
+        def handle_starttag(self, tag, attrs):
+            if tag != 'nav':
+                return
+            if self.depth:
+                self.depth += 1
+            elif 'md-nav--secondary' in dict(attrs).get('class', '').split():
+                self.start = self.position()
+                self.depth = 1
+
+        def handle_endtag(self, tag):
+            if tag == 'nav' and self.depth:
+                self.depth -= 1
+                if not self.depth:
+                    self.ranges.append((self.start, source.index('>', self.position()) + 1))
+
+    parser = TocParser()
+    parser.feed(source)
+    for start, end in reversed(parser.ranges):
+        source = source[:start] + source[end:]
+    return source
+
+
+def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> FeedItem:
+    """Reuse the built homepage shell, keeping root-relative assets valid without JS."""
+    english = SITE_LANGUAGE == "en"
+    title = "Article timeline" if english else "文章时间线"
+    description = (
+        "All articles, newest first by publication date (UTC+08:00)."
+        if english else "按创建时间倒序浏览全部文章，时间统一为北京时间。"
+    )
+    ordered = sorted(articles, key=lambda item: (item.published, item.url), reverse=True)
+    escape = html.escape
+    parts = [
+        f'<h1 id="article-timeline">{title}</h1>', f'<p>{description}</p>',
+        f'<p class="aik8s-timeline__count">{len(ordered)} ' + ("articles" if english else "篇文章") + '</p>',
+        '<div class="aik8s-timeline">',
+    ]
+    month = None
+    for item in ordered:
+        local = item.published.astimezone(DISPLAY_TIMEZONE)
+        group = local.strftime("%Y-%m")
+        if group != month:
+            if month is not None:
+                parts.append('</ol></section>')
+            month = group
+            parts.append(f'<section aria-labelledby="month-{group}"><h2 id="month-{group}">{group}</h2><ol>')
+        parts.append(
+            '<li><time datetime="' + item.published.isoformat() + f'">{local:%Y-%m-%d}</time>'
+            '<div><a href="' + escape(item.url, quote=True) + '">' + escape(item.title) + '</a>'
+            '<p>' + escape(item.description) + '</p></div></li>'
+        )
+    if month is not None:
+        parts.append('</ol></section>')
+    parts.append('</div>')
+    source = (site_dir / 'index.html').read_text(encoding='utf-8')
+    source = re.sub(re.escape(FEED_MARKER) + r'.*?(?=</head\s*>)', '', source, flags=re.S)
+    source, count = re.subn(
+        r'(<article\b[^>]*>).*?(</article>)',
+        lambda match: match[1] + '\n' + '\n'.join(parts) + '\n' + match[2],
+        source, count=1, flags=re.S,
+    )
+    if count != 1:
+        raise ValueError('missing homepage article shell for timeline')
+    # Homepage-relative empty links must return home, not reload timeline.html.
+    source = re.sub(r'\bhref=(["\'])\1', 'href="./"', source)
+    source = re.sub(r'<a\b[^>]*\bhref="\./"[^>]*>',
+                    lambda tag: tag[0].replace('md-nav__link--active', '').replace('aria-current="page"', ''), source)
+    # Discard both desktop and mobile copies of the homepage-only TOC.
+    source = re.sub(r'<label\b[^>]*\bfor="__toc"[^>]*>.*?</label>', '', source, flags=re.S)
+    source = source.replace(' md-nav__item--active', '')
+    source = without_page_toc(source)
+    source = re.sub(
+        r'(<a\b[^>]*class="[^"]*md-skip[^"]*"[^>]*>)',
+        lambda tag: re.sub(r'\bhref=["\'][^"\']*["\']', 'href="#article-timeline"', tag[0]), source,
+    )
+    source = re.sub(r'<body\b', '<body data-aik8s-view="timeline"', source, count=1)
+    source = TITLE_PATTERN.sub(lambda _: '<title>' + title + ' - ' + escape(SITE_TITLE) + '</title>', source)
+    source = re.sub(r'(<div\b[^>]*data-md-component="header-topic"[^>]*>\s*<span\b[^>]*>).*?(</span>)',
+                    lambda match: match[1] + title + match[2], source, flags=re.S)
+    source = DESCRIPTION_PATTERN.sub(lambda _: meta_tag('description', description, property_attribute='name').strip(), source)
+    url = urljoin(site_url, 'timeline.html')
+    source = CANONICAL_PATTERN.sub(lambda _: '<link rel="canonical" href="' + escape(url, quote=True) + '">', source)
+    # The homepage's adjacent-page links and footer do not describe this collection.
+    source = re.sub(r'<link\b[^>]*\brel=["\'](?:prev|next)["\'][^>]*>', '', source)
+    source = re.sub(r'<nav\b[^>]*class="[^"]*md-footer__inner[^"]*"[^>]*>.*?</nav>', '', source, flags=re.S)
+    source = re.sub(
+        r'<(?:a|link)\b[^>]*\bhreflang=["\'][^"\']+["\'][^>]*>',
+        lambda tag: re.sub(r'(\bhref=["\'])([^"\']*)(["\'])',
+                           lambda match: match[1] + match[2].rstrip('/') + '/timeline.html' + match[3],
+                           tag[0]), source,
+    )
+    label = 'Browse by category' if english else '按分类浏览文章'
+    source = re.sub(
+        r'<a\b[^>]*\bdata-aik8s-timeline\b[^>]*>.*?</a>',
+        lambda _: '<a href="./" class="md-header__button md-icon" data-aik8s-timeline '
+        'aria-label="' + label + '" title="' + label + '">'
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">'
+        '<path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z"/></svg></a>',
+        source, flags=re.S,
+    )
+    (site_dir / 'timeline.html').write_text(source, encoding='utf-8')
+    fallback = datetime.now(timezone.utc)
+    return FeedItem(title, description, url,
+                    min((item.published for item in ordered), default=fallback),
+                    max((item.updated for item in ordered), default=fallback), 'timeline', True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--docs-dir", type=Path, default=Path("docs"))
@@ -494,6 +615,8 @@ def main() -> None:
     write_rss(articles, rss_path, site_url, args.limit)
     write_atom(articles, site_dir / "atom.xml", site_url, args.limit)
     shutil.copyfile(rss_path, site_dir / "feed.xml")
+    timeline = write_timeline(articles, site_dir, site_url)
+    items = [*items, timeline]
     write_sitemap(items, site_dir / "sitemap.xml")
     items_by_url = {normalize_url(item.url): item for item in items}
     injected = sum(inject_metadata(path, site_url, items_by_url) for path in site_dir.rglob("*.html"))

@@ -12,6 +12,64 @@ import build_distribution
 
 
 class DistributionTests(unittest.TestCase):
+    def test_timeline_is_complete_localized_escaped_and_sorted_by_publication(self):
+        from datetime import datetime, timezone
+        timestamp = lambda day: datetime(2026, 9, day, 20, tzinfo=timezone.utc)
+        articles = [
+            build_distribution.FeedItem('Old <article>', 'A & B', 'https://example.org/old/',
+                                        timestamp(1), timestamp(25), 'test', False),
+            build_distribution.FeedItem('New article', 'Latest publication', 'https://example.org/new/',
+                                        timestamp(3), timestamp(3), 'test', False),
+        ]
+        shell = ('<html><head><title>Home</title><meta name="description" content="Home">'
+                 '<link rel="canonical" href="https://example.org/en/">'
+                 '<link rel="alternate" hreflang="en" href="https://example.org/en/">'
+                 '<link rel="next" href="article/">'
+                 '</head><body><a href="" class="md-nav__link md-nav__link--active">Home</a>'
+                 '<a href="#old-home-heading" class="md-skip">Skip to content</a>'
+                 '<label class="md-nav__link md-nav__link--active" for="__toc">Old TOC toggle</label>'
+                 '<nav class="md-nav md-nav--secondary"><a href="#old-toc">Old TOC</a>'
+                 '<nav class="md-nav"><a href="#nested">Nested</a></nav>'
+                 '<a href="#after-nested">After nested nav</a></nav>'
+                 '<a href="timeline.html" data-aik8s-timeline title="Timeline">icon</a>'
+                 '<a href="/" hreflang="zh">中文</a><a href="/en/" hreflang="en">English</a>'
+                 '<article class="md-content__inner"><h1>Home</h1><p>Old homepage</p></article>'
+                 '<script src="assets/app.js"></script></body></html>')
+        with TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            (site / 'index.html').write_text(shell)
+            for language in ('zh-CN', 'en'):
+                with self.subTest(language=language), patch.object(build_distribution, 'SITE_LANGUAGE', language):
+                    url = 'https://example.org/en/' if language == 'en' else 'https://example.org/'
+                    item = build_distribution.write_timeline(articles, site, url)
+                    output = (site / 'timeline.html').read_text()
+                    self.assertTrue(item.is_index)
+                    self.assertEqual(item.url, url + 'timeline.html')
+                    self.assertLess(output.index('New article'), output.index('Old &lt;article&gt;'))
+                    self.assertIn('A &amp; B', output)
+                    self.assertIn('2026-09-04</time>', output)  # Asia/Shanghai, not UTC
+                    self.assertIn('hreflang="en" href="https://example.org/en/timeline.html"', output)
+                    self.assertIn('href="/en/timeline.html" hreflang="en"', output)
+                    self.assertIn('href="/timeline.html" hreflang="zh"', output)
+                    self.assertIn('href="./"', output)
+                    self.assertIn('assets/app.js', output)
+                    self.assertNotIn('Old homepage', output)
+                    self.assertNotIn('href=""', output)
+                    self.assertNotIn('md-nav__link--active', output)
+                    self.assertNotIn('old-toc', output)
+                    self.assertNotIn('#nested', output)
+                    self.assertNotIn('#after-nested', output)
+                    self.assertNotIn('old-home-heading', output)
+                    self.assertIn('href="#article-timeline"', output)
+                    self.assertIn('id="article-timeline"', output)
+                    self.assertNotIn('rel="next"', output)
+                    self.assertIn('Browse by category' if language == 'en' else '按分类浏览文章', output)
+                    build_distribution.inject_metadata(site / 'timeline.html', url, {build_distribution.normalize_url(item.url): item})
+                    enhanced = (site / 'timeline.html').read_text()
+                    self.assertIn('CollectionPage', enhanced)
+                    self.assertNotIn('TechArticle', enhanced)
+                    self.assertNotIn('AIK8S article dates', enhanced)
+
     def test_english_metadata_uses_source_history_and_english_dates(self):
         from datetime import datetime, timezone
         with TemporaryDirectory() as temporary:
@@ -43,6 +101,9 @@ class DistributionTests(unittest.TestCase):
             docs = root / "docs"
             site = root / "site"
             site.mkdir()
+            (site / 'index.html').write_text('<html><head><title>Home</title>'
+                                             '<link rel="canonical" href="https://example.org/">'
+                                             '</head><body><article><h1>Home</h1></article></body></html>')
             fixtures = {
                 "index.md": ("Home", "Site overview"),
                 "ai-k8s/rag-agent/index.md": ("Agents", "Section overview"),
@@ -80,6 +141,7 @@ class DistributionTests(unittest.TestCase):
             urls = ET.parse(site / "sitemap.xml").findall("s:url/s:loc", sitemap)
             self.assertEqual({entry.text for entry in urls}, {
                 "https://example.org/", "https://example.org/ai-k8s/rag-agent/", expected,
+                "https://example.org/timeline.html",
             })
             self.assertTrue((docs / "assets/rag-agent/recovery/README.md").exists())
 
