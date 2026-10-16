@@ -1,6 +1,6 @@
 ---
 title: Omarchy Linux 与 Agent OS 综述：桌面系统、智能体运行时与企业落地
-description: 从 Omarchy 4 的 Linux 桌面与 Agent 集成出发，对比 Agno AgentOS、AIOS、BrowserOS 和 Builder Methods Agent OS，解释系统配置、Skills、权限、快照恢复，以及企业与 Kubernetes 场景的选择
+description: 从 Omarchy 4 的 Linux 桌面与 Agent 集成出发，对比主流 Agent OS 路线，并在 KubeVirt 上实际安装桌面、接入模型、生成配置和验证持久化
 status: evolving
 last_reviewed: 2026-10-16
 ---
@@ -13,7 +13,7 @@ last_reviewed: 2026-10-16
 
 不过，“Agent OS”还被用来描述智能体服务框架、浏览器和开发规范系统。选择这类产品，首先要看它接管的是哪部分工作。
 
-本文核查于 **2026 年 10 月 16 日**。Omarchy 发行信息以 **4.0.4** 为准，命令与配置机制同时对照官方 `quattro` 分支的固定快照 [`51bfd1db`](https://github.com/omacom/omarchy/commit/51bfd1dbaa1b5f790e19623faf2745945d40c796)。滚动手册可能领先发行镜像，文中的命令应结合实际安装版本使用。本文为公开资料与源码综述，桌面图片引自官方发行说明。
+本文核查于 **2026 年 10 月 16 日**。Omarchy 发行信息以 **4.0.4** 为准，命令与配置机制同时对照官方 `quattro` 分支的固定快照 [`51bfd1db`](https://github.com/omacom/omarchy/commit/51bfd1dbaa1b5f790e19623faf2745945d40c796)。滚动手册可能领先发行镜像，文中的命令应结合实际安装版本使用。**第 9 节补充了 KubeVirt 安装与 Agent 配置任务的实测**，安装完成、桌面和任务界面均来自本次虚拟机；第 2 节的展示图另行标注为官方图片。
 
 ## 1. “Agent OS”目前包含哪些路线
 
@@ -44,7 +44,7 @@ Omarchy 4，代号 **Quattro**，于 **2026 年 8 月 14 日 UTC** 发布。这�
 
 ![Omarchy Quattro 官方桌面展示](../../assets/rag-agent/omarchy-agent-os/official-quattro-desktop.png)
 
-*图源：Omarchy 4.0.0 官方发行说明，按比例缩小展示。该图片展示上游桌面，不代表本文进行了安装实测。*
+*图源：Omarchy 4.0.0 官方发行说明，按比例缩小展示。本次 KubeVirt 实测截图见第 9 节。*
 
 还有一个容易混淆的细节：4.0.4 已引入项目维护的 **`linux-omarchy` 定制 Linux 内核**，官方强调桌面响应、内存压力、硬件兼容及电源管理方面的调整。因此，今天再把它概括成“Arch 的一包主题和配置”已经不够完整。不过，定制 Linux 内核与后文 AIOS 所说的“LLM Kernel”属于不同层次。[4.0.4 发行说明](https://github.com/omacom/omarchy/releases/tag/v4.0.4)
 
@@ -222,7 +222,114 @@ CPU、内存和 Pod 存活能说明基础设施状态，评价 Agent 工作效�
 
 同样的任务，也可以在现有 Linux 加上同一个 Harness 执行一次。这样更容易看出 Omarchy 的收益来自哪里：预先配置的工具、系统知识、统一交互，还是模型本身的能力。成本也应包含迁移配置、维护升级和人工检查的时间，而不能只计算模型调用费。
 
-## 9. 这条路线值得关注的变化
+## 9. KubeVirt 实测：用一台无 GPU 虚拟机体验完整桌面
+
+为了观察 Omarchy 的实际工作方式，这次在已有 KubeVirt 环境里创建了一台独立虚拟机，从官方 ISO 安装系统，再让 OpenCode 读取系统知识、生成用户配置。模型使用远程 API，虚拟机只负责桌面和工具执行。
+
+### 9.1 实际配置与版本
+
+| 项目 | 本次配置或实际读取结果 |
+| --- | --- |
+| 虚拟化平台 | KubeVirt 1.4.1，x86-64，KVM 加速 |
+| CPU / 内存 | 4 vCPU / 8 GiB |
+| 持久磁盘 | 64 GiB PVC，VirtIO 根盘，节点本地 LVM 存储 |
+| 固件 | Q35、UEFI，关闭 Secure Boot |
+| 安装介质 | 官方 Omarchy 4.0.4 ISO，约 6.19 GB；上传后校验 SHA-256 |
+| 系统与内核 | `omarchy 4.0.4-1`、`7.2.5-3-omarchy` |
+| 桌面组件 | Hyprland `0.56.2-2`、Quickshell `0.3.1-1`、Mesa `26.2.2-1` |
+| 图形设备 | Bochs 虚拟显示设备，来宾驱动 `bochs-drm`，未直通 GPU |
+| Agent | OpenCode `1.19.2`，官方 Linux x64 二进制 |
+| 桌面访问 | noVNC，通过仅监听 localhost 的端口转发访问 |
+
+这里的 4 vCPU、8 GiB 是一次功能体验的配置，并非官方最低要求或容量压测结果。桌面刚启动、尚未运行 Agent 时，来宾系统 `free -h` 显示约 **1.6 GiB used、6.2 GiB available**；打开终端和任务界面后，宿主侧运行 Pod 的一次采样约为 **89m CPU、4308 MiB 内存**。两处统计口径与采样时刻不同，不能直接相减推断虚拟化开销。
+
+本次为可丢弃实验，选择了**未加密安装**，并使用独立账号、独立 SSH 密钥。它与前文介绍的默认加密物理安装不同，不应照搬为企业终端的安全配置。
+
+### 9.2 从官方 ISO 安装，而不是仅启动一个容器
+
+安装使用官方支持的 unattended 机制：将配置文件放到卷标为 `cidata` 的介质中，与 ISO 一起挂入 VM。磁盘配置只指向这台 VM 新建的 VirtIO 根盘；安装器需要格式化磁盘，不能把宿主设备直接传进去。[官方无人值守安装手册](https://omarchy.org/manual/unattended-installs/)
+
+安装器最终显示 **Installed Omarchy in 4m31s**。这是安装器统计的阶段耗时，**不包含下载、上传 ISO、创建 PVC 和排查挂载的时间**。
+
+![本次 KubeVirt 虚拟机安装 Omarchy 完成，安装器显示 4m31s](../../assets/rag-agent/omarchy-agent-os/lab-install-complete.png)
+
+*本次 VM 的原始显示画面。系统随后从持久根盘启动，并进入图形登录页。*
+
+部署时遇到一个实际问题：上传 ISO 的 Pod 仍以读写方式挂载安装盘，VM 又请求只读挂载同一卷，本地 CSI 驱动因此拒绝第二次挂载，VM 一直停在启动阶段。结束上传、核对文件校验和并删除上传 Pod 后，VM 正常启动。**上传完成以后释放卷的使用者，是安装流程的一部分**；不能只看到文件已传完就开始等待来宾系统。
+
+### 9.3 无独立 GPU，桌面是否真的能打开
+
+登录后，Hyprland 和 Quickshell 都正常运行，可以打开菜单、终端和应用；`systemctl --user --failed` 没有失败单元。下面是本次 VM 的桌面，并非上游宣传图。
+
+![本次 KubeVirt 中实际运行的 Omarchy 桌面](../../assets/rag-agent/omarchy-agent-os/lab-desktop.png)
+
+来宾中的 EGL 探针得到：
+
+```text
+EGL:      1.5
+Renderer: llvmpipe (LLVM 22.1.8, 256 bits)
+Vendor:   Mesa
+OpenGL:   OpenGL ES 3.2 Mesa 26.2.2-arch1.1
+```
+
+这说明本次图形能力来自 **CPU 软件渲染**，不是虚拟机获得了独立 GPU。结合实际桌面截图，可以确认这套版本组合能够做低成本功能体验；它不能用来推断高分辨率、多用户或视频工作负载的体验。
+
+日志中仍有 Bochs 设备相关的 EGL、DRM 渲染初始化警告。因此，即使桌面能够使用，也不能把这次结果解释为图形兼容性完全通过。对于长期工作站，仍应评估带图形加速的虚拟设备或物理桌面。已有环境是 KubeVirt 1.4.1，不能直接照抄新版文档才支持的 `devices.video` 字段；本次保留已有平台配置完成验证。
+
+### 9.4 让 Agent 根据实际系统生成一处配置
+
+为了验证第 4 节的工作流，这次选择了一项影响范围很小的任务：给笔记目录增加快捷键，先生成提案，再检查和应用。提示词的核心要求是：
+
+> 读取已安装 Omarchy 的 Skill、Hyprland 说明、用户与默认快捷键配置。检查 `SUPER + CTRL + F12` 是否冲突，为其生成名为 Lab notes 的绑定，打开 `~/Notes`。保留原配置，只把完整提案和审查说明写到实验工作目录；不要修改当前生效配置，不使用 sudo，不访问凭据或外部网络。
+
+OpenCode 通过文件和命令工具读取了实际系统资料，检查默认绑定与 `hyprctl binds`，生成 `proposed-bindings.lua` 和 `REVIEW.md`。任务窗口如下：
+
+![本次 Omarchy 桌面中打开的 OpenCode 任务记录与配置提案](../../assets/rag-agent/omarchy-agent-os/lab-agent-task.png)
+
+*界面中的 Remote Chat Model 和 Lab model gateway 是实验显示名称；实际调用远程模型 API。截图里的费用为工具显示值，未据此计算真实费用。*
+
+提案保留了原文件，只追加下面一条绑定及说明：
+
+```lua
+o.bind("SUPER + CTRL + F12", "Lab notes",
+  "nautilus --new-window /home/omarchy/Notes")
+```
+
+检查差异后，先备份用户配置，再将提案应用到 `~/.config/hypr/bindings.lua`。`luac -p` 语法检查通过；执行 `hyprctl reload` 后，`hyprctl configerrors` 为空，运行时能查到一条 `Lab notes` 绑定，修饰键掩码为 68，即 Super 与 Ctrl。
+
+这里还遇到了两类集成问题。第一，VM 直连模型网关超时，办公机调用同一网关正常，因此改用 **VM loopback → SSH 转发 → 办公机 loopback 转发器 → 模型网关**。实际凭据留在办公机，没有复制进来宾系统；这次证明的是通过该路径可以完成模型与工具交互，不能据此认定 VM 的直接出网已经解决。
+
+第二，非交互运行最初被外部目录授权阻止，写入工具又受到路径规则限制，最终记录显示文件通过允许的 Shell 命令生成。这也说明，**按命令名称配置权限，并不等于文件系统沙箱**：例如允许 `cat` 的规则还要考虑重定向。实验中没有生产凭据，提案经差异检查后才应用；企业落地应另行限制操作系统身份、可写路径与网络出口，不能把本次任务成功当作权限隔离测试通过。[OpenCode 权限说明](https://opencode.ai/docs/permissions/)
+
+### 9.5 验证撤销，再验证持久磁盘
+
+配置验收没有停在“Agent 说完成”。先恢复备份并重载，运行时 `Lab notes` 数量变为 **0**；再次应用提案并重载，数量恢复为 **1**，两次配置错误检查均为空。这样可以确认这项改动能够撤销，原有配置也有独立备份。
+
+随后关闭 VM，卸下安装 ISO 和 `cidata` 介质，再从原根盘重新启动。Kubernetes 中的 **VMI（VirtualMachineInstance，虚拟机运行实例）和 virt-launcher Pod 均已更换，来宾 boot ID 也改变**，因此这次检查跨越了真实的运行实例重建。
+
+重建后重新登录，通过 noVNC 发送 `Super + Ctrl + F12`，文件管理器确实打开了 `Notes`，其中仍有重建前创建的 `README.md`。
+
+![VM 运行实例重建后，实际按快捷键打开的 Notes 目录](../../assets/rag-agent/omarchy-agent-os/lab-shortcut-notes.png)
+
+| 验证项 | 实际结果 |
+| --- | --- |
+| 从持久根盘独立启动 | 成功，已不挂载 ISO 和安装种子盘 |
+| 用户快捷键文件 | 重建前后 SHA-256 一致 |
+| 笔记 `Notes/README.md` | 重建前后 SHA-256 一致 |
+| Agent 生成的 `REVIEW.md` | 重建前后 SHA-256 一致 |
+| Hyprland 配置 | 无配置错误，`Lab notes` 仍登记为一条 |
+| 端到端快捷键 | 重新登录后触发成功，打开 Notes 目录 |
+| Agent 会话记录 | 原会话仍可列出，任务标题和工作目录保留 |
+
+![重建后的桌面终端执行文件校验、配置检查与会话查询](../../assets/rag-agent/omarchy-agent-os/lab-persistence-check.png)
+
+*输出来自重建后实际执行的检查命令，文件校验清单在重建前生成。图中的 pacman 软件源索引未同步警告予以保留，本地包版本查询和后续校验正常完成。截图与脱敏后的结果摘要见 [实验结果记录](../../assets/rag-agent/omarchy-agent-os/lab-results.json)。*
+
+这里验证的是**同一持久磁盘上的系统与用户状态保留**。它不等同于恢复一个正在执行的 Agent 任务，也没有测试节点故障迁移。本次使用节点本地卷，节点不可用时，磁盘不会自动出现在另一台节点上；如果要向多人提供持续桌面，需要另行选择共享存储、备份与故障恢复方案。
+
+对于低成本试用，这样的一台 VM 已经能观察到 Omarchy 的主要集成价值：系统知识可以被 Agent 读取，配置改动有可审查的文件差异，桌面操作能验收结果，持久根盘能保留个人环境。对实际使用影响较大的问题则是软件渲染、浏览器远程键盘转发，以及来宾系统到模型网关的网络路径，不能只检查安装器是否退出成功。
+
+## 10. 这条路线值得关注的变化
 
 Omarchy 展示了桌面软件的一种变化：配置文件、系统命令、日志与开发工具逐步成为 Agent 可利用的接口，用户通过描述目标参与系统定制。项目提供的默认搭配和环境知识，决定了这种交互有多顺畅。
 

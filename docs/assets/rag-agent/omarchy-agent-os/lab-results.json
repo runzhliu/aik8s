@@ -1,0 +1,118 @@
+{
+  "tested_on": "2026-10-16",
+  "scope": "single disposable KubeVirt desktop, remote model API; not a capacity benchmark",
+  "platform": {
+    "kubevirt": "1.4.1",
+    "architecture": "x86_64",
+    "vcpu": 4,
+    "memory_gib": 8,
+    "root_pvc_gib": 64,
+    "storage": "node-local LVM, persistent PVC",
+    "root_filesystem": "btrfs",
+    "firmware": "UEFI; Secure Boot disabled",
+    "installation_encryption": false,
+    "gpu_passthrough": false
+  },
+  "versions": {
+    "omarchy": "4.0.4-1",
+    "kernel": "7.2.5-3-omarchy",
+    "hyprland": "0.56.2-2",
+    "quickshell": "0.3.1-1",
+    "mesa": "26.2.2-1",
+    "opencode": "1.19.2"
+  },
+  "iso": {
+    "url": "https://iso.omarchy.org/omarchy-4.0.4.iso",
+    "bytes": 6185304064,
+    "sha256": "ddeded2758c48318d201dfdac905ecb28f570441883f0c052ea3cd5d05acf92d"
+  },
+  "installation": {
+    "installer_reported_seconds": 271,
+    "excludes": [
+      "ISO download/upload",
+      "PVC provisioning",
+      "upload-pod volume-mount troubleshooting"
+    ]
+  },
+  "graphics": {
+    "device": "bochs",
+    "guest_driver": "bochs-drm",
+    "egl_probe_renderer": "llvmpipe (LLVM 22.1.8, 256 bits)",
+    "egl": "1.5",
+    "gles": "OpenGL ES 3.2 Mesa 26.2.2-arch1.1",
+    "observed_desktop": true,
+    "remaining_warning": "EGL/DRM device initialization warnings; not a graphics performance certification"
+  },
+  "resource_samples": {
+    "guest_early_desktop": {
+      "used_gib_approx": 1.6,
+      "available_gib_approx": 6.2,
+      "source": "free -h"
+    },
+    "launcher_after_terminal_and_agent": {
+      "cpu_millicores": 89,
+      "memory_mib": 4308,
+      "source": "kubectl top pod"
+    },
+    "note": "Different measurement times and accounting scopes; do not subtract to estimate hypervisor overhead."
+  },
+  "agent": {
+    "runtime": "OpenCode",
+    "model_display_alias": "Remote Chat Model",
+    "model_path": "guest loopback -> SSH reverse forward -> office-machine loopback relay -> pre-existing remote model gateway",
+    "credential_location": "office machine only",
+    "task": "Read installed Omarchy skill and bindings, check collisions, propose a Notes shortcut and review document; do not apply live config",
+    "files_created": [
+      "proposed-bindings.lua",
+      "REVIEW.md"
+    ],
+    "task_outputs_verified": true,
+    "live_config_applied_after_diff_review": true,
+    "permission_isolation_certified": false,
+    "permission_note": "External-directory and edit permission failures occurred; shell redirection produced the proposal files. This experiment is not a sandbox or isolation verification."
+  },
+  "configuration_validation": {
+    "lua_syntax_check": true,
+    "hyprland_config_errors": [],
+    "binding": "SUPER + CTRL + F12",
+    "description": "Lab notes",
+    "runtime_modifier_mask": 68,
+    "binding_count_after_rollback": 0,
+    "binding_count_after_reapply": 1,
+    "shortcut_after_vmi_replacement": "Opened Notes in Nautilus, verified visually"
+  },
+  "persistence": {
+    "vmi_uid_changed": true,
+    "launcher_pod_replaced": true,
+    "guest_boot_id_changed": true,
+    "same_root_pvc": true,
+    "installer_and_seed_detached": true,
+    "checksums": [
+      {
+        "file": "~/.config/hypr/bindings.lua",
+        "sha256": "b2637c7fc62f856bf0e273c555ebf719b58c2ea29903fa953d7fed65aa959315",
+        "check_after": "OK"
+      },
+      {
+        "file": "~/Notes/README.md",
+        "sha256": "929df208f25b9280724e094e232205c41422a4a5ca0829f446f70e9fbb9b075f",
+        "check_after": "OK"
+      },
+      {
+        "file": "~/Work/omarchy-lab/REVIEW.md",
+        "sha256": "3f8ad0f5da3a2741bb07ab148f5f79bf46724d5e8417a5bac600f4d14f3c5ad4",
+        "check_after": "OK"
+      }
+    ],
+    "agent_session_retained": true,
+    "agent_task_in_flight_recovery_tested": false,
+    "node_failover_tested": false
+  },
+  "screenshots": {
+    "lab-install-complete.png": "d98f7bbecc420d71b878ded44959dd4adb52bed3a6918e82958da47b2eabfa4c",
+    "lab-desktop.png": "a554026d2801eff58c3c6fa4b49ab47a2f21424f092eb55387967f6fa853995e",
+    "lab-agent-task.png": "ee3b0d6c1d4522845f0910972ba48036916456b673030eba66ded80ddef88656",
+    "lab-shortcut-notes.png": "0eae756124d513f0061946cf9a16e0417ec8f97017690855b99239e5cb9945b8",
+    "lab-persistence-check.png": "43ba1dd441689acfa1419536a8189429af0899204dc663b2216f327c46f2034d"
+  }
+}

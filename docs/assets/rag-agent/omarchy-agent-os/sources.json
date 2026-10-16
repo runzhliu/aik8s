@@ -36,6 +36,67 @@
       "evidence": "https://github.com/omacom/omarchy/releases/tag/v4.0.0",
       "kind": "upstream-screenshot",
       "sha256": "10172ac286fa5e91ff7fa8f0c22574ca5ddcb48952b7c7beca369e1e3f838b8c"
+    },
+    {
+      "file": "lab-install-complete.png",
+      "purpose": "本次 VM 安装完成与安装器耗时",
+      "evidence": "Omarchy 4.0.4 KubeVirt lab, 2026-10-16; captured from actual QEMU framebuffer using virsh screenshot",
+      "kind": "experiment-screenshot",
+      "size": [
+        1280,
+        800
+      ],
+      "processing": "Original PNG; no crop, redaction, resize or reconstruction required; lab uses generic identities and display aliases.",
+      "sha256": "d98f7bbecc420d71b878ded44959dd4adb52bed3a6918e82958da47b2eabfa4c"
+    },
+    {
+      "file": "lab-desktop.png",
+      "purpose": "本次无独立 GPU 的实际桌面",
+      "evidence": "Omarchy 4.0.4 KubeVirt lab, 2026-10-16; captured from actual QEMU framebuffer using virsh screenshot",
+      "kind": "experiment-screenshot",
+      "size": [
+        1280,
+        800
+      ],
+      "processing": "Original PNG; no crop, redaction, resize or reconstruction required; lab uses generic identities and display aliases.",
+      "sha256": "a554026d2801eff58c3c6fa4b49ab47a2f21424f092eb55387967f6fa853995e"
+    },
+    {
+      "file": "lab-agent-task.png",
+      "purpose": "本次实际 OpenCode 配置提案与审查记录",
+      "evidence": "Omarchy 4.0.4 KubeVirt lab, 2026-10-16; captured from actual QEMU framebuffer using virsh screenshot",
+      "kind": "experiment-screenshot",
+      "size": [
+        1280,
+        800
+      ],
+      "processing": "Original PNG; no crop, redaction, resize or reconstruction required; lab uses generic identities and display aliases.",
+      "sha256": "ee3b0d6c1d4522845f0910972ba48036916456b673030eba66ded80ddef88656"
+    },
+    {
+      "file": "lab-shortcut-notes.png",
+      "purpose": "重建后真实快捷键打开 Notes",
+      "evidence": "Omarchy 4.0.4 KubeVirt lab, 2026-10-16; captured from actual QEMU framebuffer using virsh screenshot",
+      "kind": "experiment-screenshot",
+      "size": [
+        1280,
+        800
+      ],
+      "processing": "Original PNG; no crop, redaction, resize or reconstruction required; lab uses generic identities and display aliases.",
+      "sha256": "0eae756124d513f0061946cf9a16e0417ec8f97017690855b99239e5cb9945b8"
+    },
+    {
+      "file": "lab-persistence-check.png",
+      "purpose": "实例重建后的真实文件校验、绑定检查与会话查询",
+      "evidence": "Omarchy 4.0.4 KubeVirt lab, 2026-10-16; actual QEMU framebuffer captured by virsh screenshot",
+      "kind": "experiment-screenshot",
+      "size": [
+        1280,
+        800
+      ],
+      "processing": "Original PNG; no crop, redaction, resize or reconstruction required.",
+      "sha256": "43ba1dd441689acfa1419536a8189429af0899204dc663b2216f327c46f2034d"
     }
-  ]
+  ],
+  "size_note": "Top-level size applies to original overview illustrations. Experimental screenshot dimensions are recorded individually."
 }
