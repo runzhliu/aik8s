@@ -21,6 +21,7 @@ from zoneinfo import ZoneInfo
 
 SITE_TITLE = "AI/LLM on Kubernetes 基础设施"
 SITE_DESCRIPTION = "GPU、大数据、调度、训练、推理、RAG、Agent 与生产运维"
+SITE_LANGUAGE = "zh-CN"
 AUTHOR_NAME = "runzhliu"
 AUTHOR_URL = "https://github.com/runzhliu"
 FEED_MARKER = "<!-- AIK8S distribution metadata -->"
@@ -97,7 +98,15 @@ def parse_front_matter(path: Path) -> dict[str, str]:
             if ":" not in line:
                 continue
             key, value = line.split(":", 1)
-            metadata[key.strip()] = value.strip().strip('"\'')
+            value = value.strip()
+            if value.startswith('"') and value.endswith('"'):
+                try:
+                    value = json.loads(value)
+                except json.JSONDecodeError:
+                    value = value.strip('"')
+            else:
+                value = value.strip("'")
+            metadata[key.strip()] = value
     else:
         body = text
 
@@ -192,22 +201,25 @@ def category_for(path: Path, docs_dir: Path) -> str:
     parts = path.relative_to(docs_dir).parts
     if len(parts) > 2 and parts[0] == "ai-k8s":
         return parts[1]
-    return parts[0] if len(parts) > 1 else "首页"
+    return parts[0] if len(parts) > 1 else "Home" if SITE_LANGUAGE == "en" else "首页"
 
 
-def collect_items(docs_dir: Path, repo_root: Path, site_url: str) -> list[FeedItem]:
+def collect_items(docs_dir: Path, repo_root: Path, site_url: str, source_docs_dir: Path | None = None) -> list[FeedItem]:
     items: list[FeedItem] = []
-    history_by_path = load_git_history(repo_root, docs_dir)
+    history_by_path = load_git_history(repo_root, source_docs_dir or docs_dir)
     for path in sorted(docs_dir.rglob("*.md")):
         # Asset provenance and repository notes are not published articles.
         if path.relative_to(docs_dir).parts[0] == "assets" or path.name.lower() == "readme.md":
             continue
         metadata = parse_front_matter(path)
+        if metadata.get('redirect_to'):
+            continue
         title = metadata.get("title")
         description = metadata.get("description")
         if not title or not description:
             continue
-        published, updated = git_dates(path, repo_root, metadata.get("last_reviewed"), history_by_path)
+        history_path = source_docs_dir / path.relative_to(docs_dir) if source_docs_dir else path
+        published, updated = git_dates(history_path, repo_root, metadata.get("last_reviewed"), history_by_path)
         items.append(
             FeedItem(
                 title=title,
@@ -229,7 +241,7 @@ def write_rss(items: list[FeedItem], output: Path, site_url: str, limit: int) ->
     ET.SubElement(channel, "title").text = SITE_TITLE
     ET.SubElement(channel, "link").text = site_url
     ET.SubElement(channel, "description").text = SITE_DESCRIPTION
-    ET.SubElement(channel, "language").text = "zh-CN"
+    ET.SubElement(channel, "language").text = SITE_LANGUAGE
     ET.SubElement(channel, "lastBuildDate").text = format_datetime(datetime.now(timezone.utc))
     ET.SubElement(
         channel,
@@ -319,7 +331,7 @@ def structured_data(item: FeedItem, source: str, site_url: str, image_url: str) 
             "url": site_url,
             "name": SITE_TITLE,
             "description": SITE_DESCRIPTION,
-            "inLanguage": "zh-CN",
+            "inLanguage": SITE_LANGUAGE,
         }
     ]
     if normalize_url(item.url) != normalize_url(site_url):
@@ -331,7 +343,7 @@ def structured_data(item: FeedItem, source: str, site_url: str, image_url: str) 
                     "url": item.url,
                     "name": item.title,
                     "description": item.description,
-                    "inLanguage": "zh-CN",
+                    "inLanguage": SITE_LANGUAGE,
                     "isPartOf": {"@id": website_id},
                     "dateModified": item.updated.isoformat(),
                 }
@@ -344,7 +356,7 @@ def structured_data(item: FeedItem, source: str, site_url: str, image_url: str) 
                     "url": item.url,
                     "headline": item.title,
                     "description": item.description,
-                    "inLanguage": "zh-CN",
+                    "inLanguage": SITE_LANGUAGE,
                     "datePublished": item.published.isoformat(),
                     "dateModified": item.updated.isoformat(),
                     "mainEntityOfPage": {"@type": "WebPage", "@id": item.url},
@@ -381,15 +393,18 @@ def inject_article_dates(source: str, item: FeedItem | None) -> str:
     if heading is None:
         raise ValueError(f"missing article heading for {item.url}")
     dates = []
-    for label, timestamp in (("创建于", item.published), ("更新于", item.updated)):
+    labels = ("Published", "Updated") if SITE_LANGUAGE == "en" else ("创建于", "更新于")
+    time_label = " (UTC+08:00)" if SITE_LANGUAGE == "en" else "（北京时间）"
+    group_label = "Article publication and update dates" if SITE_LANGUAGE == "en" else "文章创建与更新时间"
+    for label, timestamp in zip(labels, (item.published, item.updated)):
         local = timestamp.astimezone(DISPLAY_TIMEZONE)
         dates.append(
             f'  <span>{label} <time datetime="{timestamp.isoformat()}" '
-            f'title="{local:%Y-%m-%d %H:%M:%S}（北京时间）">{local:%Y-%m-%d}</time></span>'
+            f'title="{local:%Y-%m-%d %H:%M:%S}{time_label}">{local:%Y-%m-%d}</time></span>'
         )
     block = (
         '\n<!-- AIK8S article dates -->\n'
-        '<div class="aik8s-article-dates" role="group" aria-label="文章创建与更新时间">\n'
+        f'<div class="aik8s-article-dates" role="group" aria-label="{group_label}">\n'
         + "\n".join(dates)
         + '\n</div>\n<!-- /AIK8S article dates -->\n'
     )
@@ -447,7 +462,19 @@ def main() -> None:
     parser.add_argument("--site-dir", type=Path, default=Path("site"))
     parser.add_argument("--site-url", default="https://aik8s.run/")
     parser.add_argument("--limit", type=int, default=50)
+    parser.add_argument("--language", choices=("zh", "en"), default="zh")
+    parser.add_argument("--source-docs-dir", type=Path)
     args = parser.parse_args()
+
+    global SITE_TITLE, SITE_DESCRIPTION, SITE_LANGUAGE
+    if args.language == "en":
+        SITE_TITLE = "AI/LLM on Kubernetes Infrastructure"
+        SITE_DESCRIPTION = "GPUs, data, scheduling, training, inference, RAG, agents, and production operations"
+        SITE_LANGUAGE = "en"
+    else:
+        SITE_TITLE = "AI/LLM on Kubernetes 基础设施"
+        SITE_DESCRIPTION = "GPU、大数据、调度、训练、推理、RAG、Agent 与生产运维"
+        SITE_LANGUAGE = "zh-CN"
 
     repo_root = Path.cwd()
     docs_dir = args.docs_dir.resolve()
@@ -458,7 +485,7 @@ def main() -> None:
         parser.error("--limit must be positive")
 
     site_url = args.site_url.rstrip("/") + "/"
-    items = collect_items(docs_dir, repo_root, site_url)
+    items = collect_items(docs_dir, repo_root, site_url, args.source_docs_dir.resolve() if args.source_docs_dir else None)
     if not items:
         parser.error("no feed items found")
 

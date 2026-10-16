@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block site_meta %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  {% if page.meta and page.meta.description %}
+    <meta name="description" content="{{ page.meta.description }}">
+  {% elif config.site_description %}
+    <meta name="description" content="{{ config.site_description }}">
+  {% endif %}
+  {% if page.meta and page.meta.author %}
+    <meta name="author" content="{{ page.meta.author }}">
+  {% elif config.site_author %}
+    <meta name="author" content="{{ config.site_author }}">
+  {% endif %}
+  {% if page.meta and page.meta.redirect_to %}
+    <link rel="canonical" href="https://aik8s.run{{ page.meta.redirect_to }}">
+    <meta http-equiv="refresh" content="0; url={{ page.meta.redirect_to }}">
+    <script>window.location.replace({{ page.meta.redirect_to | tojson }} + window.location.search + window.location.hash);</script>
+  {% elif page.canonical_url %}
+    <link rel="canonical" href="{{ page.canonical_url }}">
+  {% endif %}
+  {% if page.previous_page %}
+    <link rel="prev" href="{{ page.previous_page.url | url }}">
+  {% endif %}
+  {% if page.next_page %}
+    <link rel="next" href="{{ page.next_page.url | url }}">
+  {% endif %}
+  {% if page and page.url != '404.html' %}
+    <link rel="alternate" hreflang="zh-Hans" href="https://aik8s.run/{{ page.url }}">
+    <link rel="alternate" hreflang="en" href="https://aik8s.run/en/{{ page.url }}">
+    <link rel="alternate" hreflang="x-default" href="https://aik8s.run/{{ page.url }}">
+  {% endif %}
+  {% set href = config.theme.favicon | d("assets/images/favicon.png") %}
+  <link rel="icon" href="{{ href | url }}">
+  <meta name="generator" content="{{ generator }}">
+{% endblock %}

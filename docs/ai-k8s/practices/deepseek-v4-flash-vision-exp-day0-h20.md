@@ -336,7 +336,7 @@ JSONL、同一 H20 节点和同一 NVMe Checkpoint 做公平复测。
 
 ## 复现材料
 
-- [`examples/deepseek-v4-flash-vision-exp/`](../../../examples/deepseek-v4-flash-vision-exp/)
+- [`examples/deepseek-v4-flash-vision-exp/`](https://github.com/runzhliu/aik8s/tree/main/examples/deepseek-v4-flash-vision-exp)
 - [DeepSeek-V4-Flash-Vision-Exp 模型仓库](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-Vision-Exp)
 - [SGLang DeepSeek-V4 Cookbook](https://docs.sglang.io/cookbook/autoregressive/DeepSeek/DeepSeek-V4)
 - [vLLM DeepSeek Recipe 清单](https://recipes.vllm.ai/deepseek-ai)

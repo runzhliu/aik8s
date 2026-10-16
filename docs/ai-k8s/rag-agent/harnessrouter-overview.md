@@ -201,7 +201,7 @@ LiteLLM / New API / Agent Router / 企业模型网关（可选）
 | 失败处理 | 超时、429、5xx、首 token 前 fallback | 任务取消、失败终态、Session 继续、Artifact 恢复 |
 | 典型使用者 | 模型平台团队 | 把 Agent 能力嵌入产品的应用团队 |
 
-如果需求只是让 DSH 使用 `gd18-llm-002-qwen38-note-review` 之类的内部模型，应该直接配置 DSH 或在下面放 LLM Gateway。为了这件事单独引入 HarnessRouter，会多出一套 Session、工作区和执行控制面，却没有获得真正需要的价值。
+如果需求只是让 DSH 使用 `enterprise-qwen-review` 之类的内部模型，应该直接配置 DSH 或在下面放 LLM Gateway。为了这件事单独引入 HarnessRouter，会多出一套 Session、工作区和执行控制面，却没有获得真正需要的价值。
 
 ## 9. 对 DeepSeek Harness 的实际意义
 

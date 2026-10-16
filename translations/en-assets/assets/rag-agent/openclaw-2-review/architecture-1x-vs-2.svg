@@ -1,0 +1,78 @@
+<svg id="visual-qa-21" xmlns="http://www.w3.org/2000/svg" width="1600" height="940" viewBox="0 0 1600 940" role="img" aria-labelledby="title desc">
+  <title id="title">OpenClaw 1.x vs 2.0 Architecture Evolution Comparison</title>
+  <desc id="desc">OpenClaw evolved from a Gateway-centric personal runtime to a coordination plane with persistent sessions, permissions, workboards, devices, and cloud workers.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#8a5a4a"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#6d4c41" flood-opacity="0.12"/>
+    </filter>
+    <style>#visual-qa-21 .bg{fill:#fbfaf6}#visual-qa-21 .panel{fill:#fff;stroke:#ded8cc;stroke-width:2}#visual-qa-21 .box{fill:#fffdf8;stroke:#cfc7b8;stroke-width:2}#visual-qa-21 .core{fill:#fff0eb;stroke:#c45b42;stroke-width:3}#visual-qa-21 .new{fill:#f3f0ff;stroke:#7457b7;stroke-width:2}#visual-qa-21 .state{fill:#eef7f2;stroke:#4f8a6d;stroke-width:2}#visual-qa-21 .warn{fill:#fff7d9;stroke:#b8860b;stroke-width:2}#visual-qa-21 .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#24211e}#visual-qa-21 .subtitle{font:400 21px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#6f675f}#visual-qa-21 .h2{font:700 27px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#2b2825}#visual-qa-21 .h3{font:700 20px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#2b2825}#visual-qa-21 .body{font:400 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#514b45}#visual-qa-21 .small{font:400 15px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#6f675f}#visual-qa-21 .tag{font:700 14px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#fff}#visual-qa-21 .arrow{stroke:#8a5a4a;stroke-width:3;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="940"/>
+  <text class="title" x="80" y="70" data-translated-label="true">OpenClaw 1.x → 2.0: From Personal Gateway to Coordination Plane</text>
+  <text class="subtitle" x="80" y="108" data-translated-label="true">Based on hands-on testing of installation, Control UI, Gateway, Workboard, and migration on 2026.7.1 and 2026.8.1</text>
+
+  <rect class="panel" x="60" y="150" rx="28" width="700" height="690" filter="url(#shadow)"/>
+  <rect class="panel" x="840" y="150" rx="28" width="700" height="690" filter="url(#shadow)"/>
+  <rect x="90" y="176" rx="14" width="92" height="32" fill="#7d7268"/><text class="tag" x="111" y="198">1.x</text>
+  <text class="h2" x="200" y="202" data-translated-label="true">Gateway-centric personal Agent Runtime</text>
+  <rect x="870" y="176" rx="14" width="112" height="32" fill="#c45b42"/><text class="tag" x="891" y="198">2.0</text>
+  <text class="h2" x="1000" y="202" data-translated-label="true" font-size="22.16337890115641" style="font-size: 22.1634px;">Extensible coordination plane on top of Gateway</text>
+
+  <rect class="box" x="120" y="250" rx="18" width="580" height="74"/>
+  <text class="h3" x="156" y="281" data-translated-label="true">Entry</text><text class="body" x="248" y="281" data-translated-label="true">Control UI · CLI · Messaging channels</text>
+  <text class="small" x="156" y="307" data-translated-label="true">Sessions and routing ultimately converge into a resident Gateway</text>
+  <path class="arrow" d="M410 324 L410 370"/>
+  <rect class="core" x="150" y="375" rx="22" width="520" height="132"/>
+  <text class="h3" x="184" y="414">OpenClaw Gateway</text>
+  <text class="body" x="184" y="445">Channel · Session · Agent Loop · Model · Tools</text>
+  <text class="small" x="184" y="475" data-translated-label="true" font-size="14" style="font-size: 14px;"><tspan x="184" y="475">Single-machine state and trusted operator boundary are the default</tspan><tspan x="184" y="491.8">assumptions</tspan></text>
+  <path class="arrow" d="M410 507 L410 552"/>
+  <rect class="state" x="110" y="557" rx="18" width="250" height="112"/>
+  <text class="h3" x="140" y="593" data-translated-label="true">Local state</text>
+  <text class="body" x="140" y="622">JSON / SQLite</text>
+  <text class="small" x="140" y="648">Session · Cron · Memory</text>
+  <rect class="box" x="460" y="557" rx="18" width="250" height="112"/>
+  <text class="h3" x="490" y="593" data-translated-label="true">Runtime capabilities</text>
+  <text class="body" x="490" y="622">Skill · Plugin · Tool</text>
+  <text class="small" x="490" y="648" data-translated-label="true">Local machine or paired Node</text>
+  <rect class="warn" x="110" y="707" rx="18" width="600" height="92"/>
+  <text class="h3" x="140" y="742" data-translated-label="true" font-size="19.540479136205153" style="font-size: 19.5405px;">Structural advantages: simple, direct connection, fast PoC</text>
+  <text class="body" x="140" y="773" data-translated-label="true">Devices, permissions, task state and teamwork stay fragmented</text>
+
+  <rect class="box" x="900" y="244" rx="18" width="580" height="84"/>
+  <text class="h3" x="930" y="277" data-translated-label="true">Multi-endpoint entry and external events</text>
+  <text class="body" x="930" y="305">Web · CLI · iOS/Android · Watch · Desktop · Channels</text>
+  <path class="arrow" d="M1190 328 L1190 365"/>
+  <rect class="core" x="930" y="370" rx="22" width="520" height="118"/>
+  <text class="h3" x="964" y="408">Gateway Coordination Plane</text>
+  <text class="body" x="964" y="438" data-translated-label="true">Sessions · routing · models · tools · events · approvals</text>
+  <text class="small" x="964" y="466" data-translated-label="true">Gateway ≠ strong multi-tenant control plane</text>
+
+  <path class="arrow" d="M1030 488 L1030 530"/>
+  <path class="arrow" d="M1190 488 L1190 530"/>
+  <path class="arrow" d="M1350 488 L1350 530"/>
+  <rect class="state" x="875" y="535" rx="18" width="300" height="120"/>
+  <text class="h3" x="905" y="571" data-translated-label="true" font-size="16.11024014923965" style="font-size: 16.1102px;">Durable sessions &amp; shared state</text>
+  <text class="body" x="905" y="601">SQLite · Progress Cards</text>
+  <text class="small" x="905" y="629">Conversation Search · Backup</text>
+  <rect class="new" x="1205" y="535" rx="18" width="300" height="120"/>
+  <text class="h3" x="1235" y="571" data-translated-label="true" font-size="18.977381729169338" style="font-size: 18.9774px;">Permissions &amp; security ops</text>
+  <text class="body" x="1235" y="601">Permission · Secrets</text>
+  <text class="small" x="1235" y="629">Approvals · Command Owner</text>
+
+  <rect class="new" x="875" y="680" rx="18" width="300" height="120"/>
+  <text class="h3" x="905" y="716" data-translated-label="true">Tasks and collaboration</text>
+  <text class="body" x="905" y="746">Workboard · Automations</text>
+  <text class="small" x="905" y="774">Questions · Branches · Shared Session</text>
+  <rect class="box" x="1205" y="680" rx="18" width="300" height="120"/>
+  <text class="h3" x="1235" y="716" data-translated-label="true" font-size="18.666082712521618" style="font-size: 18.6661px;">Runtime location expansion</text>
+  <text class="body" x="1235" y="746">Paired Device · Cloud Worker</text>
+  <text class="small" x="1235" y="774" data-translated-label="true">Fleet / Swarm (experimental)</text>
+
+  <rect x="60" y="868" rx="18" width="1480" height="48" fill="#2d2925"/>
+  <text x="800" y="899" text-anchor="middle" style="font: 700 16.8818px Arial, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif; fill: rgb(255, 255, 255);" data-translated-label="true" font-size="16.88177303944026">Essential change: OpenClaw itself becomes more like an "Agent operating system", but security isolation and organization-level multi-tenancy still require independent judgment</text>
+</svg>

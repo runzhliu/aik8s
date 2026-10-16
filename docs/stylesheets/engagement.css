@@ -228,13 +228,13 @@ body.aik8s-lightbox-open {
 }
 
 .aik8s-lightbox__diagram-host {
-  align-items: center;
-  background: #fff;
+  align-items: flex-start;
+  background: var(--md-default-bg-color, #fff);
   border-radius: 0.3rem;
   box-shadow: 0 1rem 3.5rem rgba(0, 0, 0, 0.45);
   box-sizing: border-box;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   max-height: calc(100vh - 6.5rem);
   max-width: min(96vw, 1800px);
   overflow: auto;
@@ -252,7 +252,7 @@ body.aik8s-lightbox-open {
   flex: 0 0 auto;
   margin: 0 !important;
   max-width: none !important;
-  width: 100% !important;
+  width: var(--aik8s-diagram-width, 100%) !important;
 }
 
 .aik8s-lightbox__placeholder {
@@ -319,4 +319,9 @@ body.aik8s-lightbox-open {
     padding: 0.4rem;
     width: 98vw;
   }
+}
+.aik8s-heading-alias {
+  display: block;
+  position: relative;
+  scroll-margin-top: 6rem;
 }

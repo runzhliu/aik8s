@@ -1,0 +1,51 @@
+<svg id="visual-qa-2" xmlns="http://www.w3.org/2000/svg" width="1200" height="960" viewBox="0 0 1200 960" role="img" aria-labelledby="title desc">
+<title id="title">Application cross-cluster orchestration and external compute access</title><desc id="desc">Architecture diagram · Arrows indicate control and execution paths, not that cross-cluster networks are already connected</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="#687b93" stroke-width="1.5"/></marker></defs>
+<rect width="1200" height="960" fill="#f6f8fc"/>
+<g font-family="-apple-system,BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;,sans-serif">
+<text x="44" y="55" fill="#172b49" font-size="32" font-weight="700" text-anchor="start" data-max-width="1112" data-translated-label="true">Application cross-cluster orchestration and external compute access</text>
+<text x="44" y="95" fill="#596b82" font-size="20.92575752041535" font-weight="400" text-anchor="start" data-max-width="1112" data-translated-label="true" style="font-size: 20.9258px;">Architecture diagram · Arrows indicate control and execution paths, not that cross-cluster networks are already connected</text>
+<rect x="40" y="130" width="540" height="734" rx="12" fill="#edf3fd" stroke="#d9e1ed"/>
+<text x="70" y="174" fill="#2455a6" font-size="29" font-weight="700" text-anchor="start" data-max-width="480">Karmada</text>
+<text x="70" y="206" fill="#596b82" font-size="21" font-weight="400" text-anchor="start" data-max-width="480" data-translated-label="true">Placement object: resource template and its replicas</text>
+<rect x="620" y="130" width="540" height="734" rx="12" fill="#eaf6f5" stroke="#d9e1ed"/>
+<text x="650" y="174" fill="#087e82" font-size="29" font-weight="700" text-anchor="start" data-max-width="480">Virtual Kubelet</text>
+<text x="650" y="206" fill="#596b82" font-size="21" font-weight="400" text-anchor="start" data-max-width="480" data-translated-label="true">Adaptation object: Pods bound to virtual nodes</text>
+<rect x="70" y="232" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="310.0" y="271" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">Karmada API</text>
+<text x="310.0" y="306" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448" data-translated-label="true">Deployment template: 6 replicas</text>
+<rect x="70" y="378" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="310.0" y="417" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448" data-translated-label="true">Policy / Binding / Work</text>
+<text x="310.0" y="452" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448" data-translated-label="true">Cluster-level scheduling, override and distribution</text>
+<rect x="70" y="524" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="310.0" y="563" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448" data-translated-label="true">Deployment in member clusters</text>
+<text x="310.0" y="598" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448" data-translated-label="true">Each member's local controller creates Pods</text>
+<path d="M310 332 L310 371" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M310 478 L310 517" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M310 624 V652 H182.5 V679" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M310 624 V652 H437.5 V679" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="70" y="686" width="225" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="182.5" y="725" fill="#2455a6" font-size="20.537186483811674" font-weight="650" text-anchor="middle" data-max-width="193" data-translated-label="true" style="font-size: 20.5372px;">Cluster A: 4 replicas</text>
+<text x="182.5" y="760" fill="#596b82" font-size="19.295385351079936" font-weight="400" text-anchor="middle" data-max-width="193" data-translated-label="true" style="font-size: 19.2954px;">Local node scheduling</text>
+<rect x="325" y="686" width="225" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="437.5" y="725" fill="#2455a6" font-size="20.739508852084523" font-weight="650" text-anchor="middle" data-max-width="193" data-translated-label="true" style="font-size: 20.7395px;">Cluster B: 2 replicas</text>
+<text x="437.5" y="760" fill="#596b82" font-size="19.295385351079936" font-weight="400" text-anchor="middle" data-max-width="193" data-translated-label="true" style="font-size: 19.2954px;">Local node scheduling</text>
+<text x="310" y="831" fill="#596b82" font-size="21" font-weight="400" text-anchor="middle" data-max-width="480" data-translated-label="true">Example policy: Divided, weight 2:1</text>
+<rect x="650" y="232" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="890.0" y="271" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448" data-translated-label="true">Standard Kubernetes API</text>
+<text x="890.0" y="306" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448" data-translated-label="true">Deployment: 6 replicas</text>
+<rect x="650" y="378" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="890.0" y="417" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448" data-translated-label="true">Local controller / kube-scheduler</text>
+<text x="890.0" y="452" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448" data-translated-label="true">Create Pods and select virtual nodes</text>
+<rect x="650" y="524" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="890.0" y="563" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448">VK / Provider</text>
+<text x="890.0" y="598" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448" data-translated-label="true">Map create requests; report status &amp; capacity</text>
+<rect x="650" y="686" width="480" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="890.0" y="725" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="448" data-translated-label="true">External execution backend</text>
+<text x="890.0" y="760" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="448" data-translated-label="true">Container cloud / remote Kubernetes / others</text>
+<path d="M890 332 L890 371" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M890 478 L890 517" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M890 624 L890 679" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="890" y="831" fill="#596b82" font-size="18.434687272197113" font-weight="400" text-anchor="middle" data-max-width="480" data-translated-label="true" style="font-size: 18.4347px;"><tspan x="890" y="831">Specific semantics depend on the Provider</tspan><tspan x="890" y="850.656">implementation</tspan></text>
+<text x="44" y="910" fill="#172b49" font-size="19.46236102011599" font-weight="400" text-anchor="start" data-max-width="1112" data-translated-label="true" style="font-size: 19.4624px;"><tspan x="44" y="910">The two approaches can be combined; the party responsible for replicas, data, identity and failure recovery must be clearly</tspan><tspan x="44" y="931.528">defined.</tspan></text>
+</g></svg>

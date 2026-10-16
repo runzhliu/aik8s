@@ -7,6 +7,9 @@ hide:
 
 # AI/LLM on Kubernetes 基础设施知识库
 
+[简体中文](/){ .md-button .md-button--primary }
+[English](/en/){ .md-button }
+
 Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大数据/Kubernetes 领域工作了十年的工程师，同时我也是一个记录狂人🤔，特别爱记笔记，这个站点是我基于这几年在 AI/LLM Infras 的工作经历总结的一些笔记，同时也经过一些大模型的润色发布的，希望和大家一起交流和学习，一起在大模型时代做一点🤏小事，无论是内容本身还是工作，欢迎大家找我交流😄👏!(runzhliu@163.com)
 
 这是一套面向平台工程师、SRE、数据平台、训练和模型服务团队的工程文档，系统整理 AI/LLM 工作负载运行在 Kubernetes 上需要的基础设施知识。

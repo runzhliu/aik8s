@@ -1,6 +1,9 @@
 (function () {
   "use strict";
 
+  function isEnglish() { return document.documentElement.lang === "en"; }
+  function t(chinese, english) { return isEnglish() ? english : chinese; }
+
   var SITE_URL = "https://aik8s.run";
   var GISCUS_REPO = "runzhliu/aik8s";
   var GISCUS_REPO_ID = "R_kgDOTp14Dw";
@@ -64,13 +67,13 @@
     var encodedUrl = encodeURIComponent(url);
     var encodedTitle = encodeURIComponent(title + " | AI/LLM on Kubernetes");
     var bar = element("nav", "aik8s-share");
-    bar.setAttribute("aria-label", "文章分享与订阅");
-    bar.appendChild(element("span", "aik8s-share__label", "分享"));
+    bar.setAttribute("aria-label", t("文章分享与订阅", "Share and subscribe"));
+    bar.appendChild(element("span", "aik8s-share__label", t("分享", "Share")));
 
     if (navigator.share) {
       var nativeButton = element("button", "aik8s-share__button aik8s-share__button--primary");
       nativeButton.type = "button";
-      decorateControl(nativeButton, "系统分享", "share");
+      decorateControl(nativeButton, t("系统分享", "Share"), "share");
       nativeButton.addEventListener("click", function () {
         navigator.share({ title: title, text: title, url: url }).catch(function (error) {
           if (error && error.name !== "AbortError") copyUrl(copyButton, url);
@@ -81,19 +84,19 @@
 
     var copyButton = element("button", "aik8s-share__button");
     copyButton.type = "button";
-    decorateControl(copyButton, "复制链接", "copy");
+    decorateControl(copyButton, t("复制链接", "Copy link"), "copy");
     copyButton.addEventListener("click", function () { copyUrl(copyButton, url); });
     bar.appendChild(copyButton);
-    bar.appendChild(shareLink("微博", "https://service.weibo.com/share/share.php?url=" + encodedUrl + "&title=" + encodedTitle, "weibo", "weibo"));
+    bar.appendChild(shareLink(t("微博", "Weibo"), "https://service.weibo.com/share/share.php?url=" + encodedUrl + "&title=" + encodedTitle, "weibo", "weibo"));
     bar.appendChild(shareLink("X", "https://twitter.com/intent/tweet?url=" + encodedUrl + "&text=" + encodedTitle, "x", "x"));
     bar.appendChild(shareLink("LinkedIn", "https://www.linkedin.com/sharing/share-offsite/?url=" + encodedUrl, "linkedin", "linkedin"));
     bar.appendChild(shareLink("Telegram", "https://t.me/share/url?url=" + encodedUrl + "&text=" + encodedTitle, "telegram", "telegram"));
     bar.appendChild(shareLink("WhatsApp", "https://api.whatsapp.com/send?text=" + encodedTitle + "%20" + encodedUrl, "whatsapp", "whatsapp"));
-    bar.appendChild(shareLink("RSS", SITE_URL + "/rss.xml", "rss", "rss"));
+    bar.appendChild(shareLink("RSS", SITE_URL + (isEnglish() ? "/en/rss.xml" : "/rss.xml"), "rss", "rss"));
 
     var commentsLink = element("a", "aik8s-share__button");
     commentsLink.href = "#comments";
-    decorateControl(commentsLink, "评论", "comment");
+    decorateControl(commentsLink, t("评论", "Comments"), "comment");
     bar.appendChild(commentsLink);
 
     var heading = article.querySelector("h1");
@@ -106,7 +109,7 @@
     function done() {
       var textNode = button.querySelector(".aik8s-share__text");
       var original = textNode.textContent;
-      textNode.textContent = "已复制，可粘贴到微信";
+      textNode.textContent = t("已复制，可粘贴到微信", "Copied to clipboard");
       window.setTimeout(function () { textNode.textContent = original; }, 2200);
     }
 
@@ -132,7 +135,7 @@
 
   function commentsEnabledForPath(pathname) {
     var excluded = ["/", "/ai-k8s/", "/cases/", "/k3s-upgrade/"];
-    return excluded.indexOf(pathname) === -1;
+    return excluded.indexOf(pathname.replace(/^\/en(?=\/)/, "")) === -1;
   }
 
   function initializeComments(article) {
@@ -141,15 +144,15 @@
 
     var section = element("section", "aik8s-comments");
     section.id = "comments";
-    section.appendChild(element("h2", "", "参与讨论"));
+    section.appendChild(element("h2", "", t("参与讨论", "Join the discussion")));
     var note = element("p", "aik8s-comments__note");
-    note.appendChild(document.createTextNode("评论由 Giscus 和 GitHub Discussions 提供，需要使用 GitHub 登录；也可以直接前往 "));
-    var discussionLink = element("a", "", "仓库 Discussions");
+    note.appendChild(document.createTextNode(t("评论由 Giscus 和 GitHub Discussions 提供，需要使用 GitHub 登录；也可以直接前往 ", "Comments are powered by Giscus and GitHub Discussions and require a GitHub account. You can also visit ")));
+    var discussionLink = element("a", "", t("仓库 Discussions", "GitHub Discussions"));
     discussionLink.href = "https://github.com/runzhliu/aik8s/discussions";
     discussionLink.target = "_blank";
     discussionLink.rel = "noopener noreferrer";
     note.appendChild(discussionLink);
-    note.appendChild(document.createTextNode(" 参与讨论。"));
+    note.appendChild(document.createTextNode(t(" 参与讨论。", " to join the conversation.")));
     section.appendChild(note);
 
     var mount = element("div", "giscus");
@@ -170,7 +173,7 @@
     script.setAttribute("data-emit-metadata", "0");
     script.setAttribute("data-input-position", "bottom");
     script.setAttribute("data-theme", giscusTheme());
-    script.setAttribute("data-lang", "zh-CN");
+    script.setAttribute("data-lang", isEnglish() ? "en" : "zh-CN");
     script.setAttribute("data-loading", "lazy");
     mount.appendChild(script);
   }
@@ -196,6 +199,10 @@
     var available = gpus * memory * (1 - reserve);
     var kvBudget = available - weights;
     var concurrency = kvBudget > 0 && kv > 0 ? Math.floor(kvBudget / kv) : 0;
+    if (isEnglish()) {
+      root.querySelector("output").textContent = "Estimated weights: " + weights.toFixed(1) + " GiB; usable GPU memory after reserve: " + available.toFixed(1) + " GiB; KV cache budget: " + kvBudget.toFixed(1) + " GiB; theoretical concurrency: " + concurrency + ".";
+      return;
+    }
     root.querySelector("output").textContent =
       "权重约 " + weights.toFixed(1) + " GiB；预留后总显存约 " + available.toFixed(1) +
       " GiB；KV Cache 预算约 " + kvBudget.toFixed(1) + " GiB；理论并发约 " + concurrency + "。";
@@ -208,6 +215,10 @@
     var utilization = Number(root.querySelector('[name="utilization"]').value) / 100;
     var effectiveTokens = tokens * utilization;
     var cost = effectiveTokens > 0 ? hourly * gpus / (effectiveTokens * 3600) * 1000000 : 0;
+    if (isEnglish()) {
+      root.querySelector("output").textContent = "Effective output: " + effectiveTokens.toFixed(1) + " tokens/s; GPU-only cost: " + cost.toFixed(2) + " per million output tokens.";
+      return;
+    }
     root.querySelector("output").textContent =
       "有效输出约 " + effectiveTokens.toFixed(1) + " Token/s；仅 GPU 成本约 " + cost.toFixed(2) + " / 百万输出 Token。";
   }
@@ -251,6 +262,7 @@
     if (!diagram) return;
 
     diagram.classList.remove("aik8s-lightbox__diagram");
+    diagram.style.removeProperty("--aik8s-diagram-width");
     if (placeholder && placeholder.parentNode) {
       placeholder.parentNode.insertBefore(diagram, placeholder);
       placeholder.parentNode.removeChild(placeholder);
@@ -285,16 +297,19 @@
     dialog.hidden = true;
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
-    dialog.setAttribute("aria-label", "图片放大预览");
+    dialog.setAttribute("aria-label", t("图片放大预览", "Image preview"));
 
     var closeButton = element("button", "aik8s-lightbox__close", "×");
     closeButton.type = "button";
-    closeButton.setAttribute("aria-label", "关闭图片预览");
-    closeButton.title = "关闭（Esc）";
+    closeButton.setAttribute("aria-label", t("关闭图片预览", "Close image preview"));
+    closeButton.title = t("关闭（Esc）", "Close (Esc)");
 
     var content = element("figure", "aik8s-lightbox__content");
     var preview = element("img", "aik8s-lightbox__image");
     var diagramHost = element("div", "aik8s-lightbox__diagram-host");
+    diagramHost.tabIndex = 0;
+    diagramHost.setAttribute("role", "region");
+    diagramHost.setAttribute("aria-label", t("流程图，可滚动查看", "Diagram viewer, scroll to explore"));
     diagramHost.hidden = true;
     var caption = element("figcaption", "aik8s-lightbox__caption");
     content.appendChild(preview);
@@ -336,8 +351,13 @@
 
   function openMermaidLightbox(diagram) {
     var dialog = ensureImageLightbox();
-    var alternative = (diagram.getAttribute("aria-label") || "架构图放大预览").replace(/，点击放大查看$/, "");
+    var alternative = (diagram.getAttribute("aria-label") || t("架构图放大预览", "Diagram preview")).replace(/(?:，点击放大查看|, click to enlarge)$/, "");
     var bounds = diagram.getBoundingClientRect();
+    var availableWidth = Math.min(window.innerWidth * 0.96, 1800) - 32;
+    var aspect = bounds.height > 0 ? bounds.width / bounds.height : 1;
+    var expandedWidth = aspect > 4 ? Math.min(4800, Math.max(availableWidth, aspect * 280)) : availableWidth;
+    var horizontalScroll = expandedWidth > availableWidth + 1;
+    if (horizontalScroll) diagram.style.setProperty("--aik8s-diagram-width", expandedWidth + "px");
     var placeholder = element("div", "aik8s-lightbox__placeholder");
     placeholder.setAttribute("aria-hidden", "true");
     placeholder.style.height = bounds.height + "px";
@@ -351,9 +371,11 @@
     lightboxState.diagramHost.hidden = false;
     diagram.classList.add("aik8s-lightbox__diagram");
     lightboxState.diagramHost.appendChild(diagram);
-    lightboxState.caption.textContent = alternative;
+    lightboxState.caption.textContent = alternative + (horizontalScroll ? t("（可横向滚动查看完整图）", " (scroll horizontally to view the full diagram)") : "");
     lightboxState.caption.hidden = false;
     dialog.hidden = false;
+    lightboxState.diagramHost.scrollLeft = 0;
+    lightboxState.diagramHost.scrollTop = 0;
     document.body.classList.add("aik8s-lightbox-open");
     dialog.querySelector(".aik8s-lightbox__close").focus();
   }
@@ -372,7 +394,7 @@
       } else {
         image.tabIndex = 0;
         image.setAttribute("role", "button");
-        image.setAttribute("aria-label", (image.alt ? image.alt + "，" : "") + "点击放大查看");
+        image.setAttribute("aria-label", (image.alt ? image.alt + (isEnglish() ? ", " : "，") : "") + t("点击放大查看", "Click to enlarge"));
         image.addEventListener("keydown", function (event) {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
@@ -382,7 +404,7 @@
       }
 
       image.classList.add("aik8s-zoomable-image");
-      if (!image.title) image.title = "点击放大查看";
+      if (!image.title) image.title = t("点击放大查看", "Click to enlarge");
       trigger.addEventListener("click", function (event) {
         event.preventDefault();
         openImageLightbox(image, trigger);
@@ -398,8 +420,8 @@
       diagram.classList.add("aik8s-zoomable-diagram");
       diagram.tabIndex = 0;
       diagram.setAttribute("role", "button");
-      diagram.setAttribute("aria-label", "架构图，点击放大查看");
-      diagram.title = "点击放大查看";
+      diagram.setAttribute("aria-label", t("架构图，点击放大查看", "Diagram, click to enlarge"));
+      diagram.title = t("点击放大查看", "Click to enlarge");
       diagram.addEventListener("click", function (event) {
         if (event.target.closest && event.target.closest("a")) return;
         event.preventDefault();

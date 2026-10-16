@@ -1,0 +1,35 @@
+<svg id="visual-qa-20" xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">CubeSandbox Agent Adapter v0.6 Multi-Cluster Execution Architecture</title>
+  <desc id="desc">Local Agents in the office network connect to the Adapter over HTTPS; platform-approved Profiles bind to test and production clusters respectively, and each backend must reach CubeAPI and CubeProxy.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#316bd8"/></marker></defs>
+  <rect width="1200" height="675" fill="#f6f8fc"/>
+  <g font-family="'Hiragino Sans GB','PingFang SC','Microsoft YaHei',sans-serif" fill="#192c45">
+    <text x="56" y="66" font-size="22" fill="#316bd8" font-weight="700">CUBESANDBOX AGENT ADAPTER · v0.6.0</text>
+    <text x="56" y="125" font-size="40" font-weight="700" data-translated-label="true">One entry point, two execution clusters</text>
+    <rect x="56" y="244" width="260" height="234" rx="20" fill="white" stroke="#d6e0f0" stroke-width="2"/>
+    <text x="82" y="290" font-size="29" font-weight="700" data-translated-label="true">Office Agent</text>
+    <text x="82" y="337" font-size="26">OpenClaw · DSH</text>
+    <text x="82" y="378" font-size="26">Hermes · Codex</text>
+    <text x="82" y="419" font-size="26">OpenCode</text>
+    <path d="M316 360H374" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <text x="326" y="333" font-size="17" fill="#526b89">HTTPS</text>
+    <rect x="390" y="219" width="322" height="284" rx="20" fill="#eaf1ff" stroke="#9bb9ee" stroke-width="2"/>
+    <text x="416" y="269" font-size="33" font-weight="700">Agent Adapter</text>
+    <text x="416" y="323" font-size="25.505721251102237" data-translated-label="true" style="font-size: 25.5057px;">Auth &amp; Profile access</text>
+    <text x="416" y="371" font-size="23.275811795891315" data-translated-label="true" style="font-size: 23.2758px;">Backends &amp; exec policy</text>
+    <text x="416" y="419" font-size="23.728456304589102" data-translated-label="true" style="font-size: 23.7285px;">Lease / task / log state</text>
+    <text x="416" y="467" font-size="22.039567926135092" data-translated-label="true" style="font-size: 22.0396px;">Approval &amp; durable audit</text>
+    <path d="M712 335H747V267H786M747 335V452H786" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <path d="M747 267H786" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <rect x="802" y="191" width="342" height="153" rx="20" fill="white" stroke="#d6e0f0" stroke-width="2"/>
+    <text x="830" y="236" font-size="31" font-weight="700" data-translated-label="true">Test cluster</text>
+    <text x="830" y="279" font-size="24" fill="#316bd8">staging-code</text>
+    <text x="830" y="318" font-size="24">CubeAPI + CubeProxy</text>
+    <rect x="802" y="376" width="342" height="153" rx="20" fill="white" stroke="#d6e0f0" stroke-width="2"/>
+    <text x="830" y="421" font-size="29.249702660406886" font-weight="700" data-translated-label="true" style="font-size: 29.2497px;">Production cluster</text>
+    <text x="830" y="464" font-size="24" fill="#316bd8">production-code</text>
+    <text x="830" y="503" font-size="24">CubeAPI + CubeProxy</text>
+    <text x="56" y="595" font-size="24.181893585507577" font-weight="700" data-translated-label="true" style="font-size: 24.1819px;">The client selects a Profile; the platform decides execution location and permissions.</text>
+    <text x="56" y="635" font-size="22" fill="#526b89" data-translated-label="true">Architecture diagram · Two backends connect to API and data plane respectively · AIK8S.RUN</text>
+  </g>
+</svg>

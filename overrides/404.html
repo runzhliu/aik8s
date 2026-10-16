@@ -1,6 +1,15 @@
 {% extends "main.html" %}
 
 {% block content %}
+  {% if config.theme.language == 'en' %}
+  <h1>Page not found</h1>
+  <p>The link may have moved or contain a typo. Continue below, or use the search at the top of the page.</p>
+  <p>
+    <a class="md-button md-button--primary" href="/en/">Go to the homepage</a>
+    <a class="md-button" href="/en/ai-k8s/practices/">Browse practical guides</a>
+  </p>
+  <p><a href="/en/ai-k8s/">Explore AI/LLM on Kubernetes documentation</a></p>
+  {% else %}
   <h1>这个页面暂时找不到</h1>
   <p>链接可能已经调整，也可能存在输入错误。可以从下面的入口继续浏览，页面顶部的搜索也能帮你定位文章。</p>
   <p>
@@ -8,4 +17,5 @@
     <a class="md-button" href="/ai-k8s/practices/">查看实战文章</a>
   </p>
   <p><a href="/ai-k8s/">浏览 AI/LLM on Kubernetes 文档</a></p>
+  {% endif %}
 {% endblock %}

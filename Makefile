@@ -16,15 +16,14 @@ dev:
 	$(DOCKER_RUN) -it -p 8000:8000 $(ZENSICAL_IMAGE)
 
 build:
-	$(DOCKER_RUN) $(ZENSICAL_IMAGE) build --clean --strict
+	python3 scripts/build_bilingual.py --docker
 
 build-production: build
-	python3 scripts/build_distribution.py --docs-dir docs --site-dir site --site-url "https://aik8s.run/"
 	python3 scripts/inject_adsense.py --site-dir site --client "$(ADSENSE_CLIENT)"
 	python3 scripts/inject_cloudflare_analytics.py --site-dir site --token "$(CLOUDFLARE_WEB_ANALYTICS_TOKEN)"
 
 distribution:
-	python3 scripts/build_distribution.py --docs-dir docs --site-dir site --site-url "https://aik8s.run/"
+	python3 scripts/build_bilingual.py --docker
 
 wechat-editor:
 	npx --yes @doocs/md-cli@2.1.3 port=$(WECHAT_EDITOR_PORT)

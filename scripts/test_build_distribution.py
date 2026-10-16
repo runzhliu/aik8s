@@ -12,6 +12,31 @@ import build_distribution
 
 
 class DistributionTests(unittest.TestCase):
+    def test_english_metadata_uses_source_history_and_english_dates(self):
+        from datetime import datetime, timezone
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            docs, original, site = root / 'en', root / 'docs', root / 'site'
+            docs.mkdir()
+            original.mkdir()
+            site.mkdir()
+            (docs / 'article.md').write_text('# A translated article\n\nAn explanation.\n')
+            (original / 'article.md').write_text('# 中文原文\n\n解释。\n')
+            published = datetime(2026, 8, 1, tzinfo=timezone.utc)
+            updated = datetime(2026, 10, 1, tzinfo=timezone.utc)
+            history = {'docs/article.md': [published, updated]}
+            with patch.object(build_distribution, 'load_git_history', return_value=history) as loader:
+                items = build_distribution.collect_items(docs, root, 'https://example.org/en/', original)
+                loader.assert_called_once_with(root, original)
+            self.assertEqual(items[0].url, 'https://example.org/en/article/')
+            self.assertEqual(items[0].published, published)
+            self.assertEqual(items[0].updated, updated)
+            with patch.object(build_distribution, 'SITE_LANGUAGE', 'en'):
+                result = build_distribution.inject_article_dates('<article><h1>A translated article</h1></article>', items[0])
+                self.assertIn('Published', result)
+                self.assertIn('Updated', result)
+                self.assertNotIn('创建于', result)
+
     def test_feeds_only_contain_articles_and_sitemap_keeps_section_indexes(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
@@ -30,6 +55,9 @@ class DistributionTests(unittest.TestCase):
                 path = docs / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(f"# {title}\n\n{description}\n", encoding="utf-8")
+            (docs / 'ai-k8s/rag-agent/old.md').write_text(
+                '---\ntitle: Old address\ndescription: Article moved\n'
+                'redirect_to: /ai-k8s/rag-agent/recovery/\n---\n\n# Article moved\n')
 
             arguments = [
                 "build_distribution.py", "--docs-dir", str(docs),

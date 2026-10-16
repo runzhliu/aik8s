@@ -1,0 +1,1345 @@
+{
+  "schema_version": 1,
+  "pages": {
+    "ai-k8s/foundations/kubernetes-for-ai.md": {
+      "source_sha256": "99533f64b1f3cb8575f371b9ee4204377b88d121e19847efcf3383a30da62899",
+      "english_sha256": "ee8621d326b631b66b342ed0caed7731d025713525159ee57f98860b445ad999",
+      "translated_at": "2026-10-16T08:43:37.914609+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "cases/index.md": {
+      "source_sha256": "4b976676282b0152277da7d38614d41a842fbafab6fff87f54536a0b825d1f34",
+      "english_sha256": "941f9fd8dee81855573e2e9bf653057a83b55c055011bec2096280bb09cd41b4",
+      "translated_at": "2026-10-16T08:43:49.269772+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/reference/glossary.md": {
+      "source_sha256": "77e052336bee779d2dd48f618ad7e2e239696c454e7294d0498268f33d997690",
+      "english_sha256": "d2cce025b542d89ef52f755e194d4dd35ee5b148544b7daf0402dee083f25dac",
+      "translated_at": "2026-10-16T08:45:15.561754+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "index.md": {
+      "source_sha256": "2d39846a3809f9c6e66311a1d86cfe65e017ea697322292e9b8677ecee7a8f40",
+      "english_sha256": "13a3d4d2271d5c5838f0817315958015ecd7dea55d8c1ac119bca0f3361114d7",
+      "translated_at": "2026-10-16T08:48:54.703821+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/omarchy-agent-os-overview.md": {
+      "source_sha256": "0496759b611c1d132db2ecf032c2bccb240293b4632e4e4b09b8e1eddc56e312",
+      "english_sha256": "6a0ce3ec8e681a1fbdb14c932315ec1109ee3a923d78f213c84da74291a2ffc9",
+      "translated_at": "2026-10-16T08:49:32.519309+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/index.md": {
+      "source_sha256": "4d7a9c78d032cf7cd14d4f4116aea7a841be5ae6b58121a2fe8655f582476cd9",
+      "english_sha256": "5e2b67b3de4737469b229ee6e79baa960ec5bc3749dcc883d42e352f362fde6a",
+      "translated_at": "2026-10-16T08:50:02.810664+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/qwen38-27b-h20-day0.md": {
+      "source_sha256": "fe37c073bdb42f6bcfb33efba2dca51e643154d482e05ac7a7e73948f4ca368a",
+      "english_sha256": "c55cd1e786c701db8f37efc027227c57e75aa5adc20872d6342523e21643754e",
+      "translated_at": "2026-10-16T08:50:06.164150+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:35:40.911854+00:00"
+    },
+    "assets/practices/deepseek-v4-flash-h20-evaluation/README.md": {
+      "source_sha256": "867f55dd77e95fcbf4a39b18fe0d7ecf86b57654a8dcbce6d9680cb6380680f2",
+      "english_sha256": "867f55dd77e95fcbf4a39b18fe0d7ecf86b57654a8dcbce6d9680cb6380680f2",
+      "translated_at": "2026-10-16T08:50:06.169080+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/practices/llm-cold-start-optimization/README.md": {
+      "source_sha256": "9cf33f9b24a425565f3cf000324a9c3cc7da94297d804cd6c9d6060bbae1f932",
+      "english_sha256": "9cf33f9b24a425565f3cf000324a9c3cc7da94297d804cd6c9d6060bbae1f932",
+      "translated_at": "2026-10-16T08:50:06.170565+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/rag-agent/chatgpt-dots/README.md": {
+      "source_sha256": "4128dee2d015bfd2624f48bdf906509d9794557e3132465f3c0bc961429aa434",
+      "english_sha256": "4d029b313257d6204f4ed65f0efc14fcc067dbf3e6c93a0098cbe3d1e097e01a",
+      "translated_at": "2026-10-16T08:50:15.204792+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "k3s-upgrade/index.md": {
+      "source_sha256": "2663d79f42ade66e3c194ebb15694753b115d9f190371172e37aa2d0d845d5b9",
+      "english_sha256": "bff0f02c8a361d4020e22c2a7d1938de103762e4321f067dc49d997b91586e21",
+      "translated_at": "2026-10-16T08:50:27.898037+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/practices/large-scale-kubernetes-optimization/README.md": {
+      "source_sha256": "e80f9591070dc3dc5d82cc3dcf38078b7cd5c5a657ce5ab5c4590fc38e5ba541",
+      "english_sha256": "23bd24cb2195362be6ac884630bd04bc5f70090dcc4c049f86cf277067f8d56d",
+      "translated_at": "2026-10-16T08:50:43.715320+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/kubernetes-fleet-reliability/README.md": {
+      "source_sha256": "10bef592f13104111bb0c9099cac6e3c437d527592ed5b869244c6112498ca0c",
+      "english_sha256": "b5e26459b2cbc800718833c7f5661d157734e6f76454872efdfa23eb4bf8b00b",
+      "translated_at": "2026-10-16T08:50:56.428771+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/index.md": {
+      "source_sha256": "1af41af7f0884783dd17cce57fc9531a08640d99686fb4a15641b7a441b41661",
+      "english_sha256": "790c8c47625d5466365ccd94cb871ec1c12554e9d49f5db9a69c040e2ad7a963",
+      "translated_at": "2026-10-16T08:50:57.637630+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/practices/gpu-notebook-platform-evolution/README.md": {
+      "source_sha256": "3cdac55cfe726d6d73b60ba5e93b682cb2047e8c27980cc8fd320c0b0da4a8bb",
+      "english_sha256": "3cdac55cfe726d6d73b60ba5e93b682cb2047e8c27980cc8fd320c0b0da4a8bb",
+      "translated_at": "2026-10-16T08:50:57.639524+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/rag-agent/agent-durable-execution/README.md": {
+      "source_sha256": "89f1c2d1472b985ea3ec00636a3f652200a4544e3b2a490b129a72df5c7f9e9d",
+      "english_sha256": "bb5426b5881cb312995c2c1696e4e0922f39398b1c429e22308af5c59d65bc61",
+      "translated_at": "2026-10-16T08:51:01.998298+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/kubernetes-apf-case/README.md": {
+      "source_sha256": "adfba7b0e42bc830c233a89187088dde4d36c9d9baea71bf7167afed2c14eae0",
+      "english_sha256": "9e46790b57e33e839f7122d405df216792105de25f2da365f7479254f16e6ea3",
+      "translated_at": "2026-10-16T08:51:02.551144+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/practices/large-scale-kubernetes-scheduler/README.md": {
+      "source_sha256": "3a91decd3a9451f9eb158ff4b8d9efb7a66bfb1ec66d8a66d568c7d896d2c5f2",
+      "english_sha256": "a4bd66b6c15fecc3f06f73f0faca6a5314199d18626c2db977b35c5aa6fedeb2",
+      "translated_at": "2026-10-16T08:51:03.314915+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/practices/large-scale-kubernetes-monitoring/README.md": {
+      "source_sha256": "a2e5634df0fd63e5ada0b789e85b22993706ee9ed476f7a2c1927d3c6806510c",
+      "english_sha256": "e1624160614e41475738cef23f4b457c8bf35b23764d183d6af3e39dacd52c24",
+      "translated_at": "2026-10-16T08:51:22.239209+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/rag-agent/cubesandbox-agent-adapter-v06/README.md": {
+      "source_sha256": "6e2c61105ab4693f200a69b3e56770d83a2dd69c06a1c10a9fe89ddff64e0344",
+      "english_sha256": "eb551a2983ec01484276d478aa0bb12c568d7a946687a3da78641abf930c6ad2",
+      "translated_at": "2026-10-16T08:51:27.398543+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/spot-checkpoint.md": {
+      "source_sha256": "db73e1ae7a97eee469cb48e85be70839998ad1d33d753d8c5429a389f857f86e",
+      "english_sha256": "a403067663dca403c74839ae646cba0cdb193cab53c6619597d377db52488026",
+      "translated_at": "2026-10-16T08:51:29.582161+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:57.390687+00:00"
+    },
+    "ai-k8s/practices/kueue-vs-volcano.md": {
+      "source_sha256": "7ea2d64654133d71bdae5de1fc2ec3cd2ee72225484912da6248b4d3f0486293",
+      "english_sha256": "768aba3e664990081fd66b13bd0472ab89fcfc916698cdd9005ae0ed73042263",
+      "translated_at": "2026-10-16T08:51:43.377057+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/kubernetes-flow-control/README.md": {
+      "source_sha256": "f32bb51082c940889725f0c4275ce745605e641237bba4d50f84b58eec9047c6",
+      "english_sha256": "90ffe2b49820a2c0285066894625429f761cc3144e4de04ff04c9dc981d8cb01",
+      "translated_at": "2026-10-16T08:51:58.224500+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:21:40.664317+00:00"
+    },
+    "ai-k8s/practices/pd-break-even.md": {
+      "source_sha256": "058f6bebfdb61c3dc278a623f68d01624c4c258fd345d955bee56876f613237a",
+      "english_sha256": "83b2dc1e6bb264df249df85172b4bce1bb945686da51487abd5d6a7b0599b475",
+      "translated_at": "2026-10-16T08:51:58.504688+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:57.187032+00:00"
+    },
+    "ai-k8s/practices/incident-review.md": {
+      "source_sha256": "e409bb024788d5c6be03002670f267ec5adc74903928a9636a23666aa2b5b1e7",
+      "english_sha256": "0158e55df28af9af570a89f7796f00c9f40ccdaaf702d8fe9bc4cca814da49b4",
+      "translated_at": "2026-10-16T08:52:34.164336+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/cloud-gpu-selection.md": {
+      "source_sha256": "9d6269455e0677d23da89981f7c382945d7395fcb716afddc4af3e9c715fb861",
+      "english_sha256": "343d7ccfc080a58e2286776b1cd5ff30c1c229a76a33fe220f270d831084c3ed",
+      "translated_at": "2026-10-16T08:52:48.208110+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:54.732385+00:00"
+    },
+    "ai-k8s/practices/ollama-to-production.md": {
+      "source_sha256": "872297f6c8b24a2b2a8ff44e96214ee10600df17d66b942a37226783674dc22f",
+      "english_sha256": "4786b6fa4643c457ffad5380e3db690199ac77b37438e24c7bc6752891d5f2b4",
+      "translated_at": "2026-10-16T08:52:52.459890+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:57.017468+00:00"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/observability.md": {
+      "source_sha256": "74c6dfcc6d2d63d917c0f33fa608334586b442f12d15c9a571ec9ef2b632ab22",
+      "english_sha256": "d282c6f5f526db4e3c82a9587390764a1f63ea98ef9d29a4b01052573927e4a7",
+      "translated_at": "2026-10-16T08:52:57.572629+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/domestic-accelerators.md": {
+      "source_sha256": "c3fc2879cc9968006e600db2d17415200f56ef48dc0a07bd7855d8cb7ddb94e3",
+      "english_sha256": "553c4f44c54df4f2f49d680253ba636b22a712dc7616b5aa16f82c77a709a595",
+      "translated_at": "2026-10-16T08:53:03.450770+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
+    },
+    "ai-k8s/index.md": {
+      "source_sha256": "9f01f06995439c607dd5dffec67b8f5caa9928906a3e04002e179f2c8efc8f50",
+      "english_sha256": "d1fa1e6cb165182b61492fb47b49447d1a694b2126540727931df2fd9133a72f",
+      "translated_at": "2026-10-16T08:53:20.087099+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/agent-sandbox-red-team.md": {
+      "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
+      "english_sha256": "c31b3ba5cab8780ac1d7c396dce45a5cc8174edb840ad1ac4e165bdcf44f8f82",
+      "translated_at": "2026-10-16T08:53:35.327637+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/air-gapped-ai-platform.md": {
+      "source_sha256": "780feeeb2966d0216e8d40d021063eb77851f3e12b9c2ee9ac25841eeae677e4",
+      "english_sha256": "4ceca562139053cc9b00e91650681405396ce6638dba2282dedab140d3ff1218",
+      "translated_at": "2026-10-16T08:53:48.655762+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:54.087851+00:00"
+    },
+    "ai-k8s/practices/kubernetes-vs-slurm.md": {
+      "source_sha256": "01aca4f4a08998dce50c5559848ec68321e93eec5594a8166da54c6bfb544418",
+      "english_sha256": "4060e23b54febbdd44a362b4b13f53139fa7db5a14c755a003fe13de22c8b9ab",
+      "translated_at": "2026-10-16T08:53:50.594762+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:56.118325+00:00"
+    },
+    "ai-k8s/practices/inference-engine-benchmark.md": {
+      "source_sha256": "47cd2a4abbc63641ea4ddd72d838d52569a282104b158f18c5571f1dd0e952b3",
+      "english_sha256": "af9c1758fd209992d20342b5e900daec1c0ada8ddcfd2ad696650cc320fc7808",
+      "translated_at": "2026-10-16T08:53:51.010344+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:55.880173+00:00"
+    },
+    "ai-k8s/practices/model-memory-calculator.md": {
+      "source_sha256": "e0227c45bfbe47e771f2dfe719bb3bdee11b34128e9b35a84cff975962b78819",
+      "english_sha256": "081be33ec97faf79582d371911fe0ccaa0a1d60fa8c02b515855d452e28ae570",
+      "translated_at": "2026-10-16T08:53:58.671955+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "assets/rag-agent/openclaw-enterprise-practice/README.md": {
+      "source_sha256": "9c8863a72be2390ff75efc3ba5d7905c16375ae3ca712ba3b4135d9561436cd1",
+      "english_sha256": "b3194562788cf69c0542c5bf82e85fed24e582a3c17252f166cf052652917945",
+      "translated_at": "2026-10-16T08:54:05.794264+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/low-gpu-utilization.md": {
+      "source_sha256": "da1bb1821f848582ba6cf10e37329446fee8a0450a980a56a7f7a11d414df4b8",
+      "english_sha256": "9c17230aa51fa900e0dc260ada780cab281f2d3d488428e833a0bf29311484c5",
+      "translated_at": "2026-10-16T08:54:19.116270+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:56.598604+00:00"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/security-hardening.md": {
+      "source_sha256": "066004ffe2f03e788dd1eed1eb1b3369150d08dd94d1772b93e975972a748849",
+      "english_sha256": "3d777411a4f4083c8b2945020a376af792991b373311bdd0b5088e9e3298b8b2",
+      "translated_at": "2026-10-16T08:54:33.038414+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/agent-workloads.md": {
+      "source_sha256": "bca233542450596bbddf413cd952d5bb67578d73127ffafd291badf0fbe5bff8",
+      "english_sha256": "2bb4c8e66eae4b1a5555fcc2a7127eb4758618c102c971cb8b5e6b0b064f1e9c",
+      "translated_at": "2026-10-16T08:54:48.266106+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/model-distribution-100-nodes.md": {
+      "source_sha256": "f9d4b6ef1d27378b123366a0673f0d7268111631a925caa3e0ab470fa7f37d2d",
+      "english_sha256": "b9609d3146c4f959dba143d104f069d7a8de08f8f32ff2c98ec2e5fd1814fd9f",
+      "translated_at": "2026-10-16T08:54:49.348499+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/gpu-pending.md": {
+      "source_sha256": "5453eb2592824ee95fa035d569254de6a4e5c90db62d934ae4c5c7ec20006acc",
+      "english_sha256": "8193c8ab9658362b78382c1d7115da3a59590fd8ead99e4f779744a8769a762f",
+      "translated_at": "2026-10-16T08:55:14.236359+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:55.654670+00:00"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/experiments.md": {
+      "source_sha256": "69611636a4a815f81d36a9a7c7da471d149f193d90e6f9109fd86bd4672c9e5a",
+      "english_sha256": "a98b16f23a4f927e8dc9222d3f62b37e49c5f53bd726706f70359fd358f9cfea",
+      "translated_at": "2026-10-16T08:55:25.729153+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/kubernetes-launcher.md": {
+      "source_sha256": "048511c5813d9643678ada33d2f6c412a44ae650488b7380d2e9d26b7a01e2f2",
+      "english_sha256": "7b047a8787e9d83a524fe502e553b11ae775bae06a5a49c3c3e58184e6c1155e",
+      "translated_at": "2026-10-16T08:55:27.759661+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/comparison.md": {
+      "source_sha256": "3bd3876fb4cffeaba3c2ab03aa15bce0b585323df2e2a7b1f125b4d2ce9f56dc",
+      "english_sha256": "96adfe598eb310e036f6ca507db9222063ea6ee9a19d339849995f20ece84b45",
+      "translated_at": "2026-10-16T08:56:04.566984+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/edge-ai.md": {
+      "source_sha256": "70ce8e507810b1ad5b5a9bee9afd51ddf7c154d6145551c4e31317a1fa4da061",
+      "english_sha256": "35bb4c98b3703a099ef9a95c06eecb63a37d34a7f922d4504da5f532a8c9fc28",
+      "translated_at": "2026-10-16T08:57:35.331968+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/mimo-v26-pro-rl-h20-first-test.md": {
+      "source_sha256": "4f1382509af9c7509f90b9bde291f047f073df78533bee32d19e95431757c831",
+      "english_sha256": "114ed5d8ccd3372f9f847bd9a2179ab31b98e6248c099630b817674c8d3aee8b",
+      "translated_at": "2026-10-16T08:57:41.037428+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/cost-capacity.md": {
+      "source_sha256": "4b7b5d46dd501001be7ae0b8125c12cd1c1f22ca8bbe80ca692ca0d8736727f7",
+      "english_sha256": "6ac9647a3548874f2816f0e89be3feb6c166fb215aab8eda6e9f564ce168049f",
+      "translated_at": "2026-10-16T08:58:18.311074+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/benchmarking.md": {
+      "source_sha256": "821f9364a75257ad1aaa7f98c5f0f7e3a72b504a149d194fbaf0878ad096a760",
+      "english_sha256": "4e531c7419d9f8a441bc8a505d749d4045ca55c16162761240f8e3edeaec5cc1",
+      "translated_at": "2026-10-16T08:58:31.212265+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/platform-operations.md": {
+      "source_sha256": "051690c6562d897c297733356291303fc7ea645fa6e03396945130e09f9e0719",
+      "english_sha256": "37ef12c6b449dc65a5c07c54c0b0c1d79d1bff54df6fe0e4343f37ea146596a8",
+      "translated_at": "2026-10-16T08:58:45.768361+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/history.md": {
+      "source_sha256": "8c8fb7dce5c70ce842c829317867c10629db3a364a26b9f7ef794c46cc1a914d",
+      "english_sha256": "986604d1a768eb3eb0624506eaffc0af0b8aaaf812051e06f86f929425af6026",
+      "translated_at": "2026-10-16T08:59:08.857740+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/reliability.md": {
+      "source_sha256": "1f66d3075e92ba73a10964a4b7b2c0de27acfb7e0e005f67b6f80164131af5ca",
+      "english_sha256": "45ea1330f7f8933adf02c6a6b9a65840600d9f537af941c5232a970358348162",
+      "translated_at": "2026-10-16T08:59:54.296202+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/security-governance.md": {
+      "source_sha256": "21b25d9881d27b95917fda7f745b22434c72674a0c741faa9159ab85993045c5",
+      "english_sha256": "591ff3de236e4fa498c42d877b03225ea24e27946196f2d5dd4409dce64f876e",
+      "translated_at": "2026-10-16T09:01:38.038116+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/queue-multitenancy.md": {
+      "source_sha256": "9948b2396a9e5aeac3965fa2b81b3796e7ae07e05b3c6d845b74f27a834f21c2",
+      "english_sha256": "89965d10aa5caffdc19dc50d515598c5b124dd145f90839eaf5719ac2a2ecd11",
+      "translated_at": "2026-10-16T09:01:46.129398+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/agentic-workloads.md": {
+      "source_sha256": "dad3b05859b8a497b88c4c74fbfa0bc6837b6f9f1e9fa7e23db3156453a8271b",
+      "english_sha256": "059b8416efa895cac3ca7ee4d62e622fd4851a724f250961a5065e4dd6c6d716",
+      "translated_at": "2026-10-16T09:01:56.178943+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/mlops.md": {
+      "source_sha256": "8fda15b231e25aefca4ec5cd2cf497b35e992b339553613e827d02cec15a4e36",
+      "english_sha256": "135717f19b65041bd1b9cd13fab019967f4bdbd48f1f171b17dc01933c7657b3",
+      "translated_at": "2026-10-16T09:02:00.820497+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/adoption-roadmap.md": {
+      "source_sha256": "66f4b744b6e68b8779f3c11af2bdca2d7ce1ff3ce8091d5910b8074cc841d7de",
+      "english_sha256": "7e1a8e35c14f4804d6a3e447113044af362ef1ca9192c698435835df9646bbba",
+      "translated_at": "2026-10-16T09:02:21.794557+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/glm53-h20-sglang-vllm-test-plan.md": {
+      "source_sha256": "acdcf5762b74a6b7e6506b9fb97016bf58deda6cae6fdf46b025fe487293e56d",
+      "english_sha256": "a04db49ee514fb7f0723de7d2c127353f237a2aa6abf398ef224e666112a2c0c",
+      "translated_at": "2026-10-16T09:02:26.031776+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/cluster/architecture.md": {
+      "source_sha256": "967cdc2ab1cf60b821dc20cbcb5c2b4cabc07f611576de73a328943c99486b58",
+      "english_sha256": "86a29696db31679b0c18cdf696e4b7994555e4963ba4bd6be1ce6e75de35bc90",
+      "translated_at": "2026-10-16T09:02:36.006107+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/guides/reference-architectures.md": {
+      "source_sha256": "6f9862a44681d3a0c09396cdaefe10b6aee27ceca746dd080db7023fc09d7a9a",
+      "english_sha256": "6b24b2c2e7225cdb51f906a894aada0d29c09e2aa4f3d40eb4c84c19230c58a8",
+      "translated_at": "2026-10-16T09:03:32.106604+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/guides/gpu-platform-lab.md": {
+      "source_sha256": "2384ed1787a83c6ea1f439834d3a5de3c6133c99f42eac88ddb99f54774435c3",
+      "english_sha256": "40272715045cacf583c83ac30f0920d77a0bb8d1a885860c7fc186d8bd6cb2be",
+      "translated_at": "2026-10-16T09:03:40.543609+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/gpu-scheduling.md": {
+      "source_sha256": "c22b0e22526fc004b63613d003d72af94b5689722e44be8a2cbdacaab6e082e7",
+      "english_sha256": "cb4073185780b1a23a840107d1d0e192290bac53eed4ec113c16268a8f5bbebd",
+      "translated_at": "2026-10-16T09:04:04.886617+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/llm-inference.md": {
+      "source_sha256": "f9279bb691940015fa29b5d13499c14f09bc9411df3728ab1846ac6cb8dae18a",
+      "english_sha256": "daebe761830b7d95897da2708720b6f666e656b502bf4abea8958fc355f10a03",
+      "translated_at": "2026-10-16T09:05:06.368744+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:48.199350+00:00"
+    },
+    "ai-k8s/practices/ling3-flash-h20-deployment-benchmark-plan.md": {
+      "source_sha256": "cfd76ece600715ec90a8fd31605bc988f40674b2dea5cc8d1203d1b886cefb5f",
+      "english_sha256": "422bac808b7bb713ccc112c3a674d56e25653c90dcbc175b37af54ac4c4750a5",
+      "translated_at": "2026-10-16T09:06:01.733443+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/cluster/gpu-node-stack.md": {
+      "source_sha256": "ba36b68af6556eb65b2560256b722a1eafe758dbea6686d98ce23ad77e53fcec",
+      "english_sha256": "9afa6b76c303b4c7ddb4b12a279bed950f1464c836c5ee0bbcd3776e80e3e6b4",
+      "translated_at": "2026-10-16T09:06:43.608892+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/accelerators/device-management.md": {
+      "source_sha256": "428b874cf26aeb01d1c52894c3dfa2565b3f9f9dec2a8c171ad6bad3a08aa709",
+      "english_sha256": "afa6f5b3d608a4c1d5107da790bedc30d7e210695abc55a5d9d78bf9297a821d",
+      "translated_at": "2026-10-16T09:07:03.340200+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/gateway-routing.md": {
+      "source_sha256": "f1cf060773719eae0178e3e00ca62c20abb030a3231db9ae5e7ea2a07642f7a0",
+      "english_sha256": "f452a085aa0798dce52e7053f28c801f8562712a12545fd8db96b54b20e6a4c1",
+      "translated_at": "2026-10-16T09:07:05.227992+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/distributed-training.md": {
+      "source_sha256": "8b7b9ca27adfb6e20e2c7995d1ce76a7a5d9cffe09894c44e8ded4842e862d2f",
+      "english_sha256": "a2bf4f4deb2c087d299bd82cd7839b13d4d07395050d94784a44ab4519e5efa2",
+      "translated_at": "2026-10-16T09:07:59.091618+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/accelerators/heterogeneous-accelerators.md": {
+      "source_sha256": "b84fbff6be1fd0cefaa9cf69bae89ec8dd35482efe9ba3883b327b71e8fbbd58",
+      "english_sha256": "b109ebfda484dd6dc66e5cab5efce98eebdc5c9061a6be1a551a2156a1c91ce8",
+      "translated_at": "2026-10-16T09:08:19.551607+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/scheduling/autoscaling.md": {
+      "source_sha256": "0b2d2432c038f8e6fd7ba254512c5632c362844e9d1ffeacfdc13e84b18389bd",
+      "english_sha256": "0bfc44923c59628b67c03e9c5cb07a6e48fc5830f9789c55d270e81a58c244be",
+      "translated_at": "2026-10-16T09:08:22.263083+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/optimization.md": {
+      "source_sha256": "197e44686f27eb441057b15bfb1d5c1159d098d9f6f9a778cbb11d4f83d3fec4",
+      "english_sha256": "e764913b0aa0db44d617f768a20adc15e7474aaa7d6c93e0a067e029e218b9d7",
+      "translated_at": "2026-10-16T09:08:30.776689+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/serving-frameworks.md": {
+      "source_sha256": "b559e73440bda705bdcdd1542b94aadc0cfc34453e65a042e0eb0b73335d3428",
+      "english_sha256": "014a50dbf8316436887e6391dd14f7ea2e95dd9449be06224738ed92bc8fe0fd",
+      "translated_at": "2026-10-16T09:08:40.685617+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/rag-infrastructure.md": {
+      "source_sha256": "1a04616b8566c4dc700073591df43ea14b5d27eebc898dfecb6739987cc3a151",
+      "english_sha256": "0c205c2e8eef0b8659a9ce6781b0c74aa1e173c1a9d92347d924332c26a7eb6b",
+      "translated_at": "2026-10-16T09:10:31.883698+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/observability.md": {
+      "source_sha256": "149888b565a2668dcb778d7ac5c245d3cc6c8e6600361f34e65aa12d1f20984e",
+      "english_sha256": "906c04966ca13a3e25c14069d6e8372101ec201daa4f1935a751cc9708cb7323",
+      "translated_at": "2026-10-16T09:13:53.513014+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/comfyui-minimax-h3-gpu.md": {
+      "source_sha256": "c8826a4af89fcb55ea2fb375fd1c821353fd9805fa225cfb6d56dea7206e4e37",
+      "english_sha256": "ee4044870c455442c2137b1f771ee8c793caf75cadd2bf74d67fc62c05ad66fe",
+      "translated_at": "2026-10-16T09:14:27.986130+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/jev-weekly-review.md": {
+      "source_sha256": "a071e776d17d0800a272b3a2dfe5282eaf3a6136fe6d47a08cfbab96f5c259a1",
+      "english_sha256": "bf748318a5760edfb35518b39c566e4442b9ac62fa7d76f6ae1688c9a9b5660b",
+      "translated_at": "2026-10-16T09:15:29.372248+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:50.407157+00:00"
+    },
+    "ai-k8s/inference/engines.md": {
+      "source_sha256": "90d016906db4192b17c4a7b0dd585517f41d28200f713bc92ba5e0211f539cf3",
+      "english_sha256": "1ea5f1aae1666bb2a04489434a289f6934c19c05c1524f5de923df2f8fc7084e",
+      "translated_at": "2026-10-16T09:15:45.694070+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/scheduling/kubernetes-scheduler-extensions.md": {
+      "source_sha256": "d1d34f62d639314389e6567e591e9cb2cae750a6c8dfedf1e210b4d67efbc0e8",
+      "english_sha256": "011473482256582e8e4e46128f82b204e4763c51450d7e60da718055f7f897eb",
+      "translated_at": "2026-10-16T09:17:38.077449+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/cubesandbox-agent-adapter-v05.md": {
+      "source_sha256": "6e08c86d0d696a0c6a8fca83cccc7093d65fa09c3c0fd8d800f0bcb2b4a9f2e2",
+      "english_sha256": "1b0a97311e7168c98b643341c45382fa9e444735dc6e8bc9fb20f7ee05145bac",
+      "translated_at": "2026-10-16T09:17:54.505123+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/training/swanlab-self-hosted.md": {
+      "source_sha256": "bf8b5d7f3a020e7a1cf653bacfaf92ba5235d23bcf9337764c6ad495777bf348",
+      "english_sha256": "19bb17b50081bcfd84f54949ed315fa6a7a601126715780a3ecea107f19ae3c2",
+      "translated_at": "2026-10-16T09:18:03.807256+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/mimo-v26-flash-rl-h20-day0.md": {
+      "source_sha256": "156d8f9b0fd040229332bf64a3844ffd5e6a5f555c6d37d1ef53c2c9cbf1c4cd",
+      "english_sha256": "b5a015f57670d9a134a23dd6a015d84831be007642d4cdda4b5bea499af8a7bc",
+      "translated_at": "2026-10-16T09:18:53.327898+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:56.844625+00:00"
+    },
+    "ai-k8s/practices/sglang-model-gateway-cpu-lab.md": {
+      "source_sha256": "e9ede7f50f8a7a8692f29f24ac3cfbd36fa5406589a9b294206d8861897b64a2",
+      "english_sha256": "5da839911e498bc634679e810574173fb95884effeebe640c6e09db813408b5c",
+      "translated_at": "2026-10-16T09:19:09.819725+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/training/rdma-distributed-training-benchmark.md": {
+      "source_sha256": "c38216195a1939a0b5ec457329b6b31da2eff489ccac3e906efd4a5510e8cd6b",
+      "english_sha256": "d3f5c7980011125dfbc048aa2e42a73a74490154fcf915c29837cf4cb956aadd",
+      "translated_at": "2026-10-16T09:20:42.678983+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/hy4-preview-hardware-benchmark-plan.md": {
+      "source_sha256": "0b9358988d1c6e0a6ddc1ada75e250149108cf1b1499a8dd4b50d3161f56f769",
+      "english_sha256": "4afe4fd833fd36ddf147d146d5c98fb6107f71880c6551f86aad9e55c3f9fd4a",
+      "translated_at": "2026-10-16T09:21:26.073121+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/glm53-flash-day1-h20.md": {
+      "source_sha256": "31e029188d67dd5aa866ee6d42589a4f606e2d5951eee10ace86ae8e328c6780",
+      "english_sha256": "ebdffccbcaed2601e4917f61e00f033c32463c67dd3c23337050309ec5af5da8",
+      "translated_at": "2026-10-16T09:21:44.579744+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/langchain-langgraph-langfuse-kubernetes-demo.md": {
+      "source_sha256": "274e6ca6bdcd4d827c1beb9085c11ca47f273e2b177f9b5947806c1515367a75",
+      "english_sha256": "f23981eccbbce4c1f6ebd00a168df4aac6b569832383c4c14f8676fec2669e9b",
+      "translated_at": "2026-10-16T12:27:43.794940+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/minimax-music3-sglang-omni.md": {
+      "source_sha256": "53f1d95c009816c1774882e8426472c3277cdddd1b3d69fab29281fa53521017",
+      "english_sha256": "2a63ec672af4620df90c4433852ddda031dd1f7d5977e1824ae47483ccf2ca9d",
+      "translated_at": "2026-10-16T12:29:16.313685+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/gpu-notebook-platform-evolution.md": {
+      "source_sha256": "6144da3a8aabae4197aac0e409f5c323f7bb2eb1f7201aee4db1464e4eea36fd",
+      "english_sha256": "f81120104d698f92dd178db1a724d34512c3e3c91aef025e088e499ee1c7fcf5",
+      "translated_at": "2026-10-16T09:27:22.469526+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/minimax-m3-h20-benchmark.md": {
+      "source_sha256": "29ca709ec444953fd8fe150d19cf48d1b37923e42c1e647abf1c2c49629a53d6",
+      "english_sha256": "5b31c630499711f0b7bf9f28ed2b82697e4dcace8758d865b1c84fb51af51b62",
+      "translated_at": "2026-10-16T09:28:31.816915+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:49.540854+00:00"
+    },
+    "ai-k8s/practices/minimax-m3-h20-deployment-fixes.md": {
+      "source_sha256": "cb0f937d2bfe1d750540ad37893a9ee0169a5428a2944be2778432cf33b7f8b9",
+      "english_sha256": "47764fdd8da57ba036f9222252591a6d6c230e5468597601a8cb660a5ace732e",
+      "translated_at": "2026-10-16T09:28:43.921915+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/training/wandb-vs-swanlab.md": {
+      "source_sha256": "2e1b91bccc4928eab1fe78729a71781f517a44d882a3334b454310b731cd80ca",
+      "english_sha256": "c46786ae1d338c130da8ca11f246d9531ec653168ce8963b60f6c00190f5fdfb",
+      "translated_at": "2026-10-16T09:29:27.131266+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/deepseek-v4-flash-vision-exp-day0-h20.md": {
+      "source_sha256": "2c798f8dab7725405d0dfc95fef1edeac64d1487a2c3b1d3ac7718878af28290",
+      "english_sha256": "fb6a0890d995b858494fb59907fcb5d115a1d74a6d67e0973abcbfb2812603cf",
+      "translated_at": "2026-10-16T09:31:01.654944+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:35:41.080449+00:00"
+    },
+    "ai-k8s/practices/kubernetes-137-ai-workloads.md": {
+      "source_sha256": "9d88aa936a2462ec297f09cbe3f7b6066769f1f469bf02ddc54d3b6cf448c820",
+      "english_sha256": "341defb28c111f41373dc204616bdecba71022b9a310234289cb583c42f27c4c",
+      "translated_at": "2026-10-16T09:31:04.067074+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/gpu-topology-fragmentation-scheduling.md": {
+      "source_sha256": "f1a36021b94b995a681c0a53d54b4f23f8bc65c86c3ef50a8e4624a5a8d19489",
+      "english_sha256": "f70c75e658c94518a0e7d9fd70d36342da3988220514b5a4b77d794d586c6ef7",
+      "translated_at": "2026-10-16T09:32:12.212510+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/cluster/open-source-management.md": {
+      "source_sha256": "e36a679efa1d594f15b01c4678892a23f1e0776ebd7649eccf9934f4c3c4b04c",
+      "english_sha256": "955f3783b738f8ebe854e4124ea8b91cf0049e1e5c59b9901d7b7053fe1e4ebb",
+      "translated_at": "2026-10-16T09:33:33.726943+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rdma-networking.md": {
+      "source_sha256": "9080349b50a39cfa24ae48e560f71047fc92dfe35b351570b98aba71dc2ce18c",
+      "english_sha256": "e699935528a41c83c7b67907c517c70cd3bdf858af1ce75616c403c159764184",
+      "translated_at": "2026-10-16T09:35:20.837251+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/cubesandbox-agent-adapter-v03.md": {
+      "source_sha256": "6a13bf8ea055c1a0d281c0ffe1e4140a6ca84afd5f19dbee92594470c8135683",
+      "english_sha256": "0b2791f5d648a81ffbb3b5cf0f15b159eb47a19bbe071990b8931d6e5d4f7754",
+      "translated_at": "2026-10-16T09:36:13.968979+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/deepseek-harness-kubernetes.md": {
+      "source_sha256": "75ddd5b0c504819fbee181fb5551e218eda0e5bcc5e17bcb4491aa58496dc3a4",
+      "english_sha256": "2dbe7ca56d119164e991f18bc77b8a265c2d551c799452a191ff348eed213279",
+      "translated_at": "2026-10-16T12:29:44.702484+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/model-weight-delivery-acceleration.md": {
+      "source_sha256": "3075e255084ef5129a0845e89d2e51a24e0267a23a1791500118777d7df1ed47",
+      "english_sha256": "4bd05b9eb690f350170166a956cee71975d59907b58daf4e8d27338d76cc14ab",
+      "translated_at": "2026-10-16T12:32:42.019742+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/chatgpt-dots-overview.md": {
+      "source_sha256": "2df20c73b6a444011f74ea8159199d9b391af3f63bc5b2a3b3f745125c9163d9",
+      "english_sha256": "b424d9ac33222789ea0676c123da6fad4b436e87b1224ec72287d2d5c9aac45f",
+      "translated_at": "2026-10-16T09:38:29.929264+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/cluster/cloud-managed-kubernetes.md": {
+      "source_sha256": "5872994c80f26b01a5ae79193d955b4a54aea245fc6d081907fe9b3bd2206765",
+      "english_sha256": "caab95b540ca815d2e68a2b00faeaf9667735b51ee0138cdbcc5c75aa35ba924",
+      "translated_at": "2026-10-16T09:41:52.914858+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "cases/ai-cluster-component-checklist.md": {
+      "source_sha256": "94716423bdfafa74293fcbecd92f341f4c120df1f7ffb7bf13411080c5f248a0",
+      "english_sha256": "8638ea5f0fc64c53907a93b1029a49e47ec9d19ffb038305dc4307b97c9ff32c",
+      "translated_at": "2026-10-16T09:42:50.170855+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/cubesandbox-kubernetes.md": {
+      "source_sha256": "3201e7fcf14231dada80b0ec92475468f3f6fe904ed6df38fb9615aab5934178",
+      "english_sha256": "ccbca455ffe459cdfaece6799f51b431cc5532bf23bd21758e4f87f1655d9e46",
+      "translated_at": "2026-10-16T09:43:16.476068+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/distributed-kv-cache-deepseek-v4.md": {
+      "source_sha256": "57bb944cf0bafad42143f41d44cdd4071d9f8196987ef2d0091971e501d5090a",
+      "english_sha256": "9ad9e9dadd03f9b5d64d51eaff7cbb8af8720c478a8b646a9bae8e66f0ed9aa0",
+      "translated_at": "2026-10-16T09:45:29.934037+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/cluster/flow-control.md": {
+      "source_sha256": "956c99c1e74ff6f21bf0419007c90c5cc4897d578c3021c0f1b6ea5cd148768c",
+      "english_sha256": "3823417f3ef82414ca7338dd86a3b549318535bde557af5028160b1e00a99630",
+      "translated_at": "2026-10-16T09:45:41.225150+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md": {
+      "source_sha256": "8f6cdecbff992554fc97956fe524a1e2d6f9caea1cc2803414621c32d9b339f2",
+      "english_sha256": "dc7bfb7a77d131f054ce44c7d5f9f7a456c35d1b60b809476925667b4e31b0ef",
+      "translated_at": "2026-10-16T09:45:43.070110+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:57.653720+00:00"
+    },
+    "ai-k8s/rag-agent/deepseek-harness-repository-analysis.md": {
+      "source_sha256": "2d8e377c1429909b2178d5f79a78957cce23f8d57bb1444d0e3a53ecf84e3c33",
+      "english_sha256": "043de78dbb00217a6f893dee9818d921d3901e9b54c48a42d98fb76fcc764975",
+      "translated_at": "2026-10-16T12:35:17.339536+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/sglang-0518-release-analysis.md": {
+      "source_sha256": "92c1d03c1fd23bf3e86fe053695163af56788fb43faeb0fed45a49a8d39e3491",
+      "english_sha256": "02c05f2874139ed9db4885f46bc1fedbdc55ca00547bac2735baa350d694f5dd",
+      "translated_at": "2026-10-16T09:49:58.056406+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/rbg-qwen-l20-serving-resilience.md": {
+      "source_sha256": "c48a3111031717b7ef705a33f422c279b0e7aef7ae37d80aa6b3a2f51467a69d",
+      "english_sha256": "02a738f5a8ce719edb39758c67928ac5c188d4bab202bc0666a3ccad62ce05e7",
+      "translated_at": "2026-10-16T09:50:30.075539+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/llm-api-relay-gateway-overview.md": {
+      "source_sha256": "2b397d201f53ad1550fff42819f8d2ec3c334fc1d6e0d052f743ca1dbc349021",
+      "english_sha256": "d294675f8825d3f24e5277baa87cbd6509a5b6347f9d88cdf84f0b05f4c93ed7",
+      "translated_at": "2026-10-16T12:35:07.406882+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/vllm-sleep-model-switch-l20.md": {
+      "source_sha256": "b12a59cdc88853573d237017a3e62b35b5e515d1040aed200cea332ccf7f604a",
+      "english_sha256": "e54ca1714f7476602b005b5960dc7f691eddeff546d85ada8da22da671e6ac03",
+      "translated_at": "2026-10-16T12:36:19.741166+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/aibrix-dsv4-observability.md": {
+      "source_sha256": "7dfa7872085889e923ed1e229777e998700c47170fa61c0ba432a8822bdb0b45",
+      "english_sha256": "fcbc74f3d1f2f9fdbbdab4fa53ff6447b283b56abdcbbd29610b56d42b44b150",
+      "translated_at": "2026-10-16T12:37:07.956431+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/qwen38-a95b-h20-day0.md": {
+      "source_sha256": "d63920b054f8eb42c3284bb4c086c03ed683da90c875eebf8152861a4c128d06",
+      "english_sha256": "8515a3d3defeb147a9738b4865a655a33eff8287aa7d2740a730360b4a7191c4",
+      "translated_at": "2026-10-16T09:55:57.862768+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/aibrix-qwen-l20-production.md": {
+      "source_sha256": "45b3a528e576142cdf77f67c90b8b7b7de939bad1f82d33e21471ceeabf02fb4",
+      "english_sha256": "d2f6980a94388c4fe0176ea9a12253decece5e0bf060e32fd1b428a3844232c3",
+      "translated_at": "2026-10-16T12:37:50.124060+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/scheduling/koordinator-node-qos-runtime-hooks.md": {
+      "source_sha256": "b51bbf671fa02371d7e0277e07ed4a8b6eaf45f6710a05d5863cb29bc814f277",
+      "english_sha256": "18f0fa546f59dfe5f5b2dbaf2fd60e2ff40a132e35e3865f341b2aa8fe8c0763",
+      "translated_at": "2026-10-16T09:57:14.003248+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:51.847522+00:00"
+    },
+    "ai-k8s/cluster/kubevirt-guest-kubernetes.md": {
+      "source_sha256": "86fafd8e4514c578ca697ca006ffa10f380933ed335d95b801faff7b03825054",
+      "english_sha256": "f647d7d8b9f71a6fe73dbbb5513a5b1625c5a9d6ff757fa2d591477fcb98f974",
+      "translated_at": "2026-10-16T12:38:44.324145+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/harnessrouter-overview.md": {
+      "source_sha256": "d5791db88919396e806bbfbba04ebb5788718db31cd6f2a89ae94b4b1ef79fa8",
+      "english_sha256": "2d3db731694b8ccb69591a3c44b52c3be73a9b032ee5e8951a5e2ed306ae159b",
+      "translated_at": "2026-10-16T12:39:08.570097+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:49.956052+00:00"
+    },
+    "ai-k8s/rag-agent/internal-agent-app-publishing.md": {
+      "source_sha256": "d8626284a13e1f06f2ca34ae0e778a2fb54ba55b9819cc51f25656929c9b1d1a",
+      "english_sha256": "6cddb720b53f423b73592907e916e341a29d06c0ffa2bc3a879fbbc751646342",
+      "translated_at": "2026-10-16T10:03:25.665526+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:50.122810+00:00"
+    },
+    "ai-k8s/practices/qwen38-flash-next-sglang-day0.md": {
+      "source_sha256": "89f0c66f8489dd2aec298d8f4d6abe34001d6eb7f65b4cb945e253e77149f3a4",
+      "english_sha256": "7b2b6bebfdf6866fc6b2cbd8e61756c5de18d7fc722b56624aef9b9c9bb01c41",
+      "translated_at": "2026-10-16T10:03:46.436976+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/scheduling/koordinator-colocation.md": {
+      "source_sha256": "6ddaaf6d1b6fa19135acd327071d627b22380959bbf42067c97a7d2c7c2aa99d",
+      "english_sha256": "48879fb139a908d2c23ad1dd31060793f16b2f5e968fa8279020c7621d237a07",
+      "translated_at": "2026-10-16T10:03:49.840951+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:51.332496+00:00"
+    },
+    "ai-k8s/practices/large-scale-kubernetes-monitoring-tsdb.md": {
+      "source_sha256": "c6df31089571c59424ea81b25e5d8b04cd5e9e877f67a882294fc2122577c55a",
+      "english_sha256": "2fc60018e82a98f9baf6f82b982356c91f1f2d45c58c5e899871455ab1504ef7",
+      "translated_at": "2026-10-16T10:40:12.309375+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/opentelemetry-kubernetes-fundamentals.md": {
+      "source_sha256": "b71e8b0e008b5e6ac701388043e049afa441fd90fbfee7ccad82ffb8d0ad0c55",
+      "english_sha256": "0f2b499261d4bb13769e6dc4b1ef804129b481af16b0eb4c4d63cf48a5b870e5",
+      "translated_at": "2026-10-16T10:57:32.549938+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/training/kubernetes-domain-sft-community.md": {
+      "source_sha256": "8fd93df58a1fa09fda03c3d8674be2631c8f2d487dba92d48306e45e8756aaa3",
+      "english_sha256": "26c72980fa6c253e635eba297b787943c9ceab3d03f606fd45562cc3677439a6",
+      "translated_at": "2026-10-16T10:57:33.393599+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:32:57.852878+00:00"
+    },
+    "ai-k8s/practices/opentelemetry-kubernetes-components-grafana.md": {
+      "source_sha256": "2834995c47a09aba83cb86fe74f5bda41f47d3e9e70b2f0749a2120fe2914117",
+      "english_sha256": "fc95ae368a39832b9939a7b6c1b749eddb14f917c8db3915e311dd211f1705f8",
+      "translated_at": "2026-10-16T12:39:18.873391+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "k3s-upgrade/report.md": {
+      "source_sha256": "8d5fef9ff7ee344fd3f9d885a5daf87c0c67e7042deec97f6a71199b302ac1a2",
+      "english_sha256": "848665b43a01fd6999e431924f64a8c258cc98019d403e41b664f9bbb55a6ce3",
+      "translated_at": "2026-10-16T11:16:42.125713+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:52.181590+00:00"
+    },
+    "ai-k8s/ray-llm-platform.md": {
+      "source_sha256": "0f1ee56f93a7df12c94315bec42f2eb47a66edefc78c5ff193d795ccf5d82044",
+      "english_sha256": "631b0c7ba66333be801aa872d69e25d74bc69a9d9d2ea067b928b324d3600cf3",
+      "translated_at": "2026-10-16T11:16:46.684513+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/aibrix-routing-cache-tradeoffs.md": {
+      "source_sha256": "7315098af002683fc71d00ff986f561bf1eafac137632cc38a73a5cb0b9e1bc6",
+      "english_sha256": "c0ea871b928662962678f25b3f438e21a6db7ac19b65d91775da39545c3a9cf7",
+      "translated_at": "2026-10-16T11:17:14.971411+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:48.506300+00:00"
+    },
+    "ai-k8s/practices/qwen-image21-l20-benchmark.md": {
+      "source_sha256": "b9d3eeabf26943f687ab021d7963b34f19f0b99298f3a0c1751e71831ff56e81",
+      "english_sha256": "72ae51c5bf51c10d71980f083ece4da82e2fd884ebb57e56f753b69cfd68cacc",
+      "translated_at": "2026-10-16T11:17:58.872198+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md": {
+      "source_sha256": "15ec65b6096686ab7724293f85bc486c1798ebf4e6162043c11636892c73a870",
+      "english_sha256": "9a331ab042009ee75b5195b0616b8be7b89bd962f8f205791307f889623bb7f9",
+      "translated_at": "2026-10-16T11:18:52.486036+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:50.612885+00:00"
+    },
+    "ai-k8s/practices/llm-cold-start-optimization.md": {
+      "source_sha256": "3b1753c63955bdbc85a0608be429218c429b6a31acd5748c528d3f431163ace4",
+      "english_sha256": "4d9bd1068e58211f112f4d7b2526180f1a1ebc4dd61497c78d862ef04c124f5f",
+      "translated_at": "2026-10-16T11:19:47.951621+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/harbor-agent-evaluation-framework.md": {
+      "source_sha256": "c0b5205f266134e0ea57a226536ad2c55cc10674924ee7c96006d14a19557453",
+      "english_sha256": "6ec4ba3790fec2b6aeb712ddaf654d5ef52bda8e0ae1d67dda6370c5b51457d4",
+      "translated_at": "2026-10-16T11:21:12.137061+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/jev-system-one-model-overview.md": {
+      "source_sha256": "44f0383b72a8d9eb2bc956f3591bccca6ce25f19f998c7bc6829df035ff11a53",
+      "english_sha256": "48af997574205b86c11a088595a881dbe240555f7dcf0d0a74c780f0b9154c64",
+      "translated_at": "2026-10-16T12:42:56.053170+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/data/big-data-on-kubernetes.md": {
+      "source_sha256": "2b5f0c5658bff8b3bf4536f0be20f044f4884df1b5642d776cddb669539eaa25",
+      "english_sha256": "b5ffe3f3d128a1d8f831a1dcdaa5361ebbe6ce42f053cd70a5a62e8169fcfb8c",
+      "translated_at": "2026-10-16T11:23:50.754636+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:47.918225+00:00"
+    },
+    "ai-k8s/training/sft-concepts.md": {
+      "source_sha256": "13188d5b6b7201eff4d7aded0f5d26462c775cac644f6f6881d7440a1975880d",
+      "english_sha256": "c2191c9b956ab97d11c60631e08f6e72e398122b354b3f20e19d5632b69ea440",
+      "translated_at": "2026-10-16T11:24:37.946057+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/agent-long-running-durable-execution.md": {
+      "source_sha256": "afe5faa514b13cedc02ad03afd6168e1152a122467a612bf57ad95797f10807e",
+      "english_sha256": "eaf1599bac962e63bf6bbd88ff67138aca86865a0aa254d63fc021472a363159",
+      "translated_at": "2026-10-16T11:24:43.882594+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/distributed-serving.md": {
+      "source_sha256": "f830654f99c686434ac37a508c0241c9ac157b8cf07a48bfd48d510a28ceef9e",
+      "english_sha256": "d96d115e73bf191d95fad11abe017c2f0df7122f622dd37a7e217a75f4ce8d7f",
+      "translated_at": "2026-10-16T11:26:34.378491+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/agent-memory-technology-overview.md": {
+      "source_sha256": "b173cb79add3ca0dd9cbf9c213f8775c5800c3d912e3f339517c3fd8ff363d34",
+      "english_sha256": "3ca165cb1a32e2d64f939886ebfebb06d0f6ff424857fcf8639108c1ecac2252",
+      "translated_at": "2026-10-16T12:42:12.669107+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/contiv-ovs-cilium-network.md": {
+      "source_sha256": "7c8f5259d98247cafc1e50512fad038b4ba5edd88d76ade413a69fb1531a382d",
+      "english_sha256": "b0c4d890b58a1ff6dc283268b348869b9c54380cafd69d50cb3f4d9e3ca29603",
+      "translated_at": "2026-10-16T11:28:15.391839+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/data/model-artifacts.md": {
+      "source_sha256": "f74cc5b8379a27357b4a67daac2a2410ef37085c9ce5d4514fd38fdb235af231",
+      "english_sha256": "17bd787cc97cb2e0b85273cbf97feec6a7795d7a0fd2fb3a1f7ec0f293540b0c",
+      "translated_at": "2026-10-16T11:29:21.554071+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/kubevirt-rbd-notebook.md": {
+      "source_sha256": "b061812c9d4346ce3bfc2a8f3cd25ea60ce085d002fa12abf0c5f1046a56c8ed",
+      "english_sha256": "491180e7b3afd4e7ae55475591af7f46519a2ca13555140b6be07607afa6311b",
+      "translated_at": "2026-10-16T11:29:55.013911+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/agent-harness-technology-overview.md": {
+      "source_sha256": "fef0c04b14178f38477b0f3447a834ded7240b564eb1c35059c9e77834e25b6a",
+      "english_sha256": "4f314a253dcd8e53c88865f80f28b7286fcde4a23b9241dadb46255620ad1d8f",
+      "translated_at": "2026-10-16T12:43:57.636371+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/kube-apiserver-load-balancing.md": {
+      "source_sha256": "f042303b377fa78a4490607bce06439698631e761a54b68f090ec32508764035",
+      "english_sha256": "c2009fecb5073ad0cbab16082af69f8e73751860488cac6b3e946033857c1a4d",
+      "translated_at": "2026-10-16T11:32:33.800557+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/openclaw-enterprise-control-plane.md": {
+      "source_sha256": "db112eec11dbb77e9ea2774b6bcc3b96cdbde66011389b3e0848ebf1f551bb33",
+      "english_sha256": "19fc8a64ac39fb79f70a397f824ec36bc92606f22382770ca44051524dc5c5a4",
+      "translated_at": "2026-10-16T11:32:45.891422+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/cluster/multi-cluster-ai.md": {
+      "source_sha256": "63d536bb54c36884ac1e228296c69b7fca2f04ee3089ffe97a681e493b6fb33a",
+      "english_sha256": "670de08f5443af3357719054ef057da8fd04bf99e40ef73e91887977942fac85",
+      "translated_at": "2026-10-16T11:32:57.873158+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/agent-sandbox-selection.md": {
+      "source_sha256": "aa43f9c1fa449b7b5a294a963bcbaf442c9041bdb503fd963ff8f63555c78481",
+      "english_sha256": "309ed3654a7ebde8ddb267cae53f576a5fa874e9215c34b033be40a15ee36a86",
+      "translated_at": "2026-10-16T11:34:05.131342+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/langfuse-langgraph-overview.md": {
+      "source_sha256": "0de180e355fb09a0485c2146b232802793c5cc6c0721254220e3802642d66f6e",
+      "english_sha256": "3ef4406f2961a33d8793d5f3498df7f683fea563f09d2c554324370b4feed9f8",
+      "translated_at": "2026-10-16T12:45:17.190838+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:21:40.441282+00:00"
+    },
+    "ai-k8s/practices/large-scale-kubernetes-scheduler-optimization.md": {
+      "source_sha256": "230975d6ea9884fabd2fb284279eb7ffff8894f05c086106b8dea7133e3d0521",
+      "english_sha256": "7edd2660ad1ea8caa86007886d9f75590248107c59770198c2add39363bc490a",
+      "translated_at": "2026-10-16T12:16:00.758596+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/deployment.md": {
+      "source_sha256": "4e53a584eee8c7d22bde566d06e8d163a3e197cafeae361d9e9278a3c84545d5",
+      "english_sha256": "d3432ca844e51adacb23532873b2ec6124f56dc4ef22096c5baeaeb067c9014f",
+      "translated_at": "2026-10-16T12:17:20.274071+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/gpu-failure-atlas.md": {
+      "source_sha256": "305f4798150306841434682ddf4122f5c9a647429eb928b105077a3131628d5d",
+      "english_sha256": "a2fad6f4784f1cd64a31013b5d7ac017d73ab65ab24605698813bbb0cd14e65b",
+      "translated_at": "2026-10-16T12:17:20.287011+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/test-report.md": {
+      "source_sha256": "0011b9e3bba277009c79349ac7ca108a9d31c3bc3bedcc835bed9daf6c758a01",
+      "english_sha256": "536b34df16c516144d3fe5c115990f5198b41e0fca744bec43345a0b3a354ced",
+      "translated_at": "2026-10-16T12:17:29.172689+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/firecracker-kubernetes-lab/kata-firecracker-runtimeclass.md": {
+      "source_sha256": "1d515a18660632c19fcbeff2c92a7f7631f62eddf53445fbe64d1317e152e81a",
+      "english_sha256": "114550f89ea01d73e53adcd5fe2f0aac87d03d7810d1e3fd3c5873f5f20353f1",
+      "translated_at": "2026-10-16T12:17:29.193898+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/volcano-scheduler-enterprise-limits.md": {
+      "source_sha256": "980344b928650f3c860dd62b5c2fa016cb260c5d0c4ee91fc9aae3998fb93551",
+      "english_sha256": "4eb47c0c10280aff9ba6939150852fef82168abd346171a490eb7e655cce30da",
+      "translated_at": "2026-10-16T12:17:29.206501+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/local-testing.md": {
+      "source_sha256": "cd13fb2f688e7b1a58c8846a681597007e5237948fc7c963a7e5a830460d8dd9",
+      "english_sha256": "c49db0b759dc45c1c34493fa2ca424f001cd4e763b8a4239b6c03040f5212fd2",
+      "translated_at": "2026-10-16T12:17:40.268462+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/openrouter-overview.md": {
+      "source_sha256": "9e85d678a2c58bf5bd6a994a7bf7f9be53701ac6f681fc116e04d8c62b471352",
+      "english_sha256": "f4646d53ef53acba26014c45d68bb0440b803b25ea79a053e97db12786938dca",
+      "translated_at": "2026-10-16T13:15:36.798858+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/deepseek-harness-runtime-containerization.md": {
+      "source_sha256": "294f88135adb98b6c06ca072b538ccd9e40649b79a12bf64c993db6b4b24f8d1",
+      "english_sha256": "749957dda8072c82fe673553aec8ce765141b2fdd696b0ca8fe455b303cebc5a",
+      "translated_at": "2026-10-16T13:15:44.014482+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/cubesandbox-agent-adapter-v06.md": {
+      "source_sha256": "6dbb1839b8bd89b3321803e06436358c9d25e78e1f222dbc7a33d8df443b72b0",
+      "english_sha256": "8789813bfe884825e7baf5f2525f0c29c75be2dabc1780ce8d60c0aa301e93d7",
+      "translated_at": "2026-10-16T12:18:32.213583+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/openclaw-2-real-world-review.md": {
+      "source_sha256": "794482b09378935bd06764f23518ec9d2bf79efe2626fa169c5de1b5157b99f1",
+      "english_sha256": "48cb218a0d7ee03fd4249cb241aef9d052d6810826b7a2ac8b1135ebccbf88cf",
+      "translated_at": "2026-10-16T12:18:32.238568+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/koordinator-webhook-multireplica-cert-race.md": {
+      "source_sha256": "0111ad1f0bbeae6f9af680f0e20e09a2ddc14eb8349587c1a56163b521986a21",
+      "english_sha256": "e33185ca98bfcb77d0f425ba0705c12e45e1f1a62efd0ccf6e6ef732bd912b14",
+      "translated_at": "2026-10-16T12:19:05.681124+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:48.899616+00:00"
+    },
+    "ai-k8s/practices/opentelemetry-kubernetes-practice.md": {
+      "source_sha256": "2b32ae89508a33739166cb48e686205d9768117867333423d5efdbd5d2bef577",
+      "english_sha256": "db4278735b6245f7038720a6ca910e3643301383271ca77b46fa87137295f0bf",
+      "translated_at": "2026-10-16T12:19:38.020733+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/data-storage.md": {
+      "source_sha256": "9f8a7e404ce2cedd6b5dd4fff7e77a3c65778e222fcba3493b28a4017f3b0cf2",
+      "english_sha256": "a2e4d025764690934d31cc45277d970410d44d5521130a9477c57124893e9a64",
+      "translated_at": "2026-10-16T12:19:44.067828+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/cubesandbox-kubernetes-practice.md": {
+      "source_sha256": "cf3466ac46080b4650965cfce6e41c98f737cb827f0c6f73c61ff24d42d713e1",
+      "english_sha256": "6d8e2477a4fe28e34bfdc6bb53d2734c8423ed2caa4dadce382aeed60cb1ea4a",
+      "translated_at": "2026-10-16T12:22:02.638256+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/grok-bot-overview.md": {
+      "source_sha256": "5d38c67f5fa198977c8755a2b6ac53b43bfac2edaccb9cbeeec46e27a97c095f",
+      "english_sha256": "6bfb9019465b4f997131e37327fb608950cb96a7133e7b5475e437b65322eaa2",
+      "translated_at": "2026-10-16T13:16:20.624472+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/kubernetes-fleet-reliability.md": {
+      "source_sha256": "66e6d4ed2ac26709b51ff16eea74dfc6d0e77890e0bdca1c33d24cd470493689",
+      "english_sha256": "5003d4225a830ae0d86bd3db82bc8b7ec9840d24057e32447985efac72e9f358",
+      "translated_at": "2026-10-16T12:23:33.924715+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:49.152627+00:00"
+    },
+    "ai-k8s/inference/higress-ai-gateway.md": {
+      "source_sha256": "9ca41230beeebfec1afa9d27870ca3b6f8709330759d9275bd51b51f0e983f86",
+      "english_sha256": "c289fa3e155989833ec76fa135a7aa57dfaa69da7c2c8dcabc12a9e11dcffd48",
+      "translated_at": "2026-10-16T12:23:52.044563+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/apf-isolation-case.md": {
+      "source_sha256": "adf2f98ec733f3f22186dd9f276f370db3778d04258df0003e1440df4137d628",
+      "english_sha256": "d2414b5949207d674b5db3ebd018349e0bb357997acf5d33ed77cf6ff7ee86a5",
+      "translated_at": "2026-10-16T12:24:24.198799+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/deepseek-v41-flash-h20-day0.md": {
+      "source_sha256": "478104913205292e2d21063cd3340be043944a538931f105aff3bb6146b308b8",
+      "english_sha256": "47bfd7e2beffed10789c9f7f70a14b622bd99dda5ec344bb8f6430e791fc8c39",
+      "translated_at": "2026-10-16T12:37:50.194962+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/tokenhub-overview.md": {
+      "source_sha256": "bbf3150a39f87ed449ce822dd2b917642a5f988845c6d6c3d4c4f7ec6426004e",
+      "english_sha256": "5085c09aa224196c6eea44387a27dde7028030f95db346a0fda4bb88b5589842",
+      "translated_at": "2026-10-16T12:40:19.972714+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/openclaw-enterprise-kubernetes-practice.md": {
+      "source_sha256": "185ff03bb0fbe027eb25cb9246841521636d8925c6d8e66dbf5640af928a1706",
+      "english_sha256": "4399a2d492543dbe7995f3df818889d2970e9f5795877d82b3ca5a6dd297cd50",
+      "translated_at": "2026-10-16T12:43:09.236100+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/hiroute-overview.md": {
+      "source_sha256": "9a83ad83d06351f0f1473826d491d557c6f692964987ac19350eb9642fea126f",
+      "english_sha256": "e41596dd526fea415e21f515ffdc042d86d4e689023531183410c3acd35e328a",
+      "translated_at": "2026-10-16T12:45:29.824445+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md": {
+      "source_sha256": "4b43dadc2d3a593b3e47213dba1ff5b71762298553d882775a70e441e11ddbb1",
+      "english_sha256": "15cf7fe54ae67de941adcfaf2ce01f0ec22df2a5bdcfc7e2881035c4e3b6971b",
+      "translated_at": "2026-10-16T12:48:16.566036+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/qwen38-27b-day0.md": {
+      "source_sha256": "bf55a13d194fb6afeca0bfd8682cf9ee71f8073e1fe81cac112a31accd8d4f9f",
+      "english_sha256": "356f0eadfe62d6d19ca86de13461e7e5629994222b1eeabeb28c1c61b86d2296",
+      "translated_at": "2026-10-16T12:49:39.617069+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/agent-landscape-2026.md": {
+      "source_sha256": "e06f0f7530b3773109680c89911ae9ef61e3b080f5a983790becd9e945fe1df7",
+      "english_sha256": "fc22014305538fc7967e6273543523ea438daeac878cf25d26383734b7285ac9",
+      "translated_at": "2026-10-16T12:49:41.348188+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/inference/kv-cache-overview.md": {
+      "source_sha256": "0cb47eb9cd58f672a29cf6512f7e2a73088e2226ff643043040ac225ef9ed386",
+      "english_sha256": "c95dee643f929a815674a86fd1f723ad052101a9ab9a4652688a63d70cde53ea",
+      "translated_at": "2026-10-16T12:50:44.406165+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/cluster/karmada-vs-virtual-kubelet.md": {
+      "source_sha256": "c0d719d86503e4ee274afcceee2592db23a450c20695d86ab4e144cf6f3cabbd",
+      "english_sha256": "cc762810515378d6d9cc937057900d99a449165bda26eea96eb0942779f0cdf9",
+      "translated_at": "2026-10-16T12:52:14.107808+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:14:47.516986+00:00"
+    },
+    "ai-k8s/practices/minimax-h3-h20-benchmark.md": {
+      "source_sha256": "0ec9891b10c5f7ca28b37409901d55bdf34d69916e9f0a069476f989deb9d5d5",
+      "english_sha256": "b7e1a383074a93f1e062aa4ffb02d99568e02e2d6bbc9956f0c6d2cbe002acda",
+      "translated_at": "2026-10-16T12:52:38.546955+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:21:40.964352+00:00"
+    },
+    "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md": {
+      "source_sha256": "c8e430fb620ea566b8094b018c143188343fca8a0576fc6f5c7e86bab81098c8",
+      "english_sha256": "4893255fba63def1f64b808fd1f42e0ddc4ca79d080ae1faeb45f469b344228e",
+      "translated_at": "2026-10-16T12:53:27.040127+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/large-scale-kubernetes-optimization.md": {
+      "source_sha256": "db0f44bad3fe25d5a4e80e890ac6eb7bea03b54405e67896bddaf335c84f33c2",
+      "english_sha256": "7d18524bfbf6981bfd706350e1dc1abbeb58d8987190a935ed5ee5e724199412",
+      "translated_at": "2026-10-16T12:54:32.958087+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md": {
+      "source_sha256": "7ba9bce74daab61acf693dada00238dac07b867a90249fa6fabb60ece920c5a8",
+      "english_sha256": "fd7b9844b4a114fbeb48e53ba78a07f2280f1d937bf5e80cc35cd9a6d927664b",
+      "translated_at": "2026-10-16T12:58:47.678256+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/aibrix-existing-cluster.md": {
+      "source_sha256": "0d7266173cdf9abd528af8d1d3d836a9478beb29502b4dbf35993b8e6490072a",
+      "english_sha256": "f08a35d4c6fb005118e1c24e66966e9e2f94cfe2d704d8a141cdd67c32d16604",
+      "translated_at": "2026-10-16T13:06:13.561788+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/rag-agent/agent-evaluation-overview.md": {
+      "source_sha256": "b106307a0961ee9fd0397509f31d30dbef11ff0621f839f4d4d0b2f307f3494c",
+      "english_sha256": "58b3b2f6beee3275ab0acaf5ba62b7801ad96fe0a5c77700eedaca392d2c3951",
+      "reviewed_at": "2026-10-16T13:14:49.728461+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/nccl-unhandled-cuda-error-host-memory-oom.md": {
+      "source_sha256": "d123e0769b0fc2fdd45aeba98998f035391cd321a78146ec8842da98aa0edb67",
+      "english_sha256": "3e5369d5ae67634375a98d2ccfc26d774162c47dd4bf9d30f35ba0e583784d00",
+      "translated_at": "2026-10-16T13:15:18.661184+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/training/distributed-training-frameworks-recovery.md": {
+      "source_sha256": "db60f3d2558f91e877486f1b42f38731ee256cd92d2313756758c44f6785d640",
+      "english_sha256": "8747fe5611babfcb131a2aa9c73df0e02fc64bfc1bd5fec388a0315f21c7440e",
+      "translated_at": "2026-10-16T13:15:53.172225+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md": {
+      "source_sha256": "72b973e72e8222d7d016c5c70710174eca36e6ba35f7876137247b8e94a1e5c0",
+      "english_sha256": "868a57f0203f5d17bf93f3e2777a46c7722bd0d701bcef532eb0f4dc35eaebb7",
+      "translated_at": "2026-10-16T13:16:26.196491+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/kubevirt-local-desktop-lab.md": {
+      "source_sha256": "a6ce08e647948a530e96466ee0c166d1d610b79e64d0894b93eae9687e43211f",
+      "english_sha256": "9559573a61711e2b06bd8adb5f2bc2304f20a4f8f3257c71e38314038787c6e8",
+      "translated_at": "2026-10-16T13:17:50.314043+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md": {
+      "source_sha256": "df7822690b375552535c275449ceb3a0135151a1e93daf325b7a132b63c5d45a",
+      "english_sha256": "7a5ebb7aa667af2c5275458661ae1e8d37b909a70c07b58acfa874b35ba9373a",
+      "translated_at": "2026-10-16T13:18:37.482894+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/practices/rbg-existing-cluster.md": {
+      "source_sha256": "e6d75e5be8e36cc8c2de5e1a5161bca6c5062d1f924484f1981884e326647660",
+      "english_sha256": "c2fedc1b14d5c71d3687837aad87059ebf7ed3a82caecaf700a59533f1a96900",
+      "translated_at": "2026-10-16T13:19:32.196385+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-16T13:30:07.379383+00:00"
+    },
+    "ai-k8s/practices/gpu-resource-bank-tidal-platform.md": {
+      "source_sha256": "3590506bc751f4768400a805693af79c26807f601d78fa83f2c4367d6cc78901",
+      "english_sha256": "aafeaa3a5dda3cb672429466c6b405f39fef215d84fc3e242375210dabd96613",
+      "translated_at": "2026-10-16T13:20:19.137156+00:00",
+      "method": "model-assisted translation; structural checks passed",
+      "review": "pending editorial review"
+    },
+    "ai-k8s/development/gpu-notebook-platform.md": {
+      "source_sha256": "a1105121ee717c902f9a13ffba2dc0c58a5ab86dcecb98bb3f601d86fa206565",
+      "english_sha256": "ff5db466ee9fda83ce7293f70478536e55a315c8478f6b317fe5c6cbe6c3f675",
+      "reviewed_at": "2026-10-16T13:21:40.168984+00:00",
+      "review": "reviewed against source"
+    }
+  }
+}

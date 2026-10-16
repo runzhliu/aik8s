@@ -1,0 +1,65 @@
+<svg id="visual-qa-15" xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860" role="img" aria-labelledby="title desc">
+  <title id="title">Ling-3.0-flash Long-Context Correctness Gate</title>
+  <desc id="desc">SGLang and vLLM both pass at three Needle depths for 32K, 64K, 128K, and 256K.</desc>
+  <style>#visual-qa-15 .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}#visual-qa-15 .sub{font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}#visual-qa-15 .axis{font:400 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}#visual-qa-15 .value{font:700 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}#visual-qa-15 .legend{font:700 18px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}#visual-qa-15 .panel{font:700 24px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}#visual-qa-15 .note{font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#596579}
+  </style>
+  <rect width="1500" height="860" fill="#fbfcfe"/>
+  <text class="title" x="72" y="66" data-translated-label="true">Long-context correctness: both engines pass 12 / 12</text>
+  <text class="sub" x="72" y="103" data-translated-label="true">32K / 64K / 128K / 256K · Needle depth 10% / 50% / 90% · exact unique-string match</text>
+  <rect x="1060" y="108" width="24" height="24" rx="5" fill="#2563eb"/>
+  <text class="legend" x="1096" y="126">SGLang</text>
+  <rect x="1245" y="108" width="24" height="24" rx="5" fill="#e4572e"/>
+  <text class="legend" x="1281" y="126">vLLM</text>
+  <rect x="72" y="160" width="150" height="100" rx="18" fill="#172033"/>
+  <text x="147" y="221" text-anchor="middle" style="font:700 30px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">32K</text>
+  <rect x="248" y="160" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="292" cy="200" r="18" fill="#2563eb"/>
+  <text x="292" y="207" text-anchor="middle" style="font:700 20px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">✓</text>
+  <text class="panel" x="328" y="207">3 / 3 PASS</text>
+  <text class="note" x="292" y="238" data-translated-label="true">Median time across three positions: 1.16s (execution evidence only)</text>
+  <rect x="838" y="160" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="882" cy="200" r="18" fill="#e4572e"/>
+  <text x="882" y="207" text-anchor="middle" style="font:700 20px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">✓</text>
+  <text class="panel" x="918" y="207">3 / 3 PASS</text>
+  <text class="note" x="882" y="238" data-translated-label="true">Median time across three positions: 1.42s (execution evidence only)</text>
+  <rect x="72" y="285" width="150" height="100" rx="18" fill="#172033"/>
+  <text x="147" y="346" text-anchor="middle" style="font:700 30px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">64K</text>
+  <rect x="248" y="285" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="292" cy="325" r="18" fill="#2563eb"/>
+  <text x="292" y="332" text-anchor="middle" style="font:700 20px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">✓</text>
+  <text class="panel" x="328" y="332">3 / 3 PASS</text>
+  <text class="note" x="292" y="363" data-translated-label="true">Median time across three positions: 1.72s (execution evidence only)</text>
+  <rect x="838" y="285" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="882" cy="325" r="18" fill="#e4572e"/>
+  <text x="882" y="332" text-anchor="middle" style="font:700 20px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">✓</text>
+  <text class="panel" x="918" y="332">3 / 3 PASS</text>
+  <text class="note" x="882" y="363" data-translated-label="true">Median time across three positions: 2.50s (execution evidence only)</text>
+  <rect x="72" y="410" width="150" height="100" rx="18" fill="#172033"/>
+  <text x="147" y="471" text-anchor="middle" style="font:700 30px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">128K</text>
+  <rect x="248" y="410" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="292" cy="450" r="18" fill="#2563eb"/>
+  <text x="292" y="457" text-anchor="middle" style="font:700 20px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">✓</text>
+  <text class="panel" x="328" y="457">3 / 3 PASS</text>
+  <text class="note" x="292" y="488" data-translated-label="true">Median time across three positions: 4.49s (execution evidence only)</text>
+  <rect x="838" y="410" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="882" cy="450" r="18" fill="#e4572e"/>
+  <text x="882" y="457" text-anchor="middle" style="font:700 20px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">✓</text>
+  <text class="panel" x="918" y="457">3 / 3 PASS</text>
+  <text class="note" x="882" y="488" data-translated-label="true">Median time across three positions: 6.06s (execution evidence only)</text>
+  <rect x="72" y="535" width="150" height="100" rx="18" fill="#172033"/>
+  <text x="147" y="596" text-anchor="middle" style="font:700 30px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">256K</text>
+  <rect x="248" y="535" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="292" cy="575" r="18" fill="#2563eb"/>
+  <text x="292" y="582" text-anchor="middle" style="font:700 20px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">✓</text>
+  <text class="panel" x="328" y="582">3 / 3 PASS</text>
+  <text class="note" x="292" y="613" data-translated-label="true">Median time across three positions: 12.58s (execution evidence only)</text>
+  <rect x="838" y="535" width="565" height="100" rx="18" fill="#ffffff" stroke="#dfe5ee" stroke-width="2"/>
+  <circle cx="882" cy="575" r="18" fill="#e4572e"/>
+  <text x="882" y="582" text-anchor="middle" style="font:700 20px Arial,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;fill:#ffffff">✓</text>
+  <text class="panel" x="918" y="582">3 / 3 PASS</text>
+  <text class="note" x="882" y="613" data-translated-label="true">Median time across three positions: 16.71s (execution evidence only)</text>
+  <rect x="72" y="690" width="1356" height="105" rx="18" fill="#eef3f9"/>
+  <text class="panel" x="104" y="728" data-translated-label="true">OpenAI-compatible feature smoke test</text>
+  <text class="sub" x="104" y="762">Models · Thinking On/Off · Streaming · Multi-turn · Tool Call：SGLang PASS / vLLM PASS</text>
+  <text class="note" x="1428" y="830" text-anchor="end" data-translated-label="true">Needle timing includes sequential execution state and is not used for engine performance ranking.</text>
+</svg>

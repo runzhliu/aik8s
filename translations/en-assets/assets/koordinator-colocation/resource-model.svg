@@ -1,0 +1,55 @@
+<svg id="visual-qa-6" xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Colocation resource model</title>
+  <desc id="desc">Relationship between online workload requests, predicted reservation, actual usage, and resources that can be lent to batch tasks</desc>
+  <defs>
+    <linearGradient id="reclaim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ede9fe"/><stop offset="1" stop-color="#f5f3ff"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#334155" flood-opacity="0.10"/></filter>
+    <style>#visual-qa-6 text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}#visual-qa-6 .muted{fill:#6b7690}#visual-qa-6 .small{font-size:18px}#visual-qa-6 .label{font-size:20px;font-weight:600}#visual-qa-6 .card{fill:#fff;stroke:#d8dfec;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1200" height="675" fill="#f7f9fd"/>
+  <text x="64" y="66" font-size="34" font-weight="700" data-translated-label="true">Colocation does not lend out all "idle" resources</text>
+  <text x="64" y="100" class="muted" font-size="18" data-translated-label="true">Resource reclamation = safe prediction above actual usage, plus a batch task channel that can yield at any time</text>
+
+  <g filter="url(#shadow)"><rect x="56" y="130" width="750" height="480" rx="20" class="card"/></g>
+  <line x1="112" y1="190" x2="112" y2="544" stroke="#aeb9cc" stroke-width="1.5"/>
+  <line x1="112" y1="544" x2="760" y2="544" stroke="#aeb9cc" stroke-width="1.5"/>
+  <g class="muted small">
+    <text x="75" y="548">0</text><text x="69" y="462">25%</text><text x="69" y="376">50%</text><text x="69" y="290">75%</text><text x="58" y="202">100%</text>
+    <text x="115" y="579">00:00</text><text x="303" y="579">06:00</text><text x="491" y="579">12:00</text><text x="679" y="579">18:00</text>
+  </g>
+  <g stroke="#e8ecf3" stroke-width="1">
+    <line x1="112" y1="458" x2="760" y2="458"/><line x1="112" y1="372" x2="760" y2="372"/><line x1="112" y1="286" x2="760" y2="286"/><line x1="112" y1="200" x2="760" y2="200"/>
+  </g>
+  <line x1="112" y1="200" x2="760" y2="200" stroke="#77839a" stroke-width="3" stroke-dasharray="10 8"/>
+  <path d="M112 361 C180 350 220 300 274 322 S365 398 420 354 S511 270 568 306 S664 397 760 339 L760 200 L112 200 Z" fill="url(#reclaim)"/>
+  <path d="M112 361 C180 350 220 300 274 322 S365 398 420 354 S511 270 568 306 S664 397 760 339" fill="none" stroke="#7656d6" stroke-width="4"/>
+  <path d="M112 433 C160 420 190 377 234 402 S313 470 356 440 S415 375 462 418 S531 456 574 405 S647 358 688 409 S731 452 760 421" fill="none" stroke="#1266e3" stroke-width="4"/>
+  <path d="M112 544 L112 433 C160 420 190 377 234 402 S313 470 356 440 S415 375 462 418 S531 456 574 405 S647 358 688 409 S731 452 760 421 L760 544 Z" fill="#dceaff" opacity="0.9"/>
+  <g class="small">
+    <line x1="138" y1="164" x2="176" y2="164" stroke="#77839a" stroke-width="3" stroke-dasharray="8 6"/><text x="186" y="170" data-translated-label="true">Request / Limit</text>
+    <line x1="342" y1="164" x2="380" y2="164" stroke="#7656d6" stroke-width="4"/><text x="390" y="170" data-translated-label="true">Predicted reserve</text>
+    <line x1="630" y1="164" x2="668" y2="164" stroke="#1266e3" stroke-width="4"/><text x="678" y="170" data-translated-label="true">Actual usage</text>
+  </g>
+  <rect x="532" y="225" width="190" height="54" rx="12" fill="#fff" stroke="#cfc5f6"/>
+  <text x="551" y="249" class="label" fill="#6548c7" data-translated-label="true" font-size="16.254138103995988" style="font-size: 16.2541px;">Lendable resources</text><text x="551" y="270" class="muted" font-size="15" data-translated-label="true">Forecast–Request</text>
+  <rect x="500" y="470" width="220" height="46" rx="12" fill="#fff" stroke="#bfd6fb"/>
+  <text x="520" y="499" class="label" fill="#1266e3" data-translated-label="true">Online usage</text>
+
+  <g filter="url(#shadow)"><rect x="838" y="130" width="306" height="480" rx="20" class="card"/></g>
+  <text x="872" y="179" font-size="18.72" font-weight="700" data-translated-label="true" style="font-size: 18.72px;">Three borrowing safeguards</text>
+  <g>
+    <circle cx="886" cy="239" r="22" fill="#e8f1ff"/><text x="879" y="247" font-size="22" font-weight="700" fill="#1266e3">1</text>
+    <text x="924" y="232" class="label" data-translated-label="true">Reserve headroom</text><text x="924" y="260" class="muted small" data-translated-label="true" font-size="14.040000000000001" style="font-size: 14.04px;">Cannot treat Request − Usage</text><text x="924" y="284" class="muted small" data-translated-label="true" font-size="15.584506699147383" style="font-size: 15.5845px;">directly as sellable capacity</text>
+  </g>
+  <g>
+    <circle cx="886" cy="355" r="22" fill="#f0ebff"/><text x="879" y="363" font-size="22" font-weight="700" fill="#7656d6">2</text>
+    <text x="924" y="348" class="label" data-translated-label="true">Borrowers must yield</text><text x="924" y="376" class="muted small" data-translated-label="true">Batch: throttle, evict,</text><text x="924" y="400" class="muted small" data-translated-label="true">retry, or Checkpoint</text>
+  </g>
+  <g>
+    <circle cx="886" cy="471" r="22" fill="#e7f8f2"/><text x="879" y="479" font-size="22" font-weight="700" fill="#078a6c">3</text>
+    <text x="924" y="464" class="label" data-translated-label="true" font-size="16.636172149265374" style="font-size: 16.6362px;">Online SLO takes priority</text><text x="924" y="492" class="muted small" data-translated-label="true" font-size="17.545927167453907" style="font-size: 17.5459px;">On breach: stop lending;</text><text x="924" y="516" class="muted small" data-translated-label="true" font-size="14.040000000000001" style="font-size: 14.04px;"><tspan x="924" y="516">return node resources within</tspan><tspan x="924" y="532.848">seconds</tspan></text>
+  </g>
+  <rect x="870" y="550" width="240" height="38" rx="10" fill="#eef2f8"/>
+  <text x="990" y="576" text-anchor="middle" font-size="17" font-weight="600" fill="#526079" data-translated-label="true">Forecast can err; protect.</text>
+</svg>

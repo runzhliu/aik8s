@@ -1,0 +1,51 @@
+<svg id="visual-qa-5" xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Koordinator control loop</title>
+  <desc id="desc">Workload contract, control plane, node execution, and observability form a closed loop</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8190a9"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#334155" flood-opacity="0.10"/></filter>
+    <style>#visual-qa-5 text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}#visual-qa-5 .muted{fill:#6b7690}#visual-qa-5 .light{fill:#fff}#visual-qa-5 .light-muted{fill:#dbe7ff}#visual-qa-5 .h{font-size:23px;font-weight:700}#visual-qa-5 .b{font-size:18px}#visual-qa-5 .card{fill:#fff;stroke:#d9e0ec;stroke-width:1.5}</style>
+  </defs>
+  <rect width="1200" height="675" fill="#f7f9fd"/>
+  <text x="64" y="66" font-size="30.911107084616777" font-weight="700" data-translated-label="true" style="font-size: 30.9111px;">Koordinator links prediction, scheduling, and protection into a closed loop</text>
+  <text x="64" y="100" class="muted" font-size="15.769367571679783" data-translated-label="true" style="font-size: 15.7694px;">The control plane decides how much to borrow and where to place; the node side continuously corrects and returns resources when online load rises</text>
+
+  <g filter="url(#shadow)"><rect x="448" y="247" width="304" height="170" rx="22" fill="#172e69"/></g>
+  <text x="600" y="292" text-anchor="middle" font-size="24.582836222676857" font-weight="700" class="light" data-translated-label="true" style="font-size: 24.5828px;">Unified resource ledger</text>
+  <text x="600" y="327" text-anchor="middle" font-size="19" class="light-muted">NodeMetric · NodeSLO</text>
+  <text x="600" y="358" text-anchor="middle" font-size="19" class="light-muted">Batch Resource · ElasticQuota</text>
+  <rect x="502" y="379" width="196" height="24" rx="12" fill="#3159ad"/>
+  <text x="600" y="397" text-anchor="middle" font-size="14" class="light" data-translated-label="true">Count capacity once</text>
+
+  <g filter="url(#shadow)"><rect x="70" y="139" width="302" height="154" rx="20" class="card"/></g>
+  <circle cx="112" cy="181" r="22" fill="#e8f1ff"/><text x="112" y="188" text-anchor="middle" font-size="21" font-weight="700" fill="#1266e3">1</text>
+  <text x="150" y="188" class="h" data-translated-label="true">Workload contract</text>
+  <text x="102" y="229" class="b muted" data-translated-label="true">Priority · QoS · Quota · Gang</text>
+  <text x="102" y="258" class="b muted" data-translated-label="true" font-size="14.040000000000001" style="font-size: 14.04px;"><tspan x="102" y="258">Retry, checkpoint, and interruption</tspan><tspan x="102" y="274.848">budget</tspan></text>
+
+  <g filter="url(#shadow)"><rect x="70" y="401" width="302" height="154" rx="20" class="card"/></g>
+  <circle cx="112" cy="443" r="22" fill="#f0ebff"/><text x="112" y="450" text-anchor="middle" font-size="21" font-weight="700" fill="#7656d6">2</text>
+  <text x="150" y="450" class="h" data-translated-label="true" font-size="20.45339390185147" style="font-size: 20.4534px;">Control &amp; placement</text>
+  <text x="102" y="491" class="b muted" data-translated-label="true" font-size="14.956232201533405" style="font-size: 14.9562px;">koord-manager: lendable resources</text>
+  <text x="102" y="520" class="b muted" data-translated-label="true" font-size="14.040000000000001" style="font-size: 14.04px;"><tspan x="102" y="520">scheduler load/topology-aware</tspan><tspan x="102" y="536.848">scheduling</tspan></text>
+
+  <g filter="url(#shadow)"><rect x="828" y="401" width="302" height="154" rx="20" class="card"/></g>
+  <circle cx="870" cy="443" r="22" fill="#e7f8f2"/><text x="870" y="450" text-anchor="middle" font-size="21" font-weight="700" fill="#078a6c">3</text>
+  <text x="908" y="450" class="h" data-translated-label="true">Node safeguards</text>
+  <text x="860" y="491" class="b muted">koordlet / Runtime Hook</text>
+  <text x="860" y="520" class="b muted" data-translated-label="true" font-size="14.040000000000001" style="font-size: 14.04px;"><tspan x="860" y="520">Isolation, suppression, eviction,</tspan><tspan x="860" y="536.848">resource return</tspan></text>
+
+  <g filter="url(#shadow)"><rect x="828" y="139" width="302" height="154" rx="20" class="card"/></g>
+  <circle cx="870" cy="181" r="22" fill="#fff3e5"/><text x="870" y="188" text-anchor="middle" font-size="21" font-weight="700" fill="#d76b00">4</text>
+  <text x="908" y="188" class="h" data-translated-label="true">Feedback &amp; value</text>
+  <text x="860" y="229" class="b muted" data-translated-label="true" font-size="16.809651210504718" style="font-size: 16.8097px;">Online P99 · PSI · OOM · Evict</text>
+  <text x="860" y="258" class="b muted" data-translated-label="true" font-size="14.040000000000001" style="font-size: 14.04px;"><tspan x="860" y="258">Batch task progress · fulfillment rate</tspan><tspan x="860" y="274.848">· net benefit</tspan></text>
+
+  <path d="M372 215 C420 215 416 275 448 297" fill="none" stroke="#8190a9" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M372 475 C420 475 416 407 448 385" fill="none" stroke="#8190a9" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M752 385 C788 407 780 475 828 475" fill="none" stroke="#8190a9" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M828 215 C780 215 788 275 752 297" fill="none" stroke="#8190a9" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M979 401 L979 293" fill="none" stroke="#8190a9" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M828 244 C790 244 787 238 787 214 C787 174 748 142 690 142 L418 142 C390 142 376 154 372 167" fill="none" stroke="#8190a9" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
+  <text x="600" y="626" text-anchor="middle" font-size="17.82645011600928" font-weight="600" fill="#526079" data-translated-label="true" style="font-size: 17.8265px;">Key principle: be conservative when metrics expire, return resources when online SLO is violated, and batch tasks must be recoverable</text>
+</svg>

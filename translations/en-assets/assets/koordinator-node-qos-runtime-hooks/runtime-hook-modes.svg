@@ -1,0 +1,59 @@
+<svg id="visual-qa-10" xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Three modes of Koordinator Runtime Hook</title>
+  <desc id="desc">Compare the call paths, timing, and failure boundaries of Standalone, CRI Proxy, and NRI</desc>
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#71809a"/></marker>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#26364f" flood-opacity="0.10"/></filter>
+    <style>#visual-qa-10 text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#172033}#visual-qa-10 .muted{fill:#65728b}#visual-qa-10 .inverse{fill:#fff}#visual-qa-10 .head{font-size:24px;font-weight:700}#visual-qa-10 .body{font-size:17px}#visual-qa-10 .box{fill:#fff;stroke:#d9e1ee;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1200" height="675" fill="#f7f9fd"/>
+  <text x="60" y="64" font-size="26.924587129168867" font-weight="700" data-translated-label="true" style="font-size: 26.9246px;">The difference between Runtime Hooks lies in when they enter the container lifecycle</text>
+  <text x="60" y="100" class="muted" font-size="18" data-translated-label="true">All three modes can express similar policies, but they differ in startup races, failure scope, and operational cost</text>
+
+  <g filter="url(#s)">
+    <rect x="52" y="145" width="344" height="404" rx="22" class="box"/>
+    <rect x="428" y="145" width="344" height="404" rx="22" class="box"/>
+    <rect x="804" y="145" width="344" height="404" rx="22" class="box"/>
+  </g>
+
+  <rect x="52" y="145" width="344" height="64" rx="22" fill="#edf3ff"/><rect x="52" y="187" width="344" height="22" fill="#edf3ff"/>
+  <text x="80" y="185" class="head" fill="#2563eb">Standalone</text>
+  <rect x="80" y="245" width="122" height="54" rx="12" fill="#fff" stroke="#bcd0fb"/><text x="141" y="278" text-anchor="middle" class="body">kubelet</text>
+  <rect x="246" y="245" width="122" height="54" rx="12" fill="#fff" stroke="#bcd0fb"/><text x="307" y="278" text-anchor="middle" class="body">runtime</text>
+  <path d="M202 272 H238" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="163" y="338" width="122" height="54" rx="12" fill="#172e69"/><text x="224" y="371" text-anchor="middle" font-size="17" class="inverse">koordlet</text>
+  <path d="M307 299 C307 323 279 341 286 352" fill="none" stroke="#71809a" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#a)"/>
+  <text x="80" y="435" class="body" font-weight="700" data-translated-label="true" font-size="14.630746009239354" style="font-size: 14.6307px;">Asynchronous discovery followed by write</text>
+  <text x="80" y="465" class="body muted" data-translated-label="true" font-size="16.413793103448278" style="font-size: 16.4138px;">Few changes; container may start first</text>
+  <text x="80" y="493" class="body muted" data-translated-label="true" font-size="14" style="font-size: 14px;"><tspan x="80" y="493">Suitable for eventually consistent periodic</tspan><tspan x="80" y="509.8">policies</tspan></text>
+  <rect x="80" y="514" width="166" height="26" rx="13" fill="#fff1e8"/><text x="163" y="533" text-anchor="middle" font-size="14" fill="#c55d11" data-translated-label="true">Startup race window</text>
+
+  <rect x="428" y="145" width="344" height="64" rx="22" fill="#f1edff"/><rect x="428" y="187" width="344" height="22" fill="#f1edff"/>
+  <text x="456" y="185" class="head" fill="#7555d9">CRI Proxy</text>
+  <rect x="456" y="245" width="88" height="54" rx="12" fill="#fff" stroke="#cbbdf7"/><text x="500" y="278" text-anchor="middle" class="body">kubelet</text>
+  <rect x="556" y="245" width="88" height="54" rx="12" fill="#7555d9"/><text x="600" y="278" text-anchor="middle" font-size="16" class="inverse">Proxy</text>
+  <rect x="656" y="245" width="88" height="54" rx="12" fill="#fff" stroke="#cbbdf7"/><text x="700" y="278" text-anchor="middle" class="body">runtime</text>
+  <path d="M544 272 H548" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/><path d="M644 272 H648" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="539" y="338" width="122" height="54" rx="12" fill="#172e69"/><text x="600" y="371" text-anchor="middle" font-size="17" class="inverse">koordlet</text>
+  <path d="M600 299 V330" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="456" y="435" class="body" font-weight="700" data-translated-label="true" font-size="14.660250240615976" style="font-size: 14.6603px;">Proxy CRI requests, handle synchronously</text>
+  <text x="456" y="465" class="body muted" data-translated-label="true" font-size="16.324997448198427" style="font-size: 16.325px;">Inject before create; replaces CRI path</text>
+  <text x="456" y="493" class="body muted" data-translated-label="true" font-size="14" style="font-size: 14px;"><tspan x="456" y="493">The proxy becomes part of the node's critical</tspan><tspan x="456" y="509.8">path</tspan></text>
+  <rect x="456" y="514" width="190" height="26" rx="13" fill="#fff1e8"/><text x="551" y="533" text-anchor="middle" font-size="14" fill="#c55d11" data-translated-label="true">May block creation</text>
+
+  <rect x="804" y="145" width="344" height="64" rx="22" fill="#e6f8f3"/><rect x="804" y="187" width="344" height="22" fill="#e6f8f3"/>
+  <text x="832" y="185" class="head" fill="#07876a">NRI</text>
+  <rect x="832" y="245" width="112" height="54" rx="12" fill="#fff" stroke="#a8dfd1"/><text x="888" y="278" text-anchor="middle" class="body">kubelet</text>
+  <rect x="1004" y="245" width="112" height="54" rx="12" fill="#fff" stroke="#a8dfd1"/><text x="1060" y="278" text-anchor="middle" class="body">runtime</text>
+  <path d="M944 272 H996" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <rect x="999" y="338" width="122" height="54" rx="12" fill="#07876a"/><text x="1060" y="371" text-anchor="middle" font-size="17" class="inverse" data-translated-label="true">NRI plugin</text>
+  <path d="M1060 299 V330" stroke="#71809a" stroke-width="3" marker-end="url(#a)"/>
+  <text x="832" y="435" class="body" font-weight="700" data-translated-label="true">Runtime-native callback plugin</text>
+  <text x="832" y="465" class="body muted" data-translated-label="true">Sync OCI Spec &amp; resources</text>
+  <text x="832" y="493" class="body muted" data-translated-label="true" font-size="15.729346970889063" style="font-size: 15.7293px;">Does not change kubelet's CRI endpoint</text>
+  <rect x="832" y="514" width="222" height="26" rx="13" fill="#e7f8f2"/><text x="943" y="533" text-anchor="middle" font-size="14" fill="#067b62" data-translated-label="true">Check runtime support first</text>
+
+  <rect x="176" y="585" width="848" height="42" rx="21" fill="#edf1f8"/>
+  <text x="600" y="612" text-anchor="middle" font-size="14.369529292466718" font-weight="600" fill="#56647d" data-translated-label="true" style="font-size: 14.3695px;">NRI improves call timing; cgroup, resctrl, and kernel capabilities still determine whether isolation actually takes effect</text>
+</svg>

@@ -1,0 +1,34 @@
+<svg id="visual-qa-18" xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">Shared prefix vs. random input comparison</title>
+  <desc id="desc">After four groups of requests share a system prompt of about 4K tokens, the cache hit rate is 50.2%, input and output throughput increase, and TTFT and end-to-end latency decrease.</desc>
+  <rect width="960" height="520" fill="#ffffff"/>
+  <text x="64" y="42" fill="#0f172a" font-family="sans-serif" font-size="24" font-weight="700" data-translated-label="true">Shared 4K system prompt: Radix Cache benefits are measurable</text>
+  <text x="64" y="74" fill="#64748b" font-family="sans-serif" font-size="14" data-translated-label="true">Concurrency 8 · 32 requests · 4 prefix groups · server-side cache hit rate 50.2%</text>
+
+  <g fill="#e2e8f0">
+    <rect x="250" y="112" width="500" height="42" rx="7"/><rect x="250" y="202" width="500" height="42" rx="7"/>
+    <rect x="250" y="292" width="500" height="42" rx="7"/><rect x="250" y="382" width="500" height="42" rx="7"/>
+  </g>
+  <g fill="#2563eb">
+    <rect x="250" y="112" width="332" height="42" rx="7"/><rect x="250" y="202" width="276" height="42" rx="7"/>
+  </g>
+  <g fill="#10b981">
+    <rect x="250" y="292" width="262" height="42" rx="7"/><rect x="250" y="382" width="204" height="42" rx="7"/>
+  </g>
+
+  <g fill="#475569" font-family="sans-serif" font-size="15">
+    <text x="65" y="138">Input tok/s</text><text x="65" y="228">Output tok/s</text>
+    <text x="65" y="318">P95 TTFT</text><text x="65" y="408">P95 E2E</text>
+  </g>
+  <g fill="#0f172a" font-family="sans-serif" font-size="14">
+    <text x="598" y="138">12.17K → 20.24K（+66.3%）</text>
+    <text x="542" y="228">184.46 → 286.31（+55.2%）</text>
+    <text x="528" y="318">2.28s → 1.09s（-52.4%）</text>
+    <text x="470" y="408">3.06s → 1.82s（-40.7%）</text>
+  </g>
+  <g font-family="sans-serif" font-size="13">
+    <rect x="250" y="464" width="18" height="18" rx="3" fill="#2563eb"/><text x="278" y="478" fill="#475569" data-translated-label="true">Throughput ↑</text>
+    <rect x="372" y="464" width="18" height="18" rx="3" fill="#10b981"/><text x="400" y="478" fill="#475569" data-translated-label="true">Latency ↓</text>
+    <text x="510" y="478" fill="#64748b" data-translated-label="true">Bar length indicates relative improvement, gray track is 100%</text>
+  </g>
+</svg>

@@ -1,0 +1,2451 @@
+{
+  "768c6291162495b8a7c4771cb715c44bc1e27a74c8503b0dc3eee59c5f4f9f1b": {
+    "translation": "Vendor Device Plugin DaemonSet\n  → Discovers devices on each node\n  → Registers resource names with kubelet\n  → kubelet updates Node Capacity/Allocatable\n  → Pod requests integer quantities via resources.limits\n  → scheduler selects nodes with sufficient extended resources\n  → kubelet calls Allocate\n  → Runtime receives device nodes, mounts, environment variables, or CDI device names",
+    "pages": [
+      "ai-k8s/accelerators/device-management.md"
+    ]
+  },
+  "d5cb0b5c825db4c85d07d6142bea02e87195fc31dd7d31f48614de422639509e": {
+    "translation": "Device vendor / Driver\n  └── ResourceSlice: publishes device inventory, attributes, and capacity\n\nCluster administrator\n  └── DeviceClass: defines claimable device classes and selection rules\n\nWorkload author\n  ├── ResourceClaimTemplate: creates a Claim with the Pod\n  └── ResourceClaim: a specific device request\n\nscheduler + kubelet + DRA Driver\n  └── selects, binds, prepares, injects, and reclaims devices",
+    "pages": [
+      "ai-k8s/accelerators/device-management.md"
+    ]
+  },
+  "16e22d5c67fca5f1aaeaeec568e4562221cf1b4d0692fbb33c99480cf3b47020": {
+    "translation": "Managed Kubernetes or K3s\n+ GPU Operator\n+ Job / Deployment\n+ MLflow\n+ Object storage\n+ Prometheus / Grafana / DCGM",
+    "pages": [
+      "ai-k8s/adoption-roadmap.md"
+    ]
+  },
+  "c2ffd17f1c7bc0c1197d044403c42c00fe9e2fd71cf3883303ff26511ef6c2df": {
+    "translation": "Kubernetes + GPU Operator\n+ Kueue\n+ Kubeflow Trainer or KubeRay\n+ Argo Workflows / KFP\n+ MLflow + Model Registry\n+ KServe\n+ Argo CD\n+ Unified monitoring, logging, and policy",
+    "pages": [
+      "ai-k8s/adoption-roadmap.md"
+    ]
+  },
+  "9708ebd7c57a4cc1407e2943fcf311c34ae33e3898541621229dda54e57aed6d": {
+    "translation": "Single training cost ≈ number of GPUs × training hours × GPU hourly price\nEffective training efficiency ≈ actual training compute time / total GPU allocation time",
+    "pages": [
+      "ai-k8s/adoption-roadmap.md"
+    ]
+  },
+  "ac0a0d7a0c6fe94400b0afaa8ea087a8e2f26ed44fd152c7ef8eb9c25451ca27": {
+    "translation": "Unit cost = total GPU cost / successfully output tokens\nSafe capacity = maximum stable token throughput while meeting target P99",
+    "pages": [
+      "ai-k8s/adoption-roadmap.md"
+    ]
+  },
+  "bc9106e245d9d79a79b3a8358a12c67f30693080408b7708988827e570255a52": {
+    "translation": "User/API\n   │\n   ▼\nAgent Control Plane\n├── Sessions, policies, budgets, approvals\n├── Sandbox lifecycle\n└── Audit and status\n   │\n   ▼\nIsolated execution environment\n├── Agent Runtime\n├── Ephemeral/persistent Workspace\n└── Controlled tool client\n   │\n   ▼\nTool Gateway / Broker\n├── Identity exchange\n├── Parameter validation\n├── Rate limiting and approvals\n└── External APIs, Git, browsers, databases",
+    "pages": [
+      "ai-k8s/agentic-workloads.md"
+    ]
+  },
+  "92079eceeddac76ef2967e3a96fc7e1a0fcf2de550ca94a870de21c4bfd4a31b": {
+    "translation": "Business outcomes: cost, quality, successful requests, training goals\nEnd-to-end: full training, full inference requests\nFramework components: vLLM, PyTorch, data loading, Checkpoint\nCluster communication: NCCL, RDMA, storage, Pod network\nHardware baseline: GPU, NVLink, PCIe, CPU, disk, NIC",
+    "pages": [
+      "ai-k8s/benchmarking.md"
+    ]
+  },
+  "0ff1be20e0af68d8990afe62a207d61032f1266d2ebdf03e8a3d2b6dcf98bfce": {
+    "translation": "Scaling efficiency\n  = Actual throughput of N GPUs / (single-GPU throughput × N)",
+    "pages": [
+      "ai-k8s/benchmarking.md"
+    ]
+  },
+  "d0f8a935cbe464aff1acc7b468c22c140654b9020f4be3c268f32c3ded1a1e00": {
+    "translation": "Objective: Verify that the new driver does not degrade 8×GPU training performance\nEnvironment: Hardware/topology/software/image summary\nWorkload: Model, data, precision, batch, parallelism\nBaseline: Median and variance of version A\nCandidate: Median and variance of version B\nQuality: Target metrics and pass/fail\nPerformance: Throughput, latency, GPU/network/storage breakdown\nReliability: Failures, retries, XID, recovery\nConclusion: Pass / Blocked / Conditional pass\nRaw evidence: Dashboard, logs, artifact links",
+    "pages": [
+      "ai-k8s/benchmarking.md"
+    ]
+  },
+  "4840890d3cc95cf130becad5d9fec4d3838c1e5b0e14a98f262925ed500178a2": {
+    "translation": "Ingress layer\n  Gateway / SSO / API / GitOps\n        │\nPlatform control layer\n  Kueue / Trainer / KServe / Policy / Observability\n        │\nGeneral compute pool        GPU training pool        GPU inference pool        High-isolation pool\n  CPU Job          RDMA + large GPU blocks    Stable models + cache    Kata/isolated nodes\n        │               │                │                │\nCluster network, storage, Registry, object storage, identity and key services",
+    "pages": [
+      "ai-k8s/cluster/architecture.md"
+    ]
+  },
+  "fac99e33e17b2955c3f0ac296ba615b7f6ea93abd8a756f83acbe803926445c2": {
+    "translation": "Allocatable capacity = Physical capacity\n            - Fault isolation\n            - Node maintenance\n            - System reservation\n            - Topology fragmentation\n            - Online service redundancy",
+    "pages": [
+      "ai-k8s/cluster/architecture.md"
+    ]
+  },
+  "0c7d9ea428dbe2294070b28cc3b920a2d48a41214521febf922e8df3e1849a2e": {
+    "translation": "Personnel OIDC identity\n  → Platform API / Git changes\n  → Kubernetes ServiceAccount\n  → Cloud Workload Identity\n  → Object storage, Registry, KMS, database",
+    "pages": [
+      "ai-k8s/cluster/architecture.md"
+    ]
+  },
+  "4b427ea93ff07dcfe6a3c9b7c34c145a4b27e3b640eea292332749a8688a537e": {
+    "translation": "Cloud provider responsibility\n  Data center and basic cloud → Managed control plane → Some system components and upgrade capabilities\n\nShared responsibility\n  VPC/subnet → Node pool → CNI/CSI → Identity → Observability → Backup\n\nUser responsibility\n  Namespace/RBAC → Operator → Training/inference → Data/model → SLO",
+    "pages": [
+      "ai-k8s/cluster/cloud-managed-kubernetes.md"
+    ]
+  },
+  "e43f71c0d7010073f5986f5c859fb71c9a9770f98f8530555d277e766270d862": {
+    "translation": "Portable application layer\n  Deployment / Job / Service / Gateway API / Standard metrics\n\nPlatform contract layer\n  GPU Capability, Queue, Model Artifact, Workload Identity, Storage Profile\n\nCloud adaptation layer\n  CNI/CSI, LB Annotation, IAM, Node class, Cloud monitoring and accelerator plugins",
+    "pages": [
+      "ai-k8s/cluster/cloud-managed-kubernetes.md"
+    ]
+  },
+  "38fbead5cafd0a9a878218b9d0b571acf26da10f37b2830cd71075a69113ea93": {
+    "translation": "Training framework / Inference engine\nPyTorch, JAX, vLLM, SGLang, TensorRT-LLM\n                  │\nUser-space compute and communication libraries\nCUDA/ROCm, cuDNN, NCCL/RCCL, UCX/NIXL\n                  │\nContainer device injection\nContainer Toolkit, CDI, RuntimeClass\n                  │\nKubernetes device management\nDevice Plugin or DRA Driver\n                  │\nNode management\nGPU Operator, NFD, monitoring and health controller\n                  │\nHost\nFirmware, BIOS, kernel, driver, PCIe, NUMA, GPU, NIC",
+    "pages": [
+      "ai-k8s/cluster/gpu-node-stack.md"
+    ]
+  },
+  "81f19579e95474b954529f23db6095a6530b33670f0921b854e7cad358135b1b": {
+    "translation": "Vendor discovery label\n  nvidia.com/gpu.product=NVIDIA-H100-80GB-HBM3\n        │\n        ▼\nPlatform label\n  platform.example.com/accelerator-class=h100-80g",
+    "pages": [
+      "ai-k8s/cluster/gpu-node-stack.md"
+    ]
+  },
+  "40817c2a32ae65f790dc57b3f9f163cb16f8e422b1601d2ca30591838716c5e0": {
+    "translation": "Detect anomaly\n  → Mark device or node unschedulable\n  → Stop admission of new workloads\n  → Save evidence and diagnostics\n  → Attempt controlled recovery/restart\n  → Run node acceptance\n  → Resume scheduling or enter maintenance",
+    "pages": [
+      "ai-k8s/cluster/gpu-node-stack.md"
+    ]
+  },
+  "0d7d6e1bb4a147be18db8164629497f004b61e97cc118fd7aa1172be73cd00b4": {
+    "translation": "Load increases → generate scaling decision → target cluster/virtual node determined\n        → backend accepts creation → resources get admission → container starts\n        → application Ready → first real request succeeds",
+    "pages": [
+      "ai-k8s/cluster/karmada-vs-virtual-kubelet.md"
+    ]
+  },
+  "f30ea12700a9cb1e1659520493b1f216eb5733a8db9242a87ca83ef5376d2540": {
+    "translation": "Guest Pod\n  → Guest CNI\n  → VM virtio NIC\n  → tap / NAT / bridge\n  → virt-launcher Pod network namespace\n  → Infrastructure CNI\n  → Physical network",
+    "pages": [
+      "ai-k8s/cluster/kubevirt-guest-kubernetes.md"
+    ]
+  },
+  "cd7cd26e2c5b5f4c0f7df73a30e1bb27a9b3fa94f17bc83b33080ada16cf068c": {
+    "translation": "Guest Pod MTU ≤ physical network MTU - underlying encapsulation - VM network overhead - Guest CNI encapsulation",
+    "pages": [
+      "ai-k8s/cluster/kubevirt-guest-kubernetes.md"
+    ]
+  },
+  "88d7eed5b72481f2f7a0294025f66c4e149fbcbeacee5f6a5fef3caf929998dc": {
+    "translation": "Business Pod PVC\n  → Guest CSI or node filesystem\n  → VM virtual disk\n  → Underlying PVC\n  → Underlying distributed storage",
+    "pages": [
+      "ai-k8s/cluster/kubevirt-guest-kubernetes.md"
+    ]
+  },
+  "717d5b9d5fd3892123e2da5735e68a4feab6be06697f5cce483e99df4be93214": {
+    "translation": "Underlying device discovery and allocation\n  → KubeVirt Host Device / GPU passthrough / vGPU\n  → Guest OS driver\n  → Guest Device Plugin\n  → Guest Pod requests GPU",
+    "pages": [
+      "ai-k8s/cluster/kubevirt-guest-kubernetes.md"
+    ]
+  },
+  "a11e3f7e735906023e97a39e8e942e34357500db0df4a24a78062065ac9f803a": {
+    "translation": "Management cluster / Hub\n  ├── Cluster inventory, policies, GitOps\n  ├── Global queue or placement controller\n  └── Unified observability entry\n        │\n        ├── GPU Cluster A\n        ├── GPU Cluster B\n        └── GPU Cluster C",
+    "pages": [
+      "ai-k8s/cluster/multi-cluster-ai.md"
+    ]
+  },
+  "f48957957c43b7443b8108bf9765eee1acf2271defb55a6cedc822cce34be510": {
+    "translation": "Resource Template\n  Deployment / Job / KServe / TrainJob / LWS ...\n        +\nPropagationPolicy / ClusterPropagationPolicy\n        +\nOverridePolicy / ClusterOverridePolicy\n        ▼\nResourceBinding\n        ▼  karmada-scheduler selects member clusters\nOne Work per target cluster\n        ▼\nPush: control plane writes member cluster API\nPull: member cluster karmada-agent pulls and executes\n        ▼\nMember cluster local Controller / Scheduler / Kueue\n        ▼\nHealth, status, and replica information aggregated back to Karmada control plane",
+    "pages": [
+      "ai-k8s/cluster/multi-cluster-ai.md"
+    ]
+  },
+  "8ea8491c31e7b3374374973fcaa765c779433e7a7078d30e4cd9082dedfd3527": {
+    "translation": "User submits TrainJob\n      ▼\nGlobal queue: tenant, priority, budget, candidate clusters\n      ▼\nSelect a GPU cluster that satisfies the entire group's resources\n      ▼\nIn-cluster Kueue/Volcano: quota, Gang, topology\n      ▼\nJobSet/Trainer/KubeRay: create all ranks\n      ▼\nTraining within NCCL/RDMA fabric\n      ▼\nCheckpoint written to cross-cluster accessible object storage",
+    "pages": [
+      "ai-k8s/cluster/multi-cluster-ai.md"
+    ]
+  },
+  "76a09d32f59662eb9f2284bb753d823d23b437d330fb4cc544de475898b13e31": {
+    "translation": "Client\n  ▼\nGlobal DNS / Anycast / Global Gateway\n  ├── Cluster A: Gateway → InferencePool → GPU Pods\n  ├── Cluster B: Gateway → InferencePool → GPU Pods\n  └── Cluster C: Gateway → InferencePool → GPU Pods\n          │\n          └── Model parallelism, KV-aware routing, and P/D pairing completed within each cluster\n\nModel Registry / Object Storage\n  └── Distribute weights to each cluster and pre-warm node caches",
+    "pages": [
+      "ai-k8s/cluster/multi-cluster-ai.md"
+    ]
+  },
+  "203b1246d02f5841a8ba2d68788551dcc666bfbbf8711270df38c4b978bc3fbf": {
+    "translation": "Global management layer (not on the synchronous data path)\n  Cluster Inventory / GitOps / Policy / Cost / Global Queue\n          │\n          ├── Training Fleet\n          │     MultiKueue Manager\n          │       ├── Cluster A: Kueue + Trainer + RDMA\n          │       └── Cluster B: Kueue + Trainer + RDMA\n          │\n          └── Inference Fleet\n                Global Gateway / DNS\n                  ├── Region A: Gateway + EPP + Model Pool\n                  └── Region B: Gateway + EPP + Model Pool\n\nShared but loosely coupled infrastructure\n  Identity / Registry / Model Registry / Object Storage / Telemetry Backend",
+    "pages": [
+      "ai-k8s/cluster/multi-cluster-ai.md"
+    ]
+  },
+  "c6ebb1a04863b2d81233194b3c8b3cbf88a90ab52fe855173e501c4c32d7b18f": {
+    "translation": "OIDC / short-term credentials\n      │\nkubeconfig exec plugin\n      │\nkubectl / k9s / Headlamp\n      │\nKubernetes API + RBAC + Audit",
+    "pages": [
+      "ai-k8s/cluster/open-source-management.md"
+    ]
+  },
+  "1735141603eb45877d70b4c732544cef5549b3fc7b97ccad859fd2cbc0a9ac00": {
+    "translation": "Git / OCI Artifact\n        │\nReview, test, sign, and version\n        │\nArgo CD / Flux / Fleet\n        │\nBase components, policies, AI operators, and business applications",
+    "pages": [
+      "ai-k8s/cluster/open-source-management.md"
+    ]
+  },
+  "275dfd19a7cc8f4be0cc7e423afb1268742a00ac78f6f8c6fffb463eade49dd9": {
+    "translation": "Cloud-managed Kubernetes / kubeadm / RKE2\n  + OIDC, kubectl, Headlamp or k9s\n  + Argo CD or Flux\n  + GPU Operator, Kueue, monitoring and object storage",
+    "pages": [
+      "ai-k8s/cluster/open-source-management.md"
+    ]
+  },
+  "834a55be0370f592154b1bc4542b14f64f725309e5359f22e35f03ef6fe9e870": {
+    "translation": "Rancher or KubeSphere: unified entry point, teams and access\nGitOps: GPU/Network Operator, Kueue, KubeRay, Trainer, KServe\nCluster API or existing IaaS: cluster and GPU node pool lifecycle",
+    "pages": [
+      "ai-k8s/cluster/open-source-management.md"
+    ]
+  },
+  "0eaa26f6e5126cf4bf7155466c6e7bc1aa34353de4417da1c69c268976f7eec3": {
+    "translation": "Cluster API / Gardener / cloud API: create and upgrade clusters\nArgo CD / Flux: baseline components and runtime convergence\nKarmada / OCM: applications, policies and regional placement\nMultiKueue: dispatch complete training jobs to an available cluster\nGateway / DNS: online inference traffic switching",
+    "pages": [
+      "ai-k8s/cluster/open-source-management.md"
+    ]
+  },
+  "36d8cbe206b7777f6d5d0380c403dac6b54691ce7345ebc398a31d3034ea3170": {
+    "translation": "Total cost\n  = GPU/CPU/memory nodes\n  + storage capacity and requests\n  + network and cross-zone traffic\n  + control plane and platform components\n  + software licenses\n  + idle and reserved capacity losses\n  + failure recomputation costs\n  + operational manpower",
+    "pages": [
+      "ai-k8s/cost-capacity.md"
+    ]
+  },
+  "a571d9de37d5965e57c59c09c14ab524b6eff19bae6e4fd780b1c8622e58ef85": {
+    "translation": "Cost per million samples = total training cost / number of processed samples × 1,000,000\nTraining cost per billion tokens = total training cost / number of tokens × 1,000,000,000\nEffective GPU hours = number of GPUs × actual training time\nFailure loss = unsaved time before failure × number of GPUs × GPU hourly price",
+    "pages": [
+      "ai-k8s/cost-capacity.md"
+    ]
+  },
+  "6b0aa64967882c4491d0506bba9f28178cd149986a66fd46963a82303c5b2972": {
+    "translation": "Cost per million tokens\n  = total serving cost / output and billed tokens × 1,000,000\n\nCost per successful request\n  = total serving cost / number of successful requests meeting SLO",
+    "pages": [
+      "ai-k8s/cost-capacity.md"
+    ]
+  },
+  "c1d86368860e1c37f11c463410d9366921b16cbaf46172359cb62349f9d8d7a2": {
+    "translation": "Required replicas\n  = peak effective request rate / safe throughput per replica\n  × redundancy factor",
+    "pages": [
+      "ai-k8s/cost-capacity.md"
+    ]
+  },
+  "70f524f9fe41e397337c737d42bba92e58e6a3669e6e3086a66277e50cf1d153": {
+    "translation": "Request layer: concurrency, dynamic batching, rate limiting\nPod layer: HPA / KEDA / custom autoscaler\nNode layer: Cluster Autoscaler / Karpenter\nQueue layer: Kueue admission, flavors and priorities",
+    "pages": [
+      "ai-k8s/cost-capacity.md"
+    ]
+  },
+  "2a3d4a4adc0576f0a0dccbe56dff05afa187c5f200056ceed2c8b905434db695": {
+    "translation": "Net savings = original on-demand cost - Spot cost - recompute cost - additional operational cost",
+    "pages": [
+      "ai-k8s/cost-capacity.md"
+    ]
+  },
+  "0c2990c214530a693858f15504a6bb9354ad960bad96128c63ce76eaa6112b69": {
+    "translation": "Business databases / logs / files / SaaS / IoT\n              │\n        CDC / Kafka / Connect\n              │\n      Flink real-time cleaning and aggregation\n              │\n              ├──────────────→ Online features / alerts / real-time index\n              ▼\nObject storage: Raw / Bronze / Silver / Gold\n              │\n       Iceberg / Delta / Hudi\n              │\n    Catalog / Schema / Lineage / Policy\n              │\n      ┌───────┼───────────┐\n      ▼       ▼           ▼\n    Spark    Trino      Ray / GPU ETL\n   Batch processing  Interactive SQL  AI data processing\n      │       │           │\n      └───────┼───────────┘\n              ▼\nTraining dataset / evaluation set / RAG chunk / Embedding / features\n              │\n       Training, inference, RAG, and Agent",
+    "pages": [
+      "ai-k8s/data/big-data-on-kubernetes.md"
+    ]
+  },
+  "0d0ddbfcd7cc0d226bf6ca7c46b1f7a2faee942f13083504b74ac23e495cc619": {
+    "translation": "Git / CI / Data Pipeline\n        │\nAirflow / Argo / Flyte / Kubeflow Pipelines\n        │\nSpark/Flink/Kafka Operator, Helm, Kubernetes Job\n        │\nKueue / Volcano / YuniKorn / kube-scheduler\n        │\nNodePool, CSI, CNI, object storage identity and observability",
+    "pages": [
+      "ai-k8s/data/big-data-on-kubernetes.md"
+    ]
+  },
+  "7ddd59c1a6abb8b86b62a2299710e581896c8bdd3a09405699528369133fbb9d": {
+    "translation": "Object storage: Parquet / ORC / Avro data files\nOpen table formats: Iceberg / Delta / Hudi metadata, Snapshot, and transactions\nCatalog: table name, Namespace, current Metadata pointer, and access entry\nCompute engines: Spark / Flink / Trino / other Readers and Writers",
+    "pages": [
+      "ai-k8s/data/big-data-on-kubernetes.md"
+    ]
+  },
+  "1a0ad47f4a3589bbbca4c2f0ae8331ba99445f4f041451fb8d2fdb2e4edb8842": {
+    "translation": "Wait for upstream partitions\n  → Submit Spark cleaning\n  → Run quality checks\n  → Publish Iceberg Snapshot\n  → Generate training Dataset Manifest\n  → Submit training\n  → Evaluate and register model",
+    "pages": [
+      "ai-k8s/data/big-data-on-kubernetes.md"
+    ]
+  },
+  "07b78b66506bb30bdae212adca89a9b5d7a77daa7faf7c10b83500a3abd8a091": {
+    "translation": "Authoritative data: object storage / retained HDFS\nTable metadata: Catalog + database + object storage Metadata\nStream state: local State Backend + remote Checkpoint/Savepoint\nMessage logs: Kafka Broker persistent volumes / local persistent disks + replicas\nShuffle/Spill: local NVMe / PVC / external Exchange\nHistory and logs: object storage + History Server / log platform",
+    "pages": [
+      "ai-k8s/data/big-data-on-kubernetes.md"
+    ]
+  },
+  "64ccfef96367ec034c9d61ab74313ffa5181f1c75d561e1d603dc735da43d7a3": {
+    "translation": "Raw corpus\n  → Format parsing and text extraction\n  → Language/quality/safety filtering\n  → PII and license governance\n  → Exact deduplication and approximate deduplication\n  → Document splitting and Token statistics\n  → Data mixing, sampling weights, and sharding\n  → Immutable Dataset Manifest / Lakehouse Snapshot\n  → Training DataLoader",
+    "pages": [
+      "ai-k8s/data/big-data-on-kubernetes.md"
+    ]
+  },
+  "dc188cb15ccbf5e69602a49d89e628e232da7ebf0f598318cc54ad503791b962": {
+    "translation": "Document changes / CDC\n  → Kafka\n  → Flink cleaning, permission mapping, and version determination\n  → Chunk task\n  → Embedding Worker (GPU/CPU)\n  → Vector Database Upsert\n  → Index version release",
+    "pages": [
+      "ai-k8s/data/big-data-on-kubernetes.md"
+    ]
+  },
+  "00de19742001fc097a2b351e46a66b3547c8d50d02b5911112e572469fe7ea24": {
+    "translation": "Base Model Revision\n  ├── Full fine-tuned weights\n  ├── LoRA / Adapter\n  ├── Merged deployment weights\n  └── Multiple quantization or hardware compilation artifacts\n        ├── BF16 / FP16\n        ├── FP8\n        ├── INT8\n        ├── INT4 / AWQ / GPTQ\n        └── GGUF / Vendor Engine",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "c44aec8788dbebd3643ff44193f1c871e85bcc017bc65e1643d1775dab06008c": {
+    "translation": "Remote Registry/Object Storage\n  → Node-local NVMe/Image Cache\n  → Pod Volume/Modelcar\n  → CPU Memory\n  → GPU HBM\n  → Engine Warmup and Prefix/KV Cache",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "a51207700cc8e2502cfa62f71ba99e241d6a8c86f346800af310a7f0d97337b7": {
+    "translation": "Training / Conversion / Quantization Pipeline\n        ▼\nModel Registry / Catalog\n  Records version, Digest, lineage, evaluation, compatibility, and approval\n        ▼\nAuthoritative Artifact Layer\n  Object Storage or OCI Registry\n        ▼\nRegional Distribution Layer\n  Cross-region replication, regional Registry/Bucket, CDN/Seed\n        ▼\nCluster Distribution Layer\n  Storage Initializer / Shared Files / P2P / Prewarm Controller\n        ▼\nNode Cache Layer\n  OCI Layer Cache / LocalModelCache / Local NVMe\n        ▼\nRuntime Loading Layer\n  mmap / Page Cache / Parallel Deserialization / Streaming\n        ▼\nGPU HBM + Engine Warmup\n        ▼\nTraffic Ready",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "f84f8e4efbc4b85c7c85694065860fe529e00c36f4e675f4dfce7b0bbdba54a2": {
+    "translation": "Origin read volume ≈ Model size × Number of nodes cold-starting simultaneously",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "6b079a293c6459531cd65dc39429e42ad8a873a24d61197dd021dabc09642b75": {
+    "translation": "Lower bound of download time ≈ Model size\n              / min(origin allocated bandwidth, network bandwidth, disk write, peer supply bandwidth)\n              + verification and file write-to-disk time",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "5410b9a61a0a015c216bcef9abdc7dbaa021bffefa2ae7940ddbc5eefa2d7f84": {
+    "translation": "Origin amplification factor = actual bytes sent by origin / model logical size\nCache coverage = qualified nodes with cached target Digest / total target nodes\nEffective prewarm rate = replicas that actually hit cache at release / total newly started replicas",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "a7993649b59258facbfa08f4f525cdad7d50cb8a0f3817772f4211157e56efd8": {
+    "translation": "Local cache budget = current production model\n             + rollback version\n             + canary/next version\n             + popular adapters\n             + download temporary space\n             + container images and logs\n             + GC safety watermark",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "2d1cdc117c6312af46d5e5bc5abcf0d0279b5a2f90c2b094c7e96482cb4dbf8a": {
+    "translation": "Cold start = node provisioning\n       + driver/device component readiness\n       + container image pull\n       + model weight download/mount\n       + weight deserialization\n       + CPU → GPU transfer\n       + graph compilation/kernel autotune\n       + engine warmup\n       + gateway discovery",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "2786b3ce6f18525c7d89308d710a4435ff44b9d82f8282b36db00fb05f840f95": {
+    "translation": "Controlled training/conversion\n  → Generate Manifest and evaluation evidence\n  → Compute Digest\n  → Upload to immutable storage/OCI Registry\n  → Sign and Attestation\n  → Registry approval\n  → Admission/deployment controller validation\n  → Re-validate after node download",
+    "pages": [
+      "ai-k8s/data/model-artifacts.md"
+    ]
+  },
+  "d4aa06fae1b86e70ea0258bd988aa0d5181d75d3917bef18daed6f3684ec0051": {
+    "translation": "Authoritative data source: object storage\n        │\n        ▼\nCluster shared layer: parallel file system / distributed cache\n        │\n        ▼\nNode hot cache: local NVMe\n        │\n        ▼\nProcess cache: Page Cache / memory / framework prefetch\n        │\n        ▼\nGPU memory: current batch and model shards",
+    "pages": [
+      "ai-k8s/data-storage.md"
+    ]
+  },
+  "dc53b0449fa18a80bc07112921a0054073c3653e38995c522cbc89bdb3dccb7f": {
+    "translation": "Minimum sustained read bandwidth\n  ≈ average bytes per sample × global samples/s × pre-decode amplification factor",
+    "pages": [
+      "ai-k8s/data-storage.md"
+    ]
+  },
+  "135c84751705b5112f9f990b8dc52cf318c0b886dc328a8c45e74094d990df09": {
+    "translation": "JupyterHub + KubeSpawner\n        │\n        ├─ Controlled CPU / shared GPU / MIG / full-card specifications\n        ├─ One RWO SSD PVC per user, storing Home and a small amount of code\n        ├─ Object storage, storing datasets, models, checkpoints, and artifacts\n        ├─ Local NVMe, storing model cache, data cache, and temporary files\n        └─ Job / TrainJob / RayJob, handling long-running training tasks",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "72816b8f4901e62fc646cadd4c3c76bf93f7f20b867f1f16bbd7626831a150c9": {
+    "translation": "Debug code in Notebook\n        │\n        ├─ Git commit code and configuration\n        ├─ Build immutable image\n        ├─ Use versioned URIs for data and models\n        ▼\nJob / TrainJob / RayJob / Pipeline\n        │\n        ├─ Kueue admission, quotas, and priorities\n        ├─ Checkpoint and experiment tracking\n        ▼\nModel registration, evaluation, GitOps release",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "1e23dc5dcb316c54410932a1fc0bd54a7a90a9019e5ae518d09b8c06071e55a4": {
+    "translation": "Enterprise IdP / OIDC / SSO\n          │\nGateway / Ingress / Workspace UI\n          │\nNotebook control plane\nJupyterHub / Kubeflow / Managed Workbench\n          │\nWorkspace Pod: JupyterLab / VS Code / Terminal\n          │\n          ├──────── Compute ──────── CPU / Shared GPU / MIG / Full GPU\n          ├──────── Persistence layer ────── Per-user PVC / Team RWX / Object Storage\n          ├──────── Acceleration layer ────── Local NVMe / Page Cache / Model Cache\n          └──────── Execution layer ────── Job / Trainer / Ray / Pipeline / Kueue",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "456c288cded7e2791fc5ba2d99b91a4c61f29d6e4fae1599d58657d84b70eb2b": {
+    "translation": "Guest: 2 vCPU / 4 GiB\nvirt-launcher CPU request: 200m\nvirt-launcher CPU limit: not set\nvirt-launcher Memory request: approximately 4 GiB + virtualization overhead",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "236f7fb1aa22cc66e76edfdcfdd09eed49d7c3efb375a8c7e333aab83348b2a4": {
+    "translation": "Total virtual CPU: 50 × 80 = 4000 vCPU\nCPU oversubscription ratio: 4000 / 120 ≈ 33.3:1\n\nTotal Guest memory: 50 × 600 GiB = 30000 GiB\nMemory oversubscription ratio: 30000 / 800 = 37.5:1",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "9eadc17afb8f84b7e7539c09c3d0e4d3a0352b66202283b3f3e74849d438676b": {
+    "translation": "Model weight GPU memory ≈ number of parameters × bytes per parameter\n\nFP32 / TF32: approximately 4 bytes\nFP16 / BF16: approximately 2 bytes\nINT8: approximately 1 byte, plus quantization metadata\nINT4: approximately 0.5 byte, plus quantization metadata",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "8a744d391e647ecf6e0ab84da79fe1b17ba789a077937a8fc28458719633d81b": {
+    "translation": "Need predictable performance or formal training? ── Yes ──> Full GPU\n             │\n             No\n             ▼\nNeed GPU memory/fault isolation and hardware supports MIG? ── Yes ──> MIG\n             │\n             No\n             ▼\nSame trust domain and acceptable Best Effort? ── Yes ──> Time-Slicing or MPS PoC\n             │\n             No\n             ▼\nUse dedicated GPU, dedicated node pool, or a stronger isolation platform",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "48632882d9b900cba21763533bc84b095847c1fb4bb1412d356fce341102c505": {
+    "translation": "/home/jovyan        per-user SSD PVC; Notebook, scripts, configuration, small virtual environments\n/workspace          Git working tree; can be a subdirectory of Home\n/data               read-only datasets; object storage mount or shared file system\n/models             read-only model cache; node NVMe or controlled shared cache\n/checkpoints        durable write entry; object storage client or shared file system\n/scratch            emptyDir / local NVMe; can be deleted at any time\n/dev/shm            memory-backed emptyDir; for DataLoader, multi-process, and framework shared memory",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "61ff1cac379692bb40151a284e0cdccd40e6f2bf0a1b642eff5a8af77b7c9f60": {
+    "translation": "Authoritative layer: object storage\nDatasets, models, adapters, checkpoints, evaluations, and artifacts\n             │\n             ▼\nShared layer: RWX / parallel file system / object FUSE\nTeam collaboration, POSIX-compatible, read-only data entry\n             │\n             ▼\nNode hot cache: Local NVMe\nHugging Face Cache, model weights, data shards, build cache\n             │\n             ▼\nPod temporary layer: emptyDir / tmpfs\nNotebook Scratch, /dev/shm, temporary extraction and intermediate results",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "fba10007aeab054520dda7c12ed51900d7a448cc466905d2fc4579896498a696": {
+    "translation": "Total startup time\n  = queueing/approval\n  + GPU node scaling\n  + image pull\n  + PVC creation and mounting\n  + Secret/configuration injection\n  + Jupyter/IDE startup\n  + data or model warm-up",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "dcc2df5478771ef7f27c380b4d4522500ea9c47ee7066eeffa571d8fba819db5": {
+    "translation": "OIDC → JupyterHub → KubeSpawner\n                    ├─ CPU Pool\n                    └─ GPU Pool: Shared Dev + Full GPU\n\nPer-user RWO SSD PVC 50–200 GiB\nS3-compatible object storage: data, models, checkpoints\nNode NVMe: model and data cache\nMLflow + Job/TrainJob + Kueue: formal experiments",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "a53b0e888ab4e431b08897505d29cce7541bd7536ba3557372343cf57b24e405": {
+    "translation": "Enterprise IdP → API Gateway / Workspace Portal\n              │\n              ├─ JupyterHub or supported Kubeflow distribution\n              ├─ Team Namespace / Quota / NetworkPolicy\n              ├─ CPU / MIG / Full GPU Resource Catalog\n              ├─ RWO Home + Team RWX + Object Storage + NVMe Cache\n              └─ Pipeline / Trainer / Ray / Kueue / MLflow / GitOps",
+    "pages": [
+      "ai-k8s/development/gpu-notebook-platform.md"
+    ]
+  },
+  "4837a545db6c9c0254c9eda862455958031168ad2c3d24990199b40ee9636784": {
+    "translation": "Code and data versioning\n    ▼\nGenerate TrainJob / RayJob / JobSet\n    ▼\nKueue admission: quota, priority, ResourceFlavor, topology\n    ▼\nCreate Launcher / Leader / Worker Pods\n    ▼\nMount data, model, and checkpoint storage\n    ▼\nInitialize communication: NCCL / Gloo / MPI / XLA\n    ▼\nTrain, evaluate, periodic checkpoint\n    ▼\nWrite to object storage, MLflow, and Model Registry",
+    "pages": [
+      "ai-k8s/distributed-training.md"
+    ]
+  },
+  "5ace031126f15f8415460ade7ba677bef7f5e71ad100e9ff6b227ef6b2997a90": {
+    "translation": "Expected waste cost ≈ failure probability × average lost training time\nCheckpoint cost ≈ number of saves × single pause/IO time",
+    "pages": [
+      "ai-k8s/distributed-training.md"
+    ]
+  },
+  "8cd1708d6cfd907c98e38530cacd8391c11774c6e8bb71d78ab69d0a6b8bcff2": {
+    "translation": "Central cloud\n├── Git / Registry / Model Registry\n├── Training and evaluation platform\n├── Fleet / GitOps control plane\n└── Aggregated monitoring and data lake\n          │ Intermittent connection\n          ▼\nEdge site\n├── K3s or EdgeCore\n├── Local Registry / model cache\n├── Inference service\n├── Message bus and device Mapper\n├── Local time-series database/buffer\n└── Cameras, PLCs, sensors",
+    "pages": [
+      "ai-k8s/edge-ai.md"
+    ]
+  },
+  "d07d9d49c21565b236b20bc9bd0cad2e53c86828d9baa11baf89e0a188d0d018": {
+    "translation": "User submits TrainJob / RayJob / InferenceService / Deployment\n                    │\n                    ▼\nOperator / Controller converts high-level APIs into resources such as Pods and Services\n                    │\n                    ▼\nAdmission control such as Kueue decides when workloads can use quotas\n                    │\n                    ▼\nkube-scheduler selects nodes based on resources, topology, affinity, and constraints\n                    │\n                    ▼\nDevice Plugin or DRA Driver allocates devices such as GPUs and NICs\n                    │\n                    ▼\nkubelet requests containerd / CRI-O to create containers via CRI\n                    │\n                    ▼\nCNI configures networking, CSI mounts volumes, Runtime injects devices and driver libraries\n                    │\n                    ▼\nTraining framework or inference engine loads code, data, and models and starts computation",
+    "pages": [
+      "ai-k8s/foundations/kubernetes-for-ai.md"
+    ]
+  },
+  "f8804402cb1e6864f3b251a074827f7474127787a1ac85597b662c3c4e867cee": {
+    "translation": "Training or inference container\n    │ CUDA / ROCm / XPU Runtime\n    ▼\nContainer Toolkit and CDI\n    │ Inject devices, libraries, and environment into the container\n    ▼\nDevice Plugin or DRA Driver\n    │ Publish device inventory and complete allocation\n    ▼\nkubelet / scheduler / Kueue\n    │ Node placement, queue admission, quotas, and topology\n    ▼\nKernel driver / GPU / NVLink / RDMA network",
+    "pages": [
+      "ai-k8s/gpu-scheduling.md"
+    ]
+  },
+  "cf0f9554dbcd2df7b5ea7b251590b7bad258fbb99acc5b213a35d982af64e36d": {
+    "translation": "Git / CI\n  → Registry\n  → Kubernetes\n      ├── system node: Ingress, GitOps, Prometheus\n      └── GPU node: Job, Deployment/vLLM\n             ├── Device Plugin\n             ├── DCGM Exporter\n             └── Local model cache (optional)\n\nObject Storage\n  ├── datasets\n  ├── models\n  └── checkpoints",
+    "pages": [
+      "ai-k8s/guides/reference-architectures.md"
+    ]
+  },
+  "69f0b65f5e074d9d8b5c2163d6a3bdf3de9159161ffaa9ff056199a1ec779841": {
+    "translation": "User / platform SDK\n  → Kubeflow Trainer / KubeRay / JobSet\n  → Kueue LocalQueue\n  → ClusterQueue / Flavor / Cohort\n  → Topology-aware Admission\n  → GPU Training Nodes\n       ├── GPU Operator\n       ├── Network Operator / RDMA\n       ├── DCGM / Node Health\n       └── Data Cache\n\nObject Store / Parallel FS\n  ├── versioned datasets\n  ├── distributed checkpoints\n  └── experiment artifacts\n\nMLflow/Kubeflow Hub + Observability + Cost",
+    "pages": [
+      "ai-k8s/guides/reference-architectures.md"
+    ]
+  },
+  "90e0ae091d5bd709e6637d3f62a6d8332019b9f52750572f885798c3375c3b64": {
+    "translation": "Artifact + Runtime + Gateway Policy\n  → Offline quality/performance evaluation\n  → Shadow (no side effects)\n  → Stable-hash Canary\n  → Metric gate\n  → Expand traffic\n  → Drain old version",
+    "pages": [
+      "ai-k8s/guides/reference-architectures.md"
+    ]
+  },
+  "df3b3e07158867945c05f9ca5b59fbfa85ba05e9b1ee1189bedcf77e3baa0bb8": {
+    "translation": "User/API\n  → Agent Control Plane\n       ├── Session / Budget / Policy\n       ├── Model Gateway\n       └── Tool Gateway\n              ├── Parameter Schema / AuthZ\n              ├── Approval / Idempotency\n              └── Audit\n       │\n       ▼\nAgent Sandbox Controller\n  → Per-session Pod/VM\n       ├── gVisor/Kata RuntimeClass\n       ├── Ephemeral Workspace\n       ├── Independent ServiceAccount\n       └── Default-deny NetworkPolicy\n\nExternal Tools / Data / Browser\n  Only accessed through controlled proxy",
+    "pages": [
+      "ai-k8s/guides/reference-architectures.md"
+    ]
+  },
+  "32b681d8ae0e51a7cd3f29d583fc947e269ed85bef2dc4f5a4e78f4b192430aa": {
+    "translation": "Small GPU platform\n  → Add queues, model artifacts, and full observability\n  → Separate training/inference node pools\n  → Multi-tenant training or high-availability inference\n  → Model-aware gateway and auto-scaling\n  → Introduce complex capabilities like P/D and multi-cluster only after benchmarks prove them",
+    "pages": [
+      "ai-k8s/guides/reference-architectures.md"
+    ]
+  },
+  "bf0e5cb151023feec7c1d5fc83bd75379d44a885ed92ae08be9a0a6df51aacd1": {
+    "translation": "Target workloads and scale:\nUsers and tenants:\nHardware and topology:\nModel/data/checkpoint paths:\nControl plane and data plane:\nIdentity and trust boundaries:\nCapacity and quotas:\nAvailability and failure domains:\nKey SLOs:\nRelease and rollback:\nObservability and audit:\nCost model:\nKnown limitations:\nExit/simplification conditions:",
+    "pages": [
+      "ai-k8s/guides/reference-architectures.md"
+    ]
+  },
+  "028327fdb3ed218d1da8b19e212438ba26e41c1c0a681d9890dbb804c47740b1": {
+    "translation": "Phase 1: Pod\n  Can the device be used by a container?\n\nPhase 2: Job / Workload\n  Can a group of Pods obtain resources as a whole and complete?\n\nPhase 3: Model Service\n  How does a model replica span Pods, load, publish, and scale?\n\nPhase 4: Inference Request\n  Which model, cache, and compute stage should a request enter?",
+    "pages": [
+      "ai-k8s/history.md"
+    ]
+  },
+  "1fe0af2da077b2689d6ff3f0ab29a3bc334f3a7f92bebb153a97f46fac1f50d7": {
+    "translation": "Users, SDKs, applications, and workflows\n        │\n        ├─ Big data / RAG / Agent / Online inference / Training tasks\n        │\nGateway, Serving, Trainer, Pipeline, Queue\n        │\nKubernetes API, controllers, scheduler, admission and policies\n        │\nDevice Plugin / CDI / DRA / CNI / CSI / CRI\n        │\nGPU, TPU, NPU, CPU, RDMA, NVMe, object storage\n        │\nPower, cooling, racks, failure domains, and data center network",
+    "pages": [
+      "ai-k8s/index.md"
+    ]
+  },
+  "2c22eaa4325fd924e123deac515a4c221af4a259a119d4971ae82eb173619902": {
+    "translation": "One logical model replica\n  Leader / API Pod\n    ├── Worker 0: GPU 0-7, node A\n    ├── Worker 1: GPU 0-7, node B\n    └── Worker 2: GPU 0-7, node C",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "2ec75a84fb55d6cd0641d7ee7939bc6c4a5178340b5c08d089fbf076807e8da5": {
+    "translation": "DeepSeek-V4-Pro Replica A\n  Leader / API Endpoint\n    ├── GB200 NVL4 Tray A1: 4 GPUs\n    └── GB200 NVL4 Tray A2: 4 GPUs\n        └── vLLM DP + Expert Parallel communication domain",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "8acb96c3e467e5d44040e2985ecee98a17cd368ce16f513a5c4a0d7ecd56e33e": {
+    "translation": "Logical model deepseek-v4-pro\n  ├── Replica A: 2 trays / 8 GPUs\n  └── Replica B: 2 trays / 8 GPUs",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "90c9d041c0dae8db56d2c05d0359a48256520c823cf5b92e39c16bd37f59d2d5": {
+    "translation": "Client\n  → vLLM API / Ray Head\n      → Same vLLM Engine\n          ├─ Ray Rank 0: GPU/weight shard\n          ├─ Ray Rank 1: GPU/weight shard\n          └─ Ray Rank 2: GPU/weight shard\n             All ranks jointly execute Prefill and Decode",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "fb6f561701476e992c29691cc216ce92f3cd63abe2387b9ee935bf61ff1aebca": {
+    "translation": "Client\n  → P/D Router\n      → Prefill vLLM Instance: load model, compute prompt and initial KV\n          → Connectors such as NIXL/LMCache/Mooncake transfer KV\n      → Decode vLLM Instance: also loads model, receives KV and generates token by token",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "132287d35be1e98c58e61bf008c0c88fe25e7c2de23adfff326aaefa401945d3": {
+    "translation": "Client\n  → P/D Router\n      → Prefill Engine (RayCluster P)\n          ├─ P-Head\n          └─ P-Worker × N\n              → Transfer KV across Engines\n      → Decode Engine (RayCluster D)\n          ├─ D-Head\n          └─ D-Worker × M",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "52a8df5cdb24f5eec6cb750d2f7bf3ab37ec0a3b59c29474ab1c5612d877ce4b": {
+    "translation": "Client\n  → Router / Frontend\n      → Prefill Pool\n          → Generate KV Cache\n          → Transfer via NIXL/UCX/RDMA/other Connectors\n      → Decode Pool\n          → Continue generation and stream back",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "fe685e17d7ce0174298ec56a53f60d297863dba7dd62543faa3973211946e7bf": {
+    "translation": "Platform control plane: AIBrix / llm-d / KServe / Ray Serve / Dynamo\nCluster orchestration layer: Kubernetes / RBG / LeaderWorkerSet / KubeRay\nInference execution layer: vLLM / SGLang / TensorRT-LLM",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "1520fd6dda3f8d9d32980f29f5a00100a3881573684b59f676ff557d1c59a03c": {
+    "translation": "Prefill demand ≈ input token arrival rate / effective tokens per second of a single Prefill Worker\nDecode demand ≈ output token arrival rate / effective tokens per second of a single Decode Worker",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "7299a10974b6ab069ab330cdac38e0398a412e843755cd8db1739f25b9cb9eed": {
+    "translation": "Gateway\n  → Router selection reason\n  → Prefill queueing/execution\n  → KV size, transfer time and path\n  → Decode queueing/execution\n  → Token streaming return",
+    "pages": [
+      "ai-k8s/inference/distributed-serving.md"
+    ]
+  },
+  "0af509cbd5bede89df1901653fbc310c6e55fb9444402d22a6b72b8467d58f89": {
+    "translation": "API Client\n  OpenAI / KServe V2 / gRPC\n        │\nGateway and request scheduling\n  Auth, Quota, Rate Limit, InferencePool, KV-aware Routing\n        │\nService control plane\n  Deployment, KServe, Ray Serve, LWS, llm-d, Dynamo\n        │\nInference engine\n  vLLM, SGLang, TensorRT-LLM, Triton, llama.cpp\n        │\nModel and hardware\n  safetensors/GGUF/Engine, GPU/TPU/ASIC, KV Cache, network",
+    "pages": [
+      "ai-k8s/inference/engines.md"
+    ]
+  },
+  "e9e2748b5c786a478a582f6d2c9522e55c53dac5cf60e57afdb5d42f7e1c5379": {
+    "translation": "Client\n  → Edge/WAF/External Load Balancer\n  → Gateway API Gateway / AI Gateway\n      ├── Identity, tenant, model permissions\n      ├── Token/concurrency/context budget\n      ├── API protocol and audit\n      └── HTTPRoute → InferencePool\n                         │\n                         ▼\n                  Endpoint Picker / Router\n                      ├── Model/LoRA loaded\n                      ├── Queue and estimated latency\n                      ├── Prefix/KV hit\n                      └── Endpoint health\n                         │\n                         ▼\n                   vLLM/SGLang/TRT-LLM",
+    "pages": [
+      "ai-k8s/inference/gateway-routing.md"
+    ]
+  },
+  "ac542a8bd9f639d29ce8ece4c2d23f6d368a597f7d2e4f54b76bbd661fc0dcd0": {
+    "translation": "HTTPRoute backendRef\n  → InferencePool\n  → Endpoint Picker\n  → Select specific Pod IP\n  → Gateway forwards request",
+    "pages": [
+      "ai-k8s/inference/gateway-routing.md"
+    ]
+  },
+  "85fbd70ec8b406a6c27d4ad3c1efaf96b8865b4c61ca3328ae13e3747b6394ee": {
+    "translation": "Authentication\n  → Model authorization\n  → Input size and context limit\n  → Tenant token/request budget\n  → Concurrency limit\n  → Queue limit and priority\n  → Timeout/cancellation\n  → Backend selection",
+    "pages": [
+      "ai-k8s/inference/gateway-routing.md"
+    ]
+  },
+  "91dc43d5ed03642f4f6d83cecbb634ebfee7e9505ef2aef823a8e407191ff91e": {
+    "translation": "gateway.receive\n  → authz\n  → tokenization/admission\n  → endpoint.pick\n  → backend.queue\n  → prefill\n  → decode\n  → tool/retrieval (if any)",
+    "pages": [
+      "ai-k8s/inference/gateway-routing.md"
+    ]
+  },
+  "838d6d993bb89cb8436247ba8501f0003fc29f36e0b8b71e6e4b7762e16ab066": {
+    "translation": "Client / SDK / Agent\n        │\n        ▼\nHigress\n  Domain, TLS, authentication, tenant, API Key, token quota, audit, protocol conversion\n        │\n        ▼\nAIBrix / Inference Gateway / Self-developed Router\n  Model discovery, queue, Prefix/KV, Session, P/D and Endpoint selection\n        │\n        ▼\nvLLM / SGLang / TensorRT-LLM\n  Continuous Batching, KV Cache, model parallelism and token generation",
+    "pages": [
+      "ai-k8s/inference/higress-ai-gateway.md"
+    ]
+  },
+  "75ebdbd6ee57842d13d1b66be0caf265069b3c0f628d28b124873c66bae5cad4": {
+    "translation": "higress-console      1/1 Ready\nhigress-controller   1/1 Ready (two containers in Pod Ready)\nhigress-gateway      1/1 Ready\nhigress-ca-root-cert generated",
+    "pages": [
+      "ai-k8s/inference/higress-ai-gateway.md"
+    ]
+  },
+  "bd735b2520eb34762251f0e9b9d0c79dc94ea716436919830e1e99c77f44ec53": {
+    "translation": "curl /v1/chat/completions\n  → Higress ClusterIP Gateway\n  → aibrix-gateway-upstream stable alias Service\n  → AIBrix Envoy Gateway + ext_proc\n  → mock-llama2-7b Pod",
+    "pages": [
+      "ai-k8s/inference/higress-ai-gateway.md"
+    ]
+  },
+  "e13be88b76acdcc1654b264d2fdcc490b4db34d36cb79bafe15e3b7b9eb39681": {
+    "translation": "chat-standard\n  ├── Self-hosted AIBrix Pool / vLLM\n  ├── Cloud provider model API\n  └── Disaster recovery model or degraded model",
+    "pages": [
+      "ai-k8s/inference/higress-ai-gateway.md"
+    ]
+  },
+  "c564d73a3e3db00f63f5e262d4dc23205664bf604c86a2cc436c4faca9747775": {
+    "translation": "                                ┌─→ Existing single-machine single-GPU Deployment Service\nClient → Higress unified entry ──────┼─→ Existing single-machine multi-GPU Deployment Service\n                                │\n                                └─→ AIBrix internal Gateway\n                                      ├─→ Multi-machine multi-GPU Replica A\n                                      ├─→ Multi-machine multi-GPU Replica B\n                                      ├─→ Prefill Role / Decode Role\n                                      └─→ KV/Prefix/Session aware Endpoint",
+    "pages": [
+      "ai-k8s/inference/higress-ai-gateway.md"
+    ]
+  },
+  "3434d1d2c06a6aa27670a560983fc73a9388927ba054a96ed1a30ea87b16258d": {
+    "translation": "Weights + KV Cache + Runtime Workspace + Input/Output Buffers + System Reserved",
+    "pages": [
+      "ai-k8s/inference/local-testing.md"
+    ]
+  },
+  "f466175daeaa45753198147ce8acc983a1377e9ec09e37996b45e61fd9329985": {
+    "translation": "Weight bytes ≈ number of parameters × bits per parameter ÷ 8",
+    "pages": [
+      "ai-k8s/inference/local-testing.md"
+    ]
+  },
+  "2e2f9ba8c3402f458a3e323e426797759f29401e770ec8014eca922b5455c84a": {
+    "translation": "GET  /v1/models\nPOST /v1/chat/completions\nPOST /v1/embeddings        # if the application needs it\nStreaming events and [DONE]\nTool Calling parameters and results\nError codes, timeouts, and cancellation\nusage/token statistics",
+    "pages": [
+      "ai-k8s/inference/local-testing.md"
+    ]
+  },
+  "8d7251a0a1bd119662bc77e075239503205e2ce3428316a6182de49f9292fb16": {
+    "translation": "Model repository and Revision / file Digest\nTokenizer and Chat Template\nQuantization format\nRuntime and version\nHardware, driver, and system version\nContext, Batch, parallelism, and Cache parameters\nTest dataset version and concurrency distribution",
+    "pages": [
+      "ai-k8s/inference/local-testing.md"
+    ]
+  },
+  "cd61babfce1356f47f7c9d47af4bb94537e8064014ea5c712f3b4e74068a6822": {
+    "translation": "Input Token\n  → Prefill: process Prompt in parallel, compute-intensive\n  → First Token\n  → Decode: generate token by token, memory-bandwidth and synchronization sensitive\n  → Complete",
+    "pages": [
+      "ai-k8s/inference/optimization.md"
+    ]
+  },
+  "71624e65a1bf4d113ec4e9385949c2c23ad0f60c1a68a86c6a2a37953cc1426b": {
+    "translation": "KV Cache ∝ number of concurrent sequences × context tokens × KV size per token",
+    "pages": [
+      "ai-k8s/inference/optimization.md"
+    ]
+  },
+  "2783c83de706991c9620c826f5d20fd2912d4d85c0f9dd99556bdda9882d679d": {
+    "translation": "GPU HBM = model weights\n        + KV Cache\n        + activations and temporary workspace\n        + communication buffers\n        + CUDA Graph/engine overhead\n        + safety margin",
+    "pages": [
+      "ai-k8s/inference/optimization.md"
+    ]
+  },
+  "57dfaec2fff2474cf3b84e39c9c37283c9503a96f8a51ebf86344ec8f71f6c77": {
+    "translation": "GPU HBM\n  ↕ high-speed\nCPU DRAM\n  ↕\nLocal NVMe\n  ↕\nRemote shared storage/distributed cache",
+    "pages": [
+      "ai-k8s/inference/optimization.md"
+    ]
+  },
+  "14014171e179a61c8752d2e7ac2dc29c26427c922c31136346b06cb63750ca8e": {
+    "translation": "Baseline: BF16, default batch, single replica\n  → adjust batch/concurrency\n  → adjust KV cache and context\n  → test prefix cache\n  → test quantization\n  → test TP/PP/DP\n  → test speculative decoding\n  → test offload/P-D",
+    "pages": [
+      "ai-k8s/inference/optimization.md"
+    ]
+  },
+  "16850949674e98a4066f38dfb54cddf0fa1ac36cd9f2d2cfcb701833ae1c5d4e": {
+    "translation": "Business applications / Agent / RAG Workflow\n  Dify, LangGraph, LlamaIndex, Haystack, custom services\n                         │\nAI application microservices and call graph\n  Ray Serve, BentoML, plain FastAPI/gRPC\n                         │\nGateway and request scheduling\n  AIBrix Gateway, Gateway API Inference Extension, Envoy AI Gateway\n                         │\nServing control plane\n  KServe, AIBrix, KubeRay/RayService, NIM Operator, Deployment/LWS\n                         │\nInference engine\n  vLLM, SGLang, TensorRT-LLM, Triton\n                         │\nGPU, model weights, KV cache, network and storage",
+    "pages": [
+      "ai-k8s/inference/serving-frameworks.md"
+    ]
+  },
+  "af2502a624d6fb608e3fbbdd9405a19a59a026df2fe6534b829995498ea4bb82": {
+    "translation": "AIBrix Gateway/Router\n  → AIBrix-managed Model/Adapter/Autoscaling\n  → vLLM Replica / Distributed Pool",
+    "pages": [
+      "ai-k8s/inference/serving-frameworks.md"
+    ]
+  },
+  "fa3be04f50834b5baa8cd4de4ada20e52c7be7670de65539d37569f5aac571dc": {
+    "translation": "Base URL + API Key + Model ID + correct protocol",
+    "pages": [
+      "ai-k8s/inference/tokenhub-overview.md"
+    ]
+  },
+  "d7b6c64f9cfab6e8b0d953d408c2471a5caa2e9c64ad6996712af4db7c77cb7b": {
+    "translation": "workspace / project / environment\napi_key_id (original text not recorded)\nrequest_id\nrequested_model\nresolved_model_and_provider (if provided by the platform)\ninput / output / cache / reasoning usage\nimage / video / audio task units\nstatus and retry_count\nunit_price_snapshot\nfinal_charge",
+    "pages": [
+      "ai-k8s/inference/tokenhub-overview.md"
+    ]
+  },
+  "72874d3f7639b0f28364e5b73f2ad8cee0d02f4224cb6651e39f4fd3198bc5df": {
+    "translation": "client_request_id\ntokenhub_request_id (if provided in the response)\ntenant / application / feature\nrequested_model\nendpoint_protocol\ninput / output usage\nttft / total_latency\nstatus / error_type / retry / fallback\ntool_calls\ncost_snapshot\nbusiness_result",
+    "pages": [
+      "ai-k8s/inference/tokenhub-overview.md"
+    ]
+  },
+  "b344c0482cc4c0f5fb9ee7f38ac5da038dde1bb36a2de3def172eb438709392d": {
+    "translation": "Client / OpenAI-Compatible API\n            │\n            ▼\nGateway and request scheduling: Gateway API / Inference Gateway / Envoy AI Gateway\n            │\n            ▼\nService control plane: KServe / Ray Serve / Seldon / Self-developed Operator\n            │\n            ▼\nInference engine: vLLM / SGLang / Triton / TensorRT-LLM\n            │\n            ▼\nGPU, model weights, KV Cache, network and storage",
+    "pages": [
+      "ai-k8s/llm-inference.md"
+    ]
+  },
+  "724da9107900e4f8b5eb454c3e8f669f92d9cedb064b5c679241064454a2bdba": {
+    "translation": "Concurrency demand ≈ arrival rate × average request duration\nRequired replicas ≈ concurrency demand / safe concurrency per replica under target SLO",
+    "pages": [
+      "ai-k8s/llm-inference.md"
+    ]
+  },
+  "22941a66876aca88331bef25b0066f3bd2769f8b8f4283063d30f61e97b0d52a": {
+    "translation": "Development experience        Notebook / IDE / Python SDK / CLI\nWorkflow orchestration        Kubeflow Pipelines / Argo Workflows / Flyte\nExperimentation and governance      MLflow / Model Registry / Evaluation / Metadata\nCompute execution        Job / TrainJob / RayJob / JobSet\nOnline serving        KServe / Ray Serve / vLLM / Triton\nContinuous delivery        GitHub Actions / Argo CD / Flux\nPlatform governance        RBAC / Kueue / Policy / Secrets / Cost\nObservability        Prometheus / DCGM / Logs / Traces / LLM Evaluation",
+    "pages": [
+      "ai-k8s/mlops.md"
+    ]
+  },
+  "8dbec6e33ab9c66cfc197a97bdce4d88a95b329cf4f786a9fa89d6787b6fc6f3": {
+    "translation": "Business and model quality: accuracy, refusal rate, user feedback, safety evaluation\nRequests and service: TTFT, TPOT, Token/s, queue, errors, cache hit\nWorkload: training step, loss, checkpoint, rank, retry\nDevices and nodes: GPU, GPU memory, NVLink, RDMA, CPU, disk, network\nControl plane: queue admission, scheduling, scaling, Operator, Kubernetes events",
+    "pages": [
+      "ai-k8s/observability.md"
+    ]
+  },
+  "5ae025355856f6ac5da13088eeca3a9d8afddd60421e68bf2c8bdfabfc7577aa": {
+    "translation": "ms-swift / PyTorch\n  -> SwanLab SDK -> Gateway\n                    -> Server / Auth -> PostgreSQL\n                    -> House / Vector -> ClickHouse\n                    -> Media and artifacts -> S3-compatible object storage\n\nKubernetes / DCGM Exporter / NIC\n  -> Prometheus -> Grafana",
+    "pages": [
+      "ai-k8s/observability.md",
+      "ai-k8s/training/swanlab-self-hosted.md"
+    ]
+  },
+  "be4785eae60c182cb92b42a3571700c1cc65ee95f8fed084804d5bb932de2d66": {
+    "translation": "API Gateway\n  → Identity/Rate limiting\n  → Model routing\n  → Queueing\n  → Prefill Worker\n  → KV Cache transfer\n  → Decode Worker\n  → Tool or retrieval service\n  → Streaming response",
+    "pages": [
+      "ai-k8s/observability.md"
+    ]
+  },
+  "87fcb3e332633beb81b9d162658901b606f91961a3460abbe34085ed448122ed": {
+    "translation": "traceparent: 00-7f3a...9c21-a1b2...e5f6-01\n             │     │          │       └─ flags\n             │     │          └─ Upstream Span ID\n             │     └─ Trace ID\n             └─ version",
+    "pages": [
+      "ai-k8s/opentelemetry-kubernetes-fundamentals.md"
+    ]
+  },
+  "fc4df19d6596b04c9ce8947ee96c26c8e975657a5528d60e53e0565af65fe46e": {
+    "translation": "Application generates data\n→ SDK exports successfully\n→ Collector Receiver receives\n→ Processor does not mistakenly delete\n→ Exporter sends successfully\n→ Backend completes ingestion\n→ Query can find it",
+    "pages": [
+      "ai-k8s/opentelemetry-kubernetes-fundamentals.md"
+    ]
+  },
+  "33193b282d0bc29aae29475c2d2f90a728ed493c722d057cb2006f8a70bbb2ea": {
+    "translation": "Confirm capacity and PDB\n  → cordon\n  → Stop new task admission\n  → Wait/Checkpoint/Migrate existing tasks\n  → drain\n  → Upgrade or repair\n  → Node self-check and benchmark\n  → uncordon\n  → Observe representative workloads",
+    "pages": [
+      "ai-k8s/platform-operations.md"
+    ]
+  },
+  "96e43044ea04a2b61181ce8b6f3904883c55a69ad89aa3c755756fe04ae92372": {
+    "translation": "Untrusted web pages/documents\n  → Prompt Injection\n  → Agent generates tool calls\n  → Tool Gateway authentication and parameter validation\n  → Sandbox execution\n  → Output filtering and auditing",
+    "pages": [
+      "ai-k8s/practices/agent-sandbox-red-team.md"
+    ]
+  },
+  "3f3d23a0866e7fd39a2b330f5212d96de40d7cafa1289de4ffcc5b0897b164d7": {
+    "translation": "Request <unique nonce>\nThe service tracks request latency, token throughput, cache utilization,\nand healthy replicas.\n...(repeated body)\nContinue with a technical explanation.",
+    "pages": [
+      "ai-k8s/practices/aibrix-dsv4-observability.md"
+    ]
+  },
+  "86c9debf1d075f697a865624c9dc3803d56593ffbf85bb7c8c7496f2d0b2a147": {
+    "translation": "Test client\n  → Envoy Gateway\n  → AIBrix ext_proc Gateway Plugin\n  → Select Pod by model + routing-strategy\n  → mock vLLM replica\n  → OpenAI-Compatible response",
+    "pages": [
+      "ai-k8s/practices/aibrix-existing-cluster.md"
+    ]
+  },
+  "f71cd43352a8090d92308c21e932662b2af07df87d1f8b11b5b4321a75dd9c0e": {
+    "translation": "Ray Route\nRayClusterFleet (similar to Deployment)\n  └─ RayClusterReplicaSet (similar to ReplicaSet)\n       └─ RayCluster × N (each is a complete inference replica)\n            ├─ Ray Head / vLLM API\n            └─ Ray Worker × M\n\nRole Route\nStormService (entire inference service)\n  └─ RoleSet × N (complete replica or shared pool)\n       ├─ Role: prefill → Pod / multi-Pod Group\n       ├─ Role: decode → Pod / multi-Pod Group\n       └─ Role: other custom roles",
+    "pages": [
+      "ai-k8s/practices/aibrix-existing-cluster.md"
+    ]
+  },
+  "1cb2c2fb9a13aea36a6aabe75089d8baf031ddedd58e193e52590c3aeb2d8e29": {
+    "translation": "Client\n  → AIBrix Gateway\n  → Prefill / Decode inference Pod (StormService / RoleSet)\n       ↕ AIBrix Offloading Connector\n     L1: Inference node CPU DRAM\n       ↕\n     L2: Distributed KVCache\n       ├─ Redis / Etcd: metadata and location index\n       ├─ Watcher: member registration and discovery\n       └─ Cache Engine Pod × N: stores actual KV Blocks",
+    "pages": [
+      "ai-k8s/practices/aibrix-existing-cluster.md"
+    ]
+  },
+  "7719d98374d0504fb0c259491fa4ba2e3097b92a6d47f2f3cdab4830f0e0c1c9": {
+    "translation": "Resource HPA\n  kubelet → Metrics Server → metrics.k8s.io → native HPA\n\nAIBrix APA (resource metric)\n  kubelet → Metrics Server → metrics.k8s.io → AIBrix Controller → Scale\n\nAIBrix KPA / APA (pod metric)\n  Inference Pod /metrics → AIBrix Controller directly scrapes → Scale\n\nCustom metric HPA\n  Inference Pod /metrics → Prometheus → Prometheus Adapter\n  → custom.metrics.k8s.io → native HPA",
+    "pages": [
+      "ai-k8s/practices/aibrix-existing-cluster.md"
+    ]
+  },
+  "33a6583921064463409ed34e1c0c764048079adc47e19058965f20506f0c6af2": {
+    "translation": "Client\n  → Higress: domain, TLS, authentication, tenant, rate limiting, audit\n  → AIBrix Envoy Gateway: model discovery, LLM routing, P/D, KV/Prefix policies\n  → vLLM / SGLang / TensorRT-LLM",
+    "pages": [
+      "ai-k8s/practices/aibrix-existing-cluster.md"
+    ]
+  },
+  "c273473aa9465fdb792080b57d53e6af8f84da2f0007ea95df2cec47141e7029": {
+    "translation": "AIBrix Gateway / P/D Router\n  ├── Prefill Role / GPU A / full quantization weights\n  │       └── Compute Prompt KV\n  │\n  └── Decode Role / GPU B / full quantization weights\n          └── Continue generation after obtaining KV via NIXL",
+    "pages": [
+      "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md"
+    ]
+  },
+  "7dffd700d4b5d90bee3a43158787307c220b04329d9973ad9fbc6f7313935abb": {
+    "translation": "AIBrix RayClusterFleet\n  └── KubeRay creates RayCluster\n       ├── Head / PP Rank 0 / vLLM API / 1×L20\n       ├── Worker / PP Rank 1 / 1×L20\n       ├── Worker / PP Rank 2 / 1×L20\n       ├── ...\n       └── Worker / PP Rank 7 / 1×L20\n\n94 Transformer Layers: 11, 12, 12, 12, 12, 12, 12, 11",
+    "pages": [
+      "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md"
+    ]
+  },
+  "df0ceb9c38ff271db0d468e5e4538960876cdbb9d9c9f46872b9c4910679cf11": {
+    "translation": "Node A: Rank 0 = PP 0 / TP 0, Rank 1 = PP 0 / TP 1\n                         │\n                         │  Only PP boundary crosses nodes\n                         ↓\nNode B: Rank 2 = PP 1 / TP 0, Rank 3 = PP 1 / TP 1",
+    "pages": [
+      "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md"
+    ]
+  },
+  "c48cc908bcecf0e5b7e624efa96015f02a14863a8b115db78bf28793a095b30f": {
+    "translation": "Single node: Rank 0 = PP 0 / TP 0\n        Rank 1 = PP 0 / TP 1\n        Rank 2 = PP 0 / TP 2\n        Rank 3 = PP 0 / TP 3",
+    "pages": [
+      "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md"
+    ]
+  },
+  "bf26c4a85539da532d1984d693dba35e2c4f4c52ca482e322b37c52cd1f8a99c": {
+    "translation": "Request <a different nonce per request>\nThe service tracks request latency, token throughput, cache utilization, and healthy replicas.\n...repeat the above sentence N times...\nContinue with a technical explanation.",
+    "pages": [
+      "ai-k8s/practices/aibrix-qwen-l20-production.md"
+    ]
+  },
+  "c24af0a49c381b6384c96fe90d7bca802e4e8564b511c12933c7d0560ce52b14": {
+    "translation": "<256 hexadecimal characters: a different salt per stage and per document>\nDocument <document number>\nThe service tracks request latency, token throughput, cache utilization, and healthy replicas.\n...repeat the above sentence 300 times...\nQuestion <six-digit request number>: Explain the operational tradeoffs in detail.",
+    "pages": [
+      "ai-k8s/practices/aibrix-routing-cache-tradeoffs.md"
+    ]
+  },
+  "27f1793945af17c884249759362cf56ae33ceaacac8f909af985fec364af703a": {
+    "translation": "Networked build zone\n  → Resolve full dependencies and licenses\n  → Lock versions, digests, SBOMs, and signatures\n  → Malicious code and vulnerability scanning\n  → Approval and offline media/cross-domain transfer\n  → Offline registry, object storage, and software sources\n  → Publish to test cluster after validation\n  → Baseline, upgrade, and rollback drills",
+    "pages": [
+      "ai-k8s/practices/air-gapped-ai-platform.md"
+    ]
+  },
+  "95aa27b440daf5a2d32074635cfc0ca253e4397f3996283fbe1f247acbf25599": {
+    "translation": "Browser\n  → Ingress of the office-network-reachable cluster\n  → Selectorless Service + manual Endpoints\n  → Ingress Controller of the GPU cluster\n  → Target Ingress of the GPU cluster\n  → ComfyUI Service :8188\n  → ComfyUI Pod / 1×GPU\n       ├── /models: read-only CephFS\n       ├── /config: extra_model_paths ConfigMap\n       └── /model-aliases: temporary symlinks generated by Init Container",
+    "pages": [
+      "ai-k8s/practices/comfyui-minimax-h3-gpu.md"
+    ]
+  },
+  "bfa7e83ca23330dc02adfbfdccd89b916a92f30e4362149a638c7a38562e9742": {
+    "translation": "Browser request Host: <OFFICE_COMFYUI_HOST>\n  → Proxy cluster Ingress\n  → Selectorless Service\n  → Manual Endpoints: target GPU cluster Ingress Controller IP\n  → Rewrite Upstream Host: <TARGET_COMFYUI_HOST>\n  → Target cluster Ingress\n  → ComfyUI Service",
+    "pages": [
+      "ai-k8s/practices/comfyui-minimax-h3-gpu.md"
+    ]
+  },
+  "ded77df79b64702ca9ecd5152d6e7791872b19f6abc274a1b4f8cff596e597f9": {
+    "translation": "containerd creates Pod network namespace\n  → Contiv CNI: creates NICs, addresses, gateways, and OVS ports\n  → Cilium CNI: discovers existing veth, registers endpoints with agent\n  → Custom post-plugin: executes environment-specific network extensions",
+    "pages": [
+      "ai-k8s/practices/contiv-ovs-cilium-network.md"
+    ]
+  },
+  "364fd37c2c26cf43fe34ad03e14230c1ee2f5422fc3b063758001bcb58e5fedb": {
+    "translation": "Bridge br-pod                 # original bridge name replaced\n  Port veth-a, tag=200         # host side of Pod A\n  Port veth-b, tag=200         # another Pod in the same VLAN\n  Port veth-c, tag=201         # another Pod network\n  Port bond-uplink            # physical uplink\n  Port br-pod, type=internal   # OVS local port\n\ntable=0, priority=0, actions=NORMAL",
+    "pages": [
+      "ai-k8s/practices/contiv-ovs-cilium-network.md"
+    ]
+  },
+  "de28b3a232df99d32c742d53fe8e2f6ac662878e721818577c5326291d1c7d09": {
+    "translation": "Pod A: 10.244.8.23/22\nDefault gateway: 10.244.8.1\nPod B: 10.244.20.31/22\n\nPod A → veth → OVS → VLAN 200 uplink\n      → network gateway routing → target VLAN → target node OVS → Pod B",
+    "pages": [
+      "ai-k8s/practices/contiv-ovs-cilium-network.md"
+    ]
+  },
+  "f0dd6c246bbf339d1bc78dd77abc65cfd9af5ae9bde5b5f3d880fdcb9cb40d11": {
+    "translation": "Pod accesses Service VIP\n  → sends to the network gateway's MAC via default route\n  → host veth is taken over by OVS\n  → OVS NORMAL forwards the packet to the VLAN uplink\n  → physical network gateway receives the packet with destination IP as Service VIP",
+    "pages": [
+      "ai-k8s/practices/contiv-ovs-cilium-network.md"
+    ]
+  },
+  "4e27b839a45e17a036e6668e564dc546eb3769fc1b0f875914a946ceebc9c8f3": {
+    "translation": "IP 10.244.8.23.<source port> > 10.244.20.31.3000: Flags [S]",
+    "pages": [
+      "ai-k8s/practices/contiv-ovs-cilium-network.md"
+    ]
+  },
+  "fb10a6e1545f8323ced59e2e42804610fe9b99b75a6f9aa63dc603ece9803601": {
+    "translation": "ethertype 802.1Q, vlan 200,\n10.244.8.23.<source port> > 10.244.20.31.3000: Flags [S]",
+    "pages": [
+      "ai-k8s/practices/contiv-ovs-cilium-network.md"
+    ]
+  },
+  "6f8af8c16ef1870778c998331b77ae71303cb36b9c23986a8c4f5eaf62c66113": {
+    "translation": "Image handles version and runtime dependencies\nStatefulSet handles single-instance lifecycle\nDSH_HOME PVC handles Harness state\nWorkspace Volume handles user code\nSecret handles Provider credentials\nNetworkPolicy handles access surface\nProbe handles real health status\nStronger RuntimeClass handles untrusted execution isolation",
+    "pages": [
+      "ai-k8s/practices/deepseek-harness-kubernetes.md"
+    ]
+  },
+  "a55164eaa1f279fede1a9955f1e13031307551a2337bd2f3b42543de08bdf5c4": {
+    "translation": "OpenAI-compatible client\n          │\n          ▼\n     vLLM API Server\n          │\n          ▼\n  Single Pod, single node, TP=8\n  8 × H20 96 GB",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "0a8d2e7310a1cbe581a73e89ca686402be36f68390a6ea828b3cc8e6bb10697c": {
+    "translation": "vLLM: 0.26.0 development version\nPyTorch: 2.11\nCUDA runtime: 12.9\nGPU: 8 × NVIDIA H20 96 GB",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "433629e2f579e63fc07c81184fa6508f43c047600f2ef8d844e5a9f0d9b66dab": {
+    "translation": "Total size: about 155.43 GiB\nFile count: 55\nSafetensors shards: 48",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "51d73fb22bfa82abb9656661753936bd8f5851296ea410254b0534b648d46220": {
+    "translation": "Client\n  → a vLLM API/Engine\n  → TP=8 executes Prefill\n  → KV Cache stays in the same Engine\n  → the same set of TP=8 GPUs executes Decode\n  → Response",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "5bb59c7e6079d8aef9581ffb9a24b9f1251933396fd54c0c50120b170f721cb1": {
+    "translation": "Client → Router → Prefill instance\n                    │\n                    └── KV Cache transfer ──→ Decode instance → Response",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "06c7a718ddbd2e59fa816c2ee131a5c89743a8f060f1c1c1584149eae57d2737": {
+    "translation": "OpenWebUI\n   │\n   ▼\nInternal authentication entry or cross-cluster gateway\n   │\n   ▼\nService\n   │\n   ▼\nvLLM Pod :8000",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "694dd9e345445619349ba7d2e19f20bb0217844e418080890968fba63794be2f": {
+    "translation": "AIBrix Gateway, routingStrategy=pd\n  ├─ Prefill RayClusterFleet, 1 8-GPU Head Pod, TP=8\n  └─ Decode RayClusterFleet, 1 8-GPU Head Pod, TP=8\n\nPrefill Head -- NIXL/UCX --> Decode Head",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "4d0ca84debcafcbef69a9ac2334b044cb2949a262fe1a6db247b109db74e843f": {
+    "translation": "RayClusterFleet / KubeRay: manages the lifecycle of two single-node Engines\nvLLM mp: manages the 8 local TP ranks inside each Engine\nAIBrix P/D Router: selects Prefill and Decode Engines\nNIXL/UCX: transfers KV between the two Engines",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "479808a65e81c3cd41574ed47fced4d09d901f02516a3d0325b290210087c988": {
+    "translation": "RoleBasedGroup\n  └─ server Role, replicas=1\n       └─ 1 Pod, 8 × H20 96 GB\n            ├─ Init Container: prepares 48 model shards\n            └─ SGLang: TP=8, Marlin, DSpark",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "de7b4d5e105cc8e3ff3027a323d61651d133e8ce0f7b78aa8a1c591a1a72b424": {
+    "translation": "SGLang / DeepGEMM generates kernel.cu\n  → nvcc / cicc compiles to PTX\n  → ptxas assembles to sm_90a cubin\n  → writes to SGLang JIT cache\n  → target verify CUDA Graph\n  → draft verify CUDA Graph\n  → HTTP Server Ready",
+    "pages": [
+      "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"
+    ]
+  },
+  "5d554ca7073f1453a0479f09f9dbea233ab7e1861fa3548cdb90c266eec4b9bf": {
+    "translation": "Request → Prefill Engine ── NIXL / Mooncake / RDMA ──→ Decode Engine\n                   KV Transfer for this request",
+    "pages": [
+      "ai-k8s/practices/distributed-kv-cache-deepseek-v4.md"
+    ]
+  },
+  "98ab2017c0849a479ffe0379a574d79ef0995142114e2d00cdcda75719c56297": {
+    "translation": "                                 ┌─ Prefill Pool\nOpenAI-compatible Request → Router┤\n                                 ├─ Decode Pool\n                                 └─ Combined Pool (short requests and failure fallback)\n                                          │\n                              P/D KV Transfer / Cache Load\n                                          │\n        ┌─────────────────────────────────┴──────────────────────────────┐\n        │                                                                │\nGlobal KV Directory and Scheduling                                Layered KV Data Plane\nPrefix → Block Location                                     L1: GPU HBM\nModel / Runtime / Layout Fingerprint                         L2: Host DRAM\nTenant / Session / TTL / Quota                               L3: Local NVMe\nLoad / Topology / Hit Cost                                   L4: Distributed KV Store",
+    "pages": [
+      "ai-k8s/practices/distributed-kv-cache-deepseek-v4.md"
+    ]
+  },
+  "0748ec923e113554023d9869fd0e2c773f2b90925fd6fe6a4f5463032217d948": {
+    "translation": "Estimated benefit = time saved by avoiding re-Prefill\nEstimated cost = queueing time + KV read/transfer time + target instance Decode pressure",
+    "pages": [
+      "ai-k8s/practices/distributed-kv-cache-deepseek-v4.md"
+    ]
+  },
+  "50b3cd2edaaf277bceae85a19dd7c742422771a1e7a2549619b647fdfb359b42": {
+    "translation": "external_prefix_cache_hits_total  +5,120 tokens\nprompt_tokens source=external_kv_transfer  +5,120 tokens\nLMCache L1 Lookup/Hit and memory usage grow simultaneously",
+    "pages": [
+      "ai-k8s/practices/distributed-kv-cache-deepseek-v4.md"
+    ]
+  },
+  "0484e4246f6e1292f7ebfa9295f189700ded37f97919d4ea6135a1221b3db5f7": {
+    "translation": "Reusable token ratio × avoided Prefill compute time\n  > global lookup + KV read + network transfer + target queueing time",
+    "pages": [
+      "ai-k8s/practices/distributed-kv-cache-deepseek-v4.md"
+    ]
+  },
+  "4276ae1e7a043267a00150a7011d44835fd33bbc6a59f8bfbc36ce5501c4aff4": {
+    "translation": "Combined + Round Robin\nCombined + KV-aware Routing\nP/D + no shared cache\nP/D + L2 Host Memory\nP/D + Distributed L3",
+    "pages": [
+      "ai-k8s/practices/distributed-kv-cache-deepseek-v4.md"
+    ]
+  },
+  "0b011d312d0521b307770f959b776504f54bbc600dcac96dcccadbc048940b25": {
+    "translation": "Hardware and firmware\n  → OS/kernel/IOMMU\n  → drivers and container runtime\n  → Device Plugin/CDI/DRA\n  → scheduler and topology\n  → PyTorch adaptation/compiler/operators\n  → HCCL or vendor Collective\n  → Exporter, health and fault isolation",
+    "pages": [
+      "ai-k8s/practices/domestic-accelerators.md"
+    ]
+  },
+  "2700865fd893442c2490cf2cd867a4634cf6f1b23eb5f329d7ab05a344ce0adc": {
+    "translation": "OpenWebUI / benchmark client\n              │\n              ▼\n        AIBrix Gateway\n              │\n              ▼\n   HTTPRoute → DNS-safe Service\n              │\n              ▼\n       vLLM Pod, TP=8\n              │\n              ▼\n  8 × H20 141 GB + shared model directory",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "cb186de5202cfbb1aaaeb11eb88e5805a657356b67a7a691f0b85f94ca04bb70": {
+    "translation": "vLLM /v1/models\n  → AIBrix /v1/models\n  → HTTPRoute Accepted / ResolvedRefs\n  → Base URL used by OpenWebUI\n  → Whether OpenWebUI persistent configuration overrides environment variables",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "8e510e394535823621d7f1e65d0c530cb51d5e5bf1502ebb0849c41bbef55254": {
+    "translation": "Benchmark Client\n       │\n       ▼\n AIBrix P/D Router\n       │\n       ├─ Prefill: Node A, 8 × H20 141 GB, TP=8\n       │       │\n       │       └─ NIXL + UCX: Transfer KV Cache\n       │                         │\n       └─ Decode: Node B, 8 × H20 141 GB, TP=8",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "7e237d0b5b96c9f980825565695a527ef233c3a5718d74b40d29d21ab4027e58": {
+    "translation": "W4AFP8 weight quantization\n  + FP8 E4M3 KV Cache\n  + EAGLE speculative decoding\n  + Higher running request limit\n  + HiCache tiered KV Cache",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "beace2726b08020ca601b7ac318e17b18b8fc0d6da708a9b36debb1db8b961d8": {
+    "translation": "All ranks complete weight and kernel initialization\n              ↓\nHTTP port starts listening\n              ↓\nPod Ready=True\n              ↓\n/v1/models correct + one correct generation",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "ad7cc46be640449eda27263ec40eed3923ce2031c1e5991f84490e6afbc06e8d": {
+    "translation": "8 TP ranks × 8 loading threads per rank\n                  │\n                  ▼\n      Approximately 64 concurrent shared filesystem reads\n                  │\n        ┌─────────┴─────────┐\n        ▼                   ▼\n  CFS throughput and metadata pressure    Rank completion time divergence\n                            │\n                            ▼\n                   All ranks wait synchronously",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "c20bed9d22a2bf64aa1f496659366c0d6672b69c068e714e8245a42b0ee1295b": {
+    "translation": "SGLang commit + SGL Kernel + CUDA/Driver\n  + GPU compute capability + TP\n  + Model revision/quantization method + Kernel parameters",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "6c1d10aaff142b7104513ee0152331104131736118d899a73fca1a61feb078d5": {
+    "translation": "SGLang native /generate or OpenAI streaming request\n                  ↓\nGPU completes generation, Metrics show running=0, queue=0\n                  ↓\nClient still stuck in socket poll / event loop waiting for completion",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "a8d973fae71a690cdd4aa91dbc4ac551a10b3eaa1ea25859d86584ace9ee030d": {
+    "translation": "Request completes and returns 200\n        |\n        v\nEAGLE Verify reads uninitialized Mamba Track Index\n        |\n        v\n8 TP schedulers throw TypeError\n        |\n        v\nParent process receives SIGQUIT and cleans up process tree\n        |\n        v\nOuter shell/tee returns 0 -> Kubernetes shows Completed",
+    "pages": [
+      "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"
+    ]
+  },
+  "e92210082f0636506e4018dc5861e0475d020cc5cffbd6615262504c2dd38c9d": {
+    "translation": "Business group B has idle guaranteed quota\n  → B provides lendable capacity within lendingLimit\n  → Business group A's low-priority training borrows\n  → Ledger records lender, borrower, Flavor, GPU count, and start time\n\nBusiness group B recovers demand\n  → Stop admitting new borrowed tasks to A\n  → Select candidate tasks that exceed A's guaranteed amount and have the lowest priority\n  → Send reclaim event, enter gracePeriod\n  → Training Controller requests Checkpoint\n  → After Checkpoint succeeds, stop tasks and release GPUs\n  → B's Workload is admitted\n  → A later resumes from Checkpoint",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "124333feca8e8a461c09dae1da266f618fab3500be556fcf626e94e9f3a51848": {
+    "translation": "Select candidate replica\n  → Router reduces weight to 0\n  → Stop accepting new requests\n  → Wait for streaming requests and long-context Decode to finish\n  → After drainTimeout is reached, terminate or migrate according to policy\n  → Delete Pod, release full Replica Shape",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "c8da61db6e27ba860bbc07fe76ed055dcc7d42fa7967a6d5a08006eb86fe266e": {
+    "translation": "Weekday 07:30\n  → Stop admitting new low-priority long training\n  → Notify borrower and trigger Checkpoint\n\nWeekday 08:30\n  → Preload daytime models and Compile Cache\n  → Inference minimum replicas increased from 2 to 6\n  → Tighten inference reserved capacity that training pool can lend out\n\nWeekday 09:00—20:00\n  → Real-time elasticity continues to vary between 6–12 replicas based on Queue/TTFT\n\nWeekday 20:00\n  → Inference minimum replicas reduced to 1–2\n  → Idle GPUs enter lendable pool\n  → Night training queue starts admission",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "60ac41afee9abdc9b1d58d1b31d164fd87cee41e000e6d64b51f815a355990f5": {
+    "translation": "Actual replica lower bound = max(tidal minimum replicas, real-time traffic calculation result)",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "c355871c0b00a204e57d68b8bd7f360a2d255f7dafbadc9adfc05c238cdda644": {
+    "translation": "GPU/Node\n  DCGM Exporter / Vendor Exporter / Node Exporter\n                        │\nKubernetes and Controllers     │\n  kube-state-metrics / Kueue / Volcano / KServe / KEDA\n                        │\nTraining and Inference Applications           │\n  Trainer / NCCL / vLLM / AIBrix / Gateway Metrics\n                        ▼\nPrometheus per cluster → Thanos/Mimir long-term storage\n                        │\n                        ├→ Grafana Dashboard\n                        ├→ Alertmanager\n                        └→ Capacity and FinOps Recording Rules\n\nGateway / Controller / Model Server Logs\n  → OpenTelemetry Collector\n      ├→ Loki/Elasticsearch\n      └→ Tempo/Jaeger",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "48a4ddce17271b914df95f98a6d9579b8678b4bccdfdd44526c0aac3db2b16f3": {
+    "translation": "Admission Webhook\n  → Validate and write controlled labels: business_group / owner_id / cost_center\n\nCentral Metadata Sync Controller\n  → Use a shared Informer/List-Watch to read necessary Pod metadata\n  → Generate per-node mapping snapshot with Pod UID as primary key\n  → Keep only fields allowed to enter metrics\n\nCustom DCGM Exporter on nodes\n  → Kubelet PodResources: GPU UUID/MIG Device → Pod/Container\n  → Local mapping snapshot: Pod UID → Team/User/Queue/Workload\n  → Append controlled labels before Prometheus Sample output\n  → Scrape never accesses API Server",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "c8623186ead0dbcb83668cfb2d31514c3807b99307feccf62f8a2aeeeae5e1c2": {
+    "translation": "GPU UUID / MIG GI-CI\n  → PodResources finds Pod UID, Namespace, Container\n  → ownershipCache.Lookup(podUID)\n  → Append business_group, owner_id, cost_center, queue, workload_uid\n  → Prometheus exposition",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "06aa41906fce79de56d6d3c722c8b996852fa445d41b7a7d3578d96ec077681c": {
+    "translation": "business_group\nowner_id          # stable account ID, not name or email\ncost_center\nqueue\nworkload_type\nworkload_uid\nmodel\nmodel_version",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "0bcf06849f9b4a65177f45f0b8a865f2373e3429ca277b6e84e4615dd1cf042c": {
+    "translation": "CronJob / Governance Controller runs every 15–30 minutes\n  → Queries Prometheus instead of querying the API Server per Pod\n  → Aggregates by business_group / owner_id / workload_uid\n  → Checks consecutive time windows, GPU memory, power consumption, training progress, and application metrics\n  → Applies whitelist, startup grace, checkpoint, and inference floor exceptions\n  → Writes alert status, completes deduplication and escalation\n  → Sends personal notifications, team summaries, and platform governance events",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "2a4484f1b202a1e84271c033a0cac74fee79506cd37b89cc1e16e20cda2a1a21": {
+    "translation": "Detected\n  → Notify Owner for the first time, with Dashboard and self-check suggestions\n  → User restores utilization: Resolved\n  → Lasts 2h: Escalated, notify team administrator\n  → Uses borrowed GPU and exceeds policy: ReclaimCandidate\n  → Checkpoint successful and approved: reclaim or downgrade",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "3a78ff27ab23101a8e9e272ee5c4808c51bb185534c1390f054d29aea51f7d13": {
+    "translation": "Allocation rate = allocated GPU-hours / available GPU-hours\n\nEffective utilization = GPU-hours that produce effective training or meet inference SLO\n             / allocated GPU-hours\n\nBorrow rate = borrowed GPU-hours / borrowable GPU-hours\n\nInference unit cost = inference GPU cost / million effective tokens\n\nIdle waste = allocated but low-utilization GPU-hours with no effective task progress",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "a4e252e87317f1077367380d52bfda29b8283f8042c9df2e364246de82411514": {
+    "translation": "GPU 0-3\nor\nGPU 4-7",
+    "pages": [
+      "ai-k8s/practices/gpu-topology-fragmentation-scheduling.md"
+    ]
+  },
+  "dfbac3773471cb734dc8680ff8707999674be94678e553c14cd10eca8ce75ff2": {
+    "translation": "Occupied  Occupied  Idle  Idle   Idle  Idle  Occupied  Occupied\nGPU0  GPU1  GPU2  GPU3   GPU4  GPU5  GPU6  GPU7",
+    "pages": [
+      "ai-k8s/practices/gpu-topology-fragmentation-scheduling.md"
+    ]
+  },
+  "aa95bd3aad41e4ab28b60ac66c9297b8ee455c473b65253919d15c9172b199a4": {
+    "translation": "Pod requests nvidia.com/gpu: 4\n          │\n          ▼\nkube-scheduler selects a node with 4 GPUs remaining\n          │  At this point, mainly integer capacity is visible\n          ▼\nkubelet calls Device Plugin\n          │\n          ▼\nDevice Plugin selects 4 GPUs from the node's idle UUIDs\n          │\n          ▼\nContainer gets CUDA_VISIBLE_DEVICES / CDI Devices",
+    "pages": [
+      "ai-k8s/practices/gpu-topology-fragmentation-scheduling.md"
+    ]
+  },
+  "bf3d9f279001342bb9cfb5378f93c3bd433f765d428f35ff0ffd62610f4d4391": {
+    "translation": "Partition A = the four UUIDs corresponding to GPU 0, 1, 2, 3\nPartition B = the four UUIDs corresponding to GPU 4, 5, 6, 7",
+    "pages": [
+      "ai-k8s/practices/gpu-topology-fragmentation-scheduling.md"
+    ]
+  },
+  "8f50ef71b2c4875b270a73e3f30ac7b71ab68afea5ff3dd380172f2e9561b1c7": {
+    "translation": "Preferred: use if good topology exists, otherwise allow degraded operation.\nRestricted: wait if no complete topology domain exists, never silently degrade.",
+    "pages": [
+      "ai-k8s/practices/gpu-topology-fragmentation-scheduling.md"
+    ]
+  },
+  "6353014b52ce16e7fe22a9b9c2abfa9b2de2ac06976250eeb50c181e429945db": {
+    "translation": "TTFT p50/p95/p99\nTPOT p50/p95/p99\nEnd-to-end latency and failure rate\nRequests per second, input tokens per second, output tokens per second\nGPU memory, SM, power consumption, and KV Cache usage\nGPU time and cost per million tokens",
+    "pages": [
+      "ai-k8s/practices/inference-engine-benchmark.md"
+    ]
+  },
+  "f4f1d7c91aae5dec556b745ced55d64f35d83a09f6212e4282dd5b2740cd7f08": {
+    "translation": "koord-manager-1 ── CA-1 ─┐\nkoord-manager-2 ── CA-2 ─┼──> the same WebhookConfiguration.caBundle\nkoord-manager-3 ── CA-3 ─┤\n...                       │\nkoord-manager-8 ── CA-8 ─┘",
+    "pages": [
+      "ai-k8s/practices/koordinator-webhook-multireplica-cert-race.md"
+    ]
+  },
+  "02b1b34f34a93a9d040b4f330490192378c9db37349e0092e02996743662498f": {
+    "translation": "Client initiates TCP/TLS connection\n        ↓\nL4 LB selects API Server 1\n        ↓\nHTTP/2 Streams 1, 2, 3... all stay on this connection\n        ↓\nL4 LB cannot see each Stream, nor can it move existing Streams to API Server 2",
+    "pages": [
+      "ai-k8s/practices/kube-apiserver-load-balancing.md"
+    ]
+  },
+  "ff9fa2a58f8a63216fc2bd367cc3a3ec3158bfafbabd03bdfb924688854da00a": {
+    "translation": "Request share_i = instance_i QPS / total QPS\nConnection share_i = instance_i active connections / total active connections\nPressure share_i = instance_i CPU or inflight / total pressure",
+    "pages": [
+      "ai-k8s/practices/kube-apiserver-load-balancing.md"
+    ]
+  },
+  "064c5fdd564c0222934fd84e1e044b59020aed890450f61aaee939002449a12e": {
+    "translation": "Instance request deviation = max(per-instance request rate) / avg(per-instance request rate)\nInstance pressure deviation = max(per-instance CPU or inflight) / avg(per-instance CPU or inflight)",
+    "pages": [
+      "ai-k8s/practices/kube-apiserver-load-balancing.md"
+    ]
+  },
+  "576006497e509466aa2ab988149e0d282e135506bda5c5a904cec85b1d10b4ab": {
+    "translation": "Capacity margin after failure\n= healthy allocatable capacity that meets topology and dependency conditions\n− peak demand\n− approved maintenance occupancy and safety reserve",
+    "pages": [
+      "ai-k8s/practices/kubernetes-fleet-reliability.md"
+    ]
+  },
+  "815acfa97ca7d7dff079feba2521d0604d0c03f6a4ac255eaa8a81e9898c9b9f": {
+    "translation": "Office network browser\n  → node address:6080\n  → noVNC/WebSocket proxy with Basic Auth\n  → virtctl VNC subresource\n  → KubeVirt VMI\n  → Tiny Core graphical desktop\n  → node-local LVM DataVolume",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "19c74ea27a002f9b1a95dc34308b80042ffe3672acfd1a5107e6bf6990546342": {
+    "translation": "User and platform layer\n  kubectl / virtctl / KubeVirt Manager / self-developed Workspace Portal\n                     │ create and modify Kubernetes objects\n                     ▼\nDeclarative API layer\n  CRDs such as VirtualMachine, VMI, Migration, Snapshot, DataVolume\n                     │ Controller continuously compares desired state with actual state\n                     ▼\nKubernetes orchestration layer\n  scheduler, Pod, PVC/CSI, CNI, Service, RBAC, Quota, PriorityClass\n                     │ schedule virt-launcher to specific nodes\n                     ▼\nNode virtualization layer\n  virt-handler → virt-launcher → libvirt/QEMU/KVM → guest OS",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "78c9b2ce5459bcc8a889fbd1c3a781f25d26dd8a5b267058a5b6447eb6540fc4": {
+    "translation": "VirtualMachine\n  → virt-controller creates VirtualMachineInstance\n  → virtualmachine-controller creates virt-launcher Pod\n  → kube-scheduler selects node based on resources, affinity, and PV nodeAffinity\n  → virt-handler on target node instructs virt-launcher to define libvirt domain\n  → QEMU opens PVC/block device, creates tap, starts guest OS\n  → VMI status reports node, IP, Guest Agent, and Ready conditions",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "55a45f08d77895d91b799d689d6ad4c94c9804f141c8b6624702dde8744c4b83": {
+    "translation": "DataVolume\n  ├─ source: http / registry / upload / pvc / snapshot / blank\n  ├─ storage: StorageClass / accessModes / volumeMode / size\n  ├─ target PVC\n  └─ status: Pending / ImportInProgress / CloneInProgress / Succeeded",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "0e032c04b3513695210ca77935588b31415684415a2cb43791efb577754ec052": {
+    "translation": "Browser /vnc.html\n  → websockify :6080\n  → virtctl vnc --proxy-only 127.0.0.1:5900\n  → Kubernetes VMI VNC subresource",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "aac47fa359af302b55ceb98b5f0b9630db1885ca654cc9b8b5faf5ad2c6b42ae": {
+    "translation": "Ubuntu 24.04 LTS QCOW cloud image (or GPU-compatible verified Ubuntu 22.04 LTS)\n  → CDI imports and clones into per-user independent root disk\n  → cloud-init creates user, SSH key, and initial configuration\n  → Install Miniforge/Micromamba, JupyterLab, code-server inside VM\n  → systemd manages two services separately\n  → Full / root disk persisted by DataVolume",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "2eb12b2f16466d3000a36dd0e26c1fa6cf8268e62733f84d11bc1fc830b9a833": {
+    "translation": "guest application\n  → systemd-resolved or guest resolver\n  → Kubernetes DNS Service IP issued by KubeVirt DHCP\n  → masquerade gateway, e.g., 10.0.2.1\n  → kube-dns/CoreDNS ClusterIP\n  → CoreDNS Pod\n  → enterprise DNS or public upstream DNS",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "356d2c0ecbedf4765ed5781be4eb37f0f8bf95d07817619a41731b5e68f84dfa": {
+    "translation": "KubeVirt VM\n  → node-local DNS, e.g., <node-local-dns-ip>\n      ├─ cluster.local → CoreDNS\n      └─ other domains → enterprise DNS",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "b5e4ed612220730e9bc4be440d491e45b0ac80a5c2593672a523caecaeb47359": {
+    "translation": "Office network or cluster client\n  → VMI Pod IP / Kubernetes Service\n  → NAT in virt-launcher network namespace\n  → guest 10.0.2.2",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "efdcfa8ab0159c5ebd0de38e319eaa77a10c77106f31a99b0cacc5cd047263ac": {
+    "translation": "user01.notebook.example.internal ─┐\nuser02.notebook.example.internal ─┼→ HTTPS Gateway/Ingress fixed VIP\nuser03.notebook.example.internal ─┘        │\n                                           ├→ Service/notebook-user01\n                                           ├→ Service/notebook-user02\n                                           └→ Service/notebook-user03\n                                                    │\n                                                    ▼\n                                          dynamic VMI Pod IP → guest",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "1c199327c8faa482c39cd085b338419aa66997743da42a54b58cb4dad5706f4d": {
+    "translation": "VM eth0: Pod network + masquerade\n  Purpose: Kubernetes Service, platform probing, and default management link\n\nVM office0: Multus + bridge/SR-IOV/macvtap\n  Purpose: Routable fixed IP in office network or business VLAN",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "e54d283a2c997cc9fa1022f1a020bad62593603346c2b4bf877cfd519ba72406": {
+    "translation": "Idle detector confirms timeout\n  → Send user a shutdown notice and enter grace period\n  → Re-confirm no active sessions or background tasks\n  → Call VM stop / set runStrategy: Halted\n  → Guest attempts graceful shutdown\n  → VMI and virt-launcher Pod deleted\n  → CPU, memory, and temporary network resources released\n  → VirtualMachine, PVC, and user's full root filesystem retained",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "ef849672d0aacc8a6340f2d3cb8360c8755bd57ddb505f7dee3a75d48c1be3a2": {
+    "translation": "Running\n  ├─ Has activity → update last-active, continue running\n  └─ Exceeds idle-timeout\n       → StoppingPending, notify user via page and message\n       ├─ Activity resumes within grace period → Running\n       └─ Grace period ends and no protection lease\n            → Call stop → Stopped\n\nStopped\n  └─ User accesses fixed domain\n       → Gateway redirects to \"Workstation starting\" page\n       → Controller calls start\n       → Wait for VMI Ready, SSH/Jupyter readiness success\n       → Re-forward to user workstation",
+    "pages": [
+      "ai-k8s/practices/kubevirt-local-desktop-lab.md"
+    ]
+  },
+  "2549d05e6b52ef2753e446f8bb30d0e7dcf28c39e871b8b22ba968cce46ed50e": {
+    "translation": "Enterprise OIDC / Workspace Portal\n             │\n             ├─ Create, start, stop, snapshot, reset\n             ▼\nKubeVirt VirtualMachine (one per user)\n  ├─ Root disk /: Ceph RBD, 100–200 GiB\n  │    ├─ OS, /home, /opt, /usr/local, /var\n  │    ├─ Conda, Python, compilers, IDE plugins\n  │    └─ User cache and system configuration\n  ├─ Work disk /workspace: optional independent RBD\n  ├─ Data/models: object storage or on-demand read-only share\n  ├─ /scratch: node-local NVMe, discardable\n  └─ GPU: PCI Passthrough or validated vGPU",
+    "pages": [
+      "ai-k8s/practices/kubevirt-rbd-notebook.md"
+    ]
+  },
+  "3dc6343c1cf5af19bf2b707881035c08c0a1a0d276d08e0b357a4a8d7b5b59a2": {
+    "translation": "User request\n  → Clone independent RBD root disk from golden image\n  → Create VirtualMachine (stopped by default)\n  → Start VMI, allocate CPU/memory/GPU\n  → User modifies guest filesystem arbitrarily\n  → Idle reminder and shutdown\n  → VMI disappears, compute resources released, VM and RBD retained\n  → Restart to restore original environment",
+    "pages": [
+      "ai-k8s/practices/kubevirt-rbd-notebook.md"
+    ]
+  },
+  "d28b8401a2c932de120cbfe89afdb98bb7b73dca2f4af701ca748061a4551c8f": {
+    "translation": "vm-cpu         Regular CPU Notebook VM\nvm-gpu-pci     GPU bound to vfio-pci, dedicated to GPU passthrough VM\ncontainer-gpu  GPU bound to nvidia/amdgpu driver, dedicated to container Pod",
+    "pages": [
+      "ai-k8s/practices/kubevirt-rbd-notebook.md"
+    ]
+  },
+  "555f2bb332a9e550e8b4140f0d00aea2ffee64e7f2041727f26370e0aecbffb5": {
+    "translation": "VMI Phase: Running\nVMI Ready: True\nGuest Agent: Connected\nVMI IP: empty\nGuest enp1s0: DOWN / unmanaged",
+    "pages": [
+      "ai-k8s/practices/kubevirt-rbd-notebook.md"
+    ]
+  },
+  "b3cbf5585db5e20e121f14f2f9b407698eb63cac7252886773ff1cb7deab6a5f": {
+    "translation": "Node lost\n  → Stop scheduling new VMs to that node\n  → Confirm old node is powered off or isolate Ceph/storage network\n  → Clean up lost VMI/Pod state\n  → Re-mount the same RBD on another compatible node\n  → Cold start VM\n  → Verify filesystem, GPU, and Jupyter",
+    "pages": [
+      "ai-k8s/practices/kubevirt-rbd-notebook.md"
+    ]
+  },
+  "b6b6364a967be04151967d63439b7e244b8ae55d1442556c8f2fa2ab75ea6699": {
+    "translation": "8 GPU × 29 seconds ≈ 232 GPU·seconds ≈ 3.9 GPU·minutes",
+    "pages": [
+      "ai-k8s/practices/llm-cold-start-optimization.md"
+    ]
+  },
+  "72833522075bccc26e89cb30edf47d79177cb7a6c7fda6108d465ebd9a3b2f5c": {
+    "translation": "Monthly benefit\n= Number of starts × GPU idle cost saved per start\n+ Reduction in business loss from shortened failure windows\n- NVMe procurement or instance premium\n- Operational costs of cache replication, monitoring, eviction, and failure backfill",
+    "pages": [
+      "ai-k8s/practices/llm-cold-start-optimization.md"
+    ]
+  },
+  "bf3a6e9aca25b1c72b30b6223259efe14b619f8ac761aa8a2e57bda082d14448": {
+    "translation": "GPU Architecture + Driver + CUDA\n+ Runtime Image Digest\n+ SGLang/vLLM/Torch/Triton/DeepGEMM/TileLang/FlashInfer\n+ Python ABI\n+ Model Implementation + DType + Quantization\n+ TP/PP/EP and compilation parameters",
+    "pages": [
+      "ai-k8s/practices/llm-cold-start-optimization.md"
+    ]
+  },
+  "14e3dc73c0531be7c2ce6767accf4460c2d25fff58e307cd147c133474b9bea2": {
+    "translation": "Fixed base image digest\n  → Execute warm-up matrix on same-architecture GPUs\n  → Collect .cubin, .so, and torch.compile cache\n  → Generate Cache Manifest and compatibility fingerprint\n  → Write to /opt/prebuilt-cache/<fingerprint> in derived image\n  → Init Container copies to writable Cache Volume",
+    "pages": [
+      "ai-k8s/practices/llm-cold-start-optimization.md"
+    ]
+  },
+  "7c83e862daa166483e4e0bd3d025f471c877c4940988a7478e5aae577d86199c": {
+    "translation": "Object storage/file system\n  → DataLoader/Tokenizer/Decode\n  → Host Memory and H2D\n  → GPU Kernel\n  → GPU-GPU Collective\n  → Checkpoint/result write-back",
+    "pages": [
+      "ai-k8s/practices/low-gpu-utilization.md"
+    ]
+  },
+  "9a456bd8a1b5c8a3d84b5238ef45b1cbe072999590a1b4572ec6375e866ad332": {
+    "translation": "Hugging Face weights + SGLang-Omni's MiniMaxMusic3PipelineConfig = callable music API",
+    "pages": [
+      "ai-k8s/practices/minimax-music3-sglang-omni.md"
+    ]
+  },
+  "862e51a5e8f647d93218c1573a5f1e228edf732d884dea31e87c1bed9b6bb7b2": {
+    "translation": "Qwen.title   -> UI song title and history\nQwen.lyrics  -> Music3 input\nQwen.caption -> Music3 instructions",
+    "pages": [
+      "ai-k8s/practices/minimax-music3-sglang-omni.md"
+    ]
+  },
+  "3810cdcd047dfe2707e1125bcc8652e5e094e740d520a82383d0c8333bdbc0a3": {
+    "translation": "Node provisioning\n  → OS/Driver/Runtime Ready\n  → Image pull\n  → Model discovery and validation\n  → Model download/extract/convert\n  → Local cache hit\n  → Engine loads weights\n  → CUDA Graph/Warmup\n  → Readiness",
+    "pages": [
+      "ai-k8s/practices/model-distribution-100-nodes.md"
+    ]
+  },
+  "4fcdd333a10f2643f41c26fa67a9788d83b78cb3c2593ed9c607160a45eb008e": {
+    "translation": "Weight GiB ≈ parameter count × bytes per parameter / 2^30\nAvailable GPU memory ≈ number of GPUs × per-GPU memory × (1 - runtime reserved ratio)\nKV budget ≈ available GPU memory - weights - other resident overhead\nTheoretical concurrency ≈ floor(KV budget / per-request KV Cache)",
+    "pages": [
+      "ai-k8s/practices/model-memory-calculator.md"
+    ]
+  },
+  "195361b001a48ce72a8885b5c4ba1f0247a221f6c87d258c67be35f4e4f6f715": {
+    "translation": "t0  Pod creation\nt1  Image and storage available\nt2  Model version and cache status confirmed\nt3  Weight reading starts\nt4  Weight reading completes\nt5  GPU weight loading completes\nt6  JIT / Autotune completes\nt7  CUDA Graph / Warm-up completes\nt8  Health check passes\nt9  First deterministic request returns correctly",
+    "pages": [
+      "ai-k8s/practices/model-weight-delivery-acceleration.md"
+    ]
+  },
+  "bf24c2312ca1bce61da216e68c4048249eb502633d003c6cb71bd30ff7c827d4": {
+    "translation": "Object storage retains immutable authoritative copies\n  → Parallel file system handles shared delivery\n  → Node NVMe caches hot models\n  → Use streaming Loader to optimize reading and H2D\n  → Introduce Dragonfly P2P after reaching scale threshold\n  → Explore ModelExpress when compatible online replicas and RDMA are available",
+    "pages": [
+      "ai-k8s/practices/model-weight-delivery-acceleration.md"
+    ]
+  },
+  "492d6a4b8f139e91a7ffe54fd734c1fac5472f71a35ba496c3e1faf26261b343": {
+    "translation": "Multiple Rank training processes start\n        ↓\nData cache, shared memory and Host Pinned Memory grow rapidly\n        ↓\nPod memory cgroup reaches approximately 640 GiB hard limit\n        ↓\nNVIDIA os_lock_user_pages can no longer lock 4/16 GiB large memory blocks\n        ↓\nSome training Ranks are OOM-killed by memcg\n        ↓\nOther Ranks fail to initialize NCCL Communicator\n        ↓\nTensorFlow finally only shows ncclCommInitRank: unhandled cuda error",
+    "pages": [
+      "ai-k8s/practices/nccl-unhandled-cuda-error-host-memory-oom.md"
+    ]
+  },
+  "ac1420a9dd32483e873b6539e77cc2f5f77ffe8e7a3bcf2c8a18c830c24c09a8": {
+    "translation": "NCCL appearing in logs\n≠ NCCL library itself has a bug\n≠ RDMA network has a failure",
+    "pages": [
+      "ai-k8s/practices/nccl-unhandled-cuda-error-host-memory-oom.md"
+    ]
+  },
+  "a6115effe989a50f54f7493e05dee4b9b97e1be0bb9a0977cf873344f7923e69": {
+    "translation": "Per-Rank cache × number of Ranks\n+ Worker cache × number of Workers × number of Ranks\n+ Prefetch depth\n+ Pinned Buffer\n+ tmpfs/shmem\n= Pod Host Memory peak",
+    "pages": [
+      "ai-k8s/practices/nccl-unhandled-cuda-error-host-memory-oom.md"
+    ]
+  },
+  "064610b6af6055fa322b99fc0f9dfc642ec1d99de4cc0647dc20424459b8f8cf": {
+    "translation": "NCCL INFO logs\nFirst anomaly and time for each Rank\nPod memory working set / RSS / cache / shmem\ncgroup memory failcnt or memory.events\nkubelet, containerd, and dmesg timeline\nGPU Xid/ECC/PCIe/P2P status",
+    "pages": [
+      "ai-k8s/practices/nccl-unhandled-cuda-error-host-memory-oom.md"
+    ]
+  },
+  "23275a60c70eb912732c90e4dd3527034f847807410b981f1f4682eabd39e308": {
+    "translation": "First application error\n  → Rank lifecycle\n  → cgroup memory\n  → NVIDIA/kernel logs\n  → GPU and PCIe\n  → SHM/P2P\n  → RDMA/Socket\n  → minimal nccl-tests",
+    "pages": [
+      "ai-k8s/practices/nccl-unhandled-cuda-error-host-memory-oom.md"
+    ]
+  },
+  "7218fd2574fe4255689ff2acd93e9da32f21aad163a037976faad707ec73f796": {
+    "translation": "Ollama local validation\n  → Pin model Revision, Tokenizer, and Prompt Template\n  → Export OpenAI-compatible API contract and regression set\n  → vLLM/SGLang single-node retest\n  → Build immutable image and model artifacts\n  → Kubernetes GPU Deployment/ServingRuntime\n  → Gateway, authentication, rate limiting, and canary\n  → Load testing, failure drills, and SLO",
+    "pages": [
+      "ai-k8s/practices/ollama-to-production.md"
+    ]
+  },
+  "372afd6566f24b620d02ea46043f62fd6c3b6b37442086cce02365ae0052b717": {
+    "translation": "FastAPI two-replica application\n  ├─ OTLP Trace  ─┐\n  └─ OTLP Metric ─┼─> OpenTelemetry Collector Gateway\n                  ├─ Trace  -> Langfuse\n                  ├─ Metric -> Prometheus Exporter -> Prometheus / Grafana\n                  └─ Log    -> Debug (replace with Loki / Elasticsearch in production)",
+    "pages": [
+      "ai-k8s/practices/opentelemetry-kubernetes-practice.md"
+    ]
+  },
+  "dcd81f7f6fe48a686ea1bcbb2a40df91e802276b98edba3b884b1f4dba2e94ac": {
+    "translation": "A. Single replica: Prefill + Decode on the same instance\nB. Multiple regular replicas: add replicas and smart routing\nC. P/D dual pool: independent instances + KV transfer",
+    "pages": [
+      "ai-k8s/practices/pd-break-even.md"
+    ]
+  },
+  "1a9634a1fa4531da06eafe15d0e5c458af6fe621abaebd42c1eba78cb8af2045": {
+    "translation": "Image tag + manifest digest\nModel repo + revision + file checksum\nGPU model, GPU memory, driver, CUDA, topology\nvLLM / PyTorch / Transformers / NCCL versions\nFull startup arguments and environment variables\nPod created / weights loaded / compile done / API ready / first correct response time\nRequest length, concurrency, request-rate, random seed, and result JSON\nGPU utilization, GPU memory, power consumption, PCIe/NVLink, CPU, memory, storage read\nError logs, OOM, Xid, timeout, retries, and client failures",
+    "pages": [
+      "ai-k8s/practices/qwen38-27b-day0.md"
+    ]
+  },
+  "da8dd72abd31f159a8c0e947f7533c6d6ef5adc8e0f044d0be4113282a6b2338": {
+    "translation": "Base URL: https://your-model-endpoint.example.com/v1\nAPI Key: configured by the access layer\nModel ID: qwen38-flash-next",
+    "pages": [
+      "ai-k8s/practices/qwen38-flash-next-sglang-day0.md"
+    ]
+  },
+  "58229ff76a56102afe4ab9d18406cb5a2de8e40fe2c2d0805a57e67a44d3b27d": {
+    "translation": "Higress\n  → Model or P/D Router\n      → Prefill Pool\n      → Decode Pool\n          → KV Cache Transfer / Store",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "8c7b8bd97a1da37fcf23bf512c5a726ebe24db3572bd6270edc6e5aa5c6140ac": {
+    "translation": "RoleBasedGroup: a complete logical service\n  ├─ Each Role automatically generates a RoleInstanceSet\n  │    └─ Each Role replica generates a RoleInstance\n  │          └─ One or more Pods\n  ├─ Each Role automatically generates a Headless Service\n  └─ Optional RoleBasedGroupScalingAdapter\n       └─ Exposes the Scale subresource for a Role",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "1f0ef1dbb3e3034d1818190cfebef417c511d6423e48b8d63f262f9a1a27a51e": {
+    "translation": "Client\n  → Higress: TLS, authentication, tenant quota, audit\n  → SGLang/Dynamo/self-developed Router Service\n  → Prefill, Decode, and KV roles managed by RBG",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "f4d8a53ae9d392313008492eaf0f898688679c52227c5078432b63285a7d69eb": {
+    "translation": "Client\n  → Higress: enterprise entry point\n  → AIBrix Gateway: model, Prefix/Session/P-D aware routing\n  → Runtime Endpoint managed by RBG",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "1dc2aaff4fe1b708edd0b32fd0eb756e4c16d520e8025ce23239d48cd8e7553a": {
+    "translation": "Client\n  → Higress / API Gateway (optional: TLS, authentication, tenant rate limiting)\n  → SGLang Model Gateway (formerly SGLang Router)\n       ├─ Select a Prefill Engine\n       └─ Select a Decode Engine\n              ↑\n       Prefill ── KV Transfer such as Mooncake/NIXL ──→ Decode\n\nRBG Controller\n  ├─ Manages Router Role\n  ├─ Manages Prefill Role\n  └─ Manages Decode Role",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "184b77b2f513f08d69f7c2fbaff3e43229dd37d3f80870f90662b994ad5f25b2": {
+    "translation": "Normal P/D: Prefill Engine computes the remaining 5K → transfers new KV → Decode\nConditional P/D: Decode Engine computes the remaining 5K locally → Decode",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "f61245d7694392429222263b3366cf00797ad8973de9818b49f1d294a368f314": {
+    "translation": "gateway × 1\n  └─ prefill × 2, waiting for gateway Ready\n       └─ decode × 2, waiting for prefill Ready\n            └─ enable ScalingAdapter",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "f9930b9a7fb47b903f80c037d31935183a4990824f8933cb2d7a8d6df74ad332": {
+    "translation": "TrainingJob / VolcanoJob\n  ├─ Master Pod: Ray Head + vLLM API\n  ├─ Worker Pod 1: join Ray Cluster\n  ├─ Worker Pod 2: join Ray Cluster\n  └─ Worker Pod N",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "06665565276bc72ce2dc07aed3b407215e123573f80b16eae365a6efe860838a": {
+    "translation": "RoleBasedGroup\n  └─ Role: backend\n       replicas: 2\n       leaderWorkerPattern:\n         size: 4\n\nFinal meaning:\n  ├─ Full model replica A: 1 Leader + 3 Workers\n  └─ Full model replica B: 1 Leader + 3 Workers",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "36fe1a6819d930e73db754824fa4868f469bf453d1ff0aae515b3ab93e8aa727": {
+    "translation": "Leader Template\n  1. ray start --head --port=6379\n  2. Wait for expected Workers Ready\n  3. vllm serve MODEL --distributed-executor-backend ray ...\n\nWorker Template\n  1. ray start --address=${RBG_LWP_LEADER_ADDRESS}:6379 --block",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "af39e449f70d4fa0ab8f76762f0e513ad65a460ab47fdc7fba6b20e4eeb10e51": {
+    "translation": "RBG_LWP_LEADER_ADDRESS  Stable DNS of Leader\nRBG_LWP_GROUP_SIZE      Total number of Pods in one RoleInstance\nRBG_LWP_WORKER_INDEX    Current Pod index, Leader is 0",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "30bed8c49604f2b2914fec5a28907833fd2943b1d0ac37ef063b72b1e7132ecd": {
+    "translation": "RoleBasedGroup\n  ├─ head × 1: ray start --head, wait for Ray GPU=2, then start vLLM API\n  └─ worker × 1: join Head via RBG stable DNS\n\nvLLM: TP=1, PP=2, distributed-executor-backend=ray",
+    "pages": [
+      "ai-k8s/practices/rbg-existing-cluster.md"
+    ]
+  },
+  "3f7db370e0d0aeade2f973108c4085dd9ff0949dabb99745d175d3f43f8912eb": {
+    "translation": "RBG experiment <SHA256 of stage name>\nThe service tracks request latency, token throughput, cache utilization, and healthy replicas.\n...Repeat the above sentence 300 times, repeat 60 times for long output scenarios...\nQuestion <six-digit request number>: Explain the operational tradeoffs in detail.",
+    "pages": [
+      "ai-k8s/practices/rbg-qwen-l20-serving-resilience.md"
+    ]
+  },
+  "5b11f91a6681afd20884dbd0155a9304052cce022cebf7b2702d330ed4762348": {
+    "translation": "Model Class appears in code\n        ↓\nOfficial Cookbook and verified startup configuration available\n        ↓\nTarget hardware, precision, context, and API functionality pass regression",
+    "pages": [
+      "ai-k8s/practices/sglang-0518-release-analysis.md"
+    ]
+  },
+  "1c8d857a13a7ecd827ee888d740b0fc7f386b691d7c25367f40ec2ee01fe7e88": {
+    "translation": "Fixed v0.5.17 baseline\n  ├─ Correctness: Chat / Reasoning / Tool Call / Structured Output\n  ├─ Performance: 128/64, 4K/128, long context, target concurrency or arrival rate\n  ├─ Startup: Cold / Weight Cache Hit / Kernel Cache Hit\n  └─ Stability: 30–60 minute steady state, cancellation, timeout, OOM and recovery\n                 ↓\nSwitch to v0.5.18 on same hardware, same weights\n                 ↓\nKeep old feature flags first, then enable Overlap / new Kernel / new Cache paths one by one",
+    "pages": [
+      "ai-k8s/practices/sglang-0518-release-analysis.md"
+    ]
+  },
+  "976c275b45544c2292e9aeab2f31f0bf62551eb759f964f642990bc8bc953bac": {
+    "translation": "Local curl\n  → kubectl port-forward (for acceptance only)\n  → Service/sglang-router:30000\n  → SGLang Router v0.2.4\n      ├─ watch Pods: sglang.ai/worker=true\n      ├─ round_robin\n      ├─ health check / circuit breaker\n      └─ :29000 Prometheus metrics\n           ├─ Pod A :8000, CPU Mock\n           └─ Pod B :8000, CPU Mock",
+    "pages": [
+      "ai-k8s/practices/sglang-model-gateway-cpu-lab.md"
+    ]
+  },
+  "7f2e374c7fbe9f48d903562d8460a5130413051e1873ff84af02a40deb5ed41a": {
+    "translation": "Client\n  → Higress: TLS, OIDC/API Key, tenant authorization, rate limiting, audit\n  → SGLang Router: model pool selection, Prefix/load/P-D routing\n  → SGLang Runtime: restricted cluster network, optional Worker mTLS/API Key",
+    "pages": [
+      "ai-k8s/practices/sglang-model-gateway-cpu-lab.md"
+    ]
+  },
+  "88aff91a7baf8c87ab19e8fd3777331e573dc3fdec26e52f1a4e8e4bb99b5526": {
+    "translation": "Higress\n  → SGLang Router Service\n  → RBG-managed SGLang Prefill/Decode Worker",
+    "pages": [
+      "ai-k8s/practices/sglang-model-gateway-cpu-lab.md"
+    ]
+  },
+  "4731fe0a2f9820e8dc491ec419c60178dde26a935b9aec72f8ce9d7d4dea6d08": {
+    "translation": "Effective cost = GPU running cost\n         + Checkpoint I/O\n         + Repeated computation after interruption\n         + Waiting window for new capacity\n         + Recovery failure and manual intervention",
+    "pages": [
+      "ai-k8s/practices/spot-checkpoint.md"
+    ]
+  },
+  "4221072dc9946ebfecf9aa233fdc5c283142e186f0db03965631fd6076cd0c17": {
+    "translation": "Answer with a single number, no explanation: what is 3 plus 4?",
+    "pages": [
+      "ai-k8s/practices/vllm-sleep-model-switch-l20.md"
+    ]
+  },
+  "ed40d1b328e94a26eb4a55d839a40d433ee7cab1a47960dcb7b87835d037dd6d": {
+    "translation": "Briefly explain in Chinese the relationship between Kubernetes Pod and Deployment.",
+    "pages": [
+      "ai-k8s/practices/vllm-sleep-model-switch-l20.md"
+    ]
+  },
+  "0b214517cce82f864e0929b34561de7d09614b5d0f3bf012b8b98c407ae61446": {
+    "translation": "Business request and Owner → Task category / SLO / Interruptibility → Queue / Quota / Priority\n        → Scheduling and device allocation → Running status → Reclaim/restart → Business result",
+    "pages": [
+      "ai-k8s/practices/volcano-scheduler-enterprise-limits.md"
+    ]
+  },
+  "cf1655fdfba077c089b18e1c1a3c8348c52e9ac0b39a144a0eb55868c3af0607": {
+    "translation": "User submits Job\n    │ queueName\n    ▼\nLocalQueue (entry point within namespace)\n    │ points to\n    ▼\nClusterQueue (cluster quota and policy)\n    │ uses\n    ├── ResourceFlavor (GPU model, node pool, price or region)\n    └── Cohort (borrow idle quota among multiple queues)",
+    "pages": [
+      "ai-k8s/queue-multitenancy.md"
+    ]
+  },
+  "84576cd7c48eab0f41d236cc99dfbde11dfc88512b356ffa193fc7cb69873e32": {
+    "translation": "Environment final state / hidden tests\n        > Schema, rules, and state diff\n        > Trajectory constraints\n        > Blinded human review\n        > Calibrated LLM Judge\n        > Agent's own final statement",
+    "pages": [
+      "ai-k8s/rag-agent/agent-evaluation-overview.md"
+    ]
+  },
+  "38c6854d7d16bc8f27f13685289c47289bc762c3e2e6854aeefd115fe0417cb6": {
+    "translation": "Effective task cost = (model + tools + execution environment + retries + human review) / number of accepted tasks",
+    "pages": [
+      "ai-k8s/rag-agent/agent-harness-technology-overview.md"
+    ]
+  },
+  "c9f6f3afaaff078a22ebdb5b5213f13aab083a30fdd5ac428dd8b4439730640b": {
+    "translation": "Idempotency key + operation status query + immutable receipt + reconciliation + compensation flow",
+    "pages": [
+      "ai-k8s/rag-agent/agent-harness-technology-overview.md"
+    ]
+  },
+  "fd4b7c1c7b218eaccf6f760acf019bacc6393c644676e1de40b3c8060f899dbb": {
+    "translation": "Employees / Internal Systems / Messaging Channels\n              │\n              ▼\nEnterprise Access Layer: SSO, Device & Service Identity, Rate Limiting, WAF\n              │\n              ▼\nAgent Control Plane (self-built or existing platform)\n├── Tenant / User / Group / RBAC\n├── Agent, Skill, Plugin, Model Catalog\n├── Policy, Quota, Budget, Approval\n├── Release, Version, Audit, Evaluation, and Rollback\n└── Route requests to Runtime Pool by trust domain\n              │\n              ▼\nOpenClaw Gateway Pool\n├── Independent Gateway and credentials per trust boundary\n├── Channel / Session / Memory / Agent Loop\n├── Fixed-version internal Plugins and Skills\n└── Tool Policy + Human Approval\n       │                    │\n       ▼                    ▼\nIsolated Execution Environment             Tool Gateway / Broker\n├── gVisor/Kata/VM        ├── Parameter-level authorization and short-lived identity\n├── Temporary Workspace        ├── Egress, rate, and budget control\n└── Default-deny network          └── Git, DB, SaaS, production APIs\n       │                    │\n       └────────┬───────────┘\n                ▼\n       Model Gateway / Data and Knowledge Systems",
+    "pages": [
+      "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md"
+    ]
+  },
+  "9c7bc696b6c0fbc633e2db262130f26d7dee6f0211905c2de2f6e76652aec23b": {
+    "translation": "Namespace/openclaw\n├── Deployment/openclaw        # Single Pod, Init Container + Gateway\n├── Service/openclaw           # ClusterIP, port 18789\n├── PersistentVolumeClaim      # Default 10 Gi, stores state and configuration\n├── ConfigMap/openclaw-config  # openclaw.json + AGENTS.md\n└── Secret/openclaw-secrets    # Gateway Token + Model API Key",
+    "pages": [
+      "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md"
+    ]
+  },
+  "a0541e0f1e3e07ffcdc52b1354a2022e74fafd57377a14a3103290f02ff43d8b": {
+    "translation": "Enterprise Users / Slack / Teams / Webhook\n                │\n                ▼\nIngress / Gateway API\n├── TLS\n├── Enterprise authentication or controlled proxy\n└── WebSocket long connections and rate limiting\n                │\n                ▼\nService:18789\n                │\n                ▼\nOpenClaw Gateway Pod (replicas: 1)\n├── ConfigMap: configuration, Agent instructions\n├── Secret/CSI: Gateway, Channel, Model credentials\n├── PVC: SQLite, Session, Workspace, Plugin state\n├── /healthz, /readyz\n└── Prometheus / OpenTelemetry\n                │\n        ┌───────┴────────┐\n        ▼                ▼\nModel Service / Model Gateway  Tool Gateway / Sandbox",
+    "pages": [
+      "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md"
+    ]
+  },
+  "ed16e02ac0e969b54d1ab5f348486eb56b11119236bfd03cff6de2af74cf008b": {
+    "translation": "Enterprise Agent Control Plane\n├── Tenants, Users, Agent Catalog, Policies, Quotas\n├── Create/Upgrade/Backup/Reclaim Gateway Cell\n└── Route ingress to explicit Trust Domains\n        │\n        ├── Namespace/Cell: rd-agent\n        │   ├── Gateway Pod × 1\n        │   ├── PVC / Secret / ServiceAccount\n        │   └── NetworkPolicy\n        │\n        ├── Namespace/Cell: ops-agent\n        │   ├── Gateway Pod × 1\n        │   ├── Independent PVC / Secret / Channel Account\n        │   └── Stricter Tool Policy + Approval\n        │\n        └── Namespace/Cell: finance-agent\n            ├── Gateway Pod × 1\n            ├── Independent node pool or independent cluster\n            └── Only allow access to controlled Tool Gateway",
+    "pages": [
+      "ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md"
+    ]
+  },
+  "efb71509ff7a88f892db839831cb7af5b1875080dd9527d464e02e027a556f47": {
+    "translation": "Use the file tool to complete a deployment demo: create a new file only in the current workspace\noce-demo-7f3a91.md; if it already exists, stop and do not overwrite. Write three lines:\n# OCE Agent Actual Running Demo\nVerification string: OCE_DEMO_7F3A91\nTask: Create a file in Kubernetes and read it back for verification.\nAfter writing, you must use the tool to re-read this file and report whether the verification string matches and the relative path of the file.\nDo not access other files, environment variables, credentials, or external networks.",
+    "pages": [
+      "ai-k8s/rag-agent/openclaw-enterprise-kubernetes-practice.md"
+    ]
+  },
+  "9143d5868ce597891579e7cdc37fe9de62f22318c7703bd22102429444fc8738": {
+    "translation": "Data Sources\n  Files, object storage, databases, Wiki, event streams\n        │\n        ▼\nIngestion and Parsing\n  Deduplication, OCR, structure parsing, permission extraction, PII handling\n        │\n        ▼\nChunking and Embedding\n  Versioned chunking rules, Embedding models, Batch inference\n        │\n        ▼\nIndex Construction\n  Vector + Metadata + Keyword/Hybrid Index\n        │\n        ▼\nOnline Retrieval\n  Query Rewrite → Embed → Filter → Retrieve → Rerank\n        │\n        ▼\nContext Builder → LLM Gateway/Inference\n        │\n        ▼\nCitations, feedback, quality evaluation, and data updates",
+    "pages": [
+      "ai-k8s/rag-agent/rag-infrastructure.md"
+    ]
+  },
+  "cfb91f2bb6bcbf6c35792bd5bffe0c6ef380e429f9be8b03f2f5f0863b327a26": {
+    "translation": "Production alias: knowledge-current → index-v41\n\nOffline build index-v42\n  → Integrity verification\n  → Retrieval quality evaluation\n  → Performance and capacity verification\n  → Small-traffic Shadow/Canary\n  → Atomically switch alias to index-v42\n  → Keep index-v41 for rollback",
+    "pages": [
+      "ai-k8s/rag-agent/rag-infrastructure.md"
+    ]
+  },
+  "d1d002f7ef8cb55d5a5b661af3fea2fe734addd3a6bed787ebb855be1b1b2beb": {
+    "translation": "Agent → Model Gateway → Cloud models / Private models / Multimodal models",
+    "pages": [
+      "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md"
+    ]
+  },
+  "1b51c8846231dde82a8d15bb0efd6a4104e8fc7d185c920cdb22e1a19d41d022": {
+    "translation": "The model handles understanding, selection, and exception handling\n+ The state diagram handles allowed paths\n+ Ordinary code handles transactions and irreversible actions",
+    "pages": [
+      "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md"
+    ]
+  },
+  "359a0154fae32b3c5e87947856d8be4ee1b33fbfaa295dbb4dd61303370c5d3c": {
+    "translation": "Who initiates the task\n→ Which Agent represents whom\n→ Which Runtime identity is used\n→ Which tools and data are allowed to be called\n→ Which actions require approval from whom\n→ Who ultimately bears the cost and responsibility",
+    "pages": [
+      "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md"
+    ]
+  },
+  "4c53d3bd00b024639a87883e3182e7e166f0ff662d145ee61233264e2ea4ee4f": {
+    "translation": "Agent: declares goals, models, capabilities, and boundaries\nRuntime: provides an isolated, recoverable execution environment\nSession: saves the context and execution state of a task\nConnector: connects to real business systems with a controlled identity",
+    "pages": [
+      "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md"
+    ]
+  },
+  "cbf49683027a0ef6dcbc0327f813a2c4c3afaa758590d87657012f060a0413ac": {
+    "translation": "Object Storage / Lakehouse Snapshot\n          │\n       Ray Data\nParsing, filtering, Tokenize, Shuffle, Streaming Split\n          │\n       Ray Train\nPyTorch / FSDP / DeepSpeed / Transformers / JAX\n          │\n  Checkpoint / Model Registry\n          │\n     ┌────┴───────────────┐\n     ▼                    ▼\nRay Data Batch        Ray Serve LLM\nOffline generation/evaluation          vLLM/SGLang Replica\n     │                    │\nEvaluation set / preference data       Gateway / OpenAI API\n     └────────┬───────────┘\n              ▼\n       Feedback, post-training, and new versions",
+    "pages": [
+      "ai-k8s/ray-llm-platform.md"
+    ]
+  },
+  "997c2dff479beea2b7f1afb7d25e389d60a0c0206f641fcda094ef46de0b1a0b": {
+    "translation": "Pipeline / SDK / Git\n        │\nRayJob (batch processing, training, hyperparameter tuning) / RayService (online service)\n        │\nKueue admission and quotas\n        │\nKubeRay creates Head/Worker Pods\n        │\nRay Scheduler places Tasks, Actors, Placement Groups\n        │\nFrameworks internally use NCCL/Gloo/HTTP/Object Store",
+    "pages": [
+      "ai-k8s/ray-llm-platform.md"
+    ]
+  },
+  "de8ec5979763d793d3af98d3a85f1f8cc85e434d8773c5c9500922e954ec97ed": {
+    "translation": "Total GPUs ≈ number of concurrent trials × number of workers per trial × GPUs per worker",
+    "pages": [
+      "ai-k8s/ray-llm-platform.md"
+    ]
+  },
+  "fabb0360aba7cf21a7b5414675f3b984f0842ace1b4c90c1b9327e3f32f0063c": {
+    "translation": "Prompt Dataset\n   │\nRollout Engine (vLLM/SGLang, multiple generations)\n   │\nReward / Verifier / Reference Model\n   │\nAdvantage and sample organization\n   │\nPolicy Training (PyTorch/DeepSpeed/FSDP)\n   └──────── New weights synced back to Rollout Engine",
+    "pages": [
+      "ai-k8s/ray-llm-platform.md"
+    ]
+  },
+  "e92e51190cd8af08d29e3ab920ad2be0e07021374457c6f0b6b83de771c49203": {
+    "translation": "Ray Serve Autoscaler: request queue → number of replicas\n          │\nRay Autoscaler: pending Actors/Tasks → number of Ray Worker Pods\n          │\nNode Autoscaler: pending Pods → number of Kubernetes Nodes",
+    "pages": [
+      "ai-k8s/ray-llm-platform.md"
+    ]
+  },
+  "6a72f8c939bff5d2da33f686fce3b1afb741cd3766f10e9e7fa8b57f27ff8c2a": {
+    "translation": "Application memory\n  → System call\n  → Kernel TCP/IP\n  → Socket Buffer\n  → NIC\n  → Network\n  → Remote NIC / Kernel / Application memory",
+    "pages": [
+      "ai-k8s/rdma-networking.md"
+    ]
+  },
+  "789b3df73121bfc9ee1c1cdf7298e07d94010427f92079879f6042b88138f358": {
+    "translation": "Application registered memory\n  → RNIC DMA\n  → RDMA Fabric\n  → Remote RNIC DMA\n  → Remote registered memory",
+    "pages": [
+      "ai-k8s/rdma-networking.md"
+    ]
+  },
+  "2c755ae4f85d9219de58c33dbe1397861f70a1b3974912113888abf298191a9b": {
+    "translation": "Per-step time = forward computation + backward computation + gradient communication + optimizer update + data wait",
+    "pages": [
+      "ai-k8s/rdma-networking.md"
+    ]
+  },
+  "67b554165d7a574d507e5a24b46d2f0fa5c243adb089443e77797faff0286e9f": {
+    "translation": "Training Pod\n ├─ eth0: default CNI, access to API, DNS, object storage and monitoring\n └─ net1: Multus-attached high-speed network\n       │\n       ├─ SR-IOV VF / Host Device / Macvlan\n       ├─ RDMA Device Resource\n       └─ /dev/infiniband + corresponding NetDevice\n               │\n               ▼\n            HCA / RNIC\n               │\n               ▼\n       InfiniBand or RoCE Fabric",
+    "pages": [
+      "ai-k8s/rdma-networking.md"
+    ]
+  },
+  "9e5ba65f2f5edf7c835d0658f6846342f8c3256ebe47c29728e84abd4aca5fb5": {
+    "translation": "GPU ─┐\n     ├─ Same PCIe Switch ─ NIC     ← Usually better\nGPU ─┘\n\nGPU ─ CPU Socket 0 ─ UPI/Infinity Fabric ─ CPU Socket 1 ─ NIC\n                                      ← Cross-NUMA, may be slower",
+    "pages": [
+      "ai-k8s/rdma-networking.md"
+    ]
+  },
+  "82cabc5cfab5f285bd30deb90aaea2aa1377329e988ebb58d2428518022cd088": {
+    "translation": "Fault detection\n  + Task termination/cleanup\n  + Re-queue and scale-out\n  + Image and data preheating\n  + Checkpoint download/re-sharding\n  + Communication group rebuild\n  + Recovery to stable throughput",
+    "pages": [
+      "ai-k8s/reliability.md"
+    ]
+  },
+  "7057bff0a5d721172c76970f8a428d810f45dabc510460161eca7d3c77ff3f4c": {
+    "translation": "Request layer\n  Concurrency, Token, priority, queueing and rejection\n        │\nPod/Workload layer\n  HPA, KEDA, WVA, training elasticity, queue admission\n        │\nNode layer\n  Cluster Autoscaler, Karpenter, cloud provider auto-provisioning\n        │\nCapacity layer\n  Reserved, Spot, quota, regional inventory and bare metal delivery",
+    "pages": [
+      "ai-k8s/scheduling/autoscaling.md"
+    ]
+  },
+  "5ee3cca8495f7a73d0607bc4706b3dfb403b0f1ee7289094ef9c2fda146d0a20": {
+    "translation": "T0  Traffic or queue growth\nT1  Autoscaler generates new replicas\nT2  Pod Pending\nT3  Node Autoscaler decides to create nodes\nT4  Cloud instance obtains capacity and starts\nT5  kubelet, CNI, CSI, GPU Driver/Plugin Ready\nT6  Image and model download\nT7  GPU weight loading, graph compilation and warm-up\nT8  Pod Ready, Gateway starts sending traffic",
+    "pages": [
+      "ai-k8s/scheduling/autoscaling.md"
+    ]
+  },
+  "ba3885a891c44f8177014a75557c5b95363d240f195568ed4f0bfc0291e4ffd4": {
+    "translation": "Hard floor: minimum capacity for system and production inference\nProtection capacity: single failure domain, upgrade, and burst reservation\nBorrowable capacity: temporarily usable for training/experiments\nElastic capacity: cloud on-demand or Spot expansion",
+    "pages": [
+      "ai-k8s/scheduling/autoscaling.md"
+    ]
+  },
+  "5033f89b8a96a5530b7674fe3538bf024b0e925fd63009f43e716b94a9356cfc": {
+    "translation": "Reclaimable resources = node allocatable resources\n           - online workload prediction reservation\n           - system and failure margin\n           - resources already lent to low-priority workloads",
+    "pages": [
+      "ai-k8s/scheduling/koordinator-colocation.md"
+    ]
+  },
+  "acf08427d5f7446c37534067a214536a8f3ed8243653d8a66ed42bf627c66db9": {
+    "translation": "Net benefit = saved machine and energy costs\n       - online performance regression cost\n       - batch task retry and checkpoint cost\n       - colocation platform and operation cost",
+    "pages": [
+      "ai-k8s/scheduling/koordinator-colocation.md"
+    ]
+  },
+  "3031ac08010492eff9d50aa7fdc9e3471aec40cf8a6d74a3ea4a68cb11d4961c": {
+    "translation": "slo-controller-config\n        ↓\nkoord-manager validates and generates NodeSLO\n        ↓\nkoordlet Rule Cache\n        ├── Runtime Hook: synchronous or near-real-time injection during lifecycle\n        └── Reconciler: periodic scanning, correction, and dynamic adjustment\n                    ↓\n      cgroup / resctrl / tc / kernel scheduler\n                    ↓\n       metrics, PSI, latency, throttling, and eviction feedback",
+    "pages": [
+      "ai-k8s/scheduling/koordinator-node-qos-runtime-hooks.md"
+    ]
+  },
+  "7012570f1d03d39263434fe0d56806f78b5201bfa4bbaa534019d427106b22bb": {
+    "translation": "1. kubelet requests runtime to create container\n2. runtime hands lifecycle events to koordlet NRI plugin\n3. koordlet constructs Pod/Container metadata into context\n4. Hook reads NodeSLO, QoS, annotations, and node capabilities\n5. Hook computes deltas such as LinuxResources, CPUSet, or resctrl\n6. runtime merges response and creates OCI container\n7. Reconciler later reviews actual cgroup vs expected state",
+    "pages": [
+      "ai-k8s/scheduling/koordinator-node-qos-runtime-hooks.md"
+    ]
+  },
+  "dfe97f0ab15134f591b6ea3b61a516451313b61f2d22f9af22cff995f205c0f9": {
+    "translation": "Pod enqueue → QueueSort\n             ↓\nPreFilter → Filter → PostFilter (when no available node)\n             ↓\nPreScore → Score → NormalizeScore → selected node\n             ↓\nReserve → Permit → PreBind → Bind → PostBind\n             ↘ rollback by phase on failure / Unreserve",
+    "pages": [
+      "ai-k8s/scheduling/kubernetes-scheduler-extensions.md"
+    ]
+  },
+  "1b3b59fedb485923dd021204b4954c9d71061892e0c9c7fdcaecc9f9ef37dbaf": {
+    "translation": "Source code review\n  → reproducible CI build\n  → vulnerability and secret scanning\n  → generate SBOM/Provenance\n  → sign images by digest\n  → Admission verifies signature and source\n  → runtime only pulls allowed digests",
+    "pages": [
+      "ai-k8s/security-governance.md"
+    ]
+  },
+  "63ecf006c42c28564c0e6ea96bd1b2fea837809d396ceb7ae0a33df34ff0a85c": {
+    "translation": "BF16 model parameters       2 byte / parameter\nFP32 Master Weight  4 byte / parameter\nAdam first and second moments   8 byte / parameter\nTotal approximately             14 byte / parameter",
+    "pages": [
+      "ai-k8s/training/distributed-training-frameworks-recovery.md"
+    ]
+  },
+  "bfdadcd3fddddd4306de234ec336c34f61b21e10d1825162de48e44a78cd9853": {
+    "translation": "RTO = fault detection\n    + old process group exit\n    + re-queueing and node preparation\n    + image/data preparation\n    + Checkpoint download and re-sharding\n    + communication group rebuild\n    + post-recovery verification",
+    "pages": [
+      "ai-k8s/training/distributed-training-frameworks-recovery.md"
+    ]
+  },
+  "a8c4ffa55811eba352cfb2655f4ef3f79c57a38ef5d52da9bef95711c42bfb45": {
+    "translation": "Candidate interval ≈ sqrt(2 × single Checkpoint duration × mean time between failures)",
+    "pages": [
+      "ai-k8s/training/distributed-training-frameworks-recovery.md"
+    ]
+  },
+  "afda32b1a63fc84ecf0615b729f3ef7c6fdedb162bb673404ed1bb621dc0a47b": {
+    "translation": "SFT on Kubernetes\n  └─ Kubernetes is just the platform for running training jobs\n     e.g., training on general Alpaca data in GPU Pods\n\nSFT on Kubernetes knowledge and tasks\n  └─ Kubernetes is the domain the model must learn and solve\n     e.g., generating Deployments, diagnosing ImagePullBackOff",
+    "pages": [
+      "ai-k8s/training/kubernetes-domain-sft-community.md"
+    ]
+  },
+  "4ff688709e5284fbf01540b22178cc4c1a4ff8268ce75c14d6e7ba5ee01b3d70": {
+    "translation": "Kubernetes official Markdown documentation\n        ↓\nOpenChat generates Question / Answer\n        ↓\nFix invalid JSON, deduplicate, remove meaningless samples\n        ↓\n2,564 Alpaca-format data entries\n        ↓\nPhi-3-mini-4k-instruct + LoRA, train 1 Epoch\n        ↓\nMerge weights and export q4_k_m GGUF\n        ↓\nLocal CPU / LocalAI / K8sGPT invocation",
+    "pages": [
+      "ai-k8s/training/kubernetes-domain-sft-community.md"
+    ]
+  },
+  "b5a0a742f2635977a612bbe76ab73afa5a6cf3806940bf69e31c929f80c198c2": {
+    "translation": "Teacher generates Instruction + YAML\n        ↓\nCan it be parsed as YAML?\n        ↓\nDoes it conform to Kubernetes Schema?\n        ↓\nDo resource Kind, fields, and values satisfy the problem constraints?\n        ↓\nPass: enter training candidate set\nFail: fix, regenerate, or discard",
+    "pages": [
+      "ai-k8s/training/kubernetes-domain-sft-community.md"
+    ]
+  },
+  "3fe0a4543a7b1378152b9e9999406fdf7b1c65f84c0cfdbc152a4477579a660c": {
+    "translation": "User question or alert\n      ↓\nSFT model: identify intent, plan investigation steps, follow safety protocols\n      ↓\nRead-only tools: read Object / Event / Log / Metric / Trace\n      ↓\nRAG: supplement current version documentation, Runbooks, and historical incidents\n      ↓\nModel: cite evidence, provide root cause, confidence, and next actions\n      ↓\nPolicy layer: block high-risk operations, require human confirmation, and retain audit",
+    "pages": [
+      "ai-k8s/training/kubernetes-domain-sft-community.md"
+    ]
+  },
+  "7b3e4fb99650475785a8e1b2ba5d138c610bdbd871444ca262fc955717a50564": {
+    "translation": "YAML Parse\n   ↓\nkubeconform / Kubernetes OpenAPI Schema\n   ↓\nPolicy: resource limits, SecurityContext, images, and permissions\n   ↓\nkubectl apply --server-side --dry-run=server\n   ↓\nActual creation in temporary Namespace\n   ↓\nQuery resource status and problem constraints\n   ↓\nClean up test Namespace",
+    "pages": [
+      "ai-k8s/training/kubernetes-domain-sft-community.md"
+    ]
+  },
+  "9ef2b1f39ff33ea1c7d5b2a85bf2eb6df596dddfb3fe9dc0115348c84c30406a": {
+    "translation": "KubeFix's traceable data pipeline\n        +\nK8s Distill's validator gate\n        +\nKubeBench's control-plane execution evaluation\n        +\nITBench's failure scenarios and root-cause metrics\n        ↓\nSFT solidifies format, investigation strategy, and safety boundaries\n        ↓\nRAG and read-only tools provide real-time, private, and versioned facts\n        ↓\nBase / Adapter / Agent three-layer controlled experiments",
+    "pages": [
+      "ai-k8s/training/kubernetes-domain-sft-community.md"
+    ]
+  },
+  "e58c5827515546b09c57164c2fabd07bb8b2d6564b7b367e91e478ad3bfafc2c": {
+    "translation": "End-to-end value of RDMA\n≈ Proportion of cross-node communication in stable steps\n× The portion of communication time that RDMA can eliminate\n× The proportion that cannot be hidden by computation overlap",
+    "pages": [
+      "ai-k8s/training/rdma-distributed-training-benchmark.md"
+    ]
+  },
+  "d3e88d013bc9833c37bf87b46ff17ea8a3ff8ae127a266ae1bff73078f0e1d11": {
+    "translation": "Problem: Pod is always Pending, Event shows insufficient GPU resources, how to handle?\n\nIdeal answer:\nFault code: SCH-103\nJudgment: GPU resources are insufficient, Pod has not been scheduled.\nAction: Check node allocatable GPUs, queue quotas, and occupancy of tasks in the same batch.\nProhibition: Do not forcibly release resources by deleting other teams' Pods.",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "4c7d7d9d2024e1e1c4d93a31afb71213e24be65667332443fde7888dcea38450": {
+    "translation": "Base model\n   + High-quality questions and ideal answers\n   + Supervised training\n   = Model or Adapter that better matches target behavior",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "f07dc096156f11a8079f4f2c3fe987ff876e19db0f3e316639567008a47253a9": {
+    "translation": "<system>\nYou are a cautious infrastructure assistant.\n<user>\nWhat should be checked first when Pod is Pending?\n<assistant>\nFirst check Pod Event, then check resources, taints, and queue quotas.",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "c71efa1661f35c4c98d8fd6070e661ff3fd970364fca0e2494f4184bc90875e2": {
+    "translation": "\"First check Pod Event\"\n        ↓ Tokenizer\n[18493, 9231, 442, 13872, ...]",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "6545982a10a7618510787c46dd92a3a5f4ed2e7d1a4471449e2f603f67ce606c": {
+    "translation": "System    does not compute Loss\nUser      does not compute Loss\nAssistant computes Loss",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "a9cbc7083e3ae54765026003b0825232a105361d46e214c290f630263a98f7a3": {
+    "translation": "Input Tokens: [System...] [User...] [Assistant...]\nTraining Labels: [-100 ...]  [-100...] [Answer Tokens...]",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "5c1a40be3b851f40cb0e9be7acefd29803e679b3d9b83600f71dd0dd68dddfd0": {
+    "translation": "Input a batch of samples\n    ↓\nForward: Model gives prediction for each next Token\n    ↓\nLoss: Compare how much prediction differs from ideal answer\n    ↓\nBackward: Calculate which direction each trainable parameter should be adjusted\n    ↓\nOptimizer Step: Actually update parameters",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "8164cf47c21ea375e29c5d5e18d54b134fbfcdf505c0038de07309621513bdbd": {
+    "translation": "Global Batch\n= Micro Batch per GPU\n× Gradient Accumulation\n× Data Parallel Size",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "eaf2e01f1ede4d72581f733c3d79fbb8a9127a4f7e20a83dce77429055bebc93": {
+    "translation": "Steps per Epoch ≈ 800 ÷ 16 = 50\nTraining 3 Epochs ≈ 150 Steps",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "8facfebac1f7451d4ca8c9b4651e432d467400f05b4a2efa14d097d1861afa6c": {
+    "translation": "Original model response\n  + a learnable \"behavior correction sticker\"\n  = fine-tuned response",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "39ce902608a14ec12f557a3df6d6daae14e19fa22b7cd24301a7c4116f5f99b5": {
+    "translation": "Low-bit-width, frozen base model\n        +\nLoRA trained at BF16/FP16 precision",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "9850e8c8e60396df0a3b0b35de3cd569783e7b776819ffe6e4afad2a9479eb8b": {
+    "translation": "Model weights\n+ Gradient\n+ Optimizer State\n+ Activation\n+ Temporary computation and communication buffers",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "2d7846dfc68ca023f2951870912827989c8033846f93223298cc96135727ea14": {
+    "translation": "Token\n  ↓\nRouter decides which expert to assign\n  ↓\nExpert 2 + Expert 7 participate in this computation",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "85583dd459bec2e8669c48fad0a4907c5e096a9484d0ff1afa200cc1378253f3": {
+    "translation": "2 Pipeline Stages\n× 8-way Expert Parallel per Stage\n× 2 Data Parallel\n= 32 GPUs",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "f1d632a5e72826259d50800f6ae3f36512ebee88fdf8eb7b3bb8dab7789b7abd": {
+    "translation": "Train Loss decreases, Validation Loss also decreases\n→ still learning and has some generalization\n\nTrain Loss continues to decrease, Validation Loss starts to rise\n→ possible overfitting\n\nLoss suddenly becomes NaN\n→ check Learning Rate, precision, abnormal samples, and gradients\n\nLoss is very low, but model responses do not change\n→ check whether Adapter is loaded, Template, and Loss Mask",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "0e775f2dd770604c6d127d9a9ae414ea76b1a1ed11b6bd35e8ec15338066edc0": {
+    "translation": "Same Base Model\nSame inference parameters\nSame batch of questions never used in training\n        ↓\nBase output vs output after loading Adapter",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "defc0b7ebb0691726047024c8b848f5ddb65e219d4b41fcad752422f4a01ff1d": {
+    "translation": "First understand one sample\n  ↓\nConfirm Chat Template and Loss Mask\n  ↓\nSingle-GPU LoRA Smoke\n  ↓\nComplete Base/Adapter blind test\n  ↓\nThen scale up model, data, and GPU count\n  ↓\nFinally compare multi-machine TCP/RDMA and complex parallelism",
+    "pages": [
+      "ai-k8s/training/sft-concepts.md"
+    ]
+  },
+  "52df2db366dfa1208eb50d2869fa492b72747141a60dfade7c5f72f8834e21a7": {
+    "translation": "JSONL dialogue data\n    ↓\nModel Chat Template and Assistant Loss Mask\n    ↓\nLoRA SFT\n    ↓\nAdapter Checkpoint\n    ↓\nLoad Adapter for inference\n    ↓\nFixed-question regression and training records",
+    "pages": [
+      "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md"
+    ]
+  },
+  "9135348a60f3d3a5256e07509cc5ac261b3e7e7a34f16e6bab2b4abfe06f7817": {
+    "translation": "Massive raw text\n    ↓ Pretraining\nBase model: masters language, patterns, knowledge, and general capabilities\n    ↓ Optional: Continued pretraining (CPT / DAPT)\nDomain base model: more familiar with industry corpora, terminology, and distribution\n    ↓ Supervised fine-tuning (SFT)\nInstruction model: learns how to understand instructions, organize answers, and follow formats\n    ↓ Preference and safety alignment (DPO / RLHF / GRPO, etc.)\nModel that better matches human preferences, business boundaries, and safety requirements\n    ↓ Combine RAG / Tools at inference time\nFetch latest or private facts and execute external actions",
+    "pages": [
+      "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md"
+    ]
+  },
+  "0a43b02fb95f8262c462621f381391f80233312fe405a4426d97ee27abd4bd6d": {
+    "translation": "System: You are a cautious infrastructure assistant.      Loss Mask = 0\nUser: Loss dropped, can we go live directly?           Loss Mask = 0\nAssistant: No, we still need isolated evaluation...         Loss Mask = 1",
+    "pages": [
+      "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md"
+    ]
+  },
+  "2b8edb5a6aa127471544d5ee8ecc0f4866dbf0b90adee9989fa813e528e951c8": {
+    "translation": "TP: Large matrix of one Transformer Layer\n    ├─ GPU 0 stores/computes matrix shard 0\n    └─ GPU 1 stores/computes matrix shard 1\n       Both cards together complete this layer\n\nPP: Input → GPU group 0: Layers 1–22 → GPU group 1: Layers 23–43 → Loss\n    Multiple micro batches pass through each stage sequentially like a pipeline\n\nEP: Token → Router → GPU 0's Experts 0–31\n                  → GPU 1's Experts 32–63\n                  → ...\n    After computation, tokens are sent back to their original sequence positions\n\nDP: Batch A → complete model group 0 ┐\n    Batch B → complete model group 1 ├─ Synchronize gradients then update identical parameters\n    Batch C → complete model group 2 ┘",
+    "pages": [
+      "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md"
+    ]
+  },
+  "878836c2267b9214d69024aa279fafd8a88b7d3edfd546800cdf1cdc71ce77c9": {
+    "translation": "N-GPU scaling efficiency = N-GPU samples/s ÷ (single-GPU samples/s × N)",
+    "pages": [
+      "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md"
+    ]
+  },
+  "0274ad6c6a2b8c455d2400c7cef0d147c3da61547fe32eb83768ece488f5c229": {
+    "translation": "ms-swift -> SwanLab: Loss, Learning Rate, Gradient Norm, throughput, configuration, Run comparison\nGPU / NIC / Kubernetes -> Prometheus -> Grafana: utilization, GPU memory, power consumption, slow Rank, network and alerts",
+    "pages": [
+      "ai-k8s/training/sft-from-single-gpu-to-deepseek-v4.md"
+    ]
+  },
+  "96f934f1db1e948b79c81d039c749093ca8285e5fb46b8f33493e035e9674829": {
+    "translation": "Training container -> SDK -> Gateway -> Data components -> Web",
+    "pages": [
+      "ai-k8s/training/swanlab-self-hosted.md"
+    ]
+  },
+  "80ff3805d6b6345bc6d677c65e348dce1d2bb3351aca5a4483e38811f5888229": {
+    "translation": "Training job / W&B SDK\n        |\n        v\nW&B Local rich container\n  ├─ Web / API / background tasks\n  ├─ MySQL: project, run, user, and metric metadata\n  ├─ MinIO: logs, media, models, and other files\n  └─ Redis: cache and internal state",
+    "pages": [
+      "ai-k8s/training/wandb-vs-swanlab.md"
+    ]
+  },
+  "2e81ee515b457e70325a5fcb69fba446b3d4d2bf38831076aaf39656fa6acb7d": {
+    "translation": "ms-swift / PyTorch\n  -> SwanLab: Run, hyperparameters, Loss, Validation, experiment comparison\n  -> Object storage: Checkpoint, Adapter, datasets, and prediction files\n\nKubernetes / GPU / NIC / RDMA\n  -> Prometheus + DCGM Exporter + Grafana: infrastructure and communication monitoring",
+    "pages": [
+      "ai-k8s/training/wandb-vs-swanlab.md"
+    ]
+  },
+  "72085976901744d5712ed5f5e151d3a2e44edcb9ceea01da34b1cfd491e89b7b": {
+    "translation": "Node Ready\n  → GPU Resource allocatable\n  → nvidia-smi/vendor tools normal inside Pod\n  → Single-GPU matrix computation\n  → Multi-GPU Collective\n  → Metrics can be associated with Pod, Node, and GPU UUID",
+    "pages": [
+      "cases/ai-cluster-component-checklist.md"
+    ]
+  },
+  "565c93777ff2ba1460217851f70aa2af7d8db57d62eca0a80d84c75bd04dc7fa": {
+    "translation": "Kueue (or Volcano/YuniKorn primary path)\nKubeflow Trainer/JobSet (or KubeRay primary path)\nRDMA/Network Operator (required for multi-node)\nMLflow/Model Registry\nWorkflow\nShared/parallel storage + Checkpoint\nCost and queue dashboard",
+    "pages": [
+      "cases/ai-cluster-component-checklist.md"
+    ]
+  },
+  "0e560558c124e9e041fd40e5f7f886ef031fcca2d7f556d25965e256848583f2": {
+    "translation": "KubeRay Operator\nRayJob + Kueue\nRay Data / Train / Tune\nRayService / Ray Serve LLM\nObject storage + Object Store Spill\nRay/Serve metrics, logs, and controlled access to Dashboard",
+    "pages": [
+      "cases/ai-cluster-component-checklist.md"
+    ]
+  },
+  "ce4b812229982611b17b6cd9f7709461ca571fe18a641f98f3ce104b8537768a": {
+    "translation": "Strimzi/Kafka (real-time)\nFlink Operator (stream state)\nSpark (batch processing)\nObject storage + Iceberg/Delta/Hudi + Catalog\nTrino (interactive SQL)\nWorkflow + data quality/Lineage\nCPU/NVMe data node pool\nRay Data or GPU ETL (last mile, optional)",
+    "pages": [
+      "cases/ai-cluster-component-checklist.md"
+    ]
+  },
+  "4e7040ef86c0a432597d137f8d2cf2709d9eee6797b6d5105216d55cd0989026": {
+    "translation": "Gateway API/Enterprise Gateway\n+ KServe or AIBrix or RayService/NIM Operator\n+ vLLM/SGLang/NIM Runtime\n+ Model node cache\n+ KEDA/HPA/dedicated Autoscaler\n+ LWS/Kueue (multi-node replicas)\n+ llm-d/AIBrix/Dynamo/Ray Serve LLM (only needed for P/D)\n+ OTel Trace, Token/KV/Queue metrics",
+    "pages": [
+      "cases/ai-cluster-component-checklist.md"
+    ]
+  },
+  "55d525adca294a763b24f40652a51f7ab78c736eb8108a401f73591b45c1a4a8": {
+    "translation": "Higress: identifies enterprise logical model deepseek-v4-pro, performs authentication and quota\n  → AIBrix Gateway: selects between Replica A and Replica B\n      ├── Replica A: 2 Tray / 8 GPU, internally coordinated by vLLM DP + EP\n      └── Replica B: 2 Tray / 8 GPU, internally coordinated by vLLM DP + EP",
+    "pages": [
+      "ai-k8s/inference/higress-ai-gateway.md"
+    ]
+  },
+  "27ba75bfeaeda8cc8de8b9454aadca67e185290354e50cf04bc28fa548ddec22": {
+    "translation": "KV per token = 2 × 32 × 8 × 128 × 2\n            = 131,072 bytes\n            = 128 KiB",
+    "pages": [
+      "ai-k8s/inference/kv-cache-overview.md"
+    ]
+  },
+  "dd2c3643358221858527b554088d6c07c5f93ee6002dd3c18ac21e853ec6161d": {
+    "translation": "Request A: [fixed system instruction][fixed tool definition][same document][Question A]\nRequest B: [fixed system instruction][fixed tool definition][same document][Question B]\n        └──────────── reusable contiguous prefix ────────────┘",
+    "pages": [
+      "ai-k8s/inference/kv-cache-overview.md"
+    ]
+  },
+  "30b4a274e3ee9d35df1593f3bdabe020a69359a7566303f9359cf19c86824da0": {
+    "translation": "TTFT ≈ gateway and preprocessing + queueing\n     + cache lookup / necessary reload + Prefill of the miss portion\n     + first token generation and transmission",
+    "pages": [
+      "ai-k8s/inference/kv-cache-overview.md"
+    ]
+  },
+  "148cc65afd01ea033acc73286f2dc051a56465d4da2a82136e6ea7f1d029f48a": {
+    "translation": "system:\n  You are a Kubernetes documentation assistant. Answer only based on the given materials; state unknown when insufficient.\n\nuser:\n  <reference version=\"v1\">\n  ……the same authorized long document with fixed content and order……\n  </reference>\n  <question>\n  ……the question to be answered this time……\n  </question>",
+    "pages": [
+      "ai-k8s/inference/kv-cache-overview.md"
+    ]
+  },
+  "ebd283774ecd7fdccfb272dc9aba54fa9f09ff40665b39f7b492f74887272bb7": {
+    "translation": "Reload overhead ≈ query + data volume / effective bandwidth + format processing + synchronization\nCache net benefit ≈ avoided Prefill time - reload overhead - added queueing",
+    "pages": [
+      "ai-k8s/inference/kv-cache-overview.md"
+    ]
+  },
+  "eff6fa9db05855bbb0e97db60bcbd657f6ad68ac210b51824d3be0650c04fd5b": {
+    "translation": "Tolerable interruption time ≈ available queue disk / measured queue growth bytes per second",
+    "pages": [
+      "ai-k8s/practices/large-scale-kubernetes-monitoring-tsdb.md"
+    ]
+  },
+  "ae6a6a53f5310285ad2c953536a8797480cd1c502a4c7875305fe7992289b86d": {
+    "translation": "Control plane load\n≈ number of objects\n× change frequency per object\n× number of LIST/WATCH consumers\n× per-operation serialization and admission cost\n× peak factor during scaling, release, and failure recovery",
+    "pages": [
+      "ai-k8s/practices/large-scale-kubernetes-optimization.md"
+    ]
+  },
+  "20c21dba1186a94519367cdccc4230e6065144a4093b0d1af20d6f88fd2185a6": {
+    "translation": "Rough upper bound of serial decision throughput ≈ 1 / average serial cycle time\nEffective scheduling throughput ≈ scheduling attempt throughput × proportion of successful attempts\nQueue growth rate ≈ newly schedulable demand − effective scheduling throughput",
+    "pages": [
+      "ai-k8s/practices/large-scale-kubernetes-scheduler-optimization.md"
+    ]
+  },
+  "dc8716d538a51ed0ea89964da1a77b23587e9b01c01a12ff2364efb2f5528907": {
+    "translation": "Scheduling and image\n  → model preparation\n  → Checkpoint reading, conversion, and GPU transfer\n  → communication and GPU memory initialization\n  → Kernel JIT, Autotune, and CUDA Graph\n  → real request validation\n  → Gateway traffic admission",
+    "pages": [
+      "ai-k8s/practices/llm-cold-start-optimization.md"
+    ]
+  },
+  "31a43b77289c194014bf5c1121320f4b63e84332579fafd9ab3cee1c133af9b9": {
+    "translation": "T0  Deployment or Role revision created\nT1  Pod scheduling completed, start preparing Runtime Image\nT2  Init Container starts preparing model\nT3  Model integrity check passed\nT4  Inference process started\nT5  Weight loading, conversion, and H2D completed\nT6  JIT and Autotune completed\nT7  CUDA Graph and built-in Warm-up completed\nT8  /health, /v1/models, and deterministic generation requests passed\nT9  Gateway adds replica to servable set",
+    "pages": [
+      "ai-k8s/practices/llm-cold-start-optimization.md"
+    ]
+  },
+  "991c04b870fbfecdfc849803f974b6053802753f5c3bad59de89387ecfb35f7f": {
+    "translation": "Object storage or shared storage: authoritative model replica\nNode model cache: evictable replica for startup\nGPU Pod: start Engine directly after verifying cache hit",
+    "pages": [
+      "ai-k8s/practices/llm-cold-start-optimization.md"
+    ]
+  },
+  "d3ab15c4c22dbed9aae6705cdfa4b101f590bbfcb30514a02f24622d235a444a": {
+    "translation": "Node Ready\n  → Runtime Image pre-pull\n  → model cache warm-up and integrity check\n  → compilation artifact preparation\n  → node enters inference-ready pool\n  → inference Pods are allowed to request GPU",
+    "pages": [
+      "ai-k8s/practices/llm-cold-start-optimization.md"
+    ]
+  },
+  "05c13f5be3eb79a6969dd7c85cdd6bf5b8d64e9cd5cc8f0ebaeda1f343e46efc": {
+    "translation": "KV byte count ≈ 2 × L × Hkv × D × S × ΣTi\n\nL    = number of attention layers\nHkv  = number of KV heads per layer, not the number of query heads\nD    = dimension of each head (assuming K and V are the same)\nS    = number of bytes per element, e.g., 2 for BF16\nTi   = number of tokens already cached for the i-th sequence\n2    = two states for K and V",
+    "pages": [
+      "ai-k8s/inference/kv-cache-overview.md"
+    ]
+  },
+  "629354b64ad991674283a514c733084edce68dfefe23025bf2b38d14f768a3f8": {
+    "translation": "DSH / Coding Agent\n        │\n        ▼\nLiteLLM or New API\n  authentication, model aliases, budget, protocol and multi-vendor\n        │\n        ├────────► official cloud model API\n        │\n        ▼\nAIBrix / Agent Router\n  instance discovery, load and cache-affinity routing\n        │\n        ▼\nvLLM / SGLang GPU replicas",
+    "pages": [
+      "ai-k8s/inference/llm-api-relay-gateway-overview.md"
+    ]
+  },
+  "7aebf79d33305251dc68040f914d44299c147089747419edf9ebb1b0ec66c2f7": {
+    "translation": "Ingress / Service Mesh\n        │\n        ▼\nInternal AI Gateway\n  ├─ SSO / JWT / ServiceAccount identity\n  ├─ model aliases, budget, rate limiting and audit\n  ├─ prompt desensitization and outbound policy\n  └─ Trace / Prometheus\n        │\n        ├────────► OpenRouter ──► external Provider\n        │\n        └────────► AIBrix ──────► vLLM / SGLang",
+    "pages": [
+      "ai-k8s/inference/openrouter-overview.md"
+    ]
+  },
+  "3b958f2e42e2530b7c00655cac9d371115752367664d18807fac7174490bce38": {
+    "translation": "Save Pod/Job/Node UID and time\n  → collect Kubernetes Events and scheduling status\n  → collect kubelet, Runtime, Device Plugin\n  → collect DCGM/nvidia-smi/kernel logs\n  → collect NIC/RDMA/NCCL and switching network\n  → then decide isolation, reset, restart or repair",
+    "pages": [
+      "ai-k8s/practices/gpu-failure-atlas.md"
+    ]
+  },
+  "cdfbcbb2e0b92d96963156970b39ff1d5cb52de49b97246da76b391f88b9fe50": {
+    "translation": "JupyterHub + KubeSpawner\n  → code-server becomes the default entry, Jupyter remains an optional tool\n  → group-level shared eight-GPU development machine + user resource attribution\n  → local disk capacity insufficient and cannot be shared\n  → self-built NFS has limited expansion capability\n  → all Home goes into CephFS, MDS bears uncontrollable metadata pressure\n  → per-user Ceph RBD + explicit CephFS shared directory\n  → personal images can only provide point-in-time recovery\n  → Workspace Operator unifies lifecycle\n  → KubeVirt + Ceph RBD root disk preserves complete user environment",
+    "pages": [
+      "ai-k8s/practices/gpu-notebook-platform-evolution.md"
+    ]
+  },
+  "9a68311adbb571b0dc790cdf908f42f8ea0f71482c9b7e582ee0d1bc072feb3e": {
+    "translation": "Workspace Spec\n  → Controller reconciles Pod/VMI, PVC, Service and access entry\n  → Status exposes Ready, Stopped, Degraded and reasons\n  → RetentionPolicy determines stop, delete and disk reclamation",
+    "pages": [
+      "ai-k8s/practices/gpu-notebook-platform-evolution.md"
+    ]
+  },
+  "c255807025f78d914f03e0bae707eb8e9f6147c83fc8ee3e612389844d30223b": {
+    "translation": "/home/<user>  → per-user Ceph RBD, RWO/RWOP\n/shared       → CephFS, team shared, RWX, ACL and project quotas\n/models       → node cache, authoritative copy can be re-pulled\n/scratch      → Local NVMe / emptyDir, discardable",
+    "pages": [
+      "ai-k8s/practices/gpu-notebook-platform-evolution.md"
+    ]
+  },
+  "4271e89b109970b2a4941ebf8bf8834488425d6109f341a04f077a7527b108e1": {
+    "translation": "Is there a Pod?\n  No → look at parent controller, Webhook and CRD\n  Yes\n  └─ Is it admitted by queue?\n       No → look at quota, Flavor, priority and borrowing\n       Yes\n       └─ Does scheduler give candidate nodes?\n            No → look at requests, Taint, Affinity, PVC and topology\n            Yes\n            └─ Is it waiting for device or node scaling?\n                 Yes → look at Device Plugin/DRA and autoscaler\n                 No → check kubelet, Runtime and Sandbox creation",
+    "pages": [
+      "ai-k8s/practices/gpu-pending.md"
+    ]
+  },
+  "2134c024c19ff1486353b809d766ee04c53a1fed0be501481f9b8b5ff7b5f8d6": {
+    "translation": "action_id       stable identifier for the same business action\nrequest_hash    hash of parameter content\nstatus          PREPARED / IN_FLIGHT / SUCCEEDED / UNKNOWN\nprovider_id     external ticket, job, or draft ID\nreceipt         verifiable return value and evidence",
+    "pages": [
+      "ai-k8s/rag-agent/agent-long-running-durable-execution.md"
+    ]
+  },
+  "8c92e9a03e565d116c499326b3d1f2f04ebedd9b2917cdc48eeff628da85d8d5": {
+    "translation": "# First process\nEXECUTE plan\nEXECUTE write_draft\nTOOL committed receipt draft-7854be0b31d5\nCRASH after effect commit, before graph checkpoint\n\n# Recovery process\nEXECUTE write_draft\nTOOL reuse receipt draft-7854be0b31d5\nEXECUTE finish",
+    "pages": [
+      "ai-k8s/rag-agent/agent-long-running-durable-execution.md"
+    ]
+  },
+  "ae448141e8feefda3631f933fc908db559954f6f6ca9dbd29ecd854301f249d4": {
+    "translation": "2025-03-01: User said \"I work in Shanghai\"\n2026-08-20: User said \"I have been transferred to Hangzhou\"",
+    "pages": [
+      "ai-k8s/rag-agent/agent-memory-technology-overview.md"
+    ]
+  },
+  "ccf44f29206fe1a4d8d77dc74723ddcdf4b522ea3810da0e3c468d1fb5890d3c": {
+    "translation": "Agent / Application\n        │\n        ▼\nSandbox API and lifecycle control plane\n├── create / claim / assign / pause / resume / delete\n├── template / snapshot / workspace / warm pool\n└── quota / tenant / audit / metrics\n        │\n        ▼\nExecution isolation boundary\n├── runc + Linux namespaces / user namespace\n├── gVisor user-space kernel\n├── Kata / Firecracker microVM\n└── full VM\n        │\n        ▼\nExternal capability and data boundary\n├── Egress Proxy / Tool Gateway\n├── short-lived identity / approval\n├── artifact scanning / trusted CI\n└── object storage / database / Git / browser",
+    "pages": [
+      "ai-k8s/rag-agent/agent-sandbox-selection.md"
+    ]
+  },
+  "d35c8a94ec3ae7b039d95f91ad0333fce13f674815f78564d7976b43bf04321b": {
+    "translation": "Agent Control Plane\n  → Agent Sandbox or self-built Pod Factory\n  → Hardened runc / User Namespace\n  → Only access Tool Gateway",
+    "pages": [
+      "ai-k8s/rag-agent/agent-sandbox-selection.md"
+    ]
+  },
+  "1976b978805b0da70eae0e9cd308f6d2889f1ca15bba981a42f6ba216e852723": {
+    "translation": "Independent low-trust Kubernetes Cluster / Node Pool\n  → Agent Sandbox\n  → Kata / microVM RuntimeClass\n  → Per-session independent identity and encrypted Workspace\n  → Enforced Egress Proxy\n  → Cross-account Tool Broker with production systems",
+    "pages": [
+      "ai-k8s/rag-agent/agent-sandbox-selection.md"
+    ]
+  },
+  "98c8d086b0a4396b76dd19a5c20a0bc339ad2d1ece75a30c91c211bb193f4dd2": {
+    "translation": "Application Backend\n  → E2B / Modal / Daytona API\n  → Hosted Sandbox\n  → Own Tool Gateway",
+    "pages": [
+      "ai-k8s/rag-agent/agent-sandbox-selection.md"
+    ]
+  },
+  "824f410219edca00041bbdbeec7b7690ebb3b68ddf156270a9c23aa19ac4d32a": {
+    "translation": "Sandbox has no long-term credentials\n  → Request Tool Gateway with session identity\n  → Gateway validates user / tenant / session / tool / args\n  → Policy or manual approval\n  → Exchange one-time downstream credentials\n  → Execute action and record result summary\n  → Credentials expire",
+    "pages": [
+      "ai-k8s/rag-agent/agent-sandbox-selection.md"
+    ]
+  },
+  "a65985fec7deb6f1a9683be64b5c31af4f03eae69f97a300527683c6c7d43c96": {
+    "translation": "Pool count\n= Region × RuntimeClass × Base Image × CPU/Memory Class × Tenant Tier",
+    "pages": [
+      "ai-k8s/rag-agent/agent-sandbox-selection.md"
+    ]
+  },
+  "d32d109ae6ec67791acf4aad8983093f40ca821b4cf440c346856a39f3b23064": {
+    "translation": "Total score = Σ(individual item 1-5 points × weight)",
+    "pages": [
+      "ai-k8s/rag-agent/agent-sandbox-selection.md"
+    ]
+  },
+  "af9fd469200a6a3c1c0de9dd8f314aa409606c7af5fccc3d97fe70d058f0ecef": {
+    "translation": "Is it only protecting the developer's local machine?\n├─ Yes → Docker Sandboxes / local VM\n└─ No\n   │\n   ├─ Is the product still in validation and lacking a platform team?\n   │  ├─ Yes → E2B / Modal / Daytona PoC\n   │  └─ No\n   │\n   ├─ Is it required to self-host or reuse Kubernetes governance?\n   │  ├─ No → Compare TCO/compliance between managed and self-built\n   │  └─ Yes → Kubernetes Agent Sandbox\n   │\n   ├─ Does it execute public, malicious, or mutually untrusted tenant code?\n   │  ├─ No → Hardened Pod / User Namespace / gVisor\n   │  └─ Yes\n   │\n   ├─ Does it require full Kernel, Docker, systemd, or strong VM isolation?\n   │  ├─ No → Agent Sandbox + gVisor\n   │  └─ Yes → Agent Sandbox + Kata, or KubeVirt/VM\n   │\n   └─ Is it a highly regulated/high-value environment?\n      ├─ No → Dedicated low-trust node pool\n      └─ Yes → Dedicated cluster/account + VM/Confidential Containers",
+    "pages": [
+      "ai-k8s/rag-agent/agent-sandbox-selection.md"
+    ]
+  },
+  "225c163a71cdb3008ab87a03d5bcd354d0a494e05726a15dc92be43d059dd800": {
+    "translation": "For the next four weeks, every Friday at 16:00, using Asia/Shanghai timezone,\norganize the official Releases, documentation, and public issue discussions of the specified project.\nDistinguish released features, roadmap, and unverified opinions, and provide original links.\nWrite this week's changes, deployment impact, and items to be verified into the report.\nFirst confirm the saved schedule, scope of materials, and report location.",
+    "pages": [
+      "ai-k8s/rag-agent/chatgpt-dots-overview.md"
+    ]
+  },
+  "178bd768cd73c30bba0fea82cbfcf57c1484c470970a58bb334e916c3becfd37": {
+    "translation": "Use approved read-only tools to analyze anomalies in the specified test cluster over the last hour.\nUnify the time windows for API Server, etcd, and workload metrics.\nSeparate facts, possible causes, and verification methods, and attach query and log sources.\nOutput troubleshooting recommendations; when configuration changes are needed, first generate a Diff and check results.",
+    "pages": [
+      "ai-k8s/rag-agent/chatgpt-dots-overview.md"
+    ]
+  },
+  "1cd6b342d9e9eaaff7344d47425138cf7e002397d6e89eda7a9ca5830d8c4494": {
+    "translation": "Follow up on the specified experiment task, recording the run ID, configuration, deadline, and acceptance criteria.\nCheck the actual task status at agreed intervals, and summarize passed, failed, and not-executed items.\nAfter a network interruption, first query the original task and saved results, then decide whether to retry.\nFinally verify the report, logs, charts, and the resource release receipt of the execution platform.",
+    "pages": [
+      "ai-k8s/rag-agent/chatgpt-dots-overview.md"
+    ]
+  },
+  "9406a251940f5676da569d8f1d2e58f4e092a94077b680891197316ee5d3136f": {
+    "translation": "Project website:\nhttps://aik8s.github.io/cubesandbox-agent-adapter/\n\nGitHub project:\nhttps://github.com/aik8s/cubesandbox-agent-adapter\n\nv0.5.0 Release:\nhttps://github.com/aik8s/cubesandbox-agent-adapter/releases/tag/v0.5.0\n\nDocker Compose deployment:\nhttps://github.com/aik8s/cubesandbox-agent-adapter/blob/main/docs/deploy-docker.zh-CN.md\n\nStrong audit and recovery:\nhttps://github.com/aik8s/cubesandbox-agent-adapter/blob/main/docs/audit-durability.zh-CN.md\n\nTrusted execution:\nhttps://github.com/aik8s/cubesandbox-agent-adapter/blob/main/docs/trusted-execution.zh-CN.md",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-agent-adapter-v05.md"
+    ]
+  },
+  "4ddcf98cc442e9d8cee36ba6a64b42c5a47f0fad71fe5cddbd9b8b0944a3a1ca": {
+    "translation": "Only use CubeSandbox tools, not the host Shell or file tools.\nFirst query the Profile with permissions.\nExecute printf STAGING_ROUTE_OK on staging-code;\nExecute printf PRODUCTION_ROUTE_OK on production-code.\nOnly renew the lease for staging-code, and finally use kill to release both sandboxes.\nReport the actual results, and do not output full resource references or connection credentials.",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-agent-adapter-v06.md"
+    ]
+  },
+  "f1d841fd6b845526ded55363c89db0a2c2f035c47909afe93b934570d3851a3f": {
+    "translation": "Kubernetes Pod image\n  → kubelet / containerd\n  → node registry configuration and CA\n\nCubeSandbox template image\n  → CubeMaster / Cubelet OCI client\n  → container's own CA trust chain",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-kubernetes-practice.md"
+    ]
+  },
+  "ea196e5d24f38d21539b85b34d5b34ccc3944fda0ab9f3afe5f9ea2a3aade510": {
+    "translation": "Does the compute node already have /dev/kvm?\n├─ Yes\n│  ├─ x86_64 → native KVM path, most direct\n│  └─ ARM64  → use physical/bare-metal with native KVM; currently no PVM\n└─ No\n   ├─ x86_64 → PVM can be evaluated; will replace host kernel and reboot\n   └─ ARM64  → PVM not currently supported, must switch to a native KVM node",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-kubernetes.md"
+    ]
+  },
+  "0710aa2288003698db3c775ab642acd3f394b3011c1a4fcc772c1dbee810f327": {
+    "translation": "First round message\n  → create sandbox by session_key\n  → upload or mount workspace\n  → execute tool\n  → auto Pause after 5 minutes idle\n\nNext round message\n  → retrieve sandbox_id by session_key\n  → auto Resume\n  → files, variables, and process context persist\n\nSession close / TTL expiry / admin reclamation\n  → Kill\n  → clean up snapshots, network, temporary volumes, and mapping records",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"
+    ]
+  },
+  "e4b7a5fd12d54c19b0c760a5b81131711f584f5edf9c9ddb714d0c1a26ea4fe5": {
+    "translation": "OpenClaw Tool Plugin ─┐\n                     ├─ Bearer / mTLS ─→ Cube Adapter ─→ Cube Python SDK ─→ MicroVM\nDSH Cordis Plugin ───┘                         │\n                                              └─ redacted JSONL audit",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"
+    ]
+  },
+  "72c7ae5fabf92971eb8837de7b447fe87b6b87079be34dcaeba52ee8619f6fe1": {
+    "translation": "OpenClaw state / DSH_HOME\n  → PVC or managed database\n  → save sessions, profiles, configuration, and approvals\n\nAgent Workspace\n  → CubeSandbox Snapshot / Volume\n  → save current task code and artifacts\n\nTemporary files, processes, and browser cache\n  → MicroVM local CoW layer\n  → retained on Pause, destroyed on Kill",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"
+    ]
+  },
+  "a9f00a5ab4069c9cb1282bee5757e505d904d7414430a6712de66168f4c4d00f": {
+    "translation": "Please use the cube-sandbox Skill to complete the following tasks, do not execute on the Gateway host:\n1. Create a sandbox with no network access and a 120-second timeout;\n2. Write /tmp/input.py to compute the sum of squares from 1 to 100;\n3. Execute the script and read the output;\n4. Prove the sandbox cannot access the public internet;\n5. Destroy the sandbox regardless of success or failure, and return only the redacted execution result.",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"
+    ]
+  },
+  "027c53232ccb52c4e3176a55d7005085a131e7addce00c9a19ffc4124da443b9": {
+    "translation": "# First round\nCreate a small Python project in an isolated workspace, write two tests, one of which is intentionally failing.\nRun the tests, then pause the environment, and note the current failure reason.\n\n# After waiting for Pause, send the second round\nContinue the same session, fix the failing test, and re-run. Do not recreate the project.",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"
+    ]
+  },
+  "53c6aa2b6984d62e320c34d8371cb4d238ef2ce9a57f3962a6a7a8cff54dd596": {
+    "translation": "Do not execute repository scripts in the current DSH host environment.\nPlease complete in a CubeSandbox with the repo-build policy:\n1. Upload the repository;\n2. First inspect package scripts, do not execute install hooks;\n3. Run static checks and unit tests;\n4. Only allow access to enterprise Git and software mirrors;\n5. Return the modification diff, test results, and Sandbox audit reference;\n6. Pause the environment and wait for my confirmation to continue.",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"
+    ]
+  },
+  "f9418ec48900f5a34d02090a5e0db5fc83cfc36a2d01dec946f76e039fccfa68": {
+    "translation": "Baseline workspace\n  → Snapshot\n  ├── Clone A: minimal fix\n  └── Clone B: refactoring approach\n\nEach clone runs its own tests\n  → compare diff, tests, time, and risk\n  → merge only the winning approach back into the controlled repository",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"
+    ]
+  },
+  "d42adfb2d095c2e3540a87c12f8f96e18dc2a366b9cac49b3584d751e215a922": {
+    "translation": "/home/node/.dsh/\n├── profiles/       # Profile, Bundle metadata, and user patches\n├── settings.yaml   # Model and runtime settings\n├── credentials*    # Credentials or references to them\n├── sessions/       # Session event logs\n└── storages/       # Domain state such as Workspace\n\n/workspace/         # User code and the directory where the Agent actually operates",
+    "pages": [
+      "ai-k8s/rag-agent/deepseek-harness-runtime-containerization.md"
+    ]
+  },
+  "559f5926088a07e713b981de0766ba09d138ea73dde11fadc9ddf1c875162edb": {
+    "translation": "Kubernetes Pod\n  -> Kata runtime-rs\n  -> Firecracker microVM (Agent runtime)\n  -> Agent's CubeSandbox plugin or MCP client\n  -> CubeSandbox Adapter\n  -> CubeSandbox sandbox (tool execution)",
+    "pages": [
+      "ai-k8s/rag-agent/firecracker-kubernetes-lab/agent-workloads.md"
+    ]
+  },
+  "518d790b1a27fabbdbb60862c4655cb67684f38a35410bed2d90c61dc974c79d": {
+    "translation": "Kubernetes scheduler\n        |\n        v\nPrivileged Launcher Pod -- /dev/kvm --> Firecracker VMM --> Linux microVM\n        |\n        +-- Kubernetes CPU, memory, and lifecycle cgroup",
+    "pages": [
+      "ai-k8s/rag-agent/firecracker-kubernetes-lab/index.md"
+    ]
+  },
+  "e1a1e9b47adfc715e85018687353bf2c8c6238abe076f55bf47efb820fda6bc1": {
+    "translation": "Agent Pod -> Kata + Firecracker isolation boundary -> CubeSandbox Adapter -> Agent sandbox",
+    "pages": [
+      "ai-k8s/rag-agent/firecracker-kubernetes-lab/index.md"
+    ]
+  },
+  "ec3ade51907e4b04cd72545bfdbd092c3e1bb86cfc49f04f287acbb662b88c55": {
+    "translation": "Business container metrics (kubectl/cAdvisor)\n        + Kata shim and Firecracker VMM processes on the host\n        + devmapper, network, and sandbox control plane status",
+    "pages": [
+      "ai-k8s/rag-agent/firecracker-kubernetes-lab/observability.md"
+    ]
+  },
+  "542b938bae37721047734018f0171207b8bf0064bb9aaf62f67e5d81db9eb296": {
+    "translation": "Bot: Platform stability assistant\nRole: Read observability platform and Kubernetes read-only interfaces, organize risks, do not modify production environment.\n\nSkill: Generate service stability weekly report\nInput: Service list, SLO, change records, Prometheus/Grafana links\nSteps: Check error rate, latency, capacity, alerts, and recent changes\nValidation: Each judgment must include query time, source link, and raw metrics\nOutput: Markdown weekly report and items to be confirmed\nApproval: Must confirm before sending group messages, creating tickets, or modifying configurations\n\nRoutine: Execute the above Skill every Monday at 09:00, and after completion, hand the draft to the owner for review",
+    "pages": [
+      "ai-k8s/rag-agent/grok-bot-overview.md"
+    ]
+  },
+  "9e4465152145be362bd51560cfc66b35bbf596d7d1377308ff43c7029f0346c4": {
+    "translation": "Objective: Analyze the reasons for the increase in error rate of the payment service over the past 6 hours, and provide judgments ranked by evidence.\n\nSources:\n1. Read-only Grafana and Prometheus;\n2. Pods, Events, Deployments, and HPAs in the production/payment Namespace;\n3. Git change records from the last 24 hours.\n\nConstraints:\n- Do not modify the cluster, alerts, dashboards, or code;\n- Do not read Secrets or execute commands inside containers;\n- Each conclusion must state the time range, PromQL, or resource name;\n- If data is insufficient, mark as \"cannot confirm\" and do not fill in reasons.\n\nDeliverables:\n- A one-page Markdown report;\n- Timeline, impact scope, three most likely causes and counter-evidence;\n- Suggested verification steps;\n- If changes are needed, generate a Git Diff draft, do not create a PR.\n\nReview point:\nStop after completing the report and wait for my confirmation; obtain approval again before creating tickets, PRs, sending messages, or modifying any external system.",
+    "pages": [
+      "ai-k8s/rag-agent/grok-bot-overview.md"
+    ]
+  },
+  "06684fb05e23c18779b745b3abe68eb4f4f6ccb652e08b02dcc33ac6180885de": {
+    "translation": "Harbor Job\n  └── Trial\n      ├── Task: problem statement, initial environment, and acceptance rules\n      ├── Agent Adapter: how to install, launch, and read traces\n      ├── Agent Runtime: how to call models and tools to complete the task\n      ├── Environment Provider: where to create isolated environments\n      └── Verifier: whether the final state meets the requirements",
+    "pages": [
+      "ai-k8s/rag-agent/harbor-agent-evaluation-framework.md"
+    ]
+  },
+  "571ed4658c4d1c755c9693f86e17c67c0052c1f53c61d27187ebe544649b257a": {
+    "translation": "Strict Success Rate = number of Trials passing all required Verifiers / total number of valid Trials",
+    "pages": [
+      "ai-k8s/rag-agent/harbor-agent-evaluation-framework.md"
+    ]
+  },
+  "1118f66d4879e4ef9d9c3c326d51cb59e6600b8dffad43137619d01375bd2b7e": {
+    "translation": "Cost per Success   = total cost of all Trials / number of successful Trials\nTokens per Success = total tokens of all Trials / number of successful Trials\nTime to Success    = P50 / P95 of wall-clock time for successful Trials",
+    "pages": [
+      "ai-k8s/rag-agent/harbor-agent-evaluation-framework.md"
+    ]
+  },
+  "f52f900fd242917b1ee217ad0434668a132f73226c70350910440048fa7bc6ed": {
+    "translation": "Your product / CI / automation platform\n            │\n            ▼\nHarnessRouter / UHP\n  Harness selection, tasks, sessions, events, files, cancellation, Artifact\n            │\n            ▼\nCodex / Claude Code / DeepSeek Harness / ...\n  Agent Loop, context, tools, Skill, MCP, permissions\n            │\n            ▼\nLiteLLM / New API / Agent Router / enterprise model gateway (optional)\n  model protocol, keys, quotas, provider routing, circuit breaking, cost governance\n            │\n            ▼\ncloud model API or self-hosted vLLM / SGLang",
+    "pages": [
+      "ai-k8s/rag-agent/harnessrouter-overview.md"
+    ]
+  },
+  "ad3d0c2e3490548fa571d94a7b4abdb3d6d9f03b94062c32d910681896d4c5a7": {
+    "translation": "User's Agent / isolated development environment\n         │\n    HiRoute local routing\n         │\n    enterprise Higress entry\n         │\n    model pool / external API",
+    "pages": [
+      "ai-k8s/rag-agent/hiroute-overview.md"
+    ]
+  },
+  "bbf000d2af3aba8d4290b8afe06008e092b2183aefef03345492f9d35d84805d": {
+    "translation": "Page or conversation entry\n+ Prompt and output format\n+ knowledge base and business data\n+ workflows and manual approval nodes\n+ approved tools and connectors\n+ users, departments, and data permissions",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "eef545ce6766418ef74a49f25c3a2c87dc827bfcd54c0757affd13620c82cf43": {
+    "translation": "Configure a knowledge and Prompt assistant\n  → Custom GPTs / Microsoft 365 Agent Builder\n\nBuild departmental workflows and integrate with office systems\n  → Copilot Studio / Power Platform / Dify\n\nImplement complex, long-state, evaluable professional Agents\n  → orchestration frameworks such as LangGraph + enterprise self-built release control plane\n\nUniformly host a large number of production Agents\n  → managed runtimes such as Bedrock AgentCore, or self-built Kubernetes runtime",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "2a2ea2546c35e7032b410e39ac9e3ad068253e96bb54dcfc61614d57d1081d73": {
+    "translation": "Select a template\n  → configure content, data, and tools\n  → small-scale trial run\n  → select visibility scope\n  → automatic risk check\n  → approval if necessary\n  → publish to internal app center\n  → continuous evaluation, feedback, and recycling",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "1232512b2c1e489b13cc2a53d737a5a0b607eb34b869ade4fa24eb037acebd12": {
+    "translation": "Name: Sales Contract Initial Review Assistant\nPurpose: Identify risk clauses such as payment, breach, and intellectual property\nOwner: Legal Department Contract Team\nExpected users: Sales Department 1, Sales Department 2\nData level: Internal sensitive",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "6b995aa7d622ef0370771241c677b2d34b1889a3e308be529a875936ce8c55ed": {
+    "translation": "Sales Contract Initial Review Assistant\n\nPurpose: Assist in identifying common contract risks, not a substitute for formal legal advice\nOwner: Legal Department Contract Team\nScope: Sales Department 1, Sales Department 2\nData retention: Deleted 7 days after task completion\nVersion: v1.3\n\n[Use Now] [Request Permission] [Instructions] [Feedback]",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "8071b6632392cf4c6b96817f2d09f75a2f5f302e9e25ab6712776a47bf914c08": {
+    "translation": "Can the application be opened?\n        │\n        └── After opening, what business data can be viewed or modified?",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "e338dfe18ca6f4173740b0120d589eb76b038c5686a13c1fcd7fb1a1b7273420": {
+    "translation": "Li Si can only view contracts in the East China region\n→ When querying through the assistant, he can still only see East China region contracts",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "d70ea3a020a5bef94d84021326ab27b59f87d604c1fe3365fa1232201c0ff50e": {
+    "translation": "Business users / Developers\n        │\n        ▼\nAI Application Workbench\n├── Templates, knowledge bases, workflows, and connectors\n├── Test sets, evaluation, permission scope, and budget\n└── Pilot run, approval, release, and decommission\n        │\n        ▼\nApplication release control plane\n├── App / Version / Owner / Environment\n├── User / Group / Role / Data Policy\n├── Risk / Approval / Quota / Audit\n├── Runtime Selection / Rollout / Rollback\n└── Catalog / Feedback / Lifecycle\n        │\n        ├── Shared application runtime\n        ├── Knative HTTP Service\n        ├── KEDA Event Worker\n        ├── Workflow / CronJob\n        └── Resident Agent Cell\n                │\n        ┌───────┼──────────────┐\n        ▼       ▼              ▼\n    Model     Tool          Memory / Data\n    Gateway   Gateway       Storage",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "802bedad4bba51161735e9bb0e9fa76a33e5a827c6a1b2095d9183be4dcfdb34": {
+    "translation": "Who can use it?\nWhat data is used?\nWhat operations can be performed?\nWho is responsible for this application?",
+    "pages": [
+      "ai-k8s/rag-agent/internal-agent-app-publishing.md"
+    ]
+  },
+  "354fdf7fc82977353ad32eec1eae2533bed332877e39334ffab0903880096e62": {
+    "translation": "Business group users / Platform administrators / FinOps\n  ├─ Submit training tasks\n  ├─ Publish inference services\n  ├─ Adjust borrowing and tidal policies within allowed scope\n  └─ View quota ledger, SLO, and costs\n                         │\n                         ▼\nGPU Platform API / Portal\n  ├─ GPUQuotaPolicy          Group quotas, mutual borrowing, and reclamation\n  ├─ InferenceScalingPolicy  Real-time scaling and draining\n  ├─ TidalPolicy             Scheduled prewarming and capacity switching\n  └─ CapacityLease           Time-bound protection and exceptions\n                         │\n                         ▼\nPolicy Controller + Admission Webhook\n  ├─ Validate business group permissions and platform protection lines\n  ├─ Generate Queue/Cohort/Priority/Autoscaler\n  ├─ Coordinate borrowing reclamation, Checkpoint, and draining\n  └─ Record expectations, decision reasons, and actual results\n            │                    │\n            ▼                    ▼\nTraining and batch workload control plane              Online inference control plane\nKueue or Volcano               KServe / AIBrix / Ray Serve\nTrainer / JobSet / RayJob      vLLM / SGLang / TensorRT-LLM\nGang / TAS / Priority          HPA / KEDA / WVA / Router\n            │                    │\n            └─────────┬──────────┘\n                      ▼\nGPU resource and node layer\nGPU Operator / Device Plugin or DRA / MIG / RDMA / NFD\n  ├─ h100-rdma-training\n  ├─ h100-inference\n  ├─ l40s-inference\n  └─ mig-or-shared-development\n                      │\n                      ▼\nObservability and cost plane\nDCGM Exporter + Prometheus/Thanos + Grafana\nKube State Metrics + Queue/Serving Metrics\nOpenTelemetry + Loki + Tempo/Jaeger\nGPU-hours / cost per token / quota and SLO reports",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "baac3e6ff01b6a2bd7bbf7c89a2f289654b9a14656f800fec309dde3e2b7ac90": {
+    "translation": "NVML enumerates GPUs\n  → UUID, Product, Memory, Compute Capability, MIG status\n  → Normalize to platform Device Class using versioned rules\n      ├─ h100-80gb → accelerator.aik8s.run/h100-80gb\n      ├─ a100-80gb → accelerator.aik8s.run/a100-80gb\n      └─ unknown   → isolate or only enter admin test pool\n  → Each Resource Name independently executes Register/ListAndWatch/Allocate\n  → Allocate only returns Device ID/CDI Device belonging to this Resource Class",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "9e6ce06df983eb9d1c27b62140d48e3fa2b2d307f0af92c80fe90c67e994c221": {
+    "translation": "Physical model: h100-80gb / a100-80gb\nPartition specification: full / mig-1g.10gb / mig-3g.40gb\nSharing semantics: exclusive / shared",
+    "pages": [
+      "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"
+    ]
+  },
+  "1a19609f5f1f6aaca526ea2b352affc42d78e241c8dfc764f23b5cbcd3770278": {
+    "translation": "10000 nodes × 5000 equivalent sequences per node = 50 million active sequences\nCollect every 30 seconds → approximately 1.667 million samples per second\nApproximately 144 billion samples per day",
+    "pages": [
+      "ai-k8s/practices/large-scale-kubernetes-monitoring-tsdb.md"
+    ]
+  },
+  "567fdf93a7651d1a892265f19c11d9556d4da2556c734d7c3fd6599cd139e12d": {
+    "translation": "max_new_tokens = target seconds × 25",
+    "pages": [
+      "ai-k8s/practices/minimax-music3-sglang-omni.md"
+    ]
+  },
+  "22e3bd0860055f181e01ee656d284a4bd3cb1699ca915f5ce9e3f928a112320f": {
+    "translation": "Cost per Success = total cost of all trials / number of successful trials\nTokens per Success = total tokens of all trials / number of successful trials\nInterventions per Success = number of human interventions / number of successful trials",
+    "pages": [
+      "ai-k8s/rag-agent/agent-evaluation-overview.md"
+    ]
+  },
+  "e505de242151c1520b617a6345c356aa323eef8569ebaa0308ef34fab73d2f09": {
+    "translation": "Employees / Slack / Teams / Internal portal\n              │\n        SSO + API Gateway\n              │\n    Internal Agent Control Plane\n   ├── Agent catalog, tenants, and quotas\n   ├── Model routing, task status, and Evals\n   ├── Approvals, audit, and cost attribution\n   └── Gateway/Cell lifecycle management\n              │\n    Independent OpenClaw Cell per trust domain\n   ├── Fixed-version Gateway\n   ├── Approved Skills/Plugins\n   └── Independent workspaces and short-lived session state\n              │\n     Container / gVisor / Kata / VM\n              │\n       Policy + Tool Gateway\n   ├── User identity and short-lived credential exchange\n   ├── Parameter validation, rate limiting, and human confirmation\n   ├── Network egress, data masking, and audit\n   └── Enterprise APIs, Git, browser, database",
+    "pages": [
+      "ai-k8s/rag-agent/agent-landscape-2026.md"
+    ]
+  },
+  "ffe3cbc44842e85eca41ed22729973dbb546147fdce792e661bee3f6b8789bf8": {
+    "translation": "state = initialize(goals, constraints, context, budget)\nwhile not complete and budget not exceeded:\n    observation = get current environment and previous step result\n    decision = model selection: answer / call tool / modify plan / request approval / delegate\n    result = execute decision within permission boundaries\n    state = record results, errors, artifacts, and remaining tasks\nreturn final result + verifiable artifacts + execution trace",
+    "pages": [
+      "ai-k8s/rag-agent/agent-landscape-2026.md"
+    ]
+  }
+}

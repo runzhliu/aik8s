@@ -1,0 +1,164 @@
+{
+  "assets/cluster/karmada-vs-virtual-kubelet/architecture-mobile.svg": {
+    "source_sha256": "0e59794972c9479c7eeacea6ec3a62b8a8f551b5bf7cd090fa6e90d552125b11",
+    "label_sha256": "4936d11c5b87b767de5861993825b9c0e42f5caa49b91b6efe9a03e527c4ef85",
+    "english_sha256": "e198ee06a362360cd3e1bd6451b82d228e09983e67418d27f842bc0f655a099c",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/cluster/karmada-vs-virtual-kubelet/architecture.svg": {
+    "source_sha256": "efa78c593ccc05c1cf4319ecb8101311ab4ab16a9ab555ebc47e642695d18c85",
+    "label_sha256": "1985aa675826691b4677e0c1f4da6a9b0bfbd14253a8f52cd36c99f53abc03b7",
+    "english_sha256": "7e90ad7f6f45d4f4c02355a6920084a2285bb08766655f51d2092e98f65188e7",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/cluster/karmada-vs-virtual-kubelet/capacity-mobile.svg": {
+    "source_sha256": "754cbe26540648fd4220f8ac6947a778380ee4525763664bcd60016be459b429",
+    "label_sha256": "1d9633dc4b9abb8c3e5f85c202124c13eb1249f59571990d1388d065e933e101",
+    "english_sha256": "cce4be048edd77a24fe097dad490d7327a44cee23e971eae765eab86cab0c65e",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/cluster/karmada-vs-virtual-kubelet/capacity.svg": {
+    "source_sha256": "b7e08882ea558e2d2f0f8ef08ac2e405ecf9734f9a60a96d85ace6e2fc7909af",
+    "label_sha256": "45b6f4277e696a245228934cc4379288412a3e026a5c669352e19e776b42e0e6",
+    "english_sha256": "6af48446ab182013745140f9022bf5dfc6c40218446ea3c9b949566756d838a4",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/koordinator-colocation/control-loop.svg": {
+    "source_sha256": "7e67d95646adf4159f094cf39dfb7069097f4bbb56183a65ecbec5721e67ec5a",
+    "label_sha256": "0516af183b2ba07fa8e0932eea7e092561232024b63733476d08e5481d692e41",
+    "english_sha256": "69b4f86dd5a2a51c4df1989609136708c5caa2c062c77290319050a85f3f8abf",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/koordinator-colocation/resource-model.svg": {
+    "source_sha256": "b819a92043adf5e2914c22589dc093ea746a0942d2c43b95cfe47cd234f8c326",
+    "label_sha256": "40d82ab239b92c4f0a07fa7619172eb0ac77a47a3c3c33c06f6bb051ff0d0a81",
+    "english_sha256": "d9eb3300d545234cd86933853273e87fe5249f14ac3a4da7dacf0bb49abac8c2",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/koordinator-colocation/rollout-ladder.svg": {
+    "source_sha256": "aa05706f50bad882f337431be5f1e58a9f965c63403c36248940386d2190a2f4",
+    "label_sha256": "4d27000cffff3ee5c331783ee3b3088d6d9041e746ae3e61c3e20986bc28901c",
+    "english_sha256": "1c224933ac5d3c06311e15d46d06061459dc1a8f9fd7411cf045d6a758228f9c",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/koordinator-node-qos-runtime-hooks/linux-enforcement-map.svg": {
+    "source_sha256": "44ddd6777b2f3345db5744c2b77be134369f3c819f2eefaf508c23b9ee352520",
+    "label_sha256": "e3f3993a5384c1e701feef3b40e0a6b43d8f5187fb8f5bf3508048a4768b8bb9",
+    "english_sha256": "114753b6c73e4b3aa9257072b385a902a5a5d4252747c5892234f73c8f61f3ce",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/koordinator-node-qos-runtime-hooks/node-control-loop.svg": {
+    "source_sha256": "8281ff45405ecd97c4eed1a360aef643011af8ed101222aae97c1aaa5d246cb2",
+    "label_sha256": "8e1be461292418f6c6d7f6ad479b1cc36757bafc0f9f437bf9d68546d77c61c6",
+    "english_sha256": "942513e2442ff8ce2b1a55ef77a26cd9b7048b911ab052e518125772d4ab579b",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/koordinator-node-qos-runtime-hooks/runtime-hook-modes.svg": {
+    "source_sha256": "68879a784b8db6f86f8cb28b3606cd54429a1ab92ce777114ea93c8fd7140199",
+    "label_sha256": "6a45942b2c24a38327832a1b6f43aed2374f81821648c514c5150f7e8ecc509e",
+    "english_sha256": "dd2ca856de67b4606d32fd857f4f461438cf7695c7666ea01d8a13db95c19ba8",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/hy4-preview-h20/correctness-gates.svg": {
+    "source_sha256": "b7532f711671adf9beb3d16d1137391c348f3e7cf67fe8f22d49ff23bcef761c",
+    "label_sha256": "4ddfeed9b25490b217118639237843e442170a07a0d3afa17b15c5cc15e8c7ac",
+    "english_sha256": "829836c888f3cdc3e757592541ff52b9f8c908c4a3e724df5dfa57c18803865f",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/hy4-preview-h20/long-context-ttft.svg": {
+    "source_sha256": "3c95527af431eb1b4220c4a3d892ade1cea04d5f914f075b7d70b55113aaf9fe",
+    "label_sha256": "93acbb9ee05a42b461263729a3ba028eecf2925ca34f4b3f0a300e78de4a1def",
+    "english_sha256": "ca30e09f6c00331025e3649529e850afee67e3b7423fcdd9e6caeddc14ee25ff",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/hy4-preview-h20/short-throughput.svg": {
+    "source_sha256": "99c1455c5e06fb9a3d9635d0d6efc1daba083357cd19e482daa19e8454fe238a",
+    "label_sha256": "1a15cad00d6d12251fdb453c48405300601e22ecbc8036303951cf8a7d2ff504",
+    "english_sha256": "e99061029e81efed986fb188c5e9168214bc544c23e0ef8d9bf47bf66d189b00",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/ling3-flash-h20/baseline-throughput.svg": {
+    "source_sha256": "683509258ebb67b5dab2795952e40066f89ad65476229bcdb34fe02db70c5286",
+    "label_sha256": "50e079060c0a768f9cfdb6304541e65c848b0ff71a9050011be1dcbd1a6e5021",
+    "english_sha256": "cd0cc90b0a44c36abcb9b98ac5fefd793cc4b441a7a06b86bb1baf2779db0d21",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/ling3-flash-h20/correctness-gates.svg": {
+    "source_sha256": "3cc9b755a401a1e0c89ed6dcf936c865c6f2eeff706a870010f1ebee2fba81f3",
+    "label_sha256": "8160ccfbf7d7a3335b13949300718d599f23d45d40c27b1e97e3dabc23e4c1ac",
+    "english_sha256": "5055974ff02cecd23e175abdccdf651b5688f49725358491303b3189cfc20c1e",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/ling3-flash-h20/speculative-delta.svg": {
+    "source_sha256": "827dd8ca9688c5939015531c8bbfd6f1bcb2a20a8e4aa64a47ba391bb8f8ed78",
+    "label_sha256": "a2112aad327f68cc1eafaa6028ed6420315433ed9360b9c2fc44b92865a33750",
+    "english_sha256": "00ee40d7c20d471986d0f94da8c2e164451858a326e730bc23678a0db86c53d7",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/qwen38-flash-next-sglang/context-ttft.svg": {
+    "source_sha256": "df237e220d87659c187fb7cd2b212f8f094fc1ea7e5fce152f3ed9761e5da482",
+    "label_sha256": "f5c8dfa92253f740e1d4226062ebf2709b72e8598b4c159027dd2737535518d0",
+    "english_sha256": "13b250730c95ba7ce72618252b979fcb0da7a21c8547c7076fc76e4210525aa1",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/qwen38-flash-next-sglang/shared-prefix.svg": {
+    "source_sha256": "84d91ee27e585be69b17fa3dbe77cbac5bf1b177a81ab60ab128ad5a8d1c399a",
+    "label_sha256": "4b8791e78092b574b335176e7ea21e457d6364031ad722a926e7cb95431bbf09",
+    "english_sha256": "6536b908cdb13c0a4f6af2fc951ca6afac3c85dec89d5cad6b30ebbc9f134ac5",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/practices/qwen38-flash-next-sglang/short-throughput.svg": {
+    "source_sha256": "5674f7b5d7cf7a641462b4295fe1992008e331dc848b648c44c024fd3311a6d5",
+    "label_sha256": "3d6876d716502102861466af17aacf2e3c5e32fb717eefa4fdcc3b3813580327",
+    "english_sha256": "2ecaddfc5d7acd1aafc9812ea7f742a9d8525ab1590b388177fd704017e1d233",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/rag-agent/cubesandbox-agent-adapter-v06/00-multi-cluster-architecture.svg": {
+    "source_sha256": "93054babc116602464cfa7333c070f4c18d3adc5306b74aaa89e320436798a81",
+    "label_sha256": "5eb15405faa2a4437d4ba718a9e216a5c2de2f140a9a15d494fee563c93c865a",
+    "english_sha256": "6db18c47af35c03bab9c9c903dec3ebeaf499cccf756ce1940af07c5bee2eb62",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/rag-agent/openclaw-2-review/architecture-1x-vs-2.svg": {
+    "source_sha256": "11f52cc309fdf86bca0f749a5c1c03b75a52a0d984e3d3187e706c7e1a8b3b40",
+    "label_sha256": "adadc35b27852c9e9fcfa8ec1379aca79b49df4108e4a0abb68f3e44587b544e",
+    "english_sha256": "4b87dc1a01aa7ae1d9bf49bcd8f805d9fb39de5d8f89dec09d951f0cee4a2970",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/rag-agent/openclaw-2-review/measured-comparison.svg": {
+    "source_sha256": "37b1ac1389300701f7b000a4d7362feb25862785e02fd7cc434cb66db15cad2d",
+    "label_sha256": "53f4a8f3ed03f00f95862479b0a49c0c1b1e85eed6809e463c47570fcf2c9798",
+    "english_sha256": "6eac670293c812cff4546a035689f80346ae06702ce9dec325586bbd16f1aa59",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/rag-agent/openclaw-2-review/migration-gates.svg": {
+    "source_sha256": "39ed7c5f2e35280b57608cd0134e28a0b6b6d699cffab05f2478fc311e0b38fc",
+    "label_sha256": "ee269a937d74e6cfdba9f107b775112e68050a68bb2398ff93b154391848f512",
+    "english_sha256": "4ae47f5da08232156e755a72980e2e4bf12a45651c332a1c6f261f74fded8633",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/training/deepseek-v4-rdma/convergence-validation.svg": {
+    "source_sha256": "7b09bbd6fe09a4a3b7ccc0122d6611d3fefe551a39044c487787325e1aef7bb1",
+    "label_sha256": "bd4ac753ffc7e54afcf2e668486b13a90715ec8743a9cf457b24bcd088ac14a3",
+    "english_sha256": "cbd1084f4eab3b92a33e7833c89dfeab6faa56a31d651251fbb98bb334419f59",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/training/deepseek-v4-rdma/nccl-bandwidth.svg": {
+    "source_sha256": "c4c2a888127a27127d82a74ac88faffaf3df421a78b8f8e8fbbaa267cfb7e14c",
+    "label_sha256": "f63f977e98f9c80e9fb6ade435a9df656c402da717b36e706aa25012aa0ca71a",
+    "english_sha256": "91ba280389cecbf0e98ff2bfe417b592cd2ccea7ee1017bb3a5a01998a34edae",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/training/deepseek-v4-rdma/sft-step-time.svg": {
+    "source_sha256": "b9d49e9144536898aa566bf491837bcd2cb0ccf7ba11eb4b8334bb5fb708c740",
+    "label_sha256": "a3b5dbb71d09378be10b48c07d341e7fb92919df4a4bf0f8dc1d986fbc8639d7",
+    "english_sha256": "a7fd385f129475e366418f9650ef95b386e70a72ed52d83f6605674ab569d81f",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/training/deepseek-v4-rdma/topology-matters.svg": {
+    "source_sha256": "6555d0f3a0f01432f0dca5fc19c1956228ee9e5bb6bcf866d5f94523577f8132",
+    "label_sha256": "8ea353bd5d7856ec1133df487a1a5c7cea06d0549defd72e9006fd1dbb64435d",
+    "english_sha256": "98f29f3b0684dd3a0ede156705edd3f3beb4ee3d7135be90c852a5d72535302d",
+    "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  }
+}

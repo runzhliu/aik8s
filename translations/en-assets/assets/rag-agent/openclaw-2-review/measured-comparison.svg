@@ -1,0 +1,58 @@
+<svg id="visual-qa-22" xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860" role="img" aria-labelledby="title desc">
+  <title id="title">OpenClaw 2026.7.1 vs 2026.8.1 measured comparison</title>
+  <desc id="desc">Comparison of installation size, file count, CLI startup, Gateway memory, default plugins, and doctor results.</desc>
+  <style>#visual-qa-22 .bg{fill:#fbfaf6}#visual-qa-22 .card{fill:#fff;stroke:#ded8cc;stroke-width:2}#visual-qa-22 .v1{fill:#8b8177}#visual-qa-22 .v2{fill:#c75b43}#visual-qa-22 .title{font:700 38px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#24211e}#visual-qa-22 .sub{font:400 19px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#6f675f}#visual-qa-22 .label{font:700 22px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#302c28}#visual-qa-22 .num{font:700 36px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#24211e}#visual-qa-22 .small{font:400 16px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#6f675f}#visual-qa-22 .tag{font:700 15px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#fff}#visual-qa-22 .delta{font:700 17px Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#a34330}
+  </style>
+  <rect class="bg" width="1500" height="860"/>
+  <text class="title" x="70" y="65" data-translated-label="true">OpenClaw 1.x vs 2.0: local isolated measurement</text>
+  <text class="sub" x="70" y="100" data-translated-label="true">macOS arm64 · Node v24.15.0 · npm install · 2026.7.1 / 2026.8.1 · data only for relative version comparison</text>
+  <rect x="1130" y="42" rx="12" width="110" height="32" class="v1"/><text class="tag" x="1152" y="64">2026.7.1</text>
+  <rect x="1255" y="42" rx="12" width="110" height="32" class="v2"/><text class="tag" x="1277" y="64">2026.8.1</text>
+
+  <rect class="card" x="70" y="145" rx="22" width="425" height="255"/>
+  <text class="label" x="100" y="184" data-translated-label="true">npm installation directory</text>
+  <text class="num" x="100" y="242">391.9 MiB</text><rect class="v1" x="100" y="263" rx="8" width="160" height="18"/>
+  <text class="num" x="100" y="330">896.5 MiB</text><rect class="v2" x="100" y="351" rx="8" width="365" height="18"/>
+  <text class="delta" x="310" y="242">+128.8%</text>
+  <text class="small" x="100" y="387" data-translated-label="true">2.0 adds providers, devices &amp; operations</text>
+
+  <rect class="card" x="535" y="145" rx="22" width="425" height="255"/>
+  <text class="label" x="565" y="184" data-translated-label="true">Number of installed files</text>
+  <text class="num" x="565" y="242">32,030</text><rect class="v1" x="565" y="263" rx="8" width="280" height="18"/>
+  <text class="num" x="565" y="330">35,902</text><rect class="v2" x="565" y="351" rx="8" width="314" height="18"/>
+  <text class="delta" x="795" y="242">+12.1%</text>
+  <text class="small" x="565" y="387" data-translated-label="true" font-size="15.290580632192572" style="font-size: 15.2906px;">Bytes grow faster than file count; files/deps are heavier</text>
+
+  <rect class="card" x="1000" y="145" rx="22" width="425" height="255"/>
+  <text class="label" x="1030" y="184" data-translated-label="true">CLI version query (hot start median)</text>
+  <text class="num" x="1030" y="242">46.9 ms</text><rect class="v1" x="1030" y="263" rx="8" width="330" height="18"/>
+  <text class="num" x="1030" y="330">44.4 ms</text><rect class="v2" x="1030" y="351" rx="8" width="312" height="18"/>
+  <text class="delta" x="1282" y="330" data-translated-label="true">≈ similar</text>
+  <text class="small" x="1030" y="387" data-translated-label="true">12 runs; difference within local noise range</text>
+
+  <rect class="card" x="70" y="445" rx="22" width="425" height="255"/>
+  <text class="label" x="100" y="484" data-translated-label="true" font-size="19.147253455377573" style="font-size: 19.1473px;">Gateway RSS: median, 5 steady samples</text>
+  <text class="num" x="100" y="542">38.3 MiB</text><rect class="v1" x="100" y="563" rx="8" width="195" height="18"/>
+  <text class="num" x="100" y="630">53.9 MiB</text><rect class="v2" x="100" y="651" rx="8" width="275" height="18"/>
+  <text class="delta" x="330" y="542">+40.7%</text>
+  <text class="small" x="100" y="687" data-translated-label="true" font-size="14.185615366683763" style="font-size: 14.1856px;">Idle, loopback, no authentication; for relative reference only</text>
+
+  <rect class="card" x="535" y="445" rx="22" width="425" height="255"/>
+  <text class="label" x="565" y="484" data-translated-label="true">Gateway default loaded plugins</text>
+  <text class="num" x="565" y="542">9</text><rect class="v1" x="565" y="563" rx="8" width="180" height="18"/>
+  <text class="num" x="565" y="630">14</text><rect class="v2" x="565" y="651" rx="8" width="280" height="18"/>
+  <text class="delta" x="760" y="630">+5</text>
+  <text class="small" x="565" y="687" data-translated-label="true">2.0 adds OpenAI/Anthropic/xAI, devices, CUA, etc.</text>
+
+  <rect class="card" x="1000" y="445" rx="22" width="425" height="255"/>
+  <text class="label" x="1030" y="484">doctor --lint --json</text>
+  <text class="num" x="1030" y="542">36 findings</text><rect class="v1" x="1030" y="563" rx="8" width="330" height="18"/>
+  <text class="num" x="1030" y="630">2 findings</text><rect class="v2" x="1030" y="651" rx="8" width="42" height="18"/>
+  <text class="delta" x="1240" y="630" data-translated-label="true">More focused</text>
+  <text class="small" x="1030" y="679" data-translated-label="true">Same host; 2.0 stops warning by default on 35</text>
+  <text class="small" x="1030" y="700" data-translated-label="true">missing-dependency Skills; not a 94% risk drop</text>
+
+  <rect x="70" y="748" rx="18" width="1355" height="67" fill="#2d2925"/>
+  <text x="747" y="779" text-anchor="middle" style="font:700 19px Arial,'PingFang SC','Microsoft YaHei',sans-serif;fill:#fff" data-translated-label="true">Conclusion: 2.0's CLI startup is not slower, but installation size, resident capability, and migration complexity have all increased significantly</text>
+  <text x="747" y="802" text-anchor="middle" style="font:400 15px Arial,'PingFang SC','Microsoft YaHei',sans-serif;fill:#d9d2ca" data-translated-label="true">Data comes from a single isolated experiment, not representative of all OSes, package managers, plugin combinations, and real business workloads</text>
+</svg>

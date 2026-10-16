@@ -1,0 +1,37 @@
+<svg id="visual-qa-4" xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+<title id="title">After obtaining the placement result, it must still pass execution-layer admission</title><desc id="desc">Engineering analysis illustration · Total capacity, resource topology, and actual runnable quantity must be verified separately</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="#687b93" stroke-width="1.5"/></marker></defs>
+<rect width="1200" height="760" fill="#f6f8fc"/>
+<g font-family="-apple-system,BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;,sans-serif">
+<text x="44" y="55" fill="#172b49" font-size="29.289472040315488" font-weight="700" text-anchor="start" data-max-width="1112" data-translated-label="true" style="font-size: 29.2895px;">After obtaining the placement result, it must still pass execution-layer admission</text>
+<text x="44" y="95" fill="#596b82" font-size="20.722206404774514" font-weight="400" text-anchor="start" data-max-width="1112" data-translated-label="true" style="font-size: 20.7222px;">Engineering analysis illustration · Total capacity, resource topology, and actual runnable quantity must be verified separately</text>
+<text x="44" y="153" fill="#2455a6" font-size="24" font-weight="700" text-anchor="start" data-max-width="1100" data-translated-label="true">Karmada path</text>
+<text x="44" y="333" fill="#087e82" font-size="24" font-weight="700" text-anchor="start" data-max-width="1100" data-translated-label="true">Virtual Kubelet path</text>
+<rect x="44" y="181" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="214.0" y="220" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308" data-translated-label="true">Selected member cluster</text>
+<text x="214.0" y="255" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308" data-translated-label="true">Policy and resource estimation</text>
+<rect x="429" y="181" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="599.0" y="220" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308" data-translated-label="true">Member scheduling / queue</text>
+<text x="599.0" y="255" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308" data-translated-label="true">Check specific Pod constraints</text>
+<rect x="814" y="181" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="984.0" y="220" fill="#2455a6" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308" data-translated-label="true">Real node execution</text>
+<text x="984.0" y="255" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308" data-translated-label="true">CPU / GPU / volume / network</text>
+<path d="M387 231 L417 231" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M772 231 L802 231" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="361" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="214.0" y="400" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308" data-translated-label="true">Selected virtual node</text>
+<text x="214.0" y="435" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308" data-translated-label="true">Report capacity and node labels</text>
+<rect x="429" y="361" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="599.0" y="400" fill="#087e82" font-size="22.421232227488147" font-weight="650" text-anchor="middle" data-max-width="308" data-translated-label="true" style="font-size: 22.4212px;">Provider / backend admission</text>
+<text x="599.0" y="435" fill="#596b82" font-size="18.492088259225575" font-weight="400" text-anchor="middle" data-max-width="308" data-translated-label="true" style="font-size: 18.4921px;">Quota, capability, and available layout</text>
+<rect x="814" y="361" width="340" height="100" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="984.0" y="400" fill="#087e82" font-size="24" font-weight="650" text-anchor="middle" data-max-width="308" data-translated-label="true">Real execution resources</text>
+<text x="984.0" y="435" fill="#596b82" font-size="20" font-weight="400" text-anchor="middle" data-max-width="308" data-translated-label="true">Capacity follows instance startup</text>
+<path d="M387 411 L417 411" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M772 411 L802 411" fill="none" stroke="#687b93" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="44" y="514" width="1112" height="187" rx="12" fill="#fff" stroke="#d9e1ed"/>
+<text x="70" y="556" fill="#172b49" font-size="19.668421986864683" font-weight="650" text-anchor="start" data-max-width="1060" data-translated-label="true" style="font-size: 19.6684px;">Hypothetical example: two machines each have 4 idle GPUs, and a single Pod requires 8 GPUs on the same machine</text>
+<text x="70" y="601" fill="#2455a6" font-size="23" font-weight="400" text-anchor="start" data-max-width="1060" data-translated-label="true">Total resources = 8 GPUs; number of physical nodes satisfying this Pod = 0.</text>
+<text x="70" y="646" fill="#596b82" font-size="17.45465654685188" font-weight="400" text-anchor="start" data-max-width="1060" data-translated-label="true" style="font-size: 17.4547px;"><tspan x="70" y="646">Resource estimation or Provider admission should recognize this fragmentation and must not only expose the summed GPU count</tspan><tspan x="70" y="666.592">upward.</tspan></text>
+<text x="44" y="735" fill="#596b82" font-size="18.24946166664371" font-weight="400" text-anchor="start" data-max-width="1112" data-translated-label="true" style="font-size: 18.2495px;">The execution constraints in the diagram are verification requirements and do not imply that all Providers use the same capacity model.</text>
+</g></svg>

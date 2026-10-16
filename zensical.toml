@@ -228,6 +228,12 @@ features = [
 [project.theme.icon]
 repo = "fontawesome/brands/github"
 
+[project.extra]
+alternate = [
+  { name = "简体中文", link = "/", lang = "zh" },
+  { name = "English", link = "/en/", lang = "en" },
+]
+
 [[project.theme.palette]]
 media = "(prefers-color-scheme: light)"
 scheme = "default"

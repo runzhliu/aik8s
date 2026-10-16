@@ -1,0 +1,45 @@
+{
+  "ai-k8s/practices/minimax-h3-h20-benchmark.md": [
+    {
+      "quote_index": 0,
+      "source_sha256": "bfc3ffcd8bb0cf14cd2bc97163b81058d2455fcf040c59f13fd1b0341e05cf18",
+      "english_sha256": "b7d0c22307a51527cddcf08473164389623eeaa36c3df993d283869cf929e233"
+    },
+    {
+      "quote_index": 1,
+      "source_sha256": "73a439d338bf912ea78e3be204e6b19b4b52729b198bb3438505a65eeff21a6a",
+      "english_sha256": "f5814ee8623be58d3fe5745e49cd7cede4b3695cfa022735af5a2bc74b176150"
+    },
+    {
+      "quote_index": 3,
+      "source_sha256": "9d304197f7df6c1476890cad4cad04abaca89bc943ab5dbcce35ef6c7adb58a9",
+      "english_sha256": "3ce9211dfbaa21c526fb360e0b589dfc2cd163b420046018c2cb76129195b84c"
+    }
+  ],
+  "ai-k8s/practices/minimax-music3-sglang-omni.md": [
+    {
+      "quote_index": 0,
+      "source_sha256": "960fd4ee3361d55ea451ac199c9a39e8126aabbab7a6dd7707126b4514e1903a",
+      "english_sha256": "372258836fe5174e640e1d1236d9400cc6d1f413cc27fa69353a09e585342522"
+    }
+  ],
+  "ai-k8s/rag-agent/hiroute-overview.md": [
+    {
+      "quote_index": 0,
+      "source_sha256": "608d170215f86d85857d3137da06a34ff4510d683453458f1c37d773c3f6dc6a",
+      "english_sha256": "686e21a9faf6c22ea73733cf47dc05408ece5bbbee6126f7caf2d11eacfed920"
+    }
+  ],
+  "ai-k8s/rag-agent/omarchy-agent-os-overview.md": [
+    {
+      "quote_index": 0,
+      "source_sha256": "3251661f38959a449e62dd446b9284ddc7778eaebf28c10ade49dbd2ca3bf0de",
+      "english_sha256": "4b6c7ed4454cc2ceb917980e9b644916a6905b3f4371585fb46bbdca4cb7cb69"
+    },
+    {
+      "quote_index": 1,
+      "source_sha256": "a73d531ed0578254f770dd174840ac8f63d326d229b6c721c54060279d58335a",
+      "english_sha256": "d390aeab9ee9d79c6a4f0c0d0388ece0f4926ded397e24e381823acc6113aaa8"
+    }
+  ]
+}

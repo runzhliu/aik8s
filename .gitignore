@@ -4,6 +4,7 @@
 .wechat-output/
 .social-drafts/
 site/
+/.zensical-*.generated.toml
 __pycache__/
 *.py[cod]
 
@@ -42,3 +43,9 @@ vip/
 /.local/koordinator-webhook-cert-race/
 **/*test-plan.md
 **/*benchmark-plan.md
+
+# English mirrors of historical, already-published result reports. Their legacy
+# URLs contain "plan"; new test plans remain excluded above.
+!/translations/en/ai-k8s/practices/glm53-h20-sglang-vllm-test-plan.md
+!/translations/en/ai-k8s/practices/hy4-preview-hardware-benchmark-plan.md
+!/translations/en/ai-k8s/practices/ling3-flash-h20-deployment-benchmark-plan.md

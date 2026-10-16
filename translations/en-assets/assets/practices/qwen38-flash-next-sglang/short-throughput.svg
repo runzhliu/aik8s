@@ -1,0 +1,30 @@
+<svg id="visual-qa-19" xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">Qwen3.8-Flash-Next FP8 short-request output throughput</title>
+  <desc id="desc">On four H20s, as concurrency increased from 1 to 64, output throughput increased from 90.32 to 1860.09 tokens per second.</desc>
+  <rect width="960" height="520" fill="#ffffff"/>
+  <text x="64" y="42" fill="#0f172a" font-family="sans-serif" font-size="24" font-weight="700" data-translated-label="true">4×H20 FP8: short-request throughput scales with concurrency</text>
+  <text x="64" y="74" fill="#64748b" font-family="sans-serif" font-size="14" data-translated-label="true">128 input / 64 output · SGLang Day-0 official image · TCP probe</text>
+  <g stroke="#e2e8f0" stroke-width="1">
+    <line x1="92" y1="420" x2="910" y2="420"/><line x1="92" y1="345" x2="910" y2="345"/>
+    <line x1="92" y1="270" x2="910" y2="270"/><line x1="92" y1="195" x2="910" y2="195"/>
+    <line x1="92" y1="120" x2="910" y2="120"/>
+  </g>
+  <g fill="#64748b" font-family="sans-serif" font-size="13" text-anchor="end">
+    <text x="82" y="425">0</text><text x="82" y="350">500</text><text x="82" y="275">1,000</text>
+    <text x="82" y="200">1,500</text><text x="82" y="125">2,000 tok/s</text>
+  </g>
+  <g fill="#2563eb">
+    <rect x="130" y="406" width="86" height="14" rx="5"/><rect x="264" y="370" width="86" height="50" rx="5"/>
+    <rect x="398" y="333" width="86" height="87" rx="5"/><rect x="532" y="290" width="86" height="130" rx="5"/>
+    <rect x="666" y="211" width="86" height="209" rx="5"/><rect x="800" y="141" width="86" height="279" rx="5"/>
+  </g>
+  <g fill="#0f172a" font-family="sans-serif" font-size="14" text-anchor="middle">
+    <text x="173" y="396">90</text><text x="307" y="360">335</text><text x="441" y="323">579</text>
+    <text x="575" y="280">864</text><text x="709" y="201">1,394</text><text x="843" y="131">1,860</text>
+  </g>
+  <g fill="#475569" font-family="sans-serif" font-size="14" text-anchor="middle">
+    <text x="173" y="450">C1</text><text x="307" y="450">C4</text><text x="441" y="450">C8</text>
+    <text x="575" y="450">C16</text><text x="709" y="450">C32</text><text x="843" y="450">C64</text>
+    <text x="500" y="488" fill="#64748b" data-translated-label="true">maximum concurrency</text>
+  </g>
+</svg>
