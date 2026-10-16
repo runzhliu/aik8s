@@ -7,6 +7,8 @@ last_reviewed: 2026-09-11
 
 # CubeSandbox Agent Adapter v0.5：不记账，就不执行
 
+后续版本的多集群路由、内部模板、日志接续与控制台实践见 [Adapter v0.6](cubesandbox-agent-adapter-v06.md)。本页保留 v0.5 的实现和实测记录。
+
 CubeSandbox Agent Adapter `v0.5.0` 把强审计变成受控执行的前置条件，并完成 OpenClaw、DSH、Hermes、Codex 与 Claude Code 五客户端真实 MicroVM 验收。
 
 上一次写 CubeSandbox Agent Adapter，还是 `v0.3.0`。

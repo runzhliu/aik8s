@@ -96,6 +96,7 @@ nav = [
       {"CubeSandbox 增强 OpenClaw 与 DSH 实战" = "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"},
       {"CubeSandbox Agent Adapter v0.3 实测" = "ai-k8s/rag-agent/cubesandbox-agent-adapter-v03.md"},
       {"CubeSandbox Agent Adapter v0.5 强审计实测" = "ai-k8s/rag-agent/cubesandbox-agent-adapter-v05.md"},
+      {"CubeSandbox Agent Adapter v0.6 多集群实践" = "ai-k8s/rag-agent/cubesandbox-agent-adapter-v06.md"},
       {"Firecracker Kubernetes 实验" = [
         {"实验总览" = "ai-k8s/rag-agent/firecracker-kubernetes-lab/index.md"},
         {"宿主机部署与原生冒烟" = "ai-k8s/rag-agent/firecracker-kubernetes-lab/deployment.md"},

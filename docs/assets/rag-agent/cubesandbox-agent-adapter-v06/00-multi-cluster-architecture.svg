@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">CubeSandbox Agent Adapter v0.6 多集群执行架构</title>
+  <desc id="desc">办公网中的本地 Agent 通过 HTTPS 连接 Adapter，平台批准的 Profile 分别绑定测试和生产集群，每个后端都需要连通 CubeAPI 和 CubeProxy。</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#316bd8"/></marker></defs>
+  <rect width="1200" height="675" fill="#f6f8fc"/>
+  <g font-family="'Hiragino Sans GB','PingFang SC','Microsoft YaHei',sans-serif" fill="#192c45">
+    <text x="56" y="66" font-size="22" fill="#316bd8" font-weight="700">CUBESANDBOX AGENT ADAPTER · v0.6.0</text>
+    <text x="56" y="125" font-size="40" font-weight="700">一个入口，两个执行集群</text>
+    <rect x="56" y="244" width="260" height="234" rx="20" fill="white" stroke="#d6e0f0" stroke-width="2"/>
+    <text x="82" y="290" font-size="29" font-weight="700">办公网 Agent</text>
+    <text x="82" y="337" font-size="26">OpenClaw · DSH</text>
+    <text x="82" y="378" font-size="26">Hermes · Codex</text>
+    <text x="82" y="419" font-size="26">OpenCode</text>
+    <path d="M316 360H374" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <text x="326" y="333" font-size="17" fill="#526b89">HTTPS</text>
+    <rect x="390" y="219" width="322" height="284" rx="20" fill="#eaf1ff" stroke="#9bb9ee" stroke-width="2"/>
+    <text x="416" y="269" font-size="33" font-weight="700">Agent Adapter</text>
+    <text x="416" y="323" font-size="28">认证与 Profile 授权</text>
+    <text x="416" y="371" font-size="28">固定后端与执行策略</text>
+    <text x="416" y="419" font-size="28">租约、任务与日志接续</text>
+    <text x="416" y="467" font-size="28">审批和持久审计</text>
+    <path d="M712 335H747V267H786M747 335V452H786" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <path d="M747 267H786" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <rect x="802" y="191" width="342" height="153" rx="20" fill="white" stroke="#d6e0f0" stroke-width="2"/>
+    <text x="830" y="236" font-size="31" font-weight="700">测试集群</text>
+    <text x="830" y="279" font-size="24" fill="#316bd8">staging-code</text>
+    <text x="830" y="318" font-size="24">CubeAPI + CubeProxy</text>
+    <rect x="802" y="376" width="342" height="153" rx="20" fill="white" stroke="#d6e0f0" stroke-width="2"/>
+    <text x="830" y="421" font-size="31" font-weight="700">生产集群</text>
+    <text x="830" y="464" font-size="24" fill="#316bd8">production-code</text>
+    <text x="830" y="503" font-size="24">CubeAPI + CubeProxy</text>
+    <text x="56" y="595" font-size="27" font-weight="700">客户端选 Profile，平台决定执行位置与权限。</text>
+    <text x="56" y="635" font-size="22" fill="#526b89">架构示意 · 两套后端分别连通 API 与数据面 · AIK8S.RUN</text>
+  </g>
+</svg>
