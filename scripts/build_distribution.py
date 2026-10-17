@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import hashlib
 import json
 import re
 import shutil
@@ -553,11 +554,12 @@ def timeline_controls(articles: list[FeedItem]) -> str:
     types = {item.content_type for item in articles}
     return (
         '<form class="aik8s-timeline-controls" data-timeline-controls hidden role="search" aria-label="' + label('筛选文章', 'Filter articles') + '">'
-        '<label>' + label('排序', 'Sort by') + '<select name="sort"><option value="published">' + label('最新发布', 'Newest published') + '</option><option value="updated">' + label('最近更新', 'Recently updated') + '</option></select></label>'
-        '<label>' + label('主题标签', 'Topic') + '<select name="tag"><option value="">' + label('全部标签', 'All topics') + '</option>' + options(tags, TAG_LABELS) + '</select></label>'
-        '<label>' + label('文章类型', 'Article type') + '<select name="type"><option value="">' + label('全部类型', 'All types') + '</option>' + options(types, TYPE_LABELS) + '</select></label>'
+        '<p class="aik8s-timeline-controls__title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg>' + label('筛选文章', 'Filter articles') + '</p>'
+        '<label class="aik8s-timeline-controls__select">' + label('排序', 'Sort by') + '<select name="sort"><option value="published">' + label('最新发布', 'Newest published') + '</option><option value="updated">' + label('最近更新', 'Recently updated') + '</option></select></label>'
+        '<label class="aik8s-timeline-controls__select">' + label('主题标签', 'Topic') + '<select name="tag"><option value="">' + label('全部标签', 'All topics') + '</option>' + options(tags, TAG_LABELS) + '</select></label>'
+        '<label class="aik8s-timeline-controls__select">' + label('文章类型', 'Article type') + '<select name="type"><option value="">' + label('全部类型', 'All types') + '</option>' + options(types, TYPE_LABELS) + '</select></label>'
         '<label class="aik8s-timeline-controls__search">' + label('关键词', 'Keywords') + '<input type="search" name="q" autocomplete="off" placeholder="' + label('搜索标题、摘要或标签', 'Search titles, summaries or topics') + '"></label>'
-        '<button type="reset">' + label('重置筛选', 'Reset filters') + '</button></form>'
+        '<button type="reset" class="md-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2.6 8.4M3 4v6h6"/></svg>' + label('重置筛选', 'Reset filters') + '</button></form>'
     )
 
 
@@ -572,7 +574,7 @@ def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> F
     ordered = sorted(articles, key=lambda item: (item.published, item.url), reverse=True)
     escape = html.escape
     parts = [
-        f'<h1 id="article-timeline">{title}</h1>', f'<p>{description}</p>',
+        f'<h1 id="article-timeline">{title}</h1>', f'<p class="aik8s-timeline__intro">{description}</p>',
         timeline_controls(articles),
         f'<p class="aik8s-timeline__count" data-timeline-count aria-live="polite" aria-atomic="true">{len(ordered)} ' + ("articles" if english else "篇文章") + '</p>',
         '<p data-timeline-empty hidden>' + ('No matching articles. Try another filter.' if english else '没有符合条件的文章，请尝试其他筛选条件。') + '</p>',
@@ -653,6 +655,24 @@ def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> F
                     max((item.updated for item in ordered), default=fallback), 'timeline', True)
 
 
+def version_discovery_assets(site_dir: Path) -> None:
+    """Content versions prevent old cached controls/CSS surviving a new release."""
+    replacements = []
+    for name in ('stylesheets/timeline.css', 'javascripts/timeline.js'):
+        asset = site_dir / name
+        if asset.is_file():
+            version = hashlib.sha256(asset.read_bytes()).hexdigest()[:12]
+            pattern = re.compile(r'((?:href|src)="[^"<>]*?' + re.escape(name) + r')(?:\?[^"<>]*)?(")')
+            replacements.append((pattern, version))
+    for path in site_dir.rglob('*.html'):
+        original = path.read_text(encoding='utf-8')
+        source = original
+        for pattern, version in replacements:
+            source = pattern.sub(lambda match: match[1] + '?v=' + version + match[2], source)
+        if source != original:
+            path.write_text(source, encoding='utf-8')
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--docs-dir", type=Path, default=Path("docs"))
@@ -696,6 +716,7 @@ def main() -> None:
     write_sitemap(items, site_dir / "sitemap.xml")
     items_by_url = {normalize_url(item.url): item for item in items}
     injected = sum(inject_metadata(path, site_url, items_by_url, articles) for path in site_dir.rglob("*.html"))
+    version_discovery_assets(site_dir)
     print(
         f"Generated RSS/Atom with {min(len(articles), args.limit)} items and Sitemap with "
         f"{len(items)} URLs; enhanced {injected} HTML files"

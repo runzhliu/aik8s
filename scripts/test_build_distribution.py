@@ -118,6 +118,31 @@ class DistributionTests(unittest.TestCase):
             self.assertEqual(build_distribution.inject_article_discovery(shell, index, [candidate], 'https://example.org/en/'), shell)
             self.assertNotIn('aik8s-related', build_distribution.inject_article_discovery(shell, item, [item], 'https://example.org/en/'))
 
+    def test_discovery_assets_use_content_versions_and_keep_relative_links(self):
+        import hashlib
+        with TemporaryDirectory() as temporary:
+            site = Path(temporary)
+            (site / 'stylesheets').mkdir()
+            (site / 'javascripts').mkdir()
+            css = site / 'stylesheets/timeline.css'
+            css.write_text('first version')
+            (site / 'javascripts/timeline.js').write_text('/* script */')
+            page = site / 'index.html'
+            page.write_text('<link href="../stylesheets/timeline.css?v=old">'
+                            '<script src="javascripts/timeline.js"></script><link href="other.css">')
+            build_distribution.version_discovery_assets(site)
+            first = page.read_text()
+            version = hashlib.sha256(css.read_bytes()).hexdigest()[:12]
+            self.assertIn('../stylesheets/timeline.css?v=' + version, first)
+            self.assertRegex(first, r'javascripts/timeline\.js\?v=[a-f0-9]{12}')
+            self.assertIn('href="other.css"', first)
+            build_distribution.version_discovery_assets(site)
+            self.assertEqual(first, page.read_text())
+            css.write_text('second version')
+            build_distribution.version_discovery_assets(site)
+            self.assertNotEqual(first, page.read_text())
+            self.assertNotIn('?v=' + version, page.read_text())
+
     def test_feeds_only_contain_articles_and_sitemap_keeps_section_indexes(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()

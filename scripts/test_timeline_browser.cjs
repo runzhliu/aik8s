@@ -10,7 +10,7 @@ const { chromium } = require('playwright');
 const ROOT = path.resolve(__dirname, '..');
 
 async function contextFor(browser, javascriptEnabled = true) {
-  const context = await browser.newContext({ javaScriptEnabled: javascriptEnabled });
+  const context = await browser.newContext({ javaScriptEnabled: javascriptEnabled, reducedMotion: 'reduce' });
   await context.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.origin !== 'https://aik8s.run') return route.abort();
@@ -35,6 +35,26 @@ async function contextFor(browser, javascriptEnabled = true) {
       await page.goto(base + 'timeline.html?utm_source=test#article-timeline');
       const controls = page.locator('[data-timeline-controls]');
       await controls.waitFor({ state: 'visible' });
+      const style = await controls.evaluate(form => {
+        const select = form.querySelector('select');
+        const input = form.querySelector('input');
+        const button = form.querySelector('button');
+        return {
+          layout: getComputedStyle(form).display,
+          appearance: getComputedStyle(select).appearance,
+          heights: [select, input, button].map(el => el.getBoundingClientRect().height),
+          inputWidth: input.getBoundingClientRect().width,
+          selectWidth: select.getBoundingClientRect().width,
+          heading: !!form.querySelector('.aik8s-timeline-controls__title svg'),
+          version: document.querySelector('link[href*="stylesheets/timeline.css"]').href
+        };
+      });
+      assert.equal(style.layout, 'grid');
+      assert.equal(style.appearance, 'none', 'Select uses themed styling, not browser defaults');
+      assert.ok(style.heights.every(height => Math.abs(height - style.heights[0]) < 1));
+      assert.ok(style.inputWidth > style.selectWidth * 1.8, 'Search spans two columns');
+      assert.ok(style.heading);
+      assert.match(style.version, /\?v=[a-f0-9]{12}$/);
       const rows = await page.locator('[data-timeline-item]').evaluateAll(nodes => nodes.map(node => ({
         published: node.dataset.published, updated: node.dataset.updated,
         tags: node.dataset.tags.split(/\s+/).filter(Boolean), type: node.dataset.contentType
@@ -81,8 +101,14 @@ async function contextFor(browser, javascriptEnabled = true) {
       await page.setViewportSize({ width: 390, height: 844 });
       assert.ok(await controls.isVisible());
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      assert.ok(await controls.locator('input').evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 16));
+      for (const height of await controls.locator('select,input,button').evaluateAll(nodes => nodes.map(el => el.getBoundingClientRect().height))) assert.ok(height >= 44);
+      const lightBackground = await controls.evaluate(el => getComputedStyle(el).backgroundColor);
       await page.locator('.md-header [data-md-component=palette] label:visible').first().click();
       assert.ok(await controls.isVisible());
+      assert.notEqual(await controls.evaluate(el => getComputedStyle(el).backgroundColor), lightBackground, 'Controls follow theme changes');
+      await controls.locator('input').focus();
+      assert.notEqual(await controls.locator('input').evaluate(el => getComputedStyle(el).boxShadow), 'none');
       await page.goto(base + 'timeline.html?tag=invalid&type=invalid&sort=invalid');
       await controls.waitFor({ state: 'visible' });
       assert.equal(await controls.locator('[name=tag]').inputValue(), '');

@@ -54,53 +54,127 @@ body[data-aik8s-view="timeline"] .md-path { display: none; }
 [data-timeline-empty][hidden],
 .aik8s-timeline [hidden] { display: none !important; }
 
+.md-typeset .aik8s-timeline__intro {
+  color: var(--md-default-fg-color--light);
+  font-size: .8rem;
+  margin-top: -.4rem;
+}
 .md-typeset [data-timeline-controls] {
   align-items: end;
   background: var(--md-code-bg-color);
   border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: .35rem;
+  border-radius: .5rem;
   display: grid;
-  gap: .65rem;
+  gap: .85rem .8rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 1rem 0 .65rem;
+  margin: 1.2rem 0 .8rem;
   max-width: 100%;
   min-width: 0;
-  padding: .8rem;
+  padding: 1rem;
 }
+.md-typeset .aik8s-timeline-controls__title {
+  align-items: center;
+  color: var(--md-default-fg-color);
+  display: flex;
+  font-size: .8rem;
+  font-weight: 600;
+  gap: .4rem;
+  grid-column: 1 / -1;
+  line-height: 1.4;
+  margin: 0 0 .1rem;
+}
+[data-timeline-controls] svg {
+  fill: none;
+  flex: 0 0 auto;
+  height: .95rem;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: .95rem;
+}
+.aik8s-timeline-controls__title svg { color: var(--md-accent-fg-color); }
 [data-timeline-controls] > *,
 [data-timeline-controls] label { min-width: 0; }
 [data-timeline-controls] label {
   color: var(--md-default-fg-color--light);
   display: flex;
   flex-direction: column;
-  font-size: .7rem;
-  gap: .25rem;
+  font-size: .65rem;
+  font-weight: 500;
+  gap: .35rem;
+  line-height: 1.4;
+  position: relative;
 }
+[data-timeline-controls] .aik8s-timeline-controls__search { grid-column: span 2; }
 [data-timeline-controls] select,
 [data-timeline-controls] input,
-[data-timeline-controls] button {
+[data-timeline-controls] button.md-button {
+  appearance: none;
   background: var(--md-default-bg-color);
   border: 1px solid var(--md-default-fg-color--lighter);
-  border-radius: .2rem;
+  border-radius: .3rem;
   box-sizing: border-box;
   color: var(--md-default-fg-color);
   font: inherit;
   font-size: .75rem;
+  height: 2.3rem;
+  line-height: 1.4;
+  margin: 0;
   max-width: 100%;
-  min-height: 2rem;
   min-width: 0;
-  padding: .35rem .5rem;
+  padding: .5rem .65rem;
+  transition: border-color .15s, box-shadow .15s, background-color .15s;
 }
 [data-timeline-controls] select,
 [data-timeline-controls] input { width: 100%; }
-[data-timeline-controls] input::placeholder { color: var(--md-default-fg-color--light); }
-[data-timeline-controls] button { cursor: pointer; overflow-wrap: anywhere; }
-[data-timeline-controls] button:hover { border-color: var(--md-accent-fg-color); }
-[data-timeline-controls] :is(input, select, button):focus-visible,
+[data-timeline-controls] select { cursor: pointer; padding-right: 2rem; }
+.aik8s-timeline-controls__select::after {
+  border-bottom: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  bottom: 1rem;
+  content: "";
+  height: .3rem;
+  pointer-events: none;
+  position: absolute;
+  right: .8rem;
+  transform: rotate(45deg);
+  width: .3rem;
+}
+[data-timeline-controls] input::placeholder { color: var(--md-default-fg-color--light); font-weight: 400; }
+[data-timeline-controls] :is(select, input):hover { border-color: var(--md-accent-fg-color); }
+[data-timeline-controls] :is(select, input):focus {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-accent-fg-color) 15%, transparent);
+  outline: none;
+}
+[data-timeline-controls] button.md-button {
+  align-items: center;
+  border-color: var(--md-primary-fg-color);
+  color: var(--md-primary-fg-color);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 600;
+  gap: .4rem;
+  justify-content: center;
+  justify-self: end;
+  white-space: nowrap;
+  width: 100%;
+}
+[data-timeline-controls] button.md-button:hover {
+  background: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+}
+[data-timeline-controls] button:focus-visible,
 .aik8s-tag:focus-visible,
 .aik8s-related a:focus-visible {
   outline: 2px solid var(--md-accent-fg-color);
-  outline-offset: 2px;
+  outline-offset: 3px;
+}
+@media (forced-colors: active) {
+  [data-timeline-controls] select { appearance: auto; }
+  .aik8s-timeline-controls__select::after { display: none; }
+  [data-timeline-controls] :is(select, input):focus { outline: 2px solid Highlight; }
 }
 [data-timeline-count],
 [data-timeline-empty] {
@@ -144,5 +218,11 @@ body[data-aik8s-view="timeline"] .md-path { display: none; }
 }
 @media (max-width: 600px) {
   .md-typeset .aik8s-timeline li { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
-  .md-typeset [data-timeline-controls] { grid-template-columns: minmax(0, 1fr); padding: .65rem; }
+  .md-typeset [data-timeline-controls] { gap: .8rem; grid-template-columns: minmax(0, 1fr); padding: .85rem; }
+  [data-timeline-controls] .aik8s-timeline-controls__search { grid-column: auto; }
+  [data-timeline-controls] :is(select, input, button.md-button) { font-size: max(.75rem, 16px); min-height: 44px; height: 2.5rem; }
+  .aik8s-timeline-controls__select::after { bottom: 1.1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-timeline-controls] :is(select, input, button.md-button) { transition: none; }
 }
