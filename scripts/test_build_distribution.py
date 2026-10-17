@@ -79,7 +79,7 @@ class DistributionTests(unittest.TestCase):
             original.mkdir()
             site.mkdir()
             (docs / 'article.md').write_text('# A translated article\n\nAn explanation.\n')
-            (original / 'article.md').write_text('# 中文原文\n\n解释。\n')
+            (original / 'article.md').write_text('---\ntags: ["gpu", "inference"]\ncontent_type: benchmark\n---\n# 中文原文\n\n解释。\n')
             published = datetime(2026, 8, 1, tzinfo=timezone.utc)
             updated = datetime(2026, 10, 1, tzinfo=timezone.utc)
             history = {'docs/article.md': [published, updated]}
@@ -89,11 +89,34 @@ class DistributionTests(unittest.TestCase):
             self.assertEqual(items[0].url, 'https://example.org/en/article/')
             self.assertEqual(items[0].published, published)
             self.assertEqual(items[0].updated, updated)
+            self.assertEqual(set(items[0].tags), {'gpu', 'inference'})
+            self.assertEqual(items[0].content_type, 'benchmark')
             with patch.object(build_distribution, 'SITE_LANGUAGE', 'en'):
                 result = build_distribution.inject_article_dates('<article><h1>A translated article</h1></article>', items[0])
                 self.assertIn('Published', result)
                 self.assertIn('Updated', result)
                 self.assertNotIn('创建于', result)
+
+    def test_article_discovery_is_static_localized_and_idempotent(self):
+        from datetime import datetime, timezone
+        timestamp = datetime(2026, 10, 1, tzinfo=timezone.utc)
+        item = build_distribution.FeedItem('Main', 'Summary', 'https://example.org/en/main/', timestamp, timestamp, 'inference', False, ('inference',), 'overview')
+        candidate = build_distribution.FeedItem('Related <article>', 'A & B', 'https://example.org/en/related/', timestamp, timestamp, 'inference', False, ('inference',), 'tutorial')
+        shell = '<article><h1>Main</h1><p>Original article</p></article>'
+        with patch.object(build_distribution, 'SITE_LANGUAGE', 'en'):
+            output = build_distribution.inject_article_discovery(shell, item, [item, candidate], 'https://example.org/en/')
+            self.assertIn('Related articles', output)
+            self.assertIn('Related &lt;article&gt;', output)
+            self.assertIn('A &amp; B', output)
+            self.assertIn('href="https://example.org/en/timeline.html?tag=inference"', output)
+            self.assertIn('href="https://example.org/en/related/"', output)
+            repeated = build_distribution.inject_article_discovery(output, item, [item, candidate], 'https://example.org/en/')
+            self.assertEqual(repeated.count('class="aik8s-related"'), 1)
+            self.assertEqual(repeated.count('class="aik8s-article-tags"'), 1)
+            self.assertNotIn('<h2', repeated)  # Do not disrupt bilingual authored-heading pairing.
+            index = build_distribution.FeedItem('Index', 'Overview', 'https://example.org/en/', timestamp, timestamp, 'index', True)
+            self.assertEqual(build_distribution.inject_article_discovery(shell, index, [candidate], 'https://example.org/en/'), shell)
+            self.assertNotIn('aik8s-related', build_distribution.inject_article_discovery(shell, item, [item], 'https://example.org/en/'))
 
     def test_feeds_only_contain_articles_and_sitemap_keeps_section_indexes(self):
         with TemporaryDirectory() as temporary:

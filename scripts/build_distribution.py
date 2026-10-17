@@ -15,8 +15,10 @@ from datetime import date, datetime, time, timezone
 from email.utils import format_datetime
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urlencode, urljoin
 from zoneinfo import ZoneInfo
+
+from article_discovery import TAG_LABELS, TYPE_LABELS, infer_discovery, related_items
 
 
 SITE_TITLE = "AI/LLM on Kubernetes 基础设施"
@@ -54,6 +56,8 @@ class FeedItem:
     updated: datetime
     category: str
     is_index: bool
+    tags: tuple[str, ...] = ()
+    content_type: str = "overview"
 
 
 class BreadcrumbParser(HTMLParser):
@@ -220,6 +224,10 @@ def collect_items(docs_dir: Path, repo_root: Path, site_url: str, source_docs_di
             continue
         history_path = source_docs_dir / path.relative_to(docs_dir) if source_docs_dir else path
         published, updated = git_dates(history_path, repo_root, metadata.get("last_reviewed"), history_by_path)
+        # English pages inherit discovery metadata from the original document,
+        # just like their dates, so filters remain stable across languages.
+        discovery_metadata = parse_front_matter(history_path) if source_docs_dir else metadata
+        tags, content_type = infer_discovery(path.relative_to(docs_dir).as_posix(), discovery_metadata)
         items.append(
             FeedItem(
                 title=title,
@@ -229,6 +237,8 @@ def collect_items(docs_dir: Path, repo_root: Path, site_url: str, source_docs_di
                 updated=updated,
                 category=category_for(path, docs_dir),
                 is_index=path.name == "index.md",
+                tags=tags,
+                content_type=content_type,
             )
         )
     return sorted(items, key=lambda item: (item.updated, item.url), reverse=True)
@@ -411,12 +421,53 @@ def inject_article_dates(source: str, item: FeedItem | None) -> str:
     return source[:heading.end()] + block + source[heading.end():].lstrip("\n")
 
 
-def inject_metadata(path: Path, site_url: str, items_by_url: dict[str, FeedItem]) -> bool:
+def discovery_label(labels: dict[str, tuple[str, str]], value: str) -> str:
+    return labels[value][1 if SITE_LANGUAGE == 'en' else 0]
+
+
+def tag_links(item: FeedItem, site_url: str) -> str:
+    return ' '.join(
+        '<a class="aik8s-tag" href="' + html.escape(urljoin(site_url, 'timeline.html') + '?' + urlencode({'tag': tag}), quote=True)
+        + '">' + html.escape(discovery_label(TAG_LABELS, tag)) + '</a>' for tag in item.tags
+    )
+
+
+def inject_article_discovery(source: str, item: FeedItem | None, articles: list[FeedItem], site_url: str) -> str:
+    """Add crawlable topic links and deterministic recommendations, never requiring JS."""
+    source = re.sub(r'\n?<!-- AIK8S discovery -->.*?<!-- /AIK8S discovery -->\n?', '\n', source, flags=re.S)
+    if item is None or item.is_index:
+        return source
+    english = SITE_LANGUAGE == 'en'
+    if item.tags:
+        label = 'Article topics' if english else '文章标签'
+        block = '\n<!-- AIK8S discovery -->\n<nav class="aik8s-article-tags" aria-label="' + label + '">' + tag_links(item, site_url) + '</nav>\n<!-- /AIK8S discovery -->\n'
+        dates = ARTICLE_DATES_PATTERN.search(source)
+        heading = ARTICLE_HEADING_PATTERN.search(source)
+        anchor = dates.end() if dates else heading.end() if heading else None
+        if anchor is not None:
+            source = source[:anchor] + block + source[anchor:]
+    recommendations = related_items(item, articles)
+    if recommendations:
+        title = 'Related articles' if english else '相关文章'
+        entries = ''.join(
+            '<li><a href="' + html.escape(candidate.url, quote=True) + '">' + html.escape(candidate.title)
+            + '</a><p>' + html.escape(candidate.description) + '</p></li>' for candidate in recommendations
+        )
+        # A labelled aside avoids altering authored heading/anchor parity in the
+        # bilingual builder while keeping recommendations accessible as a landmark.
+        block = '\n<!-- AIK8S discovery -->\n<aside class="aik8s-related" aria-labelledby="aik8s-related-title"><p class="aik8s-related__title" id="aik8s-related-title"><strong>' + title + '</strong></p><ul>' + entries + '</ul></aside>\n<!-- /AIK8S discovery -->\n'
+        source = re.sub(r'</article\s*>', lambda match: block + match[0], source, count=1, flags=re.I)
+    return source
+
+
+def inject_metadata(path: Path, site_url: str, items_by_url: dict[str, FeedItem], articles: list[FeedItem] | None = None) -> bool:
     original = path.read_text(encoding="utf-8")
     canonical_match = CANONICAL_PATTERN.search(original)
     canonical = canonical_match.group(1).strip() if canonical_match else site_url
     item = items_by_url.get(normalize_url(canonical)) if canonical_match else None
     source = inject_article_dates(original, item)
+    if articles is not None:
+        source = inject_article_discovery(source, item, articles, site_url)
     if FEED_MARKER in source:
         if source == original:
             return False
@@ -492,19 +543,39 @@ def without_page_toc(source: str) -> str:
     return source
 
 
+def timeline_controls(articles: list[FeedItem]) -> str:
+    english = SITE_LANGUAGE == 'en'
+    def label(zh: str, en: str) -> str:
+        return en if english else zh
+    def options(values, labels):
+        return ''.join('<option value="' + html.escape(value, quote=True) + '">' + html.escape(discovery_label(labels, value)) + '</option>' for value in sorted(values))
+    tags = {tag for item in articles for tag in item.tags}
+    types = {item.content_type for item in articles}
+    return (
+        '<form class="aik8s-timeline-controls" data-timeline-controls hidden role="search" aria-label="' + label('筛选文章', 'Filter articles') + '">'
+        '<label>' + label('排序', 'Sort by') + '<select name="sort"><option value="published">' + label('最新发布', 'Newest published') + '</option><option value="updated">' + label('最近更新', 'Recently updated') + '</option></select></label>'
+        '<label>' + label('主题标签', 'Topic') + '<select name="tag"><option value="">' + label('全部标签', 'All topics') + '</option>' + options(tags, TAG_LABELS) + '</select></label>'
+        '<label>' + label('文章类型', 'Article type') + '<select name="type"><option value="">' + label('全部类型', 'All types') + '</option>' + options(types, TYPE_LABELS) + '</select></label>'
+        '<label class="aik8s-timeline-controls__search">' + label('关键词', 'Keywords') + '<input type="search" name="q" autocomplete="off" placeholder="' + label('搜索标题、摘要或标签', 'Search titles, summaries or topics') + '"></label>'
+        '<button type="reset">' + label('重置筛选', 'Reset filters') + '</button></form>'
+    )
+
+
 def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> FeedItem:
     """Reuse the built homepage shell, keeping root-relative assets valid without JS."""
     english = SITE_LANGUAGE == "en"
     title = "Article timeline" if english else "文章时间线"
     description = (
-        "All articles, newest first by publication date (UTC+08:00)."
-        if english else "按创建时间倒序浏览全部文章，时间统一为北京时间。"
+        "Browse all articles by publication or update date (UTC+08:00)."
+        if english else "按发布或更新时间浏览全部文章，时间统一为北京时间。"
     )
     ordered = sorted(articles, key=lambda item: (item.published, item.url), reverse=True)
     escape = html.escape
     parts = [
         f'<h1 id="article-timeline">{title}</h1>', f'<p>{description}</p>',
-        f'<p class="aik8s-timeline__count">{len(ordered)} ' + ("articles" if english else "篇文章") + '</p>',
+        timeline_controls(articles),
+        f'<p class="aik8s-timeline__count" data-timeline-count aria-live="polite" aria-atomic="true">{len(ordered)} ' + ("articles" if english else "篇文章") + '</p>',
+        '<p data-timeline-empty hidden>' + ('No matching articles. Try another filter.' if english else '没有符合条件的文章，请尝试其他筛选条件。') + '</p>',
         '<div class="aik8s-timeline">',
     ]
     month = None
@@ -516,10 +587,15 @@ def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> F
                 parts.append('</ol></section>')
             month = group
             parts.append(f'<section aria-labelledby="month-{group}"><h2 id="month-{group}">{group}</h2><ol>')
+        search_text = ' '.join([item.title, item.description, *(discovery_label(TAG_LABELS, tag) for tag in item.tags), *item.tags, discovery_label(TYPE_LABELS, item.content_type)])
         parts.append(
-            '<li><time datetime="' + item.published.isoformat() + f'">{local:%Y-%m-%d}</time>'
+            '<li data-timeline-item data-published="' + item.published.isoformat() + '" data-updated="' + item.updated.isoformat()
+            + '" data-tags="' + escape(' '.join(item.tags), quote=True) + '" data-content-type="' + escape(item.content_type, quote=True)
+            + '" data-search="' + escape(search_text, quote=True) + '"><time data-timeline-date datetime="' + item.published.isoformat() + f'">{local:%Y-%m-%d}</time>'
             '<div><a href="' + escape(item.url, quote=True) + '">' + escape(item.title) + '</a>'
-            '<p>' + escape(item.description) + '</p></div></li>'
+            '<p>' + escape(item.description) + '</p><div class="aik8s-timeline__tags">'
+            + '<span class="aik8s-tag">' + escape(discovery_label(TYPE_LABELS, item.content_type)) + '</span> '
+            + tag_links(item, site_url) + '</div></div></li>'
         )
     if month is not None:
         parts.append('</ol></section>')
@@ -619,7 +695,7 @@ def main() -> None:
     items = [*items, timeline]
     write_sitemap(items, site_dir / "sitemap.xml")
     items_by_url = {normalize_url(item.url): item for item in items}
-    injected = sum(inject_metadata(path, site_url, items_by_url) for path in site_dir.rglob("*.html"))
+    injected = sum(inject_metadata(path, site_url, items_by_url, articles) for path in site_dir.rglob("*.html"))
     print(
         f"Generated RSS/Atom with {min(len(articles), args.limit)} items and Sitemap with "
         f"{len(items)} URLs; enhanced {injected} HTML files"
