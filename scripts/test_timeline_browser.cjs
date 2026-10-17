@@ -35,6 +35,11 @@ async function contextFor(browser, javascriptEnabled = true) {
       await page.goto(base + 'timeline.html?utm_source=test#article-timeline');
       const controls = page.locator('[data-timeline-controls]');
       await controls.waitFor({ state: 'visible' });
+      const friend = page.locator('footer [data-aik8s-friend-link]');
+      assert.equal(await friend.count(), 1);
+      assert.equal(await friend.getAttribute('href'), 'https://runzhliu.cn');
+      assert.equal(await friend.locator('..').getAttribute('aria-label'), prefix ? 'Friends' : '友情链接');
+      assert.equal(await friend.getAttribute('rel'), 'noopener');
       const style = await controls.evaluate(form => {
         const select = form.querySelector('select');
         const input = form.querySelector('input');
@@ -115,6 +120,7 @@ async function contextFor(browser, javascriptEnabled = true) {
       assert.equal(await controls.locator('[name=sort]').inputValue(), 'published');
       assert.equal(await page.locator('[data-timeline-item]').count(), rows.length);
       await page.goto(base + 'ai-k8s/inference/engines/');
+      assert.equal(await page.locator('footer [data-aik8s-friend-link]').getAttribute('href'), 'https://runzhliu.cn');
       const recommendations = page.locator('.aik8s-related li a');
       assert.ok(await recommendations.count() >= 1 && await recommendations.count() <= 4);
       for (const href of await recommendations.evaluateAll(nodes => nodes.map(node => node.href))) {

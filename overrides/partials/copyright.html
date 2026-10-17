@@ -1,0 +1,20 @@
+<div class="md-copyright">
+  {% if config.copyright %}
+    <div class="md-copyright__highlight">
+      {{ config.copyright }}
+    </div>
+  {% endif %}
+  {% if config.extra.friend_links %}
+    {% set friends_label = "Friends" if config.theme.language == "en" else "友情链接" %}
+    <nav class="md-copyright__highlight" aria-label="{{ friends_label }}">
+      {{ friends_label }}:
+      {% for friend in config.extra.friend_links %}
+        <a href="{{ friend.url | e }}" target="_blank" rel="noopener" data-aik8s-friend-link>{{ friend.name }}</a>{% if not loop.last %} · {% endif %}
+      {% endfor %}
+    </nav>
+  {% endif %}
+  {% if not config.extra.generator == false %}
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">Zensical</a>
+  {% endif %}
+</div>
