@@ -39,9 +39,22 @@ jobs:
           python scripts/bilingual.py
           python -m unittest discover -s scripts -p 'test_*.py' -v
           node --check docs/javascripts/timeline.js
+          node --check docs/javascripts/engagement.js
 
       - name: Build Chinese and English documentation
         run: python scripts/build_bilingual.py
+
+      - name: Verify browser interactions before publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix .local/browser-check --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          export NODE_PATH="$PWD/.local/browser-check/node_modules"
+          export CHROMIUM_PATH="$(command -v google-chrome || command -v chromium)"
+          test -n "$CHROMIUM_PATH"
+          node scripts/test_timeline_browser.cjs
+          node scripts/test_engagement_browser.cjs
+          node scripts/test_blog_polish_browser.cjs
 
       - name: Add production-only AdSense
         env:

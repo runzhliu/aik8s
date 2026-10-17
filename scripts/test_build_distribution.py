@@ -91,6 +91,10 @@ class DistributionTests(unittest.TestCase):
             self.assertEqual(items[0].updated, updated)
             self.assertEqual(set(items[0].tags), {'gpu', 'inference'})
             self.assertEqual(items[0].content_type, 'benchmark')
+            self.assertIn('中文原文', items[0].search_text)
+            self.assertIn('A translated article', items[0].search_text)
+            self.assertIn('模型推理', items[0].search_text)
+            self.assertIn('Inference', items[0].search_text)
             with patch.object(build_distribution, 'SITE_LANGUAGE', 'en'):
                 result = build_distribution.inject_article_dates('<article><h1>A translated article</h1></article>', items[0])
                 self.assertIn('Published', result)
@@ -117,6 +121,58 @@ class DistributionTests(unittest.TestCase):
             index = build_distribution.FeedItem('Index', 'Overview', 'https://example.org/en/', timestamp, timestamp, 'index', True)
             self.assertEqual(build_distribution.inject_article_discovery(shell, index, [candidate], 'https://example.org/en/'), shell)
             self.assertNotIn('aik8s-related', build_distribution.inject_article_discovery(shell, item, [item], 'https://example.org/en/'))
+
+    def test_chinese_search_includes_translated_titles_and_bilingual_aliases(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            docs = root / 'docs'
+            translated = root / 'translations/en'
+            docs.mkdir()
+            translated.mkdir(parents=True)
+            (docs / 'article.md').write_text('---\ntags: scheduling\n---\n# 调度实践\n\n调度说明。\n')
+            (translated / 'article.md').write_text('# Scheduling practice\n\nScheduling guide.\n')
+            with patch.object(build_distribution, 'load_git_history', return_value={}):
+                item = build_distribution.collect_items(docs, root, 'https://example.org/')[0]
+            for term in ('调度实践', 'Scheduling practice', '调度', 'Scheduling'):
+                self.assertIn(term, item.search_text)
+
+    def test_feeds_keep_publication_and_update_times_distinct(self):
+        from datetime import datetime, timezone
+        from email.utils import parsedate_to_datetime
+        early = datetime(2026, 8, 1, tzinfo=timezone.utc)
+        middle = datetime(2026, 9, 1, tzinfo=timezone.utc)
+        latest = datetime(2026, 10, 1, tzinfo=timezone.utc)
+        old = build_distribution.FeedItem('Old but updated', 'Summary', 'https://example.org/old/', early, latest, 'test', False)
+        new = build_distribution.FeedItem('New article', 'Summary', 'https://example.org/new/', middle, middle, 'test', False)
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            build_distribution.write_rss([old, new], root / 'rss.xml', 'https://example.org/', 50)
+            entries = ET.parse(root / 'rss.xml').findall('./channel/item')
+            self.assertEqual([entry.findtext('title') for entry in entries], ['New article', 'Old but updated'])
+            self.assertEqual(parsedate_to_datetime(entries[1].findtext('pubDate')), early)
+            self.assertEqual(entries[1].findtext('{http://www.w3.org/2005/Atom}updated'), latest.isoformat())
+            self.assertIn('2026-10-01', entries[1].findtext('description'))
+            build_distribution.write_atom([new, old], root / 'atom.xml', 'https://example.org/', 50)
+            ns = {'a': 'http://www.w3.org/2005/Atom'}
+            atom = ET.parse(root / 'atom.xml').findall('a:entry', ns)
+            self.assertEqual(atom[0].findtext('a:id', namespaces=ns), old.url)
+            self.assertEqual(atom[0].findtext('a:published', namespaces=ns), early.isoformat())
+            self.assertEqual(atom[0].findtext('a:updated', namespaces=ns), latest.isoformat())
+
+    def test_homepage_exposes_latest_articles_and_browse_modes_without_new_headings(self):
+        from datetime import datetime, timezone
+        articles = [build_distribution.FeedItem(f'Article {day}', 'Summary', f'https://example.org/en/article-{day}/', datetime(2026, 10, day, tzinfo=timezone.utc), datetime(2026, 10, day, tzinfo=timezone.utc), 'test', False) for day in range(1, 5)]
+        shell = '<article><h1>Home</h1><p>Introduction</p><h2 id="original">Original section</h2></article>'
+        with patch.object(build_distribution, 'SITE_LANGUAGE', 'en'):
+            output = build_distribution.inject_home_discovery(shell, articles, 'https://example.org/en/')
+            self.assertIn('Latest articles', output)
+            self.assertIn('https://example.org/en/timeline.html?sort=updated', output)
+            self.assertIn('Article 4', output)
+            self.assertNotIn('Article 1', output)
+            self.assertLess(output.index('Latest articles'), output.index('<h2'))
+            repeated = build_distribution.inject_home_discovery(output, articles, 'https://example.org/en/')
+            self.assertEqual(repeated.count('class="aik8s-home-latest"'), 1)
+            self.assertEqual(repeated.count('<h2'), 1)
 
     def test_discovery_assets_use_content_versions_and_keep_relative_links(self):
         import hashlib

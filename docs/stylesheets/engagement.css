@@ -195,14 +195,29 @@ body.aik8s-lightbox-open {
   align-items: center;
   background: rgba(7, 10, 18, 0.9);
   backdrop-filter: blur(5px);
+  border: 0;
+  box-sizing: border-box;
+  color: inherit;
   display: flex;
+  height: 100%;
   inset: 0;
   justify-content: center;
+  margin: 0;
+  max-height: none;
+  max-width: none;
   padding: 3.5rem 1.25rem 1.25rem;
   position: fixed;
+  width: 100%;
   z-index: 10000;
 }
 
+.aik8s-lightbox::backdrop {
+  /* The full-viewport dialog itself paints the existing translucent overlay. */
+  background: transparent;
+}
+
+.aik8s-lightbox:not([open]),
+.aik8s-lightbox [hidden],
 .aik8s-lightbox[hidden] {
   display: none;
 }

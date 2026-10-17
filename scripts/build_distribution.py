@@ -20,6 +20,7 @@ from urllib.parse import urlencode, urljoin
 from zoneinfo import ZoneInfo
 
 from article_discovery import TAG_LABELS, TYPE_LABELS, infer_discovery, related_items
+from theme_navigation import adapt_theme_assets
 
 
 SITE_TITLE = "AI/LLM on Kubernetes 基础设施"
@@ -59,6 +60,7 @@ class FeedItem:
     is_index: bool
     tags: tuple[str, ...] = ()
     content_type: str = "overview"
+    search_text: str = ""
 
 
 class BreadcrumbParser(HTMLParser):
@@ -229,6 +231,14 @@ def collect_items(docs_dir: Path, repo_root: Path, site_url: str, source_docs_di
         # just like their dates, so filters remain stable across languages.
         discovery_metadata = parse_front_matter(history_path) if source_docs_dir else metadata
         tags, content_type = infer_discovery(path.relative_to(docs_dir).as_posix(), discovery_metadata)
+        # Search both source and translation, so changing language never silently
+        # turns the same query into an empty result set.
+        counterpart = history_path if source_docs_dir else repo_root / 'translations/en' / path.relative_to(docs_dir)
+        peer_metadata = parse_front_matter(counterpart) if counterpart.is_file() else {}
+        search_text = ' '.join([
+            title, description, peer_metadata.get('title', ''), peer_metadata.get('description', ''),
+            *(label for tag in tags for label in TAG_LABELS[tag]), *tags, *TYPE_LABELS[content_type],
+        ])
         items.append(
             FeedItem(
                 title=title,
@@ -240,6 +250,7 @@ def collect_items(docs_dir: Path, repo_root: Path, site_url: str, source_docs_di
                 is_index=path.name == "index.md",
                 tags=tags,
                 content_type=content_type,
+                search_text=search_text,
             )
         )
     return sorted(items, key=lambda item: (item.updated, item.url), reverse=True)
@@ -259,13 +270,19 @@ def write_rss(items: list[FeedItem], output: Path, site_url: str, limit: int) ->
         "{http://www.w3.org/2005/Atom}link",
         {"href": urljoin(site_url, "rss.xml"), "rel": "self", "type": "application/rss+xml"},
     )
-    for entry in items[:limit]:
+    # RSS is the publication feed; editing an old article must not change pubDate.
+    for entry in sorted(items, key=lambda item: (item.published, item.url), reverse=True)[:limit]:
         item = ET.SubElement(channel, "item")
         ET.SubElement(item, "title").text = entry.title
         ET.SubElement(item, "link").text = entry.url
         ET.SubElement(item, "guid", {"isPermaLink": "true"}).text = entry.url
-        ET.SubElement(item, "pubDate").text = format_datetime(entry.updated)
-        ET.SubElement(item, "description").text = entry.description
+        ET.SubElement(item, "pubDate").text = format_datetime(entry.published)
+        ET.SubElement(item, "{http://www.w3.org/2005/Atom}updated").text = entry.updated.isoformat()
+        description = entry.description
+        if entry.updated > entry.published:
+            updated_label = 'Updated' if SITE_LANGUAGE == 'en' else '更新于'
+            description += f'\n\n{updated_label}: {entry.updated.astimezone(DISPLAY_TIMEZONE):%Y-%m-%d} (UTC+08:00)'
+        ET.SubElement(item, "description").text = description
         ET.SubElement(item, "category").text = entry.category
     ET.indent(rss, space="  ")
     ET.ElementTree(rss).write(output, encoding="utf-8", xml_declaration=True)
@@ -285,11 +302,12 @@ def write_atom(items: list[FeedItem], output: Path, site_url: str, limit: int) -
         f"{{{atom_ns}}}link",
         {"href": urljoin(site_url, "atom.xml"), "rel": "self", "type": "application/atom+xml"},
     )
-    for item in items[:limit]:
+    for item in sorted(items, key=lambda item: (item.updated, item.url), reverse=True)[:limit]:
         entry = ET.SubElement(feed, f"{{{atom_ns}}}entry")
         ET.SubElement(entry, f"{{{atom_ns}}}title").text = item.title
         ET.SubElement(entry, f"{{{atom_ns}}}id").text = item.url
         ET.SubElement(entry, f"{{{atom_ns}}}link", {"href": item.url})
+        ET.SubElement(entry, f"{{{atom_ns}}}published").text = item.published.isoformat()
         ET.SubElement(entry, f"{{{atom_ns}}}updated").text = item.updated.isoformat()
         ET.SubElement(entry, f"{{{atom_ns}}}summary").text = item.description
         ET.SubElement(entry, f"{{{atom_ns}}}category", {"term": item.category})
@@ -461,6 +479,26 @@ def inject_article_discovery(source: str, item: FeedItem | None, articles: list[
     return source
 
 
+def inject_home_discovery(source: str, articles: list[FeedItem], site_url: str) -> str:
+    """Expose recent publications and both browse modes without changing source docs."""
+    source = re.sub(r'\n?<!-- AIK8S home discovery -->.*?<!-- /AIK8S home discovery -->\n?', '\n', source, flags=re.S)
+    latest = sorted((item for item in articles if not item.is_index), key=lambda item: (item.published, item.url), reverse=True)[:3]
+    if not latest:
+        return source
+    english = SITE_LANGUAGE == 'en'
+    timeline = html.escape(urljoin(site_url, 'timeline.html'), quote=True)
+    title = 'Latest articles' if english else '最新文章'
+    links = '<a href="' + timeline + '">' + ('All articles' if english else '全部文章') + ' →</a> <a href="' + timeline + '?sort=updated">' + ('Recently updated' if english else '最近更新') + '</a>'
+    entries = ''.join('<li><time datetime="' + item.published.isoformat() + '">' + item.published.astimezone(DISPLAY_TIMEZONE).strftime('%Y-%m-%d') + '</time><a href="' + html.escape(item.url, quote=True) + '">' + html.escape(item.title) + '</a></li>' for item in latest)
+    block = '\n<!-- AIK8S home discovery -->\n<aside class="aik8s-home-latest" aria-labelledby="aik8s-home-latest-title"><div class="aik8s-home-latest__header"><p id="aik8s-home-latest-title"><strong>' + title + '</strong></p><nav aria-label="' + ('Browse articles' if english else '浏览文章') + '">' + links + '</nav></div><ul>' + entries + '</ul></aside>\n<!-- /AIK8S home discovery -->\n'
+    article = re.search(r'<article\b[^>]*>(.*?)</article\s*>', source, re.S | re.I)
+    if article:
+        first_section = re.search(r'<h2\b', article[1], re.I)
+        position = article.start(1) + first_section.start() if first_section else article.end(1)
+        source = source[:position] + block + source[position:]
+    return source
+
+
 def inject_metadata(path: Path, site_url: str, items_by_url: dict[str, FeedItem], articles: list[FeedItem] | None = None) -> bool:
     original = path.read_text(encoding="utf-8")
     canonical_match = CANONICAL_PATTERN.search(original)
@@ -469,6 +507,8 @@ def inject_metadata(path: Path, site_url: str, items_by_url: dict[str, FeedItem]
     source = inject_article_dates(original, item)
     if articles is not None:
         source = inject_article_discovery(source, item, articles, site_url)
+        if item and normalize_url(item.url) == normalize_url(site_url):
+            source = inject_home_discovery(source, articles, site_url)
     if FEED_MARKER in source:
         if source == original:
             return False
@@ -491,7 +531,7 @@ def inject_metadata(path: Path, site_url: str, items_by_url: dict[str, FeedItem]
         f"  {FEED_MARKER}\n"
         f'  <link rel="alternate" type="application/rss+xml" title="{SITE_TITLE} RSS" href="{urljoin(site_url, "rss.xml")}">\n'
         f'  <link rel="alternate" type="application/atom+xml" title="{SITE_TITLE} Atom" href="{urljoin(site_url, "atom.xml")}">\n'
-        + meta_tag("og:type", "article")
+        + meta_tag("og:type", "article" if item and not item.is_index else "website")
         + meta_tag("og:site_name", SITE_TITLE)
         + meta_tag("og:title", title)
         + meta_tag("og:description", description)
@@ -576,6 +616,7 @@ def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> F
     parts = [
         f'<h1 id="article-timeline">{title}</h1>', f'<p class="aik8s-timeline__intro">{description}</p>',
         timeline_controls(articles),
+        '<div class="aik8s-timeline-active" data-timeline-active hidden aria-label="' + ('Active filters' if english else '当前筛选条件') + '"></div>',
         f'<p class="aik8s-timeline__count" data-timeline-count aria-live="polite" aria-atomic="true">{len(ordered)} ' + ("articles" if english else "篇文章") + '</p>',
         '<p data-timeline-empty hidden>' + ('No matching articles. Try another filter.' if english else '没有符合条件的文章，请尝试其他筛选条件。') + '</p>',
         '<div class="aik8s-timeline">',
@@ -589,7 +630,7 @@ def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> F
                 parts.append('</ol></section>')
             month = group
             parts.append(f'<section aria-labelledby="month-{group}"><h2 id="month-{group}">{group}</h2><ol>')
-        search_text = ' '.join([item.title, item.description, *(discovery_label(TAG_LABELS, tag) for tag in item.tags), *item.tags, discovery_label(TYPE_LABELS, item.content_type)])
+        search_text = item.search_text or ' '.join([item.title, item.description, *(label for tag in item.tags for label in TAG_LABELS[tag]), *item.tags, *TYPE_LABELS[item.content_type]])
         parts.append(
             '<li data-timeline-item data-published="' + item.published.isoformat() + '" data-updated="' + item.updated.isoformat()
             + '" data-tags="' + escape(' '.join(item.tags), quote=True) + '" data-content-type="' + escape(item.content_type, quote=True)
@@ -645,7 +686,7 @@ def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> F
         lambda _: '<a href="./" class="md-header__button md-icon" data-aik8s-timeline '
         'aria-label="' + label + '" title="' + label + '">'
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">'
-        '<path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z"/></svg></a>',
+        '<path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z"/></svg><span class="aik8s-view-toggle__label">' + ('Categories' if english else '分类浏览') + '</span></a>',
         source, flags=re.S,
     )
     (site_dir / 'timeline.html').write_text(source, encoding='utf-8')
@@ -658,7 +699,10 @@ def write_timeline(articles: list[FeedItem], site_dir: Path, site_url: str) -> F
 def version_discovery_assets(site_dir: Path) -> None:
     """Content versions prevent old cached controls/CSS surviving a new release."""
     replacements = []
-    for name in ('stylesheets/timeline.css', 'javascripts/timeline.js'):
+    names = ['stylesheets/timeline.css', 'javascripts/timeline.js',
+             'stylesheets/engagement.css', 'javascripts/engagement.js']
+    names.extend(bundle.relative_to(site_dir).as_posix() for bundle in (site_dir / 'assets/javascripts').glob('bundle.*.min.js'))
+    for name in names:
         asset = site_dir / name
         if asset.is_file():
             version = hashlib.sha256(asset.read_bytes()).hexdigest()[:12]
@@ -716,6 +760,7 @@ def main() -> None:
     write_sitemap(items, site_dir / "sitemap.xml")
     items_by_url = {normalize_url(item.url): item for item in items}
     injected = sum(inject_metadata(path, site_url, items_by_url, articles) for path in site_dir.rglob("*.html"))
+    adapt_theme_assets(site_dir)
     version_discovery_assets(site_dir)
     print(
         f"Generated RSS/Atom with {min(len(articles), args.limit)} items and Sitemap with "

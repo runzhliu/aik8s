@@ -9,6 +9,12 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 const ROOT = path.resolve(__dirname, '..');
 
+async function assertCount(page, total, english) {
+  const shown = await page.locator('[data-timeline-item]').count();
+  assert.equal(await page.locator('[data-timeline-count]').textContent(), english ?
+    `Showing ${shown} of ${total} articles` : `找到 ${shown} / ${total} 篇文章`);
+}
+
 async function contextFor(browser, javascriptEnabled = true) {
   const context = await browser.newContext({ javaScriptEnabled: javascriptEnabled, reducedMotion: 'reduce' });
   await context.route('**/*', async route => {
@@ -62,9 +68,78 @@ async function contextFor(browser, javascriptEnabled = true) {
       assert.match(style.version, /\?v=[a-f0-9]{12}$/);
       const rows = await page.locator('[data-timeline-item]').evaluateAll(nodes => nodes.map(node => ({
         published: node.dataset.published, updated: node.dataset.updated,
-        tags: node.dataset.tags.split(/\s+/).filter(Boolean), type: node.dataset.contentType
+        tags: node.dataset.tags.split(/\s+/).filter(Boolean), type: node.dataset.contentType,
+        search: node.dataset.search
       })));
-      assert.ok(rows.length > 50, 'All articles, not the RSS cap');
+      assert.equal(rows.length, 167, 'Full generated article corpus, not the RSS cap');
+      const active = page.locator('[data-timeline-active]');
+      assert.equal(await active.isVisible(), false);
+      await assertCount(page, rows.length, !!prefix);
+      assert.equal(await page.locator('.aik8s-share, .aik8s-comments').count(), 0, 'Timeline has no article engagement controls');
+      const label = page.locator('.aik8s-view-toggle__label').first();
+      assert.ok(await label.isVisible(), 'Desktop timeline toggle has a text label');
+
+      // A tag link is a true merged URL, while ordinary clicks stay in this document.
+      const contextRow = rows.find(row => row.tags.length > 1) || rows.find(row => row.tags.length);
+      const contextQuery = contextRow.search.trim().split(/\s+/)[0].slice(0, 12);
+      await controls.locator('[name=sort]').selectOption('updated');
+      await controls.locator('[name=type]').selectOption(contextRow.type);
+      await controls.locator('[name=tag]').selectOption(contextRow.tags[contextRow.tags.length - 1]);
+      await controls.locator('[name=q]').fill(contextQuery);
+      await controls.locator('[name=q]').press('Enter');
+      const tagCandidates = page.locator('.aik8s-timeline__tags a.aik8s-tag');
+      const alternateIndex = await tagCandidates.evaluateAll((nodes, current) =>
+        nodes.findIndex(node => new URL(node.href).searchParams.get('tag') !== current),
+      await controls.locator('[name=tag]').inputValue());
+      if (contextRow.tags.length > 1) assert.ok(alternateIndex >= 0, 'A second tag can replace the active tag');
+      const tagLink = tagCandidates.nth(Math.max(0, alternateIndex));
+      const merged = new URL(await tagLink.getAttribute('href'), page.url());
+      const beforeTag = new URL(page.url());
+      for (const key of ['sort', 'type', 'q', 'utm_source']) {
+        assert.equal(merged.searchParams.get(key), beforeTag.searchParams.get(key));
+      }
+      assert.equal(merged.hash, beforeTag.hash);
+      await page.evaluate(() => {
+        window.__timelineDocumentSentinel = 'retained';
+        window.__timelineModifiedPrevented = null;
+        // Observe whether enhancement canceled the modified click, then avoid opening a tab.
+        document.addEventListener('click', event => {
+          if (event.ctrlKey && event.target.closest('.aik8s-timeline__tags a')) {
+            window.__timelineModifiedPrevented = event.defaultPrevented;
+            event.preventDefault();
+          }
+        });
+      });
+      await tagLink.click({ modifiers: ['Control'] });
+      assert.equal(await page.evaluate(() => window.__timelineModifiedPrevented), false);
+      assert.equal(page.url(), beforeTag.href);
+      await tagLink.click();
+      assert.equal(await page.evaluate(() => window.__timelineDocumentSentinel), 'retained');
+      assert.equal(page.url(), merged.href);
+      assert.equal(await active.locator('button').count(), 4);
+      await assertCount(page, rows.length, !!prefix);
+      for (const key of ['tag', 'type', 'q', 'sort']) {
+        const chip = active.locator(`[data-timeline-clear="${key}"]`);
+        assert.match(await chip.getAttribute('aria-label'), prefix ? /^Remove .+ filter$/ : /^移除.+筛选$/);
+        const previous = new URL(page.url());
+        await chip.focus();
+        await chip.press('Enter');
+        const next = new URL(page.url());
+        assert.equal(next.searchParams.get(key), null);
+        for (const other of ['sort', 'tag', 'type', 'q', 'utm_source'].filter(other => other !== key)) {
+          assert.equal(next.searchParams.get(other), previous.searchParams.get(other));
+        }
+        assert.equal(next.hash, previous.hash);
+        await assertCount(page, rows.length, !!prefix);
+        await page.goBack();
+        assert.equal(page.url(), previous.href);
+        assert.ok(await active.locator(`[data-timeline-clear="${key}"]`).isVisible());
+        await assertCount(page, rows.length, !!prefix);
+        await page.goForward();
+        assert.equal(page.url(), next.href);
+      }
+      assert.equal(await active.isVisible(), false);
+      await controls.locator('[type=reset]').click();
       await controls.locator('[name=sort]').selectOption('updated');
       let times = await page.locator('[data-timeline-date]').evaluateAll(nodes => nodes.map(node => Date.parse(node.dateTime)));
       assert.deepEqual(times, rows.map(row => Date.parse(row.updated)).sort((a,b) => b-a));
@@ -98,12 +173,45 @@ async function contextFor(browser, javascriptEnabled = true) {
       assert.equal(await page.locator('[data-timeline-item]').count(), rows.length);
       assert.equal(new URL(page.url()).searchParams.get('tag'), null);
       assert.equal(new URL(page.url()).searchParams.get('utm_source'), 'test');
+      assert.equal(await active.isVisible(), false);
+      await assertCount(page, rows.length, !!prefix);
+      await page.goBack();
+      assert.equal(await page.locator('[data-timeline-item]').count(), 0);
+      assert.ok(await active.isVisible());
+      await page.goForward();
+      assert.equal(await active.isVisible(), false);
+      await assertCount(page, rows.length, !!prefix);
+
+      // Query text is not translated: both generated search indexes contain originals.
+      await controls.locator('[name=q]').fill('调度');
+      await controls.locator('[name=q]').press('Enter');
+      const chineseMatches = await page.locator('[data-timeline-item]').count();
+      assert.ok(chineseMatches > 0);
+      const bilingualUrl = new URL(await languageLink.getAttribute('href'), page.url());
+      assert.equal(bilingualUrl.searchParams.get('q'), '调度');
+      assert.equal(bilingualUrl.searchParams.get('utm_source'), 'test');
+      await page.locator('.md-select > button').hover();
+      await languageLink.click();
+      await controls.waitFor({ state: 'visible' });
+      assert.equal(await controls.locator('[name=q]').inputValue(), '调度');
+      assert.equal(await page.locator('[data-timeline-item]').count(), chineseMatches);
+      await assertCount(page, rows.length, !prefix);
+      await page.goto(base + 'timeline.html?utm_source=test#article-timeline');
+      await controls.waitFor({ state: 'visible' });
       await controls.locator('[name=q]').fill('vllm');
       assert.ok(await page.locator('[data-timeline-item]').count() > 0);
       await controls.locator('[name=q]').fill('vllm impossibleword49827');
       assert.equal(await page.locator('[data-timeline-item]').count(), 0, 'Search words combine with AND');
       await controls.locator('[type=reset]').click();
+      await page.setViewportSize({ width: 760, height: 844 });
+      assert.equal(await label.isVisible(), false, 'Toggle label hides at 760px, not the icon/link');
+      assert.ok(await page.locator('.aik8s-view-toggle .md-header__button').first().isVisible());
+      await page.setViewportSize({ width: 761, height: 844 });
+      assert.ok(await label.isVisible());
       await page.setViewportSize({ width: 390, height: 844 });
+      await controls.locator('[name=q]').fill('x'.repeat(160));
+      assert.ok(await active.isVisible());
+      assert.ok(await page.locator('[data-timeline-empty]').isVisible());
       assert.ok(await controls.isVisible());
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       assert.ok(await controls.locator('input').evaluate(el => parseFloat(getComputedStyle(el).fontSize) >= 16));
@@ -140,8 +248,12 @@ async function contextFor(browser, javascriptEnabled = true) {
     const staticPage = await staticContext.newPage();
     for (const prefix of ['', 'en/']) {
       await staticPage.goto('https://aik8s.run/' + prefix + 'timeline.html');
-      assert.ok(await staticPage.locator('[data-timeline-item]').count() > 50);
+      assert.equal(await staticPage.locator('[data-timeline-item]').count(), 167);
       assert.equal(await staticPage.locator('[data-timeline-controls]').isVisible(), false);
+      assert.equal(await staticPage.locator('[data-timeline-active]').count(), 1);
+      assert.equal(await staticPage.locator('[data-timeline-active]').isVisible(), false);
+      await staticPage.goto('https://aik8s.run/' + prefix + 'timeline.html?tag=invalid&q=no-match');
+      assert.equal(await staticPage.locator('[data-timeline-item]').count(), 167, 'No-JS URL filters never hide the static corpus');
       await staticPage.goto('https://aik8s.run/' + prefix + 'ai-k8s/inference/engines/');
       assert.ok(await staticPage.locator('.aik8s-related li a').count() > 0);
     }

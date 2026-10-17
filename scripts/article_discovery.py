@@ -139,6 +139,34 @@ class _Article(Protocol):
 _ArticleT = TypeVar("_ArticleT", bound=_Article)
 _GENERIC_DIRS = {"", "ai-k8s", "docs", "en", "zh", "zh-cn", "practices", "guides", "foundations", "home", "首页"}
 
+# Recommendation-only path evidence: these are products/series, not new tag IDs.
+# An explicit allowlist avoids treating arbitrary slug words ("architecture",
+# "practice", etc.) as evidence, and does not depend on translated metadata.
+_PRODUCTS = (
+    "kubevirt", "aibrix", "cubesandbox", "openclaw", "vllm", "sglang",
+    "koordinator", "karmada", "kueue", "volcano", "slurm", "ollama",
+    "firecracker", "gvisor", "langgraph", "langchain", "langfuse",
+    "opentelemetry", "prometheus", "grafana", "cilium", "contiv",
+    "ceph", "pytorch", "deepspeed", "ray", "kube-apiserver",
+)
+_PRODUCT_PATTERN = re.compile(
+    r"(?<![a-z0-9])(?:" + "|".join(map(re.escape, _PRODUCTS)) + r")(?![a-z0-9])"
+)
+_TAG_WEIGHTS = {tag: 0.15 if tag in {"kubernetes", "platform"} else 1.0 for tag in TAG_LABELS}
+
+
+def _products(url: str) -> set[str]:
+    return set(_PRODUCT_PATTERN.findall(_path_text(urlsplit(url).path)))
+
+
+def _overlap(own_tags: set[str], tags: set[str], own_products: set[str], products: set[str]) -> float:
+    """Weighted Jaccard penalizes broad candidates with many unrelated topics."""
+    shared = sum(_TAG_WEIGHTS[tag] for tag in sorted(own_tags & tags))
+    union = sum(_TAG_WEIGHTS[tag] for tag in sorted(own_tags | tags))
+    shared += 4.0 * len(own_products & products)
+    union += 4.0 * len(own_products | products)
+    return shared / union if union else 0.0
+
 
 def _url_key(url: str) -> str:
     parsed = urlsplit(url)
@@ -160,11 +188,12 @@ def _timestamp(value: datetime) -> float:
 
 
 def related_items(item: _ArticleT, articles: Iterable[_ArticleT], limit: int = 4) -> list[_ArticleT]:
-    """Rank shared tags first, meaningful directories second; never pad the list.
+    """Rank shared URL products first, then weighted relative topic overlap.
 
-    Ties use same-directory/category, same type, newest update/publication, then
-    canonical URL ascending. Input order does not affect distinct-URL results.
-    Generic site/practice directories and content type alone do not imply relevance.
+    Kubernetes/platform tags carry little weight; extra unrelated topics dilute
+    overlap rather than rewarding broad surveys. Directory/category and type only
+    break relevance ties, never admit an otherwise unrelated candidate. Further
+    ties use newest update/publication, canonical URL, then raw URL (for aliases).
     The supplied objects are returned unchanged; no FeedItem import is required.
     """
     if limit <= 0:
@@ -172,20 +201,24 @@ def related_items(item: _ArticleT, articles: Iterable[_ArticleT], limit: int = 4
     own_url = _url_key(item.url)
     own_directory = _directory(item.url)
     own_tags = set(item.tags)
+    own_products = _products(item.url)
     ranked = []
     for candidate in articles:
         key = _url_key(candidate.url)
         if candidate is item or key == own_url or candidate.is_index:
             continue
-        shared = len(own_tags.intersection(candidate.tags))
+        tags = set(candidate.tags)
+        products = _products(candidate.url)
+        shared_product = bool(own_products & products)
+        if not (shared_product or own_tags & tags):
+            continue
+        similarity = _overlap(own_tags, tags, own_products, products)
         same_directory = bool(own_directory and own_directory == _directory(candidate.url))
         same_category = bool(item.category and item.category == candidate.category
                              and item.category.casefold() not in _GENERIC_DIRS)
-        if not (shared or same_directory or same_category):
-            continue
-        rank = (-shared, -int(same_directory), -int(same_category),
+        rank = (-int(shared_product), -similarity, -int(same_directory), -int(same_category),
                 -int(item.content_type == candidate.content_type),
-                -_timestamp(candidate.updated), -_timestamp(candidate.published), key)
+                -_timestamp(candidate.updated), -_timestamp(candidate.published), key, candidate.url)
         ranked.append((rank, candidate))
     ranked.sort(key=lambda pair: pair[0])
     result: list[_ArticleT] = []

@@ -36,6 +36,7 @@
     var controls = scope.querySelector("form[data-timeline-controls]");
     var count = scope.querySelector("[data-timeline-count]");
     var empty = scope.querySelector("[data-timeline-empty]");
+    var active = scope.querySelector("[data-timeline-active]");
     if (!controls || !count || !empty) return;
     var sort = controls.querySelector('select[name="sort"]');
     var tag = controls.querySelector('select[name="tag"]');
@@ -72,6 +73,49 @@
     });
     // Malformed generated data must not destroy the readable static fallback.
     if (items.some(function (item) { return !Number.isFinite(item.published) || !item.date; })) return;
+
+    var tagLinks = [];
+    items.forEach(function (item) {
+      item.node.querySelectorAll(".aik8s-timeline__tags a.aik8s-tag").forEach(function (link) {
+        var url;
+        try { url = new URL(link.href, document.baseURI); } catch (_) { return; }
+        var value = url.searchParams.get("tag");
+        if (url.origin === window.location.origin && value && knownValue(tag, value, "")) {
+          tagLinks.push({ link: link, value: value });
+        }
+      });
+    });
+
+    function syncTagLinks() {
+      // Real links remain useful for modified clicks, copying and opening new tabs.
+      tagLinks.forEach(function (entry) {
+        var url = new URL(window.location.href);
+        url.searchParams.set("tag", entry.value);
+        entry.link.href = url.href;
+      });
+    }
+
+    function renderActive(state) {
+      if (!active) return;
+      var fragment = document.createDocumentFragment();
+      keys.forEach(function (key) {
+        if (!state[key] || (key === "sort" && state[key] === "published")) return;
+        var select = key === "sort" ? sort : key === "tag" ? tag : type;
+        var value = key === "q" ? state.q : select.options[select.selectedIndex].textContent;
+        var labels = english ? { sort: "Sort", tag: "Tag", type: "Type", q: "Search" } :
+          { sort: "排序", tag: "标签", type: "类型", q: "关键词" };
+        var label = labels[key] + (english ? ": " : "：") + value;
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "aik8s-timeline__chip";
+        button.dataset.timelineClear = key;
+        button.textContent = label + " ×";
+        button.setAttribute("aria-label", english ? "Remove " + label + " filter" : "移除" + label + "筛选");
+        fragment.appendChild(button);
+      });
+      active.replaceChildren(fragment);
+      active.hidden = !active.childElementCount;
+    }
 
     function readState(params) {
       return {
@@ -145,9 +189,13 @@
         list.appendChild(item.node);
       });
       timeline.replaceChildren(fragment);
-      count.textContent = english ? visible.length + (visible.length === 1 ? " article" : " articles") : visible.length + " 篇";
-      empty.textContent = english ? "No matching articles." : "没有匹配的文章。";
+      count.textContent = english ? "Showing " + visible.length + " of " + items.length + " articles" :
+        "找到 " + visible.length + " / " + items.length + " 篇文章";
+      empty.textContent = english ? "No matching articles. Remove a filter or reset to see all articles." :
+        "没有匹配的文章。移除筛选条件或重置以查看全部文章。";
       empty.hidden = visible.length !== 0;
+      renderActive(state);
+      syncTagLinks();
     }
 
     var searchStart = null;
@@ -196,6 +244,28 @@
       type.value = "";
       query.value = "";
       update("push");
+    });
+    timeline.addEventListener("click", function (event) {
+      if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      var link = event.target.closest(".aik8s-timeline__tags a.aik8s-tag");
+      if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
+      var entry = tagLinks.find(function (candidate) { return candidate.link === link; });
+      if (!entry) return;
+      event.preventDefault();
+      tag.value = entry.value;
+      update("push");
+    });
+    if (active) active.addEventListener("click", function (event) {
+      var button = event.target.closest("button[data-timeline-clear]");
+      if (!button || !active.contains(button)) return;
+      var key = button.dataset.timelineClear;
+      var control = key === "sort" ? sort : key === "tag" ? tag : key === "type" ? type : query;
+      var index = Array.prototype.indexOf.call(active.children, button);
+      control.value = key === "sort" ? "published" : "";
+      update("push");
+      // The removed button cannot retain keyboard focus after rendering.
+      var next = active.children[Math.min(index, active.childElementCount - 1)];
+      (next || controls.querySelector('[type="reset"]') || query).focus();
     });
     instances.set(timeline, instance);
     controls.hidden = false;

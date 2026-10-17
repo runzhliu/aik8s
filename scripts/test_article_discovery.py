@@ -139,13 +139,77 @@ class RelatedTests(unittest.TestCase):
         strong = Article("https://example.org/elsewhere/strong/", ("gpu", "inference"), category="other", content_type="tutorial")
         single = Article("https://example.org/elsewhere/single/", ("gpu",), category="other")
         weak = Article("https://example.org/ai-k8s/inference/weak/", ("networking",), category="inference")
-        self.assertEqual(related_items(source, [weak, single, strong]), [strong, single, weak])
+        self.assertEqual(related_items(source, [weak, single, strong]), [strong, single])
 
-    def test_same_meaningful_directory_is_weak_evidence(self):
+    def test_same_meaningful_directory_is_not_standalone_evidence(self):
         source = replace(self.item, url="https://example.org/ai-k8s/training/current/", tags=(), category="")
         sibling = Article("https://example.org/ai-k8s/training/other/", (), category="")
         distant = Article("https://example.org/ai-k8s/networking/other/", (), category="")
-        self.assertEqual(related_items(source, [distant, sibling]), [sibling])
+        self.assertEqual(related_items(source, [distant, sibling]), [])
+
+    def test_real_kubevirt_paths_prioritize_product_over_generic_surveys(self):
+        def article(path):
+            tags, kind = infer_discovery(path + ".md", {})
+            return Article("https://www.aik8s.cn/" + path + "/", tags, content_type=kind)
+
+        source = article("ai-k8s/practices/kubevirt-rbd-notebook")
+        desktop = article("ai-k8s/practices/kubevirt-local-desktop-lab")
+        guest = article("ai-k8s/cluster/kubevirt-guest-kubernetes")
+        # The real source classification remains unchanged: products are a
+        # separate ranking signal, not a change to the public tag contract.
+        self.assertEqual(source.tags, ("kubernetes", "storage", "platform"))
+        surveys = [
+            Article("https://www.aik8s.cn/ai-k8s/guides/reference-architectures/",
+                    ("kubernetes", "gpu", "inference", "training", "agent", "sandbox", "platform")),
+            Article("https://www.aik8s.cn/ai-k8s/cluster/architecture/",
+                    ("kubernetes", "inference", "training", "networking", "storage")),
+            Article("https://www.aik8s.cn/ai-k8s/history/",
+                    ("kubernetes", "gpu", "inference", "training", "networking", "platform")),
+            article("ai-k8s/rag-agent/openclaw-enterprise-kubernetes-practice"),
+        ]
+        ranked = related_items(source, [*surveys, desktop, guest])
+        self.assertEqual(ranked[:2], [desktop, guest])
+        self.assertEqual(related_items(source, reversed([*surveys, desktop, guest])), ranked)
+
+    def test_generic_tags_are_downweighted_and_extra_topics_dilute_overlap(self):
+        source = replace(self.item, tags=("kubernetes", "platform", "storage"))
+        specific = Article("https://example.org/storage/", ("storage",))
+        generic = Article("https://example.org/generic/", ("kubernetes", "platform"))
+        survey = Article("https://example.org/survey/", tuple(TAG_LABELS))
+        # Two generic matches and even three matches in a broad survey must
+        # not beat one focused storage match.
+        self.assertEqual(related_items(source, [generic, survey, specific])[0], specific)
+
+    def test_relative_overlap_not_shared_tag_count(self):
+        source = replace(self.item, tags=("storage", "security"))
+        focused = Article("https://example.org/focused/", ("storage",))
+        broad = Article("https://example.org/broad/", tuple(TAG_LABELS))
+        self.assertEqual(related_items(source, [broad, focused]), [focused, broad])
+
+    def test_product_allowlist_is_path_only_and_boundary_aware(self):
+        for product in ("kubevirt", "aibrix", "cubesandbox", "openclaw", "vllm", "sglang", "koordinator"):
+            with self.subTest(product=product):
+                source = Article(f"https://example.org/en/practices/{product}-one/", ())
+                sibling = Article(f"https://example.org/elsewhere/{product}-two/", ())
+                unrelated = Article(f"https://example.org/en/practices/not{product}-three/", ())
+                query = Article(f"https://example.org/opaque/?product={product}", ())
+                self.assertEqual(related_items(source, [unrelated, query, sibling]), [sibling])
+        source = Article("https://example.org/practices/architecture-guide/", ())
+        generic = Article("https://example.org/practices/architecture-overview/", ())
+        self.assertEqual(related_items(source, [generic]), [])
+
+    def test_category_and_type_without_topic_are_not_relevant(self):
+        source = replace(self.item, category="inference")
+        candidate = Article("https://example.org/elsewhere/unrelated/", ("storage",), category="inference")
+        self.assertEqual(related_items(source, [candidate]), [])
+
+    def test_alias_deduplication_is_deterministic(self):
+        source = Article("https://example.org/practices/kubevirt-source/", ("kubernetes",))
+        plain = replace(source, url="https://example.org/practices/kubevirt-other/")
+        aliases = [plain, replace(plain, url=plain.url + "index.html"),
+                   replace(plain, url=plain.url + "?lang=zh#section")]
+        for order in permutations(aliases):
+            self.assertEqual(related_items(source, order), [plain])
 
     def test_deterministic_ties_independent_of_input_order(self):
         articles = [replace(self.item, url=f"https://example.org/ai-k8s/practices/{name}/")

@@ -59,8 +59,8 @@
     return decorateControl(link, label, iconName);
   }
 
-  function initializeShare(article) {
-    if (article.querySelector(".aik8s-share")) return;
+  function initializeShare(article, policy) {
+    if (!policy.share || article.querySelector(".aik8s-share")) return;
 
     var title = articleTitle(article);
     var url = window.location.href.split("#")[0];
@@ -94,10 +94,12 @@
     bar.appendChild(shareLink("WhatsApp", "https://api.whatsapp.com/send?text=" + encodedTitle + "%20" + encodedUrl, "whatsapp", "whatsapp"));
     bar.appendChild(shareLink("RSS", SITE_URL + (isEnglish() ? "/en/rss.xml" : "/rss.xml"), "rss", "rss"));
 
-    var commentsLink = element("a", "aik8s-share__button");
-    commentsLink.href = "#comments";
-    decorateControl(commentsLink, t("评论", "Comments"), "comment");
-    bar.appendChild(commentsLink);
+    if (policy.comments) {
+      var commentsLink = element("a", "aik8s-share__button");
+      commentsLink.href = "#comments";
+      decorateControl(commentsLink, t("评论", "Comments"), "comment");
+      bar.appendChild(commentsLink);
+    }
 
     var heading = article.querySelector("h1");
     var anchor = article.querySelector(".aik8s-article-dates") || heading;
@@ -133,13 +135,31 @@
     done();
   }
 
-  function commentsEnabledForPath(pathname) {
+  function engagementPolicy(article) {
+    var pathname = window.location.pathname.replace(/^\/en(?=\/|$)/, "") || "/";
+    pathname = pathname.replace(/\/index\.html$/, "/");
+    var browsing = pathname === "/timeline.html";
     var excluded = ["/", "/ai-k8s/", "/cases/", "/k3s-upgrade/"];
-    return excluded.indexOf(pathname.replace(/^\/en(?=\/)/, "")) === -1;
+    var isArticle = !browsing && excluded.indexOf(pathname) === -1;
+    // Distribution builds identify directory indexes explicitly. In local dev,
+    // missing generated dates/JSON-LD must not disable otherwise valid articles.
+    if (isArticle && !article.querySelector(".aik8s-article-dates")) {
+      document.querySelectorAll('script[type="application/ld+json"]').forEach(function (script) {
+        try {
+          var data = JSON.parse(script.textContent);
+          var nodes = Array.isArray(data) ? data : (data["@graph"] || [data]);
+          if (nodes.some(function (node) {
+            var types = [].concat(node["@type"] || []);
+            return types.indexOf("CollectionPage") !== -1;
+          })) isArticle = false;
+        } catch (_) { /* Unrelated or incomplete structured data is not authoritative. */ }
+      });
+    }
+    return { share: !browsing, comments: isArticle };
   }
 
-  function initializeComments(article) {
-    if (!commentsEnabledForPath(window.location.pathname)) return;
+  function initializeComments(article, policy) {
+    if (!policy.comments) return;
     if (article.querySelector(".aik8s-comments")) return;
 
     var section = element("section", "aik8s-comments");
@@ -277,6 +297,7 @@
   function closeImageLightbox() {
     if (!lightboxState.dialog) return;
     if (lightboxState.dialog.hidden && !lightboxState.movedDiagram) return;
+    if (lightboxState.dialog.open) lightboxState.dialog.close();
     lightboxState.dialog.hidden = true;
     restoreMermaidDiagram();
     lightboxState.image.removeAttribute("src");
@@ -293,7 +314,9 @@
   function ensureImageLightbox() {
     if (lightboxState.dialog) return lightboxState.dialog;
 
-    var dialog = element("div", "aik8s-lightbox");
+    // Native top-layer modality makes the background inert without changing any
+    // existing hidden, disabled or inert attributes on the page.
+    var dialog = element("dialog", "aik8s-lightbox");
     dialog.hidden = true;
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
@@ -323,8 +346,26 @@
     dialog.addEventListener("click", function (event) {
       if (event.target === dialog) closeImageLightbox();
     });
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") closeImageLightbox();
+    dialog.addEventListener("cancel", function (event) {
+      event.preventDefault();
+      closeImageLightbox();
+    });
+    dialog.addEventListener("close", function () {
+      if (!dialog.open) closeImageLightbox();
+    });
+    dialog.addEventListener("keydown", function (event) {
+      if (event.key !== "Tab") return;
+      var controls = Array.prototype.filter.call(dialog.querySelectorAll('a[href], button, input, select, textarea, [tabindex]'), function (node) {
+        return node.tabIndex >= 0 && !node.matches(":disabled") &&
+          !node.closest("[hidden], [inert]") && node.getClientRects().length > 0 &&
+          getComputedStyle(node).visibility !== "hidden";
+      });
+      var first = controls[0];
+      var last = controls[controls.length - 1];
+      if (first && (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      }
     });
 
     lightboxState.dialog = dialog;
@@ -345,6 +386,7 @@
     lightboxState.caption.textContent = alternative;
     lightboxState.caption.hidden = !alternative;
     dialog.hidden = false;
+    if (!dialog.open) dialog.showModal();
     document.body.classList.add("aik8s-lightbox-open");
     dialog.querySelector(".aik8s-lightbox__close").focus();
   }
@@ -374,6 +416,7 @@
     lightboxState.caption.textContent = alternative + (horizontalScroll ? t("（可横向滚动查看完整图）", " (scroll horizontally to view the full diagram)") : "");
     lightboxState.caption.hidden = false;
     dialog.hidden = false;
+    if (!dialog.open) dialog.showModal();
     lightboxState.diagramHost.scrollLeft = 0;
     lightboxState.diagramHost.scrollTop = 0;
     document.body.classList.add("aik8s-lightbox-open");
@@ -458,10 +501,17 @@
     closeImageLightbox();
     var article = document.querySelector("article.md-content__inner");
     if (!article) return;
-    initializeShare(article);
+    var policy = engagementPolicy(article);
+    // Reconcile existing controls too: instant navigation and repeated startup
+    // must never leave a toolbar/comment mount behind on browsing pages.
+    if (!policy.share) article.querySelectorAll(".aik8s-share").forEach(function (node) { node.remove(); });
+    if (!policy.comments) {
+      article.querySelectorAll('.aik8s-comments, .aik8s-share a[href="#comments"]').forEach(function (node) { node.remove(); });
+    }
+    initializeComments(article, policy);
+    initializeShare(article, policy);
     initializeCalculators(article);
     initializeVisualLightbox(article);
-    initializeComments(article);
   }
 
   if (typeof document$ !== "undefined" && document$.subscribe) {
