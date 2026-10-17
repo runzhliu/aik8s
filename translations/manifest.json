@@ -1244,12 +1244,12 @@
       "reviewed_at": "2026-10-16T13:14:47.516986+00:00"
     },
     "ai-k8s/practices/minimax-h3-h20-benchmark.md": {
-      "source_sha256": "0ec9891b10c5f7ca28b37409901d55bdf34d69916e9f0a069476f989deb9d5d5",
-      "english_sha256": "b7e1a383074a93f1e062aa4ffb02d99568e02e2d6bbc9956f0c6d2cbe002acda",
+      "source_sha256": "0f19d0ff9cf30882eaa1126bc5bf719d82e5ac88f26f85d3124501a569af0372",
+      "english_sha256": "8cb0ef919bb9fbae794b5dd43131252595846382e27aa0c63a56954ec08fc3c4",
       "translated_at": "2026-10-16T12:52:38.546955+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-16T13:21:40.964352+00:00"
+      "reviewed_at": "2026-10-17T01:38:07.774469+00:00"
     },
     "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md": {
       "source_sha256": "c8e430fb620ea566b8094b018c143188343fca8a0576fc6f5c7e86bab81098c8",

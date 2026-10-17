@@ -1,0 +1,6 @@
+{
+  "description": "Raw built-file sizes, not compressed transfer sizes or Core Web Vitals. Third-party ads are not modified or included in these local-asset budgets.",
+  "custom_javascript_bytes": 98304,
+  "custom_stylesheet_bytes": 49152,
+  "single_html_bytes": 1048576
+}

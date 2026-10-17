@@ -21,6 +21,8 @@ from zoneinfo import ZoneInfo
 
 from article_discovery import TAG_LABELS, TYPE_LABELS, infer_discovery, related_items
 from theme_navigation import adapt_theme_assets
+from article_tools import inject_article_tools
+from image_optimization import optimize_images
 
 
 SITE_TITLE = "AI/LLM on Kubernetes 基础设施"
@@ -61,6 +63,10 @@ class FeedItem:
     tags: tuple[str, ...] = ()
     content_type: str = "overview"
     search_text: str = ""
+    source_path: str = ""
+    reviewed: str = ""
+    applicable_versions: str = ""
+    tested_environment: str = ""
 
 
 class BreadcrumbParser(HTMLParser):
@@ -251,6 +257,10 @@ def collect_items(docs_dir: Path, repo_root: Path, site_url: str, source_docs_di
                 tags=tags,
                 content_type=content_type,
                 search_text=search_text,
+                source_path=path.relative_to(docs_dir).as_posix(),
+                reviewed=discovery_metadata.get('last_reviewed', ''),
+                applicable_versions=metadata.get('applicable_versions', discovery_metadata.get('applicable_versions', '')),
+                tested_environment=metadata.get('tested_environment', discovery_metadata.get('tested_environment', '')),
             )
         )
     return sorted(items, key=lambda item: (item.updated, item.url), reverse=True)
@@ -505,6 +515,10 @@ def inject_metadata(path: Path, site_url: str, items_by_url: dict[str, FeedItem]
     canonical = canonical_match.group(1).strip() if canonical_match else site_url
     item = items_by_url.get(normalize_url(canonical)) if canonical_match else None
     source = inject_article_dates(original, item)
+    if item and not item.is_index:
+        source = inject_article_tools(source, title=item.title, url=item.url, source_path=item.source_path,
+                                      language='en' if SITE_LANGUAGE == 'en' else 'zh', reviewed=item.reviewed,
+                                      versions=item.applicable_versions, environment=item.tested_environment)
     if articles is not None:
         source = inject_article_discovery(source, item, articles, site_url)
         if item and normalize_url(item.url) == normalize_url(site_url):
@@ -700,7 +714,8 @@ def version_discovery_assets(site_dir: Path) -> None:
     """Content versions prevent old cached controls/CSS surviving a new release."""
     replacements = []
     names = ['stylesheets/timeline.css', 'javascripts/timeline.js',
-             'stylesheets/engagement.css', 'javascripts/engagement.js']
+             'stylesheets/engagement.css', 'javascripts/engagement.js',
+             'stylesheets/article-tools.css', 'javascripts/search-polish.js']
     names.extend(bundle.relative_to(site_dir).as_posix() for bundle in (site_dir / 'assets/javascripts').glob('bundle.*.min.js'))
     for name in names:
         asset = site_dir / name
@@ -760,6 +775,11 @@ def main() -> None:
     write_sitemap(items, site_dir / "sitemap.xml")
     items_by_url = {normalize_url(item.url): item for item in items}
     injected = sum(inject_metadata(path, site_url, items_by_url, articles) for path in site_dir.rglob("*.html"))
+    for path in site_dir.rglob('*.html'):
+        original = path.read_text(encoding='utf-8')
+        optimized = optimize_images(original, path, site_dir)
+        if optimized != original:
+            path.write_text(optimized, encoding='utf-8')
     adapt_theme_assets(site_dir)
     version_discovery_assets(site_dir)
     print(

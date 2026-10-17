@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% block htmltitle %}
+  {% if page and page.url == '' %}
+    <title>{{ config.site_name | e }}</title>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
 {% block site_meta %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">

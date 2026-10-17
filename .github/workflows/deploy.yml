@@ -40,9 +40,13 @@ jobs:
           python -m unittest discover -s scripts -p 'test_*.py' -v
           node --check docs/javascripts/timeline.js
           node --check docs/javascripts/engagement.js
+          node --check docs/javascripts/search-polish.js
 
       - name: Build Chinese and English documentation
         run: python scripts/build_bilingual.py
+
+      - name: Verify all internal links, images and anchors
+        run: python scripts/check_site_links.py --site-dir site --site-url https://aik8s.run/
 
       - name: Verify browser interactions before publication
         shell: bash
@@ -55,6 +59,7 @@ jobs:
           node scripts/test_timeline_browser.cjs
           node scripts/test_engagement_browser.cjs
           node scripts/test_blog_polish_browser.cjs
+          node scripts/test_search_browser.cjs
 
       - name: Add production-only AdSense
         env:
@@ -68,6 +73,9 @@ jobs:
           python scripts/inject_cloudflare_analytics.py
           --site-dir site
           --token "$CLOUDFLARE_WEB_ANALYTICS_TOKEN"
+
+      - name: Enforce authored-asset performance budgets
+        run: python scripts/check_site_budget.py --site-dir site
 
       - name: Package deployment artifact
         shell: bash

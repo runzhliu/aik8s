@@ -359,7 +359,7 @@ and the per-card power sample mean was **329.17–338.22 W**. Startup and warm-u
 with a maximum sampling gap of approximately 1.52 seconds, so the GPU memory figures are discrete sampling peaks and do not represent capture of all instantaneous spikes.
 
 <video controls preload="metadata" style="width:100%;max-width:960px" poster="../../../assets/practices/minimax-h3-h20/sglang-t2va-5s-poster.png">
-  <source src="../../../assets/practices/minimax-h3-h20/sglang-t2va-5s.mp4" type="video/mp4">
+  <source src="../../assets/practices/minimax-h3-h20/sglang-t2va-5s.mp4" type="video/mp4">
 </video>
 
 [Download the untranscoded original MP4](../../assets/practices/minimax-h3-h20/sglang-t2va-5s.mp4) to re-check both picture and audio track simultaneously.

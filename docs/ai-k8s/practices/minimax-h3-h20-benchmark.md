@@ -362,7 +362,7 @@ SGLang 文本生成与首尾帧矩阵已完成。以下“成功”表示请求�
 最大采样间隙约 1.52 秒，因此显存数字是离散采样峰值，不代表捕获了全部瞬时尖峰。
 
 <video controls preload="metadata" style="width:100%;max-width:960px" poster="../../../assets/practices/minimax-h3-h20/sglang-t2va-5s-poster.png">
-  <source src="../../../assets/practices/minimax-h3-h20/sglang-t2va-5s.mp4" type="video/mp4">
+  <source src="../../assets/practices/minimax-h3-h20/sglang-t2va-5s.mp4" type="video/mp4">
 </video>
 
 [下载未转码的原始 MP4](../../assets/practices/minimax-h3-h20/sglang-t2va-5s.mp4)，可同时复查画面与音轨。

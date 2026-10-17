@@ -102,7 +102,7 @@
     }
 
     var heading = article.querySelector("h1");
-    var anchor = article.querySelector(".aik8s-article-dates") || heading;
+    var anchor = article.querySelector(".aik8s-article-info") || article.querySelector(".aik8s-article-dates") || heading;
     if (anchor) anchor.parentNode.insertBefore(bar, anchor.nextSibling);
     else article.insertBefore(bar, article.firstChild);
   }
@@ -138,7 +138,9 @@
   function engagementPolicy(article) {
     var pathname = window.location.pathname.replace(/^\/en(?=\/|$)/, "") || "/";
     pathname = pathname.replace(/\/index\.html$/, "/");
-    var browsing = pathname === "/timeline.html";
+    var robots = document.querySelector('meta[name="robots"]');
+    var browsing = pathname === "/timeline.html" || pathname === "/404.html" ||
+      !!(robots && /(?:^|[\s,])noindex(?:[\s,]|$)/i.test(robots.content));
     var excluded = ["/", "/ai-k8s/", "/cases/", "/k3s-upgrade/"];
     var isArticle = !browsing && excluded.indexOf(pathname) === -1;
     // Distribution builds identify directory indexes explicitly. In local dev,
