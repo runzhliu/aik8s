@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">CubeSandbox snapshot dependency and state boundaries</title>
+  <desc id="desc">An Agent calls an Adapter, which uses the SDK to reach CubeAPI and CubeMaster. Cubelet coordinates CubeShim and cube-hypervisor to freeze and capture a VM. The recovery point includes Guest RAM, CPU and device state, rootfs and metadata. Adapter databases, business APIs and external volumes are outside that recovery point. This is an implementation illustration; the acceptance test calls the SDK directly.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#316bd8"/></marker></defs>
+  <rect width="1200" height="675" fill="#f4f7fb"/>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif" fill="#142b45">
+    <text x="44" y="57" font-size="19" font-weight="700" fill="#557087" letter-spacing="1.2">CUBESANDBOX v0.7.3 · SNAPSHOT IMPLEMENTATION</text>
+    <text x="44" y="111" font-size="37" font-weight="750">Who actually restores the process?</text>
+    <g data-panel="agent" transform="translate(44 166)">
+      <rect width="254" height="104" rx="16" fill="white" stroke="#dbe5ef" stroke-width="2"/>
+      <text x="20" y="41" font-size="28" font-weight="700">Agent</text>
+      <text x="20" y="76" font-size="19" fill="#526b80">Choose checkpoint timing</text>
+    </g>
+    <g data-panel="adapter" transform="translate(350 166)">
+      <rect width="340" height="104" rx="16" fill="#eaf1fb" stroke="#9bb9ee" stroke-width="2"/>
+      <text x="22" y="41" font-size="28" font-weight="700">Adapter + SDK</text>
+      <text x="22" y="76" font-size="21" fill="#526b80">Policy · audit · reference IDs</text>
+    </g>
+    <g data-panel="control" transform="translate(742 166)">
+      <rect width="414" height="104" rx="16" fill="white" stroke="#dbe5ef" stroke-width="2"/>
+      <text x="22" y="41" font-size="28" font-weight="700">CubeAPI → CubeMaster</text>
+      <text x="22" y="76" font-size="21" fill="#526b80">Resource catalog · orchestration</text>
+    </g>
+    <path d="M298 218H344" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <path d="M690 218H736" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <path d="M949 270V317" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <g data-panel="unit" transform="translate(44 323)">
+      <rect width="254" height="100" rx="16" fill="white" stroke="#dbe5ef" stroke-width="2"/>
+      <text x="20" y="34" font-size="20" fill="#526b80">RESTORE UNIT</text>
+      <text x="20" y="72" font-size="27" font-weight="700">The whole VM</text>
+    </g>
+    <g data-panel="node" transform="translate(350 323)">
+      <rect width="806" height="100" rx="16" fill="#eaf1fb" stroke="#9bb9ee" stroke-width="2"/>
+      <text x="22" y="39" font-size="27" font-weight="700">Cubelet → CubeShim → cube-hypervisor</text>
+      <text x="22" y="75" font-size="22" fill="#526b80">Freeze VM → capture memory + rootfs → resume</text>
+    </g>
+    <path d="M600 423V454H390V481" stroke="#316bd8" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+    <text x="620" y="461" font-size="19" fill="#526b80">state artifacts</text>
+    <g data-panel="snapshot" transform="translate(44 487)">
+      <rect width="690" height="120" rx="16" fill="#e0f4eb" stroke="#98cbb8" stroke-width="2"/>
+      <text x="22" y="35" font-size="27" font-weight="700" fill="#06734f">Recovery point</text>
+      <text x="22" y="69" font-size="22">Guest RAM · vCPU / devices · rootfs</text>
+      <text x="22" y="99" font-size="19" fill="#526b80">Restore metadata + version / object references</text>
+    </g>
+    <g data-panel="external" transform="translate(780 487)">
+      <rect width="376" height="120" rx="16" fill="white" stroke="#9cafbe" stroke-width="2" stroke-dasharray="7 5"/>
+      <text x="22" y="35" font-size="27" font-weight="700">Not rolled back</text>
+      <text x="22" y="69" font-size="22">Adapter Redis / audit DB</text>
+      <text x="22" y="99" font-size="19" fill="#526b80">Business APIs / external volumes</text>
+    </g>
+    <text x="44" y="650" font-size="18" fill="#526b80">Implementation overview · The SDK acceptance test bypassed Agent / Adapter · AIK8S.RUN</text>
+  </g>
+</svg>

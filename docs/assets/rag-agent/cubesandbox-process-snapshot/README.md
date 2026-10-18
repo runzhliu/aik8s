@@ -6,6 +6,7 @@ Tested on 2026-10-18 with CubeSandbox v0.7.3 and Python SDK 0.7.3.
 - `lab-results.json`, `production-results.json`: redacted actual output, three rounds each.
 - `report.html`: Light report derived from those outputs, not a product UI.
 - `01-results-light.png`, `02-memory-trace-light.png`: browser captures of the report at 1200x675.
+- `03-snapshot-dependency.svg`, `03-snapshot-dependency.png`: editable implementation diagram and Light rendering based on v0.7.3 source; an illustration, not an observed runtime trace.
 
 The worker never reloads application progress. Snapshots are taken at a cooperative in-memory hold barrier; HTTP service stays live. Each round kills the guest worker before rollback, then deletes the source VM before creating a new VM from the snapshot. This is not a host-failure, cross-node, GPU, mounted-volume, or native Agent-tool acceptance test.
 

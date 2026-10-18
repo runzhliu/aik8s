@@ -19,6 +19,74 @@ On October 18, 2026, CubeSandbox v0.7.3 completed three rounds in each of two Ku
 
 *Light acceptance report. It was generated from the redacted JSON recorded in this test and captured in a browser; it is not the CubeSandbox console UI. The complete values are linked at the end.*
 
+## The dependency chain: who actually saves the process?
+
+**Memory recovery depends on CubeSandbox's VM snapshot capability. The Agent requests it, the Adapter adds authorization and resource management, and the CubeSandbox node runtime pauses, saves, and restores the VM.** This test called the SDK directly, bypassing the Agent and Adapter to verify that underlying capability.
+
+![Responsibilities and dependencies across the Agent, Adapter, CubeSandbox control plane, node runtime, and snapshot storage](../../assets/rag-agent/cubesandbox-process-snapshot/03-snapshot-dependency.png)
+
+*Implementation diagram based on v0.7.3 source, not a runtime trace of this test's requests. Agent/Adapter is an integration path; the test entered CubeAPI directly through the Python SDK.*
+
+### Where the Agent and Adapter stop
+
+For an OpenClaw `cube_checkpoint` call, the integrated request path is:
+
+```text
+Agent: cube_checkpoint
+  → Adapter: authorize identity, lease, Profile and checkpoint policy
+  → Python SDK: sandbox.create_snapshot()
+  → CubeAPI: POST /sandboxes/{sandboxID}/snapshots
+  → CubeMaster: register snapshot work, locate the source node
+  → Cubelet: CommitSandbox, coordinate the node operation
+  → CubeShim / cube-hypervisor: freeze VM, capture runtime state
+  → Snapshot storage: retain memory, rootfs and restore metadata
+```
+
+The Adapter's `checkpoint_ref` is an authorization-controlled reference. Internally, it maps to the `snapshot_id` returned by CubeSandbox and is associated with a lease, tenant, and `backend_id`. **The Adapter does not inspect Python objects, store Guest RAM in Redis, or reconstruct progress from chat history.** On a `cube_rollback` request, it resolves the original snapshot and asks CubeSandbox to restore it through the SDK. [Adapter implementation](https://github.com/aik8s/cubesandbox-agent-adapter/blob/ac6a16494b83953d8c8efa8a734cc5f973e8478c/adapter/core.py#L1187)
+
+CubeAPI provides the external API. CubeMaster manages the snapshot as a platform resource and delegates the operation to Cubelet on the source node. There, CubeShim works with the repository's `cube-hypervisor` VMM, which incorporates Cloud Hypervisor implementations. The restored object is a virtual machine; a container restart policy does not rerun the Shell to recreate its progress.
+
+### What is saved, and why the PID returns
+
+Several parts must work together to form recoverable state; saving program files alone is insufficient:
+
+| State | Contents | Role in this test |
+| --- | --- | --- |
+| Guest RAM | Guest kernel data, process address spaces, heaps, stacks, and runtime objects | Preserves the counter, random identity, hold flag, and kernel process records |
+| vCPU and device runtime state | Execution position, registers, and supported virtual-device state | Allows VM execution to resume instead of starting at the program entry point |
+| rootfs snapshot | Code, dependencies, and writable files in the sandbox root filesystem | Restores the root-file marker to `before-snapshot` |
+| Restore configuration and metadata | VM specification, kernel/image versions, memory/disk object references, and related configuration | Locates the right objects and reconstructs the VM with compatible settings |
+
+From outside the VM, Python interpreter objects and the Guest kernel's process table are both data in Guest RAM. Once that memory and execution state are restored, the application does not need to reconstruct `counter` and `identity`. PID **33 in the table is a Guest PID**; deleting the original VM and creating another one does not require an equal host-side process PID.
+
+This explains why a new sandbox ID can contain the same Guest PID. The platform creates a new sandbox resource containing the old VM's execution state. It does not boot a fresh Guest system and coincidentally assign Python PID 33 again.
+
+### How capture and restore happen on the node
+
+The coordinated snapshot path supported in v0.7.3 first freezes the VM. It captures memory state and commits a CoW rootfs snapshot within the same freeze window, then resumes the source VM. This avoids capturing memory at one point while the program continues changing disk state at another. In the source, `CommitSandbox` drives `SnapshotCapture`, performs the rootfs operation, and then sends `SnapshotResume`. [Node coordination code](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/Cubelet/services/cubebox/template_ops.go#L224)
+
+A snapshot logically supplies complete recoverable state without necessarily copying every byte physically on each capture. Node storage uses CoW. The memory path can use incremental/soft-dirty capture over a valid baseline, falling back to full capture if no usable baseline exists. Writing less data is an optimization; restoration still requires a complete, correct baseline and state. The source retains compatibility branches for older Shims, so assess the node runtime as well as the CubeAPI version when determining consistency behavior.
+
+There are two restoration entry points:
+
+1. `sandbox.rollback(snapshot_id)` retains the original platform sandbox identifier, tears down the current VM execution state internally, loads the snapshot's memory, disks, and configuration, and resumes execution. It does not undo a `SIGKILL`; it replaces the whole VM state with one captured before the process was killed. A failed restore does not imply that the discarded execution state can be recovered.
+2. `Sandbox.create(template=snapshot_id)` allocates a new platform sandbox resource and uses the snapshot as its restore source. `cube_fork` uses this capability and registers a new lease for that sandbox; it does not automatically create a new training Job.
+
+The test's `/hold` endpoint is only an application-level barrier that pauses increments for exact comparisons. **CubeSandbox performs the actual VM freeze** independently of that test HTTP service. Rollback invalidates old connections, so clients must reconnect; every state query in the test establishes a new connection. [Shim rollback description](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/CubeShim/docs/shimapi/rollback-snapshot.md)
+
+### Snapshots, Redis, and the audit database hold different state
+
+| Location | Stored state | What it cannot replace |
+| --- | --- | --- |
+| CubeSandbox snapshot storage | VM memory, rootfs, and restore metadata, using node-local XFS or a shared S3 storage path | Does not restore business changes already made to external databases or mounted volumes |
+| Adapter state backend | Lease, Job, checkpoint-reference, and backend mappings; process memory by default, surviving Adapter restarts only with reliable Redis configured | A `snapshot_id` without its snapshot objects cannot restore a VM |
+| Adapter audit database | The requester, operation, execution intent, outcome, and audit chain, persisted in SQLite or PostgreSQL | Audit events do not contain the memory image needed to restore the VM |
+
+Kubernetes hosts the control plane, node components, Services, and persistent-storage infrastructure in this deployment. The test does not use Kubernetes Job retries or Pod restarts to recover Python memory; CubeSandbox manages snapshot resources and VM recovery. Automatically saving at intervals and selecting a recovery point after failure still requires higher-level task management to determine capture timing, recovery policy, and treatment of external side effects. Installing the Adapter alone does not provide that workflow.
+
+If OpenClaw runs in the office network and its execution sandbox runs in production, **the snapshot saves the production sandbox, not the office-side Agent's conversation and plan**. The client or Agent framework must persist its own session. Reconnecting still requires locating the original lease, Job, or checkpoint reference. This SDK test verifies process recovery; Agent-session recovery was not counted as a passing check.
+
+
 ## Ruling out a script restart that reloads progress from a file
 
 The worker consists of an incrementing thread and an HTTP server listening only on the sandbox loopback interface. The thread increments once every 100 ms. State queries read memory only. The program generates a random identity at startup, does not load an application checkpoint, and does not save progress to a file.
@@ -138,3 +206,6 @@ The conclusion established here is specific: **with this CPU workload in the two
 - [Light acceptance report](../../assets/rag-agent/cubesandbox-process-snapshot/report.html)
 - [CubeSandbox v0.7.3: Snapshot, Rollback, and Clone](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/docs/guide/snapshot-rollback-clone.md)
 - [Adapter long-running jobs, multiple backends, and durable audit](cubesandbox-agent-adapter-v06.md)
+
+- [v0.7.3 control-plane snapshot API](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/CubeAPI/src/services/snapshots.rs), [Master snapshot task implementation](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/CubeMaster/pkg/templatecenter/snapshot_ops.go)
+- [v0.7.3 VMM snapshot format and restore documentation](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/hypervisor/docs/snapshot_restore.md)
