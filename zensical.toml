@@ -130,10 +130,15 @@ nav = [
       {"AI 平台安全与治理" = "ai-k8s/security-governance.md"},
       {"性能基准与回归" = "ai-k8s/benchmarking.md"},
       {"平台运维与升级" = "ai-k8s/platform-operations.md"},
+      {"K3s 集群升级" = [
+        "k3s-upgrade/index.md",
+        {"升级与 DRA 预检报告" = "k3s-upgrade/report.md"},
+      ]},
       {"落地路线图" = "ai-k8s/adoption-roadmap.md"},
     ]},
     {"实战、排障与选型" = [
       "ai-k8s/practices/index.md",
+      {"工程案例总览" = "cases/index.md"},
       {"GPU Pending 排障" = "ai-k8s/practices/gpu-pending.md"},
       {"GPU 利用率排障" = "ai-k8s/practices/low-gpu-utilization.md"},
       {"推理引擎同机实测" = "ai-k8s/practices/inference-engine-benchmark.md"},
@@ -199,15 +204,8 @@ nav = [
     ]},
     {"参考架构与实验" = [
       {"生产参考架构" = "ai-k8s/guides/reference-architectures.md"},
+      {"AI/LLM 集群组件清单" = "cases/ai-cluster-component-checklist.md"},
       {"GPU 平台最小闭环实验" = "ai-k8s/guides/gpu-platform-lab.md"},
-    ]},
-  ]},
-  {"案例" = [
-    "cases/index.md",
-    {"AI/LLM 集群组件清单" = "cases/ai-cluster-component-checklist.md"},
-    {"K3s 集群升级" = [
-      "k3s-upgrade/index.md",
-      {"升级与 DRA 预检报告" = "k3s-upgrade/report.md"},
     ]},
   ]},
 ]

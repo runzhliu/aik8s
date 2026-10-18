@@ -177,7 +177,7 @@
   "参考架构与实验": "Reference Architecture and Experiments",
   "生产参考架构": "Production Reference Architecture",
   "GPU 平台最小闭环实验": "GPU Platform Minimal Closed-Loop Experiment",
-  "案例": "Case Studies",
+  "工程案例总览": "Engineering Case Studies",
   "AI/LLM 集群组件清单": "AI/LLM Cluster Component Checklist",
   "K3s 集群升级": "K3s Cluster Upgrade",
   "升级与 DRA 预检报告": "Upgrade and DRA Preflight Report",

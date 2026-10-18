@@ -31,6 +31,11 @@ const ROOT = path.resolve(__dirname, '..');
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.goto(base, { waitUntil: 'networkidle' });
       assert.equal(await page.title(), prefix ? 'AI/LLM on Kubernetes Infrastructure' : 'AI/LLM on Kubernetes 基础设施', 'Homepage title must not duplicate the site name');
+      const primary = page.locator('.md-nav--primary');
+      assert.equal(await primary.locator(':scope > ul.md-nav__list > li').count(), 2, 'Home plus one integrated technical navigation root');
+      const caseRoutes = ['cases/', 'cases/ai-cluster-component-checklist/', 'k3s-upgrade/', 'k3s-upgrade/report/'];
+      const navigationPaths = await primary.locator('a[href]').evaluateAll(nodes => nodes.map(node => new URL(node.href).pathname));
+      for (const route of caseRoutes) assert.ok(navigationPaths.includes('/' + prefix + route), 'Original case route remains in the unified sidebar: ' + route);
       const latest = page.locator('.aik8s-home-latest');
       assert.ok(await latest.isVisible());
       assert.equal(await latest.locator('li').count(), 3);
@@ -47,6 +52,12 @@ const ROOT = path.resolve(__dirname, '..');
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
         assert.equal(await page.locator('.aik8s-view-toggle__label').isVisible(), false);
         assert.ok(await page.locator('[data-aik8s-timeline]').isVisible());
+      }
+      for (const route of caseRoutes) {
+        await page.goto(base + route, { waitUntil: 'networkidle' });
+        assert.equal(await page.locator('article h1').count(), 1);
+        assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'), base + route);
+        assert.ok((await page.locator('.md-path').innerText()).includes('AI/LLM on Kubernetes'), 'Cases inherit the unified technical breadcrumb');
       }
       await page.goto(base + 'ai-k8s/practices/kubevirt-rbd-notebook/', { waitUntil: 'networkidle' });
       const firstRelated = await page.locator('.aik8s-related li a').first().getAttribute('href');
