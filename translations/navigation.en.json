@@ -81,6 +81,7 @@
   "CubeSandbox Agent Adapter v0.3 实测": "CubeSandbox Agent Adapter v0.3 Hands-On Test",
   "CubeSandbox Agent Adapter v0.5 强审计实测": "CubeSandbox Agent Adapter v0.5 Strong Audit Hands-On Test",
   "CubeSandbox Agent Adapter v0.6 多集群实践": "CubeSandbox Agent Adapter v0.6 Multi-Cluster Practice",
+  "CubeSandbox 进程内存快照实测": "CubeSandbox Process-Memory Snapshot Tests",
   "Firecracker Kubernetes 实验": "Firecracker Kubernetes Experiments",
   "实验总览": "Experiment Overview",
   "宿主机部署与原生冒烟": "Host Deployment and Native Smoke Tests",

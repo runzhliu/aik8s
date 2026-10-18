@@ -1,0 +1,205 @@
+{
+  "backend_version": "v0.7.3",
+  "cleanup": {
+    "baseline_sandboxes_retained": true,
+    "baseline_snapshots_retained": true,
+    "errors": [],
+    "new_sandboxes_remaining": 0,
+    "new_snapshots_remaining": 0
+  },
+  "environment": "production",
+  "result": "PASS",
+  "rounds": [
+    {
+      "checks": {
+        "new_vm_restored_same_pid_identity_counter_digest": "PASS",
+        "new_vm_worker_continued": "PASS",
+        "original_worker_killed_before_rollback": "PASS",
+        "rollback_resurrected_same_pid_identity_counter_digest": "PASS",
+        "rollback_worker_continued": "PASS",
+        "round_resources_deleted": "PASS",
+        "snapshot_preserved_live_process": "PASS",
+        "source_vm_deleted_before_restore": "PASS"
+      },
+      "round": 1,
+      "states": {
+        "advanced_before_rollback": {
+          "counter": 27,
+          "digest": "2927558ac7d9381efc75bad8377e9c1ec40f28c50d5a47e53a4f73791f43b667",
+          "held": true,
+          "identity_tag": "7ba5957579f0",
+          "pid": 33
+        },
+        "after_rollback": {
+          "counter": 12,
+          "digest": "5d543454fafbb611dda997ad241c8c0adb2ad1a697600cc016e92d0a56e85ae0",
+          "held": true,
+          "identity_tag": "7ba5957579f0",
+          "pid": 33
+        },
+        "after_rollback_continued": {
+          "counter": 20,
+          "digest": "cffede6da50c5a7c824893924dacaad50dc15b7a746bb8e809e856354a876cda",
+          "held": true,
+          "identity_tag": "7ba5957579f0",
+          "pid": 33
+        },
+        "captured": {
+          "counter": 12,
+          "digest": "5d543454fafbb611dda997ad241c8c0adb2ad1a697600cc016e92d0a56e85ae0",
+          "held": true,
+          "identity_tag": "7ba5957579f0",
+          "pid": 33
+        },
+        "new_vm_continued": {
+          "counter": 19,
+          "digest": "91972b68fbfea8f9a7260aa693511966b3d580114ea826ace8d1238156ab8590",
+          "held": true,
+          "identity_tag": "7ba5957579f0",
+          "pid": 33
+        },
+        "new_vm_from_snapshot": {
+          "counter": 12,
+          "digest": "5d543454fafbb611dda997ad241c8c0adb2ad1a697600cc016e92d0a56e85ae0",
+          "held": true,
+          "identity_tag": "7ba5957579f0",
+          "pid": 33
+        }
+      },
+      "timings_ms": {
+        "restore_after_source_deleted": 119.71,
+        "rollback": 190.04,
+        "snapshot": 106.34
+      }
+    },
+    {
+      "checks": {
+        "new_vm_restored_same_pid_identity_counter_digest": "PASS",
+        "new_vm_worker_continued": "PASS",
+        "original_worker_killed_before_rollback": "PASS",
+        "rollback_resurrected_same_pid_identity_counter_digest": "PASS",
+        "rollback_worker_continued": "PASS",
+        "round_resources_deleted": "PASS",
+        "snapshot_preserved_live_process": "PASS",
+        "source_vm_deleted_before_restore": "PASS"
+      },
+      "round": 2,
+      "states": {
+        "advanced_before_rollback": {
+          "counter": 25,
+          "digest": "60f71bae11e28b91bc27950345ea1951dafaa43521c348d10e6daf310ab6a18a",
+          "held": true,
+          "identity_tag": "0328b05da132",
+          "pid": 33
+        },
+        "after_rollback": {
+          "counter": 11,
+          "digest": "6c6ff19cd850c221fb5b1d2037a34b077943e2d77dd42cc7656f1878b288742d",
+          "held": true,
+          "identity_tag": "0328b05da132",
+          "pid": 33
+        },
+        "after_rollback_continued": {
+          "counter": 18,
+          "digest": "badc2ec3b2524d4950452e42f47c797cb03382ef4cc4f71b87c0f25c19158769",
+          "held": true,
+          "identity_tag": "0328b05da132",
+          "pid": 33
+        },
+        "captured": {
+          "counter": 11,
+          "digest": "6c6ff19cd850c221fb5b1d2037a34b077943e2d77dd42cc7656f1878b288742d",
+          "held": true,
+          "identity_tag": "0328b05da132",
+          "pid": 33
+        },
+        "new_vm_continued": {
+          "counter": 17,
+          "digest": "506442b91ce21047109d2c693790c5aebc7f240c8ca18ac1168774f918e03e86",
+          "held": true,
+          "identity_tag": "0328b05da132",
+          "pid": 33
+        },
+        "new_vm_from_snapshot": {
+          "counter": 11,
+          "digest": "6c6ff19cd850c221fb5b1d2037a34b077943e2d77dd42cc7656f1878b288742d",
+          "held": true,
+          "identity_tag": "0328b05da132",
+          "pid": 33
+        }
+      },
+      "timings_ms": {
+        "restore_after_source_deleted": 104.0,
+        "rollback": 148.18,
+        "snapshot": 97.63
+      }
+    },
+    {
+      "checks": {
+        "new_vm_restored_same_pid_identity_counter_digest": "PASS",
+        "new_vm_worker_continued": "PASS",
+        "original_worker_killed_before_rollback": "PASS",
+        "rollback_resurrected_same_pid_identity_counter_digest": "PASS",
+        "rollback_worker_continued": "PASS",
+        "round_resources_deleted": "PASS",
+        "snapshot_preserved_live_process": "PASS",
+        "source_vm_deleted_before_restore": "PASS"
+      },
+      "round": 3,
+      "states": {
+        "advanced_before_rollback": {
+          "counter": 27,
+          "digest": "33118969a7053d5f275aef8d60fcc33e7142cfbfbd2dc9081f2fc290cc7c172c",
+          "held": true,
+          "identity_tag": "2f93dd3cb17a",
+          "pid": 34
+        },
+        "after_rollback": {
+          "counter": 14,
+          "digest": "89a9de2d018837fca95d9820013f2cc2019f0451ee3e398072c98f77faf9a6d0",
+          "held": true,
+          "identity_tag": "2f93dd3cb17a",
+          "pid": 34
+        },
+        "after_rollback_continued": {
+          "counter": 21,
+          "digest": "5782dbec4dfe904925deb47690ebbf0d48e71ddbe9a4afb2f2b737dcff7d10b9",
+          "held": true,
+          "identity_tag": "2f93dd3cb17a",
+          "pid": 34
+        },
+        "captured": {
+          "counter": 14,
+          "digest": "89a9de2d018837fca95d9820013f2cc2019f0451ee3e398072c98f77faf9a6d0",
+          "held": true,
+          "identity_tag": "2f93dd3cb17a",
+          "pid": 34
+        },
+        "new_vm_continued": {
+          "counter": 22,
+          "digest": "595bf99f116bc010deffa989d16672bf6f4bf62261b72d10739fd27f19469cc2",
+          "held": true,
+          "identity_tag": "2f93dd3cb17a",
+          "pid": 34
+        },
+        "new_vm_from_snapshot": {
+          "counter": 14,
+          "digest": "89a9de2d018837fca95d9820013f2cc2019f0451ee3e398072c98f77faf9a6d0",
+          "held": true,
+          "identity_tag": "2f93dd3cb17a",
+          "pid": 34
+        }
+      },
+      "timings_ms": {
+        "restore_after_source_deleted": 122.9,
+        "rollback": 389.92,
+        "snapshot": 106.26
+      }
+    }
+  ],
+  "schema_version": 1,
+  "scope": "SDK process-memory restore; no application checkpoint, no external volume",
+  "sdk_version": "0.7.3",
+  "tested_at": "2026-10-18T10:33:45.636269+00:00",
+  "worker_source_sha256": "3478bfb75dcd989fe4de8fde494cb1bac76ad73bf97df491504416e1a596c417"
+}

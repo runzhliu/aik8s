@@ -1,0 +1,205 @@
+{
+  "backend_version": "v0.7.3",
+  "cleanup": {
+    "baseline_sandboxes_retained": true,
+    "baseline_snapshots_retained": true,
+    "errors": [],
+    "new_sandboxes_remaining": 0,
+    "new_snapshots_remaining": 0
+  },
+  "environment": "lab",
+  "result": "PASS",
+  "rounds": [
+    {
+      "checks": {
+        "new_vm_restored_same_pid_identity_counter_digest": "PASS",
+        "new_vm_worker_continued": "PASS",
+        "original_worker_killed_before_rollback": "PASS",
+        "rollback_resurrected_same_pid_identity_counter_digest": "PASS",
+        "rollback_worker_continued": "PASS",
+        "round_resources_deleted": "PASS",
+        "snapshot_preserved_live_process": "PASS",
+        "source_vm_deleted_before_restore": "PASS"
+      },
+      "round": 1,
+      "states": {
+        "advanced_before_rollback": {
+          "counter": 32,
+          "digest": "dff998973baa3b4afc00665ba42184cc8bdc0bed69eae497b97facdd6e1d4c55",
+          "held": true,
+          "identity_tag": "dd4a988d24c2",
+          "pid": 33
+        },
+        "after_rollback": {
+          "counter": 17,
+          "digest": "0844ac67259db960145eb2d79b3ad8a75fbdaf98c812d027d3a620dfd5057a6b",
+          "held": true,
+          "identity_tag": "dd4a988d24c2",
+          "pid": 33
+        },
+        "after_rollback_continued": {
+          "counter": 28,
+          "digest": "6904cdd2d16109d5462599b8d5a22ef6c23f58e2ed0b59e59c6668290f0a1b4e",
+          "held": true,
+          "identity_tag": "dd4a988d24c2",
+          "pid": 33
+        },
+        "captured": {
+          "counter": 17,
+          "digest": "0844ac67259db960145eb2d79b3ad8a75fbdaf98c812d027d3a620dfd5057a6b",
+          "held": true,
+          "identity_tag": "dd4a988d24c2",
+          "pid": 33
+        },
+        "new_vm_continued": {
+          "counter": 27,
+          "digest": "444418a1eedc9dd65bbe88ed6415e317ffc745a04f9e3e1e9b76fa51f2f456bb",
+          "held": true,
+          "identity_tag": "dd4a988d24c2",
+          "pid": 33
+        },
+        "new_vm_from_snapshot": {
+          "counter": 17,
+          "digest": "0844ac67259db960145eb2d79b3ad8a75fbdaf98c812d027d3a620dfd5057a6b",
+          "held": true,
+          "identity_tag": "dd4a988d24c2",
+          "pid": 33
+        }
+      },
+      "timings_ms": {
+        "restore_after_source_deleted": 473.95,
+        "rollback": 294.92,
+        "snapshot": 456.6
+      }
+    },
+    {
+      "checks": {
+        "new_vm_restored_same_pid_identity_counter_digest": "PASS",
+        "new_vm_worker_continued": "PASS",
+        "original_worker_killed_before_rollback": "PASS",
+        "rollback_resurrected_same_pid_identity_counter_digest": "PASS",
+        "rollback_worker_continued": "PASS",
+        "round_resources_deleted": "PASS",
+        "snapshot_preserved_live_process": "PASS",
+        "source_vm_deleted_before_restore": "PASS"
+      },
+      "round": 2,
+      "states": {
+        "advanced_before_rollback": {
+          "counter": 32,
+          "digest": "b22c0e6f5263ad48dfc8711bf9a7dd6f1983ccb64a9df2af085551007091d77d",
+          "held": true,
+          "identity_tag": "71e5805812e2",
+          "pid": 33
+        },
+        "after_rollback": {
+          "counter": 17,
+          "digest": "5018ddb9f17875e83befc86f578aa8c869fb83ab07047034e4994fdd227cea00",
+          "held": true,
+          "identity_tag": "71e5805812e2",
+          "pid": 33
+        },
+        "after_rollback_continued": {
+          "counter": 28,
+          "digest": "1ca81dca30dd9467a755905241f403a66238058027545b326ccdfe188c59b8ff",
+          "held": true,
+          "identity_tag": "71e5805812e2",
+          "pid": 33
+        },
+        "captured": {
+          "counter": 17,
+          "digest": "5018ddb9f17875e83befc86f578aa8c869fb83ab07047034e4994fdd227cea00",
+          "held": true,
+          "identity_tag": "71e5805812e2",
+          "pid": 33
+        },
+        "new_vm_continued": {
+          "counter": 28,
+          "digest": "1ca81dca30dd9467a755905241f403a66238058027545b326ccdfe188c59b8ff",
+          "held": true,
+          "identity_tag": "71e5805812e2",
+          "pid": 33
+        },
+        "new_vm_from_snapshot": {
+          "counter": 17,
+          "digest": "5018ddb9f17875e83befc86f578aa8c869fb83ab07047034e4994fdd227cea00",
+          "held": true,
+          "identity_tag": "71e5805812e2",
+          "pid": 33
+        }
+      },
+      "timings_ms": {
+        "restore_after_source_deleted": 402.55,
+        "rollback": 231.55,
+        "snapshot": 410.34
+      }
+    },
+    {
+      "checks": {
+        "new_vm_restored_same_pid_identity_counter_digest": "PASS",
+        "new_vm_worker_continued": "PASS",
+        "original_worker_killed_before_rollback": "PASS",
+        "rollback_resurrected_same_pid_identity_counter_digest": "PASS",
+        "rollback_worker_continued": "PASS",
+        "round_resources_deleted": "PASS",
+        "snapshot_preserved_live_process": "PASS",
+        "source_vm_deleted_before_restore": "PASS"
+      },
+      "round": 3,
+      "states": {
+        "advanced_before_rollback": {
+          "counter": 32,
+          "digest": "8110901968e7b163d1622aa34a36f22b0e7f4238df85ee70b11ca06c2cf3959a",
+          "held": true,
+          "identity_tag": "15ca8a5adeca",
+          "pid": 33
+        },
+        "after_rollback": {
+          "counter": 17,
+          "digest": "8b8394884718e68eb31b1a8c7c6ac94a9edb81045a2100f967ffa4ce724f7380",
+          "held": true,
+          "identity_tag": "15ca8a5adeca",
+          "pid": 33
+        },
+        "after_rollback_continued": {
+          "counter": 28,
+          "digest": "25f42660407cbd0a103d89a2e2950d389a05db0213b13838ec9ed62c1c7fa33d",
+          "held": true,
+          "identity_tag": "15ca8a5adeca",
+          "pid": 33
+        },
+        "captured": {
+          "counter": 17,
+          "digest": "8b8394884718e68eb31b1a8c7c6ac94a9edb81045a2100f967ffa4ce724f7380",
+          "held": true,
+          "identity_tag": "15ca8a5adeca",
+          "pid": 33
+        },
+        "new_vm_continued": {
+          "counter": 28,
+          "digest": "25f42660407cbd0a103d89a2e2950d389a05db0213b13838ec9ed62c1c7fa33d",
+          "held": true,
+          "identity_tag": "15ca8a5adeca",
+          "pid": 33
+        },
+        "new_vm_from_snapshot": {
+          "counter": 17,
+          "digest": "8b8394884718e68eb31b1a8c7c6ac94a9edb81045a2100f967ffa4ce724f7380",
+          "held": true,
+          "identity_tag": "15ca8a5adeca",
+          "pid": 33
+        }
+      },
+      "timings_ms": {
+        "restore_after_source_deleted": 443.88,
+        "rollback": 224.23,
+        "snapshot": 404.31
+      }
+    }
+  ],
+  "schema_version": 1,
+  "scope": "SDK process-memory restore; no application checkpoint, no external volume",
+  "sdk_version": "0.7.3",
+  "tested_at": "2026-10-18T10:35:19.730839+00:00",
+  "worker_source_sha256": "3478bfb75dcd989fe4de8fde494cb1bac76ad73bf97df491504416e1a596c417"
+}
