@@ -1365,6 +1365,12 @@
       "english_sha256": "47035621f44c7e5928feff5f7ccf01737dbb13ce0ef119a959012667f6cc5e16",
       "reviewed_at": "2026-10-18T13:00:08.867725+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/firecracker-cubesandbox-enterprise-selection.md": {
+      "source_sha256": "fd1a294860f4deff335a53be17036800b84ec8ed12c9174bed6e2f9ce0772407",
+      "english_sha256": "f543ef6b3784ffdd3395947d01a2d4f937f7874aa59671244febc79f6fd7ccb4",
+      "reviewed_at": "2026-10-18T14:21:15.831263+00:00",
+      "review": "reviewed against source"
     }
   }
 }
