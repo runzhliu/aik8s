@@ -6,8 +6,20 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
 const ROOT = path.resolve(__dirname, '..');
+// Compare with the complete authored corpus, independently of the rendered
+// timeline and the capped RSS feed. New articles must not require a count edit.
+const articleUrls = JSON.parse(execFileSync(process.env.PYTHON || 'python3', ['-c', `
+import json, sys
+from pathlib import Path
+sys.path.insert(0, 'scripts')
+from build_distribution import collect_items
+root = Path.cwd()
+items = collect_items(root / 'docs', root, 'https://aik8s.run/')
+print(json.dumps([item.url for item in items if not item.is_index]))
+`], { cwd: ROOT, encoding: 'utf8' }));
 
 async function assertCount(page, total, english) {
   const shown = await page.locator('[data-timeline-item]').count();
@@ -69,9 +81,12 @@ async function contextFor(browser, javascriptEnabled = true) {
       const rows = await page.locator('[data-timeline-item]').evaluateAll(nodes => nodes.map(node => ({
         published: node.dataset.published, updated: node.dataset.updated,
         tags: node.dataset.tags.split(/\s+/).filter(Boolean), type: node.dataset.contentType,
-        search: node.dataset.search
+        search: node.dataset.search, url: node.querySelector('div > a').href
       })));
-      assert.equal(rows.length, 167, 'Full generated article corpus, not the RSS cap');
+      assert.equal(rows.length, articleUrls.length, 'Full authored article corpus, not the RSS cap');
+      assert.deepEqual(rows.map(row => row.url).sort(),
+        articleUrls.map(url => url.replace('https://aik8s.run/', base)).sort(),
+        'Every authored article appears exactly once in each language');
       const active = page.locator('[data-timeline-active]');
       assert.equal(await active.isVisible(), false);
       await assertCount(page, rows.length, !!prefix);
@@ -104,13 +119,15 @@ async function contextFor(browser, javascriptEnabled = true) {
         window.__timelineModifiedPrevented = null;
         // Observe whether enhancement canceled the modified click, then avoid opening a tab.
         document.addEventListener('click', event => {
-          if (event.ctrlKey && event.target.closest('.aik8s-timeline__tags a')) {
+          if ((event.ctrlKey || event.metaKey) && event.target.closest('.aik8s-timeline__tags a')) {
             window.__timelineModifiedPrevented = event.defaultPrevented;
             event.preventDefault();
           }
         });
       });
-      await tagLink.click({ modifiers: ['Control'] });
+      // Control-click is a context-menu gesture on macOS; Meta is its normal
+      // open-in-new-tab modifier. Both must bypass in-page filtering.
+      await tagLink.click({ modifiers: [process.platform === 'darwin' ? 'Meta' : 'Control'] });
       assert.equal(await page.evaluate(() => window.__timelineModifiedPrevented), false);
       assert.equal(page.url(), beforeTag.href);
       await tagLink.click();
@@ -248,12 +265,12 @@ async function contextFor(browser, javascriptEnabled = true) {
     const staticPage = await staticContext.newPage();
     for (const prefix of ['', 'en/']) {
       await staticPage.goto('https://aik8s.run/' + prefix + 'timeline.html');
-      assert.equal(await staticPage.locator('[data-timeline-item]').count(), 167);
+      assert.equal(await staticPage.locator('[data-timeline-item]').count(), articleUrls.length);
       assert.equal(await staticPage.locator('[data-timeline-controls]').isVisible(), false);
       assert.equal(await staticPage.locator('[data-timeline-active]').count(), 1);
       assert.equal(await staticPage.locator('[data-timeline-active]').isVisible(), false);
       await staticPage.goto('https://aik8s.run/' + prefix + 'timeline.html?tag=invalid&q=no-match');
-      assert.equal(await staticPage.locator('[data-timeline-item]').count(), 167, 'No-JS URL filters never hide the static corpus');
+      assert.equal(await staticPage.locator('[data-timeline-item]').count(), articleUrls.length, 'No-JS URL filters never hide the static corpus');
       await staticPage.goto('https://aik8s.run/' + prefix + 'ai-k8s/inference/engines/');
       assert.ok(await staticPage.locator('.aik8s-related li a').count() > 0);
     }
