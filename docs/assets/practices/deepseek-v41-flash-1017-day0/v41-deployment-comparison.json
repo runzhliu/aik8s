@@ -1,0 +1,84 @@
+{
+  "scope": "Historical deployment comparison, not a controlled weights-only A/B",
+  "selection": "C8 for all four core workload shapes; both deployments have three complete rounds and 48/48 successful requests per cell",
+  "aggregation": "Median of per-round metrics, no pooled percentiles",
+  "source_sha256": {
+    "previous_v41_summary": "65cb7a5e1c868a0c2d52efb069d03afa9f79df99d3eb1185bfe21744f72625fe",
+    "1017_summary": "a7a8ab8752996b7a99f554073ee4619d79078e3279a4e3527b3f8efae0a6b75a"
+  },
+  "confounders": [
+    "model weights",
+    "vLLM source commit",
+    "PyTorch and other dependencies",
+    "max_num_batched_tokens 8192 -> 4096",
+    "expert parallel enabled -> not explicitly enabled",
+    "CPU request 64 -> 48",
+    "different synthetic inputs are not a byte-for-byte replay"
+  ],
+  "rows": [
+    {
+      "case": "short-c8",
+      "shape": "1K → 128",
+      "old_output_tok_s": 404.24718226854407,
+      "new_output_tok_s": 569.2398505558817,
+      "throughput_gain_pct": 40.814797362701704,
+      "old_p95_ttft_s": 1.1756080102641135,
+      "new_p95_ttft_s": 0.5685207637725398,
+      "ttft_reduction_pct": 51.64027815319025,
+      "old_p95_tpot_ms": 18.21562979465688,
+      "new_p95_tpot_ms": 12.683061694939013,
+      "old_successful_requests": 48,
+      "new_successful_requests": 48,
+      "requests_per_deployment": 48,
+      "valid_rounds_per_deployment": 3
+    },
+    {
+      "case": "prefill-c8",
+      "shape": "8K → 128",
+      "old_output_tok_s": 97.63078119913274,
+      "new_output_tok_s": 223.55957122136587,
+      "throughput_gain_pct": 128.9847202649975,
+      "old_p95_ttft_s": 9.193929874454625,
+      "new_p95_ttft_s": 3.208894908428192,
+      "ttft_reduction_pct": 65.09767909646428,
+      "old_p95_tpot_ms": 72.57850588607332,
+      "new_p95_tpot_ms": 30.96110154196297,
+      "old_successful_requests": 48,
+      "new_successful_requests": 48,
+      "requests_per_deployment": 48,
+      "valid_rounds_per_deployment": 3
+    },
+    {
+      "case": "decode-c8",
+      "shape": "1K → 512",
+      "old_output_tok_s": 613.7419023748109,
+      "new_output_tok_s": 726.9523375925899,
+      "throughput_gain_pct": 18.445935462402495,
+      "old_p95_ttft_s": 1.1766843994846568,
+      "new_p95_ttft_s": 0.5667612229008228,
+      "ttft_reduction_pct": 51.834049712136675,
+      "old_p95_tpot_ms": 12.596697088854055,
+      "new_p95_tpot_ms": 10.671869369812397,
+      "old_successful_requests": 48,
+      "new_successful_requests": 48,
+      "requests_per_deployment": 48,
+      "valid_rounds_per_deployment": 3
+    },
+    {
+      "case": "long-c8",
+      "shape": "24K → 128",
+      "old_output_tok_s": 35.08600260236773,
+      "new_output_tok_s": 90.92047103701047,
+      "throughput_gain_pct": 159.13602090103828,
+      "old_p95_ttft_s": 26.227974120760337,
+      "new_p95_ttft_s": 9.568093954236247,
+      "ttft_reduction_pct": 63.51950817786276,
+      "old_p95_tpot_ms": 187.41733556994654,
+      "new_p95_tpot_ms": 74.00601983206039,
+      "old_successful_requests": 48,
+      "new_successful_requests": 48,
+      "requests_per_deployment": 48,
+      "valid_rounds_per_deployment": 3
+    }
+  ]
+}
