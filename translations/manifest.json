@@ -1359,6 +1359,12 @@
       "english_sha256": "d75a0cc37dd521a23455a57593a58a06a3389ae5a8b3c32bb509ec0b9854f259",
       "reviewed_at": "2026-10-18T11:02:26.665110+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/digital-employees-enterprise-design.md": {
+      "source_sha256": "2d26cfd485fcbd9bf2b7176e2141a9044400083456be260498b7fd53fa811e89",
+      "english_sha256": "47035621f44c7e5928feff5f7ccf01737dbb13ce0ef119a959012667f6cc5e16",
+      "reviewed_at": "2026-10-18T13:00:08.867725+00:00",
+      "review": "reviewed against source"
     }
   }
 }

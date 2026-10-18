@@ -73,12 +73,22 @@ async function snapshot(page) {
       assert.equal(await input.getAttribute('aria-label'), en ? 'Search articles' : '搜索文章');
       const filter = page.locator('button:has(svg.lucide-list-filter)');
       assert.equal(await filter.getAttribute('aria-label'), en ? 'Filters' : '筛选');
+      const waitForFilter = expected => page.waitForFunction(value => Array.from(document.body.children).some(el =>
+        el.shadowRoot?.querySelector('button:has(svg.lucide-list-filter)')?.getAttribute('aria-expanded') === value), expected);
+      // The theme starts expanded when the index contains authored tags. Do not
+      // assume a collapsed default: normalize first, then verify both transitions.
+      if (await filter.getAttribute('aria-expanded') === 'true') {
+        await filter.click();
+        await waitForFilter('false');
+      }
       await filter.click();
+      await waitForFilter('true');
       await page.locator('.X h3.I').waitFor({ state: 'visible' });
       assert.equal(await page.locator('.X h3.I').textContent(), en ? 'Filters' : '筛选');
       assert.equal(await page.locator('.X h4.R').textContent(), en ? 'Tags' : '标签');
       assert.equal(await filter.getAttribute('aria-expanded'), 'true');
       await filter.click();
+      await waitForFilter('false');
       assert.equal(await filter.getAttribute('aria-expanded'), 'false');
       for (const term of ['KubeVirt', '调度']) {
         await query(page, term);
