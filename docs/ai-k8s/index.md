@@ -132,6 +132,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](practices/deepseek-harness-kubernetes.md)：all-in-one 浏览器桌面、自研 DSH Plugin、Tailscale 远程入口、状态卷、Cilium 探针冲突和安全边界。
 - [RAG 基础设施](rag-agent/rag-infrastructure.md)：采集、切分、Embedding、向量数据库、检索、重排和权限过滤。
 - [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)：威胁模型、Kubernetes Agent Sandbox、gVisor、Kata、微虚机和托管平台决策。
+- [OpenSandbox Kubernetes 实战](rag-agent/opensandbox-kubernetes-practice.md)：官方 Console、文件与命令执行、四并发、访问鉴权、到期回收及真实监控截图。
 - [CubeSandbox Kubernetes 部署条件与生产评估](rag-agent/cubesandbox-kubernetes.md)：60ms 基准口径、KVM/PVM、XFS、eBPF、Helm 与生产上线边界。
 - [CubeSandbox Agent Adapter v0.3 实测](rag-agent/cubesandbox-agent-adapter-v03.md)：OpenClaw、DSH、Hermes 与 Codex 四客户端验收，以及持久租约、异步 Job、PTY、Checkpoint、Redis HA、多租户身份和迁移 Gate。
 - [OpenClaw 作为企业 Agent 平台底座](rag-agent/openclaw-enterprise-agent-platform.md)：可复用能力、企业控制面缺口、安全风险、二次开发边界和推荐架构。

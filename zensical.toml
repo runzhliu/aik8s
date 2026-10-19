@@ -96,6 +96,7 @@ nav = [
       {"数字员工与企业岗位型 Agent" = "ai-k8s/rag-agent/digital-employees-enterprise-design.md"},
       {"从 WorkBuddy 看企业 Agent 技术栈" = "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md"},
       {"Agent Sandbox 选型与分析" = "ai-k8s/rag-agent/agent-sandbox-selection.md"},
+      {"OpenSandbox Kubernetes 实战" = "ai-k8s/rag-agent/opensandbox-kubernetes-practice.md"},
       {"Firecracker 与 CubeSandbox 企业选型" = "ai-k8s/rag-agent/firecracker-cubesandbox-enterprise-selection.md"},
       {"CubeSandbox Kubernetes 部署评估" = "ai-k8s/rag-agent/cubesandbox-kubernetes.md"},
       {"CubeSandbox Kubernetes 部署实战" = "ai-k8s/rag-agent/cubesandbox-kubernetes-practice.md"},

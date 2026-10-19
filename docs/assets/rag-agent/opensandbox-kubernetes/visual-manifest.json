@@ -1,0 +1,35 @@
+{
+  "topic": "OpenSandbox Kubernetes validation",
+  "date": "2026-10-19",
+  "size": [1200, 675],
+  "assets": [
+    {
+      "file": "console-login.png",
+      "type": "real-browser-screenshot",
+      "purpose": "Show the official Console login entry without credentials",
+      "source_commit": "834c839dcf587784c16449aed56c21a5cf71b6d1",
+      "redaction": "No credentials entered; localhost only"
+    },
+    {
+      "file": "console-detail.png",
+      "type": "real-browser-screenshot",
+      "purpose": "Show a Python sandbox actually created through the official Console",
+      "source_commit": "834c839dcf587784c16449aed56c21a5cf71b6d1",
+      "redaction": "Public image reference and generic lab identity; no pixel replacement"
+    },
+    {
+      "file": "grafana-validation.png",
+      "type": "real-grafana-screenshot",
+      "purpose": "Show native controller metrics and kube-state-metrics during validation",
+      "dashboard": "opensandbox-lab",
+      "redaction": "Queries aggregate away private node, instance, and address labels",
+      "notes": "Controller CPU is process CPU; sandbox count includes one retained demo"
+    }
+  ],
+  "checks": [
+    "Original Chinese UI text preserved",
+    "Images inspected visually and verified at 1200x675",
+    "Native metrics checked against query responses",
+    "No internal hostname, node IP, registry, or credential in public assets"
+  ]
+}
