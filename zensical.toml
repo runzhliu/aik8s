@@ -173,6 +173,7 @@ nav = [
       {"GLM-5.2 FP8 H20 AIBrix + vLLM 实测" = "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"},
       {"DeepSeek-V4.1-Flash Day 0：双引擎实测" = "ai-k8s/practices/deepseek-v41-flash-h20-day0.md"},
       {"DeepSeek 1017 Day0：vLLM 与百万 Token 实测" = "ai-k8s/practices/deepseek-v41-flash-1017-day0.md"},
+      {"DeepSeek 1017：PRO 5000 与 H20 线上观察" = "ai-k8s/practices/deepseek-v41-pro5000-h20-observation.md"},
       {"DeepSeek V4 Flash H20 部署与压测" = "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"},
       {"DeepSeek Harness + Chromium 实战" = "ai-k8s/practices/deepseek-harness-kubernetes.md"},
       {"既有集群落地 AIBrix" = "ai-k8s/practices/aibrix-existing-cluster.md"},
