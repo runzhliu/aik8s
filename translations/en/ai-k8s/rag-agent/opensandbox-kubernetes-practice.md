@@ -1,6 +1,6 @@
 ---
 title: "OpenSandbox on Kubernetes: Official Console, Task Execution, and Automatic Cleanup"
-description: Deploy OpenSandbox 1.1.1 on Kubernetes 1.30.4, connect its official Developer Console, and validate file processing, exit codes, access authentication, four concurrent tasks, and expiry cleanup with real screenshots
+description: Deploy OpenSandbox 1.1.1 on Kubernetes 1.30.4, validate its official Console, execution, authentication, concurrency, and cleanup, and compare architecture, isolation, snapshots, and enterprise selection with Tencent CubeSandbox
 status: evolving
 last_reviewed: 2026-10-19
 ---
@@ -214,7 +214,69 @@ Sandbox count comes from kube-state-metrics; controller metrics come from its na
 
 Execution-proxy network requests can still fail after the controller has reconciled a workload. An SDK readiness timeout and zero controller errors can therefore coexist. Following the whole request path is more useful than checking controller health alone.
 
-## 11. What This Experiment Establishes
+## 11. Comparing It with Tencent CubeSandbox
+
+OpenSandbox and Tencent Cloud's open-source CubeSandbox both provide agent execution environments: applications request environments, execute tools, and manage lifecycles through APIs. Selection requires examining how sandboxes run, where state is stored, and which components the operations team must maintain. This comparison covers **OpenSandbox 1.1.1** and **CubeSandbox v0.7.3**. OpenSandbox measurements come from this article's container backend; CubeSandbox measurements come from earlier independent experiments on this site. There was no performance comparison under matched conditions.
+
+### 11.1 Similar Execution Interfaces, Different Runtimes and Scheduling Paths
+
+The OpenSandbox path tested here is `Lifecycle API → BatchSandbox → Pod → execd`: Kubernetes creates a Pod for each test environment. CubeSandbox manages microVMs—small virtual machines—through `CubeAPI → CubeMaster → Cubelet → CubeShim / CubeHypervisor`. CubeMaster selects a compute node, whose runtime creates and restores the VM. [CubeSandbox architecture](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/docs/architecture/overview.md)
+
+CubeSandbox's VMM—Virtual Machine Monitor—derives from **Cloud Hypervisor**. It should not be described as a Firecracker wrapper. [VMM documentation in the repository](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/hypervisor/README.md)
+
+OpenSandbox is also not limited to ordinary containers. Version 1.1.1 integrates with the external **Fast Sandbox** platform, which hosts template-based environments, including Firecracker microVMs, in pre-warmed Fastlets. Fast Sandbox has its own control plane, runtime, and node requirements. Installing its CRDs in this experiment did not install or validate that runtime. Consequently, “OpenSandbox uses containers and CubeSandbox uses VMs” describes the configurations of these two experiments, not the complete scope of either project. [Fast Sandbox integration](https://github.com/opensandbox-group/OpenSandbox/blob/release-1.1.1/docs/architecture/fast-sandbox/index.md)
+
+| Dimension | OpenSandbox | Tencent CubeSandbox |
+| --- | --- | --- |
+| Application interfaces | Its own SDKs and lifecycle, command, file, and endpoint APIs | CubeAPI offers E2B-compatible APIs; integrations must still verify SDK versions and actual methods |
+| Isolation path discussed here | Ordinary containers share the host kernel; alternatives include Fast Sandbox runtime paths | MicroVMs use independent guest kernels managed by a node-local VMM |
+| Kubernetes scheduling unit | The BatchSandbox path tested here creates Pods per sandbox; Fast Sandbox instead uses pre-warmed pools | Kubernetes hosts platform and node components; CubeMaster schedules internal VMs. A sandbox is not an ordinary Pod |
+| Environment preparation | This experiment specifies a container image directly; Fast Sandbox uses prebuilt templates | Images and initialized environments become VM templates, from which instances are cloned and restored |
+| Pause and snapshots | Semantics depend on the backend; Fast Sandbox Firecracker checkpoints can preserve memory, VM state, and rootfs | VM snapshots, rollback, and creation from snapshots; process-memory restoration has been tested separately on this site |
+| State and storage | This experiment uses SQLite and temporary storage; Fast Sandbox additionally uses CRDs and checkpoint artifact storage | The Helm architecture includes MySQL, Redis, and template/snapshot storage; local XFS and shared S3 paths require separate designs |
+| Network and credential governance | This experiment checks API Keys, execution-endpoint security headers, and gateway access; egress policy and Credential Vault were not tested | CubeProxy handles inbound access; CubeVS and CubeEgress provide network policy, outbound proxying, and credential injection. Actual enforcement coverage still needs validation |
+| Official interface | Developer Console login, creation, and details were verified here using a pinned main-branch frontend snapshot | WebUI and CubeOps manage sandboxes, templates, and nodes; this does not imply matching authorization models |
+| Node operations | No node DaemonSet was installed for this container path; a microVM path requires new host checks | Node components involve runtime, networking, storage, and host privileges; Kubernetes deployment documentation for v0.7.3 is still marked Preview |
+
+Interfaces, components, and storage responsibilities in this table come from the pinned project documentation. Component count alone is not a maturity measure. CubeSandbox's Helm installation and removal also involve host configuration that may remain after uninstall; see [node components and chart responsibilities](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/docs/guide/kubernetes/architecture.md) and [deployment limitations for this version](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/docs/guide/kubernetes/index.md).
+
+### 11.2 Long-Task Recovery Requires More Than a Pause Button
+
+Consider a Python program that has computed for half an hour while keeping intermediate variables only in memory. Saving its working directory preserves input and output files but does not automatically recover interpreter objects. Creating another Pod does not restore the original process heap and stack. Continuing that execution state requires application checkpoints or a snapshot that covers process runtime state.
+
+| Existing experiment | What was actually verified | Limits of the result |
+| --- | --- | --- |
+| This OpenSandbox container backend | Commands, files, an HTTP service, authentication, concurrency, and expiry cleanup | Process-memory snapshots were not tested, so the experiment establishes neither support nor lack of support for memory resumption |
+| Earlier CubeSandbox v0.7.3 tests | 3 rounds in each of two environments, 6 / 6 passing overall. After killing the process, rollback restored its memory counter, random identity, and state digest; creation from a snapshot after deleting the source also restored them | Snapshot recovery within each environment was verified; cross-node migration, automatic takeover after node failure, and rollback of external mounted volumes were not |
+
+See [process-memory snapshot and recovery tests](cubesandbox-process-snapshot-recovery.md) for CubeSandbox requests, state records, and acceptance checks. OpenSandbox's Fast Sandbox documentation likewise describes checkpoints containing rootfs, guest memory, vCPU, and device state. That is a separate deployment path to validate; missing coverage in this container experiment does not disprove it. [OpenSandbox checkpoint mechanism](https://github.com/opensandbox-group/OpenSandbox/blob/release-1.1.1/docs/architecture/fast-sandbox/checkpoints.md)
+
+Storage placement also changes recovery capabilities. CubeSandbox's default local XFS path does not automatically provide recovery after losing the source node. Cross-node snapshots require a separately configured shared S3/CubeS3lvol path, compatible targets, and ready snapshot artifacts. **Same-node recovery, cross-node recovery, and automatic task resumption after failure need separate acceptance checks.** [Cross-node snapshot conditions](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/docs/guide/cross-node-snapshot.md)
+
+Neither platform's VM snapshots undo operations already committed to an external database or automatically preserve an agent's conversations and approval state on an office computer. Long-running tasks still need associations between task records, sandbox recovery points, and idempotency keys for external operations.
+
+### 11.3 Start Enterprise Selection with the Workload
+
+The recommendations below are an analysis of the architecture and experiments above, not official product capability scores.
+
+| Requirement | Suggested starting point | Essential acceptance checks |
+| --- | --- | --- |
+| Existing Kubernetes; expose controlled Python, Shell, and file processing as remote tools first | Use this OpenSandbox container path to complete one real task flow | Tenant permissions, resource limits, command cancellation, tail latency, and cleanup; untrusted code requires a separate isolation-backend assessment |
+| Independent guest kernels and preservation of stateful program execution | Shortlist CubeSandbox and the OpenSandbox Fast Sandbox microVM path together | Memory recovery for the same task, storage durability, network reconnection, and target-node compatibility |
+| Existing E2B clients moving to self-hosted execution | Verify CubeAPI compatibility first | The file, command, timeout, pause, and resume methods actually used, beyond the create API alone |
+| One application interface with a choice of execution backends | Evaluate OpenSandbox's backend integration model | Snapshot semantics, limitations, and errors across backends; a common API does not mean identical capabilities |
+
+For operations teams, the OpenSandbox container experiment here made relatively few changes and offers an inexpensive starting point. Independent-kernel isolation and VM-memory recovery require node runtimes, template production, snapshot storage, and upgrade recovery as well. CubeSandbox organizes these into a platform, while its v0.7.3 Kubernetes Preview limitations remain part of the assessment. Both need enterprise identity, quotas, auditing, and outbound permissions. A successful lab deployment does not replace those production checks.
+
+### 11.4 Comparing Startup Speed and Cost Fairly Next Time
+
+The several-second SDK creation-to-executable times here cannot be compared directly with CubeSandbox's advertised millisecond VM startup. Authentication, template preparation, scheduling, proxying, and application readiness may be included or omitted differently, and the isolation mechanisms differ.
+
+A useful comparison should match hardware, dependencies, CPU and memory specifications, and network paths. If comparing microVMs, use microVM backends on both sides. Measure uncached templates, cached templates, available warm capacity, and capacity exhaustion separately. Start the clock at the client request and stop when the first command returns a correct result. Report P50, P95, timeouts, and the original success denominator.
+
+Cost must include control planes, guest kernels and VMMs, idle warm capacity, node caches, templates, and snapshot storage, together with measured resource release after pause. Existing records help prioritize the next validation, but do not establish which platform is faster or less expensive overall. See [Firecracker and CubeSandbox enterprise selection](firecracker-cubesandbox-enterprise-selection.md) for a deeper discussion of responsibilities at the underlying layers.
+
+## 12. What This Experiment Establishes
 
 OpenSandbox provides usable interfaces for requesting environments, running commands, exchanging files, exposing services, and reclaiming resources. Its official Console also makes environment creation and state visible. These capabilities fit an agent's tool-execution layer.
 
@@ -229,6 +291,7 @@ For an actual agent integration, begin by moving one independently verifiable ta
 - [OpenSandbox 1.1.1](https://github.com/opensandbox-group/OpenSandbox/releases/tag/release-1.1.1)
 - [Deployment documentation for the tested version](https://github.com/opensandbox-group/OpenSandbox/blob/release-1.1.1/docs/deployment/index.md)
 - [Pinned official Console snapshot](https://github.com/opensandbox-group/OpenSandbox/tree/834c839dcf587784c16449aed56c21a5cf71b6d1/console)
+- [CubeSandbox v0.7.3 architecture](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.3/docs/architecture/overview.md), [process-memory recovery tests](cubesandbox-process-snapshot-recovery.md)
 - [Sanitized reproduction programs](https://github.com/runzhliu/aik8s/tree/main/examples/opensandbox-kubernetes)
 - [Measurements and metric samples](../../assets/rag-agent/opensandbox-kubernetes/evidence.json)
 - [Agent Sandbox selection](agent-sandbox-selection.md), [Agent long-task recovery](agent-long-running-durable-execution.md)

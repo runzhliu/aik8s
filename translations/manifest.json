@@ -1405,9 +1405,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/opensandbox-kubernetes-practice.md": {
-      "source_sha256": "e865e948871ef0f12799ad14d5bda273507d92c9c163d3f180489d47df66af5c",
-      "english_sha256": "ed57f3c7e2d7973ccf15c70a1c35b28865ab7d1d741937cf3a98142d54b652b0",
-      "reviewed_at": "2026-10-19T08:56:41.395346+00:00",
+      "source_sha256": "115f826c8ba22e83d0894bc4f0e2ae065dd82647a6e6fc1ca57955ad2fdcc56c",
+      "english_sha256": "dce7516a80b267d10dea5fb8d2571af282a1036af0f67f5548e8173befc7408a",
+      "reviewed_at": "2026-10-19T10:06:21.303441+00:00",
       "review": "reviewed against source"
     }
   }
