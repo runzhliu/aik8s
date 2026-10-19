@@ -650,5 +650,27 @@
       "稳定 Step -32.08% · 吞吐 +47.23%": "Stable step -32.08% · throughput +47.23%",
       "拓扑图只展示通信域关系；每个节点实际使用 8 张 GPU。": "The topology diagram only shows communication domain relationships; each node actually uses 8 GPUs."
     }
+  },
+  "assets/rag-agent/deepseek-search-fetch/budget.html": {
+    "source_sha256": "a520c705264e19cdff105f3b3c0d31aaf506277471cb1a40a1fec1a446ec2ddc",
+    "strings": {
+      "DeepSeek 联网任务预算": "DeepSeek web-task budget",
+      "预算推算，不调用 API，也不发送输入数据。": "Budget estimate. No API calls; no input data is sent.",
+      "任务总数": "Number of tasks",
+      "每任务成功 Search 次数": "Successful Search calls / task",
+      "每任务成功 Fetch 次数": "Successful Fetch calls / task",
+      "每任务其他费用（元）": "Other cost / task (CNY)",
+      "任务验收通过率（%）": "Task verification pass rate (%)",
+      "请填写有效的非负数，任务数与通过率须大于零。": "Enter valid non-negative values; task count and pass rate must be positive.",
+      "Search 费用（元）": "Search cost (CNY)",
+      "Fetch 费用（元）": "Fetch cost (CNY)",
+      "其他费用（元）": "Other cost (CNY)",
+      "总费用（元）": "Total cost (CNY)",
+      "通过验收的任务数": "Tasks passing verification",
+      "每个通过任务费用（元）": "Cost / verified task (CNY)",
+      "Search 与 Fetch 各按 0.005 元／成功请求计算。调用次数可以填平均值；模型与执行费用请自行估算。": "Search and Fetch each cost CNY 0.005 / successful request. Call counts may be averages; estimate model and execution costs separately.",
+      "未扣免费额度或合同折扣；结果是预算，不是账单。价格核对：2026-10-19。": "Before free allowances or contract discounts. A budget, not an invoice. Prices checked: 2026-10-19.",
+      "核对官方价格": "Check official prices"
+    }
   }
 }

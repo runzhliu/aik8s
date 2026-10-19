@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DeepSeek 联网任务预算</title>
+<style>
+:root{color-scheme:light;font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#24324c;background:#f6f8fd}
+*{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:1020px;margin:auto}h1{font-size:25px;margin:0 0 8px}p{margin:8px 0;color:#566781}.lead{font-size:14px}
+.inputs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:22px 0}.field{display:flex;flex-direction:column;gap:7px}label{font-size:14px;font-weight:650;min-height:3.1em}input{min-width:0;width:100%;font:inherit;padding:10px 12px;border:1px solid #c6d1e4;border-radius:8px;background:white;color:#24324c}input:focus{outline:3px solid #ccd8ff;border-color:#3158df}
+.outputs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{background:white;border:1px solid #d9e1ef;border-radius:12px;padding:16px}.card span{display:block;font-size:14px;color:#566781}.card output{display:block;font-size:27px;line-height:1.25;font-weight:720;margin-top:10px;font-variant-numeric:tabular-nums;color:#3158df;overflow-wrap:anywhere}.card.total{background:#eaf0ff;border-color:#b7c9fa}
+.note{font-size:13px;margin-top:16px}.error{color:#a83920;font-size:14px}a{color:#3158df}@media(max-width:650px){body{padding:16px}.inputs,.outputs{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:12px}.card output{font-size:23px}h1{font-size:22px}}
+@media(max-width:320px){.inputs{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<h1>DeepSeek 联网任务预算</h1>
+<p class="lead">预算推算，不调用 API，也不发送输入数据。</p>
+<form id="budget" novalidate>
+<div class="inputs">
+<div class="field"><label for="tasks">任务总数</label><input id="tasks" type="number" value="10000" min="1" max="1000000000" step="1" required></div>
+<div class="field"><label for="search">每任务成功 Search 次数</label><input id="search" type="number" value="2" min="0" max="1000000" step="0.1" required></div>
+<div class="field"><label for="fetch">每任务成功 Fetch 次数</label><input id="fetch" type="number" value="6" min="0" max="1000000" step="0.1" required></div>
+<div class="field"><label for="other">每任务其他费用（元）</label><input id="other" type="number" value="0.14" min="0" max="1000000" step="0.001" required></div>
+<div class="field"><label for="verified">任务验收通过率（%）</label><input id="verified" type="number" value="90" min="0.1" max="100" step="0.1" required></div>
+</div>
+<p id="error" class="error" role="alert" hidden>请填写有效的非负数，任务数与通过率须大于零。</p>
+<div class="outputs" aria-live="polite">
+<div class="card"><span>Search 费用（元）</span><output id="searchCost">100.00</output></div>
+<div class="card"><span>Fetch 费用（元）</span><output id="fetchCost">300.00</output></div>
+<div class="card"><span>其他费用（元）</span><output id="otherCost">1,400.00</output></div>
+<div class="card total"><span>总费用（元）</span><output id="totalCost">1,800.00</output></div>
+<div class="card"><span>通过验收的任务数</span><output id="verifiedTasks">9,000</output></div>
+<div class="card total"><span>每个通过任务费用（元）</span><output id="verifiedCost">0.2000</output></div>
+</div>
+</form>
+<p class="note">Search 与 Fetch 各按 0.005 元／成功请求计算。调用次数可以填平均值；模型与执行费用请自行估算。</p>
+<p class="note">未扣免费额度或合同折扣；结果是预算，不是账单。价格核对：2026-10-19。</p>
+<p class="note"><a href="https://api-docs.deepseek.com/zh-cn/quick_start/pricing/" target="_blank" rel="noopener noreferrer">核对官方价格</a></p>
+</main>
+<script>
+(()=>{
+ const ids=['tasks','search','fetch','other','verified'];
+ const fields=ids.map(id=>document.getElementById(id));
+ const outputs=['searchCost','fetchCost','otherCost','totalCost','verifiedTasks','verifiedCost'];
+ const format=(value,digits)=>new Intl.NumberFormat(document.documentElement.lang==='en'?'en-US':'zh-CN',{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(value);
+ function update(){
+  const valid=fields.every(field=>field.value!==''&&field.validity.valid&&Number.isFinite(field.valueAsNumber));
+  document.getElementById('error').hidden=valid;
+  if(!valid){outputs.forEach(id=>document.getElementById(id).textContent='—');return;}
+  const [n,s,f,o,q]=fields.map(field=>field.valueAsNumber);
+  const search=n*s*0.005,fetch=n*f*0.005,other=n*o,total=search+fetch+other,verified=n*q/100;
+  const values=[search,fetch,other,total,verified,total/verified];
+  outputs.forEach((id,i)=>document.getElementById(id).textContent=format(values[i],i===4?2:i===5?4:2));
+ }
+ document.getElementById('budget').addEventListener('input',update);
+ document.getElementById('budget').addEventListener('submit',event=>event.preventDefault());
+ update();
+})();
+</script>
+</body></html>

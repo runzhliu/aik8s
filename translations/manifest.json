@@ -214,11 +214,12 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "9f01f06995439c607dd5dffec67b8f5caa9928906a3e04002e179f2c8efc8f50",
-      "english_sha256": "d1fa1e6cb165182b61492fb47b49447d1a694b2126540727931df2fd9133a72f",
+      "source_sha256": "b55796e1c9f0599ef84565937e0a21a84b3934d3b793a97bb3f6d3e44c837a79",
+      "english_sha256": "76ab9eef377c4a208626048417df586b13f5ea66369d2fa4995b606ef236b933",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
-      "review": "pending editorial review"
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-19T03:21:37.377130+00:00"
     },
     "ai-k8s/practices/agent-sandbox-red-team.md": {
       "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
@@ -1389,6 +1390,12 @@
       "source_sha256": "ed90eb40f141a63fb9033a4e631e46011cf503c4a54ddad6e96cf9cb2e855fe1",
       "english_sha256": "63d740136a1efa80a44dddecdb72de2abfd4087ffa0c088a6f1d9681422bd43c",
       "reviewed_at": "2026-10-19T02:56:18.755045+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/deepseek-search-fetch-agent-cost.md": {
+      "source_sha256": "ffb46cc2942de4b9135fa121d9ee87999376e6836fe16ddb665449ac16423152",
+      "english_sha256": "2c34ab3c78d686d80c3a10953b7ce0fee564218e7c5be6ad8ad4622ccd035b59",
+      "reviewed_at": "2026-10-19T03:27:40.591978+00:00",
       "review": "reviewed against source"
     }
   }
