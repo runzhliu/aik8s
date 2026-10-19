@@ -1,0 +1,8 @@
+{
+  "layout_reference": "articles/wechat/assets/minimax-m3-h20/brand-cover/",
+  "brand_accent": "#76B900",
+  "palette_scope": "NVIDIA green with darker editorial text; no official logo reproduction",
+  "main": "900x383",
+  "sharing": "900x900",
+  "source": "scripts/generate_nvcre_article_assets.py"
+}

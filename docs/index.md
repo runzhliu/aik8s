@@ -99,6 +99,7 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 - [万节点 Kubernetes 集群优化实战](ai-k8s/practices/large-scale-kubernetes-optimization.md)
 - [Kube-apiserver 负载均衡实战](ai-k8s/practices/kube-apiserver-load-balancing.md)
 - [GPU 节点软件栈](ai-k8s/cluster/gpu-node-stack.md)
+- [NVIDIA NVCRE：GPU 集群验收原理与生产接入评估](ai-k8s/practices/nvidia-cluster-readiness-engine.md)
 - [多厂商异构加速器](ai-k8s/accelerators/heterogeneous-accelerators.md)
 - [Device Plugin、CDI 与 DRA](ai-k8s/accelerators/device-management.md)
 

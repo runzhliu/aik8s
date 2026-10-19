@@ -48,6 +48,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 
 ## Platform and Scheduling
 
+- [NVIDIA NVCRE: GPU Cluster Readiness and Production Integration](nvidia-cluster-readiness-engine.md)
 - [Large-Scale Kubernetes Monitoring Solutions: Prometheus, VictoriaMetrics, Thanos, and Mimir](large-scale-kubernetes-monitoring-tsdb.md)
 - [Large-Scale Kubernetes Scheduler Optimization: Queues, Plugins, Search, and Parallel Architecture](large-scale-kubernetes-scheduler-optimization.md)
 - [OpenTelemetry × Grafana: Observing Kubernetes Control Plane and Cluster State](opentelemetry-kubernetes-components-grafana.md)

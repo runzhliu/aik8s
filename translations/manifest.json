@@ -23,11 +23,12 @@
       "review": "pending editorial review"
     },
     "index.md": {
-      "source_sha256": "2d39846a3809f9c6e66311a1d86cfe65e017ea697322292e9b8677ecee7a8f40",
-      "english_sha256": "13a3d4d2271d5c5838f0817315958015ecd7dea55d8c1ac119bca0f3361114d7",
+      "source_sha256": "f7a9e58cbb8975cdf63a8514575f231a72ec471a0f2425c0cca07ebc17095524",
+      "english_sha256": "84d8cdf59da4b5b8c6414e49b7c9f767a1214e5aee2c03d7bb07862d51358e6b",
       "translated_at": "2026-10-16T08:48:54.703821+00:00",
       "method": "model-assisted translation; structural checks passed",
-      "review": "pending editorial review"
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-19T00:56:25.294963+00:00"
     },
     "ai-k8s/rag-agent/omarchy-agent-os-overview.md": {
       "source_sha256": "0496759b611c1d132db2ecf032c2bccb240293b4632e4e4b09b8e1eddc56e312",
@@ -94,12 +95,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/practices/index.md": {
-      "source_sha256": "2bfc9b0a01aac3cd75c1402f53c5482822f7825d14e73ed6dfb51bf45d162e48",
-      "english_sha256": "985f4f8d403e9eed3c20997fffef24d4a0ba02400c0fab59d3d7e731395f4047",
+      "source_sha256": "ca45128a72c18acc7d75ede6ae58126c74156793363dce16ba8ca330252ec946",
+      "english_sha256": "d37c00e7c51d1a31c97680f03fc77bc7100e41f37a799fb7d770c44dfce8661b",
       "translated_at": "2026-10-16T08:50:57.637630+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-18T05:06:18.546266+00:00"
+      "reviewed_at": "2026-10-19T00:56:25.195646+00:00"
     },
     "assets/practices/gpu-notebook-platform-evolution/README.md": {
       "source_sha256": "3cdac55cfe726d6d73b60ba5e93b682cb2047e8c27980cc8fd320c0b0da4a8bb",
@@ -1370,6 +1371,18 @@
       "source_sha256": "fd1a294860f4deff335a53be17036800b84ec8ed12c9174bed6e2f9ce0772407",
       "english_sha256": "f543ef6b3784ffdd3395947d01a2d4f937f7874aa59671244febc79f6fd7ccb4",
       "reviewed_at": "2026-10-18T14:21:15.831263+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/nvidia-cluster-readiness-engine.md": {
+      "source_sha256": "aaf66f900fa24ee34e1bc04a36492c8f33f7f466f6aae8f5c7f40bbd9b50e5bb",
+      "english_sha256": "4b223f51e6f4ebea8927a3d761f348d980cb830c01021509edd30322586da907",
+      "reviewed_at": "2026-10-19T00:56:24.969805+00:00",
+      "review": "reviewed against source"
+    },
+    "assets/nvcre/README.md": {
+      "source_sha256": "9c6ba5445f2da6b93fb9b1692d241337447f8c8c64b77236c7eb8b76da2a7525",
+      "english_sha256": "86e55ae93b6e3a820d3f9a992f8d0835e4d83349c646c5abf5b18273edb7917d",
+      "reviewed_at": "2026-10-19T00:56:25.072636+00:00",
       "review": "reviewed against source"
     }
   }

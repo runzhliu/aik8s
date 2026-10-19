@@ -1,0 +1,42 @@
+[
+  {
+    "source": "nccl-util.jpg",
+    "dest": "gpu-nccl-observation.png",
+    "title": "通信测试：GPU 利用率不能代替带宽",
+    "subtitle": "2 × 8 H20-3e · 八卡平均 · Exporter 30 s / Scrape 5 s · 原始面板截图",
+    "note": "三轮通信测量；Node A / Node B 为脱敏后的节点名称。",
+    "source_sha256": "91fc5993c1cc1c086dda1c99039797b3e1bb263326db903347b598307834f47c"
+  },
+  {
+    "source": "nccl-power.jpg",
+    "dest": "gpu-nccl-power.png",
+    "title": "通信测试：单卡功耗与任务阶段",
+    "subtitle": "2 × 8 H20-3e · 最高卡功耗 · Exporter 30 s / Scrape 5 s · 原始面板截图",
+    "note": "固定通信实验时间窗；曲线反映设备状态，带宽成绩来自 NCCL 原始日志。",
+    "source_sha256": "61e2b43b367e1f7c0a0bf07482195789ce381044995d0635fe18067ceca4e2f0"
+  },
+  {
+    "source": "dcgm-memory.jpg",
+    "dest": "gpu-dcgm-observation.png",
+    "title": "DCGM 诊断：观察实际设备活动",
+    "subtitle": "2 × 8 H20-3e · 最高卡显存 · Exporter 30 s / Scrape 5 s · 原始面板截图",
+    "note": "Level 1 / Level 2 独立执行；完成状态需要同时读取诊断结果。",
+    "source_sha256": "0351c4326c31bf6f8cc7a2cbdd2c25b31a0251bf96ccc70222196d4eecd5798c"
+  },
+  {
+    "source": "dcgm-temperature.jpg",
+    "dest": "gpu-dcgm-temperature.png",
+    "title": "DCGM 诊断：温度变化与执行时间",
+    "subtitle": "2 × 8 H20-3e · 最高卡温度 · Exporter 30 s / Scrape 5 s · 原始面板截图",
+    "note": "固定诊断实验时间窗；曲线只保留设备数据与匿名节点标识。",
+    "source_sha256": "cf4c8dfb6996400700f92faa609452638e81f1770aae4f7da3a50e52e0e35dd4"
+  },
+  {
+    "source": "dcgm-status.jpg",
+    "dest": "nccl-results-dashboard.png",
+    "title": "诊断结果：首次与修复轮分别记录",
+    "subtitle": "NVIDIA DCGM 4.5.3 · 每节点 8 GPU · 真实结果面板截图",
+    "note": "Attempt 1 保留原始失败；Attempt 2 表示补齐插件后的独立诊断。",
+    "source_sha256": "a45bb59271baba0e6e36c60fc6d729adc567ad982b934e416dbb0d747f737069"
+  }
+]

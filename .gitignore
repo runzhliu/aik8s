@@ -1,5 +1,14 @@
 .DS_Store
 .deploy-secrets/
+# Local credentials and client configuration; keep public examples elsewhere.
+/.env
+/.env.local
+/.env.*.local
+/.kube/
+/.ssh/
+/kubeconfig
+/kubeconfig.*
+/.netrc
 .venv/
 .wechat-output/
 .social-drafts/

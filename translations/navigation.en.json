@@ -117,6 +117,7 @@
   "实战、排障与选型": "Practice, Troubleshooting, and Selection",
   "GPU Pending 排障": "GPU Pending Troubleshooting",
   "GPU 利用率排障": "GPU Utilization Troubleshooting",
+  "NVIDIA NVCRE：GPU 集群验收": "NVIDIA NVCRE: GPU Cluster Readiness",
   "推理引擎同机实测": "Inference Engine Same-Machine Benchmark",
   "Kubernetes 1.37 的 AI/LLM 价值": "Kubernetes 1.37's AI/LLM Value",
   "DeepSeek-V4-Flash-Vision-Exp Day 0": "DeepSeek-V4-Flash-Vision-Exp Day 0",

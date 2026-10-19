@@ -99,6 +99,7 @@ Direct entry points to official documentation organized by technical layer. Proj
 - [10k-Node Kubernetes Cluster Optimization in Practice](ai-k8s/practices/large-scale-kubernetes-optimization.md)
 - [Kube-apiserver Load Balancing in Practice](ai-k8s/practices/kube-apiserver-load-balancing.md)
 - [GPU Node Software Stack](ai-k8s/cluster/gpu-node-stack.md)
+- [NVIDIA NVCRE: GPU Cluster Readiness and Production Integration](ai-k8s/practices/nvidia-cluster-readiness-engine.md)
 - [Multi-vendor Heterogeneous Accelerators](ai-k8s/accelerators/heterogeneous-accelerators.md)
 - [Device Plugin, CDI & DRA](ai-k8s/accelerators/device-management.md)
 

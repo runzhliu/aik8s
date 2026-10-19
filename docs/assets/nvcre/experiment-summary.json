@@ -1,0 +1,352 @@
+{
+  "hardware": "2 nodes x 8 NVIDIA H20-3e",
+  "software": {
+    "cuda": "12.9",
+    "nccl": "2.27.3",
+    "nccl_tests": "2.17.9",
+    "driver": "580.126.20",
+    "dcgm": "4.5.3"
+  },
+  "diagnostic_plugin_cuda_major": 13,
+  "scope": "Standalone Kubernetes Jobs; NVCRE/Trainer/JobSet not installed",
+  "method": {
+    "data_type": "float",
+    "minimum_bytes": 4096,
+    "maximum_bytes": 1073741824,
+    "step_factor": 4,
+    "warmup": 10,
+    "iterations": 50,
+    "repeats": 3,
+    "reported_buffer_mode": "out-of-place",
+    "cpu_binding": "none",
+    "nccl_algorithm": "automatic",
+    "nccl_protocol": "automatic",
+    "one_rank_per_gpu": true
+  },
+  "original_attempt_count": 30,
+  "execution_attempts": 39,
+  "successful_measurement_runs": 30,
+  "infrastructure_failures_preserved": 9,
+  "dcgm": [
+    {
+      "node_alias": "Node A",
+      "suite": "level1",
+      "attempt": 1,
+      "status": "FAIL",
+      "returncode": 226,
+      "duration_s": 4,
+      "start_epoch": 1791951145,
+      "end_epoch": 1791951149,
+      "raw_sha256": "a6da254604fae45b622a53e7798182ab6354e4df222f99fa0c21d6c54883cf19",
+      "status_field_counts": {},
+      "status_field_counts_note": "Counts all JSON status fields, including test summary; not a test count."
+    },
+    {
+      "node_alias": "Node A",
+      "suite": "level2",
+      "attempt": 1,
+      "status": "FAIL",
+      "returncode": 226,
+      "duration_s": 3,
+      "start_epoch": 1791951149,
+      "end_epoch": 1791951152,
+      "raw_sha256": "a6da254604fae45b622a53e7798182ab6354e4df222f99fa0c21d6c54883cf19",
+      "status_field_counts": {},
+      "status_field_counts_note": "Counts all JSON status fields, including test summary; not a test count."
+    },
+    {
+      "node_alias": "Node A",
+      "suite": "level1",
+      "attempt": 2,
+      "status": "PASS",
+      "returncode": 0,
+      "duration_s": 3,
+      "start_epoch": 1791951855,
+      "end_epoch": 1791951858,
+      "raw_sha256": "7390cd11158db80ccc8189be8c3cb9d315ec95d610d9fd4d25738cc77800ddf4",
+      "status_field_counts": {
+        "Pass": 9
+      },
+      "status_field_counts_note": "Counts all JSON status fields, including test summary; not a test count.",
+      "software_gpu_pass": 8,
+      "software_gpu_total": 8
+    },
+    {
+      "node_alias": "Node A",
+      "suite": "level2",
+      "attempt": 2,
+      "status": "TIMEOUT",
+      "returncode": 137,
+      "duration_s": 730,
+      "start_epoch": 1791951858,
+      "end_epoch": 1791952588,
+      "raw_sha256": "0089bb674406997eb0e6850cf01c46d23d8689610788516cebf2a31b9276d691",
+      "status_field_counts": {},
+      "status_field_counts_note": "Counts all JSON status fields, including test summary; not a test count."
+    },
+    {
+      "node_alias": "Node B",
+      "suite": "level1",
+      "attempt": 1,
+      "status": "FAIL",
+      "returncode": 226,
+      "duration_s": 4,
+      "start_epoch": 1791951144,
+      "end_epoch": 1791951148,
+      "raw_sha256": "a6da254604fae45b622a53e7798182ab6354e4df222f99fa0c21d6c54883cf19",
+      "status_field_counts": {},
+      "status_field_counts_note": "Counts all JSON status fields, including test summary; not a test count."
+    },
+    {
+      "node_alias": "Node B",
+      "suite": "level2",
+      "attempt": 1,
+      "status": "FAIL",
+      "returncode": 226,
+      "duration_s": 3,
+      "start_epoch": 1791951148,
+      "end_epoch": 1791951151,
+      "raw_sha256": "a6da254604fae45b622a53e7798182ab6354e4df222f99fa0c21d6c54883cf19",
+      "status_field_counts": {},
+      "status_field_counts_note": "Counts all JSON status fields, including test summary; not a test count."
+    },
+    {
+      "node_alias": "Node B",
+      "suite": "level1",
+      "attempt": 2,
+      "status": "PASS",
+      "returncode": 0,
+      "duration_s": 5,
+      "start_epoch": 1791951854,
+      "end_epoch": 1791951859,
+      "raw_sha256": "197b814682ba9cc41b7c36b3d1a29d935fd3aaf7b2052fc9530e2776ed171266",
+      "status_field_counts": {
+        "Pass": 9
+      },
+      "status_field_counts_note": "Counts all JSON status fields, including test summary; not a test count.",
+      "software_gpu_pass": 8,
+      "software_gpu_total": 8
+    },
+    {
+      "node_alias": "Node B",
+      "suite": "level2",
+      "attempt": 2,
+      "status": "TIMEOUT",
+      "returncode": 137,
+      "duration_s": 730,
+      "start_epoch": 1791951859,
+      "end_epoch": 1791952589,
+      "raw_sha256": "0089bb674406997eb0e6850cf01c46d23d8689610788516cebf2a31b9276d691",
+      "status_field_counts": {},
+      "status_field_counts_note": "Counts all JSON status fields, including test summary; not a test count."
+    }
+  ],
+  "observation": {
+    "util_avg_node_peak": {
+      "Node B": 100.0,
+      "Node A": 100.0
+    },
+    "memory_highest_card_peak_mib": {
+      "Node B": 6638.0,
+      "Node A": 6638.0
+    },
+    "power_highest_card_peak_w": {
+      "Node B": 161.064,
+      "Node A": 254.699
+    },
+    "temperature_highest_card_peak_c": {
+      "Node B": 49.0,
+      "Node A": 46.0
+    }
+  },
+  "device_refresh_seconds": 30,
+  "prometheus_scrape_seconds": 5,
+  "one_gib": [
+    {
+      "scenario": "dual-roce",
+      "collective": "all_gather",
+      "repeats": 3,
+      "busbw_gbs_median": 172.73,
+      "latency_us_median": 5827.92,
+      "busbw_gbs_rounds": [
+        172.73,
+        149.15,
+        187.97
+      ],
+      "latency_us_rounds": [
+        5827.92,
+        6749.15,
+        5355.29
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "dual-roce",
+      "collective": "all_reduce",
+      "repeats": 3,
+      "busbw_gbs_median": 427.58,
+      "latency_us_median": 4708.46,
+      "busbw_gbs_rounds": [
+        363.76,
+        427.58,
+        452.28
+      ],
+      "latency_us_rounds": [
+        5534.66,
+        4708.46,
+        4451.34
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "dual-roce",
+      "collective": "alltoall",
+      "repeats": 3,
+      "busbw_gbs_median": 37.87,
+      "latency_us_median": 26583.5,
+      "busbw_gbs_rounds": [
+        42.26,
+        37.69,
+        37.87
+      ],
+      "latency_us_rounds": [
+        23819.5,
+        26707.8,
+        26583.5
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "dual-tcp",
+      "collective": "all_reduce",
+      "repeats": 3,
+      "busbw_gbs_median": 2.25,
+      "latency_us_median": 894751.0,
+      "busbw_gbs_rounds": [
+        2.25,
+        2.29,
+        2.14
+      ],
+      "latency_us_rounds": [
+        894751.0,
+        877336.0,
+        941683.0
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "single-a",
+      "collective": "all_gather",
+      "repeats": 3,
+      "busbw_gbs_median": 341.38,
+      "latency_us_median": 2752.1,
+      "busbw_gbs_rounds": [
+        339.9,
+        341.85,
+        341.38
+      ],
+      "latency_us_rounds": [
+        2764.1,
+        2748.36,
+        2752.1
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "single-a",
+      "collective": "all_reduce",
+      "repeats": 3,
+      "busbw_gbs_median": 465.56,
+      "latency_us_median": 4036.09,
+      "busbw_gbs_rounds": [
+        465.56,
+        465.02,
+        466.02
+      ],
+      "latency_us_rounds": [
+        4036.09,
+        4040.76,
+        4032.13
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "single-a",
+      "collective": "alltoall",
+      "repeats": 3,
+      "busbw_gbs_median": 293.55,
+      "latency_us_median": 3200.52,
+      "busbw_gbs_rounds": [
+        293.55,
+        293.76,
+        293.55
+      ],
+      "latency_us_rounds": [
+        3200.52,
+        3198.29,
+        3200.61
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "single-b",
+      "collective": "all_gather",
+      "repeats": 3,
+      "busbw_gbs_median": 341.85,
+      "latency_us_median": 2748.32,
+      "busbw_gbs_rounds": [
+        342.42,
+        341.85,
+        341.62
+      ],
+      "latency_us_rounds": [
+        2743.82,
+        2748.32,
+        2750.19
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "single-b",
+      "collective": "all_reduce",
+      "repeats": 3,
+      "busbw_gbs_median": 465.73,
+      "latency_us_median": 4034.67,
+      "busbw_gbs_rounds": [
+        465.73,
+        465.63,
+        465.77
+      ],
+      "latency_us_rounds": [
+        4034.67,
+        4035.5,
+        4034.32
+      ],
+      "wrong": 0
+    },
+    {
+      "scenario": "single-b",
+      "collective": "alltoall",
+      "repeats": 3,
+      "busbw_gbs_median": 288.66,
+      "latency_us_median": 3254.74,
+      "busbw_gbs_rounds": [
+        288.66,
+        288.67,
+        288.45
+      ],
+      "latency_us_rounds": [
+        3254.74,
+        3254.66,
+        3257.17
+      ],
+      "wrong": 0
+    }
+  ],
+  "time_windows": {
+    "nccl_start_epoch": 1791950177.100834,
+    "nccl_end_epoch": 1791951137.1934566,
+    "dcgm_repair_start_epoch": 1791951854,
+    "dcgm_repair_end_epoch": 1791952589
+  }
+}

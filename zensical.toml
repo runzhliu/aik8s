@@ -143,6 +143,7 @@ nav = [
       {"工程案例总览" = "cases/index.md"},
       {"GPU Pending 排障" = "ai-k8s/practices/gpu-pending.md"},
       {"GPU 利用率排障" = "ai-k8s/practices/low-gpu-utilization.md"},
+      {"NVIDIA NVCRE：GPU 集群验收" = "ai-k8s/practices/nvidia-cluster-readiness-engine.md"},
       {"推理引擎同机实测" = "ai-k8s/practices/inference-engine-benchmark.md"},
       {"Kubernetes 1.37 的 AI/LLM 价值" = "ai-k8s/practices/kubernetes-137-ai-workloads.md"},
       {"DeepSeek-V4-Flash-Vision-Exp Day 0" = "ai-k8s/practices/deepseek-v4-flash-vision-exp-day0-h20.md"},
