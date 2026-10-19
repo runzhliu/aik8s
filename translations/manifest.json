@@ -1362,9 +1362,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/digital-employees-enterprise-design.md": {
-      "source_sha256": "2d26cfd485fcbd9bf2b7176e2141a9044400083456be260498b7fd53fa811e89",
-      "english_sha256": "47035621f44c7e5928feff5f7ccf01737dbb13ce0ef119a959012667f6cc5e16",
-      "reviewed_at": "2026-10-18T13:00:08.867725+00:00",
+      "source_sha256": "7222da57bed85ef2eec83989236c1d0f561b18d738fb287637deff6449b59826",
+      "english_sha256": "0fe87daa3e389424b3fb522529edb9d19bb583aa58422cf772ba9056b53d924b",
+      "reviewed_at": "2026-10-19T01:15:12.435571+00:00",
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/firecracker-cubesandbox-enterprise-selection.md": {
