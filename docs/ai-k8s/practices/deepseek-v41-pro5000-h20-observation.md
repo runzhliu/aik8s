@@ -39,6 +39,38 @@ PRO 组有 1 个副本，H20 组有 4 个副本，**每副本均分配 8 张 GPU
 
 DCGM 是 NVIDIA Data Center GPU Manager，表中的容量是监控字段之和，不是产品标称容量，也不等同于全部物理显存。镜像标签不能证明包版本或代码提交相同：这次没有进入生产容器读取实际运行时包，因此保留两个构建之间的实现差异。
 
+### 1.1 硬件差异：72GB GDDR7 与 141GB HBM3e
+
+两组虽然都分配八张卡，硬件基础却不一样。PRO 5000 是 Blackwell 架构的专业工作站 GPU；H20-3e 属于 Hopper 数据中心 GPU。架构更新，不等于在所有大模型服务中都更快。
+
+| 硬件维度 | RTX PRO 5000 72GB Blackwell | H20-3e 141GB |
+| --- | --- | --- |
+| 架构与产品形态 | Blackwell，PCIe 专业显卡 | Hopper，SXM5 / HGX 服务器平台 |
+| 单卡标称显存 | 72 GB GDDR7，支持 ECC 纠错 | 141 GB HBM3e |
+| 八卡标称容量之和 | 576 GB | 1,128 GB，约为前者的 1.96 倍 |
+| 标称显存带宽 | 1,344 GB/s，即 1.344 TB/s | 所引官方材料未列出这个 141GB SKU 的带宽，本文不填推测值 |
+| 主机接入与多卡通信 | PCIe 5.0 ×16；本轮未采集本机 GPU 间的实际通信路径 | SXM5；此前同型号 H20 验机记录为 GPU 两两 NV18，本轮生产副本未重查拓扑 |
+| 算子适配 | 第五代 Tensor Core，支持 FP4；CUDA 计算能力为 12.0 | Hopper 路径；具体量化与注意力算子仍由运行时选择 |
+| 板卡功耗与散热 | 官方总板卡功耗 300 W，主动散热 | 本轮未核实这批板卡的功耗上限；运行功耗另见后文 |
+
+PRO 的容量、带宽、接口、功耗和 Tensor Core 规格来自 [NVIDIA 产品页](https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-5000/)及[官方规格书](https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf)。H20 的 Hopper / SXM5 归属见 [NVIDIA vGPU 文档](https://docs.nvidia.com/ai-enterprise/release-8/latest/infra-software/vgpu/reference/hopper.html)；[NVIDIA R595 发布说明](https://docs.nvidia.com/595trd1-trusted-computing-solutions-release-notes.pdf)明确把 H20 141GB HBM3e、H20A 96GB HBM3 与 H200 分列。因此，不能把 96GB H20 或 H200 的带宽、算力和功耗直接套给这里的 H20-3e。
+
+八卡容量之和只是容量预算的起点，不是一块可以随意使用的统一显存。权重如何切分、每卡 KV Cache、临时工作区和通信缓冲区，都要分别放得下。产品标称 GB 也不能直接替换前表 DCGM 的 MiB / GiB。
+
+### 1.2 这些差异怎样影响 DeepSeek 推理
+
+**显存容量影响部署余量。** 同样八卡，H20 的标称容量接近 PRO 的两倍，在相同权重切分与缓存精度下，通常能留出更多 KV Cache 和工作区空间。本轮 PRO 显式使用 FP8 KV，且单卡显存已经接近监控可见容量；但 KV 使用率没有满，不能据此认定显存容量就是排队原因。
+
+**显存带宽影响读取，不能与 PCIe 带宽混为一谈。** GPU 读取本卡权重和 KV Cache，走的是 GDDR7 或 HBM；从 CPU 内存搬数据，才涉及主机内存和 PCIe。Prefill（输入预填充）通常更容易利用矩阵计算能力；小批量 Decode（逐步生成）更容易受权重与 KV 读取带宽制约，批量、上下文和缓存命中会改变瓶颈。[NVIDIA 推理优化说明](https://developer.nvidia.com/blog/mastering-llm-techniques-inference-optimization/)。因此，PRO 支持 PCIe 5.0，不能替代对显存读取带宽的评估；本窗口也没有实测两种显存的有效带宽。
+
+**多卡互联影响每一步协作的代价。** 张量并行需要交换中间结果，专家并行可能需要跨卡分发 Token。历史 H20 的 `NV18` 表示 GPU 间有聚合 NVLink 路径，具体记录见[此前 H20 首测](deepseek-v41-flash-1017-day0.md)。PRO 的 PCIe 多卡路径则需要核对交换芯片、CPU 插槽和 Peer-to-Peer（P2P，设备间直接传输）支持，不能假定与 HGX 等价，也不能反过来断言所有传输都必须绕经 CPU 内存。历史拓扑不能代替这次生产主机的拓扑核对。
+
+**新架构的低精度能力，要有对应算子才能兑现。** NVIDIA 列出的 PRO 5000 计算能力是 12.0，而 B200 是 10.0；同叫 Blackwell，也不是同一个编译目标。[CUDA GPU 计算能力表](https://developer.nvidia.com/cuda/gpus)。PRO 支持 FP4，不代表这次 FP8 模型实际采用了 FP4 核函数，更不能把 FP4 稀疏 AI TOPS 与另一张卡的 FP8 / BF16 稠密峰值直接比较。
+
+**CPU 卸载和整机配置同样重要。** 本轮两组都开启 Engram CPU 卸载，因此除了 GPU，还应关注主机内存带宽、NUMA（Non-Uniform Memory Access，非统一内存访问）放置和 CPU–GPU 传输。PRO 的外部 KV 缓存又引入另一条数据路径。这是需要关联排查的方向，现有排队曲线尚不能证明其中哪一项是瓶颈。
+
+功耗也要对应同一种口径：PRO 的 300 W 是官方板卡规格，后文约 95 W 是这批流量下的板卡平均值；H20 的约 317–327 W 同样是运行观测值。它们既不是同负载能效测试，也不包括 CPU、内存和网络开销。用于企业选型时，应比较满足相同延迟要求的整机吞吐与总成本，而不是只比较架构代际或八张卡的价格。
+
 ## 2. 数据怎样取，哪些数字要谨慎读
 
 应用指标来自现有 vLLM 采集，GPU 指标来自现有 DCGM 采集。五个实例在窗口内各有 **60 个应用采样点**，每张 GPU 也有 60 个利用率采样点；生成 Token 计数器在窗口内没有观察到重置。

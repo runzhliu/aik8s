@@ -39,6 +39,38 @@ Both deployment configurations reference a **DeepSeek-V4.1-Flash-1017** director
 
 DCGM means NVIDIA Data Center GPU Manager. The capacities above are sums of monitoring fields, not product-rated capacity or necessarily all physical memory. Image tags do not prove identical package versions or commits. This analysis did not enter production containers to inspect runtime packages, so implementation differences between builds remain possible.
 
+### 1.1 Hardware Differences: 72GB GDDR7 Versus 141GB HBM3e
+
+Both groups allocate eight GPUs, but their hardware differs. PRO 5000 is a Blackwell professional workstation GPU; H20-3e belongs to the Hopper data-center family. A newer architecture does not make every large-model service faster.
+
+| Hardware dimension | RTX PRO 5000 72GB Blackwell | H20-3e 141GB |
+| --- | --- | --- |
+| Architecture and form factor | Blackwell, professional PCIe card | Hopper, SXM5 / HGX server platform |
+| Rated memory per GPU | 72 GB GDDR7 with ECC error correction | 141 GB HBM3e |
+| Sum of eight rated capacities | 576 GB | 1,128 GB, about 1.96 times the former |
+| Rated memory bandwidth | 1,344 GB/s, or 1.344 TB/s | The cited official material does not specify bandwidth for this 141GB SKU; no estimated value is substituted |
+| Host attachment and multi-GPU communication | PCIe 5.0 ×16; actual inter-GPU paths on these hosts were not collected | SXM5; an earlier same-model H20 validation recorded NV18 between GPU pairs, but this production topology was not rechecked |
+| Kernel compatibility | Fifth-generation Tensor Cores with FP4 support; CUDA compute capability 12.0 | Hopper execution paths; the runtime still selects specific quantization and attention kernels |
+| Board power and cooling | Official total board power of 300 W, active cooling | Power limits on these boards were not verified; observed operating power appears below |
+
+PRO memory, bandwidth, interface, power, and Tensor Core specifications come from the [NVIDIA product page](https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-5000/) and [official datasheet](https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf). The [NVIDIA vGPU documentation](https://docs.nvidia.com/ai-enterprise/release-8/latest/infra-software/vgpu/reference/hopper.html) places H20 under Hopper and identifies SXM5. The [NVIDIA R595 release notes](https://docs.nvidia.com/595trd1-trusted-computing-solutions-release-notes.pdf) list H20 141GB HBM3e, H20A 96GB HBM3, and H200 separately. Specifications for 96GB H20 or H200 therefore cannot simply be assigned to this H20-3e.
+
+Summing eight GPUs is only a starting point for capacity planning, not a freely allocatable unified memory pool. Weight shards, per-GPU KV Cache, workspaces, and communication buffers must each fit. Product-rated GB also cannot replace the DCGM MiB / GiB values above.
+
+### 1.2 What These Differences Mean for DeepSeek Inference
+
+**Memory capacity affects deployment headroom.** With eight GPUs each, H20 has almost twice PRO's rated capacity. Matching weight partitioning and cache precision would generally leave more space for KV Cache and workspaces. PRO explicitly uses FP8 KV here, and its allocated memory approaches the monitored capacity. However, KV usage was not full, so capacity alone cannot explain the queues.
+
+**Local memory bandwidth and PCIe bandwidth are different resources.** Reading weights and KV Cache on a GPU uses GDDR7 or HBM. Transfers from CPU memory involve host memory and PCIe. Prefill processes input and typically makes better use of matrix compute; small-batch decode generates tokens incrementally and is more susceptible to weight and KV read bandwidth. Batch size, context, and cache hits change the bottleneck. See [NVIDIA's inference optimization explanation](https://developer.nvidia.com/blog/mastering-llm-techniques-inference-optimization/). PCIe 5.0 support therefore does not replace an assessment of local memory bandwidth; neither GPU's effective memory bandwidth was measured in this window.
+
+**Interconnects affect the cost of cooperation on every step.** Tensor parallelism exchanges intermediate results, while expert parallelism can distribute tokens across GPUs. The historical H20 `NV18` topology denotes an aggregated NVLink path; see the [earlier H20 test](deepseek-v41-flash-1017-day0.md). PRO's PCIe multi-GPU paths require checking switches, CPU sockets, and Peer-to-Peer (P2P) support. They cannot be assumed equivalent to HGX, nor does PCIe imply that every transfer must stage through CPU memory. Historical topology does not establish this production host's topology.
+
+**Low-precision capabilities require suitable kernels.** NVIDIA lists PRO 5000 at compute capability 12.0 and B200 at 10.0: both are Blackwell, but they are different compilation targets. See the [CUDA GPU compute-capability table](https://developer.nvidia.com/cuda/gpus). PRO's FP4 support does not establish that this FP8 model used FP4 kernels. Sparse FP4 AI TOPS also cannot be compared directly with another GPU's dense FP8 / BF16 peak.
+
+**CPU offload and the rest of the server matter.** Both groups enable Engram CPU offload, making host memory bandwidth, NUMA (Non-Uniform Memory Access) placement, and CPU–GPU transfers relevant alongside the GPU. PRO's external KV cache adds another data path. These are directions for correlated investigation; the queue curves do not yet identify a bottleneck among them.
+
+Power must use matching definitions, too. PRO's 300 W is an official board specification; the roughly 95 W below is a board mean under this traffic. H20's roughly 317–327 W is also an operating observation. These do not constitute an efficiency test under matching load and exclude CPU, memory, and networking. Enterprise selection should compare whole-system throughput and total cost at matching latency requirements, rather than architecture generation or the price of eight cards alone.
+
 ## 2. Collection and Statistical Definitions
 
 Application metrics come from the existing vLLM collection; GPU metrics come from existing DCGM collection. Each of the five instances has **60 application samples** in the window, and each GPU has 60 utilization samples. No generation-token counter resets were observed during the window.

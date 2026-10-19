@@ -1411,9 +1411,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/practices/deepseek-v41-pro5000-h20-observation.md": {
-      "source_sha256": "b7fc0654bb7a0fd1c32c9d6db08910f6a1779aaeb12ad6c3a7446a1a4d73be95",
-      "english_sha256": "f8f5cd77a47468a787bb166efd9509deec0a05cb0d8fe4425940c84beb9637dc",
-      "reviewed_at": "2026-10-19T11:01:14.591851+00:00",
+      "source_sha256": "c681578ac40de5c8641de59e09004893f342169fd59e2b5bb70c918bcc108d22",
+      "english_sha256": "c158cc281bd40bc0a2cd0d6c28bbc2b9cb8b093e05a2df0805f931483de63771",
+      "reviewed_at": "2026-10-19T11:29:05.691851+00:00",
       "review": "reviewed against source"
     }
   }
