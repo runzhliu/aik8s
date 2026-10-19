@@ -117,6 +117,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 
 - [2026 年 AI Agent 现状、实现原理与趋势](rag-agent/agent-landscape-2026.md)：主流编程、浏览器与企业 Agent 的产品格局、实现原理、框架、风险和演进方向。
 - [Agent Harness 技术综述](rag-agent/agent-harness-technology-overview.md)：Agent Loop、上下文、工具、状态恢复、沙箱、权限、验证与 Kubernetes 生产架构。
+- [Agent RL：veRL 与 Miles](rag-agent/agent-rl-verl-miles-overview.md)：多轮轨迹、奖励与动作掩码，主流训练框架、TITO、全异步流水线及 Kubernetes 工程落地。
 - [DeepSeek Search/Fetch 与 Agent 联网成本](rag-agent/deepseek-search-fetch-agent-cost.md)：搜索、抓取的作用，供应商定价差异与任务预算计算。
 - [Omarchy Linux 与 Agent OS 综述](rag-agent/omarchy-agent-os-overview.md)：桌面 Linux、Agno、AIOS、BrowserOS 的定位、工作机制、权限与企业落地。
 - [ChatGPT Dots 技术解析](rag-agent/chatgpt-dots-overview.md)：发布时间、持续职责、记忆、云端与本地执行、Codex 协作，以及企业权限和 Kubernetes 接入建议。

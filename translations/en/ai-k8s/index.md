@@ -117,6 +117,7 @@ Any layer can become the bottleneck. Low GPU utilization is not necessarily a GP
 
 - [2026 AI Agent Landscape, Implementation Principles, and Trends](rag-agent/agent-landscape-2026.md): Product landscape, implementation principles, frameworks, risks, and evolution directions for mainstream coding, browser, and enterprise agents.
 - [Agent Harness Technical Survey](rag-agent/agent-harness-technology-overview.md): Agent Loop, context, tools, state recovery, sandboxing, permissions, verification, and Kubernetes production architecture.
+- [Agent RL: veRL and Miles](rag-agent/agent-rl-verl-miles-overview.md): Multi-turn trajectories, rewards and action masks, training frameworks, TITO, fully asynchronous pipelines, and Kubernetes engineering.
 - [DeepSeek Search/Fetch and Agent Web Costs](rag-agent/deepseek-search-fetch-agent-cost.md): Search and retrieval roles, provider-pricing differences, and task budgeting.
 - [Omarchy Linux and Agent OS Survey](rag-agent/omarchy-agent-os-overview.md): Positioning, working mechanisms, permissions, and enterprise adoption of desktop Linux, Agno, AIOS, and BrowserOS.
 - [ChatGPT Dots Technical Analysis](rag-agent/chatgpt-dots-overview.md): Release timing, persistent responsibilities, memory, cloud and local execution, Codex collaboration, plus enterprise permissions and Kubernetes integration recommendations.

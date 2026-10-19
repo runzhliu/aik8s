@@ -214,12 +214,12 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "b55796e1c9f0599ef84565937e0a21a84b3934d3b793a97bb3f6d3e44c837a79",
-      "english_sha256": "76ab9eef377c4a208626048417df586b13f5ea66369d2fa4995b606ef236b933",
+      "source_sha256": "eae6cd50079311bb03f7e959ee917813e4a0d0d3ec3bb3a1a5c44ab3cdc498ac",
+      "english_sha256": "f8eff9d8042b138e6a3cac61af3cee1505522527c2d5ef99c6e4846d4eb30910",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-19T03:21:37.377130+00:00"
+      "reviewed_at": "2026-10-19T04:19:21.889760+00:00"
     },
     "ai-k8s/practices/agent-sandbox-red-team.md": {
       "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
@@ -1396,6 +1396,12 @@
       "source_sha256": "ffb46cc2942de4b9135fa121d9ee87999376e6836fe16ddb665449ac16423152",
       "english_sha256": "2c34ab3c78d686d80c3a10953b7ce0fee564218e7c5be6ad8ad4622ccd035b59",
       "reviewed_at": "2026-10-19T03:27:40.591978+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/agent-rl-verl-miles-overview.md": {
+      "source_sha256": "7f800485bf6369d95aeb230ec2902214fcd7f64816b50042440cb38e42736ed0",
+      "english_sha256": "879ba54fb79d4b89f55c5c397b43e7d5663759293fbef000a04489de9ec75588",
+      "reviewed_at": "2026-10-19T04:26:39.238383+00:00",
       "review": "reviewed against source"
     }
   }
