@@ -1,0 +1,375 @@
+{
+  "kind": "live-monitoring-followup",
+  "version": 1,
+  "observation": {
+    "from_utc": "2026-10-19T04:32:36+00:00",
+    "to_utc": "2026-10-19T04:39:28.250000+00:00",
+    "display_timezone": "Asia/Shanghai",
+    "scrape_interval_seconds": 15
+  },
+  "scope": "Existing single-node Underlay experiment; no CNI switch, workload recreation or load test",
+  "change_checks": {
+    "targets_before": 75,
+    "targets_after": 77,
+    "original_targets_preserved": true,
+    "new_targets_up": 2,
+    "helm_values_unchanged": true,
+    "kubeovn_workload_specs_unchanged": true,
+    "kubeovn_pod_identities_unchanged": true,
+    "vmagent_restarted": false
+  },
+  "sources": [
+    "Controller and CNI native /metrics endpoints",
+    "Existing cAdvisor /metrics/cadvisor counters"
+  ],
+  "read_only_connectivity_check": {
+    "protocol": "HTTP",
+    "status": 200,
+    "body_bytes": 612,
+    "target": "existing Underlay server"
+  },
+  "interpretation": [
+    "Follow-up interval, not migration-time history or before/after performance data",
+    "Business IP counts exclude the node join network",
+    "OVS client P95 uses a 2-minute histogram window in milliseconds; not network RTT",
+    "CNI ADD/DEL values are process lifetime counters, not activity generated during collection",
+    "Observed 4xx remain visible; CSR denial is confirmed by logs, not an explanation for every 4xx",
+    "Dedicated OVN-monitor and pinger telemetry are not installed"
+  ],
+  "chart_values": [
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "采集端点 UP",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "业务地址已用",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "业务地址可用",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "业务保留地址总数",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "业务地址池趋势",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "业务地址池趋势",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "Controller / CNI 进程 CPU",
+      "values": [
+        {
+          "labels": {
+            "kubeovn_role": "cni"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0.005083333333334395"
+        },
+        {
+          "labels": {
+            "kubeovn_role": "controller"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0.0029166666666659087"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "Controller / CNI 进程 RSS",
+      "values": [
+        {
+          "labels": {
+            "kubeovn_role": "cni"
+          },
+          "timestamp": 1792384768.25,
+          "value": "113414144"
+        },
+        {
+          "labels": {
+            "kubeovn_role": "controller"
+          },
+          "timestamp": 1792384768.25,
+          "value": "127442944"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-overview",
+      "panel": "采集可达性",
+      "values": [
+        {
+          "labels": {
+            "kubeovn_role": "cni"
+          },
+          "timestamp": 1792384768.25,
+          "value": "1"
+        },
+        {
+          "labels": {
+            "kubeovn_role": "controller"
+          },
+          "timestamp": 1792384768.25,
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-control",
+      "panel": "API client 请求速率",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "0.44166666666666665"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-control",
+      "panel": "HTTP 4xx 速率",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "0.13333333333333333"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-control",
+      "panel": "当前队列最大深度",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-control",
+      "panel": "API client 请求 · 按角色",
+      "values": [
+        {
+          "labels": {
+            "kubeovn_role": "cni"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0.05"
+        },
+        {
+          "labels": {
+            "kubeovn_role": "controller"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0.3916666666666666"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-control",
+      "panel": "HTTP 4xx · 按返回码",
+      "values": [
+        {
+          "labels": {
+            "code": "403"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0.03333333333333333"
+        },
+        {
+          "labels": {
+            "code": "404"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0.1"
+        },
+        {
+          "labels": {
+            "code": "422"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-control",
+      "panel": "工作队列最大深度",
+      "values": [
+        {
+          "labels": {
+            "kubeovn_role": "cni"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0"
+        },
+        {
+          "labels": {
+            "kubeovn_role": "controller"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-control",
+      "panel": "工作队列重试速率",
+      "values": [
+        {
+          "labels": {
+            "kubeovn_role": "cni"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0"
+        },
+        {
+          "labels": {
+            "kubeovn_role": "controller"
+          },
+          "timestamp": 1792384768.25,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-cni",
+      "panel": "OVS 客户端操作速率",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "1.3833333333333333"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-cni",
+      "panel": "OVS 客户端 P95",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "3.8999999999999995"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-cni",
+      "panel": "CNI 操作累计次数",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "8"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-cni",
+      "panel": "OVS 客户端操作速率",
+      "values": [
+        {
+          "labels": {
+            "db": "ovsdb"
+          },
+          "timestamp": 1792384768.25,
+          "value": "1.3833333333333333"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-cni",
+      "panel": "OVS 客户端 P95 · 2 分钟窗口",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "3.8999999999999995"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-cni",
+      "panel": "CNI ADD / DEL · 进程累计",
+      "values": [
+        {
+          "labels": {
+            "method": "/api/v1/add"
+          },
+          "timestamp": 1792384768.25,
+          "value": "2"
+        },
+        {
+          "labels": {
+            "method": "/api/v1/del"
+          },
+          "timestamp": 1792384768.25,
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "dashboard": "kubeovn-underlay-cni",
+      "panel": "OVS 容器 CPU",
+      "values": [
+        {
+          "labels": {},
+          "timestamp": 1792384768.25,
+          "value": "0.036079417166668765"
+        }
+      ]
+    }
+  ]
+}

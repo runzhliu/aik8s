@@ -14,5 +14,45 @@
     "en"
   ],
   "diagram_sources": "Editable Mermaid blocks in both article sources",
-  "privacy": "Only allowlisted anonymized records; no original IP, MAC, VLAN, hostname, credentials or private file paths"
+  "privacy": "Only allowlisted anonymized records; no original IP, MAC, VLAN, hostname, credentials or private file paths",
+  "monitoring_followup": {
+    "date": "2026-10-19",
+    "evidence": "monitoring-evidence-20261019.json",
+    "screenshots": [
+      {
+        "file": "grafana-overview-20261019.png",
+        "sha256": "7be3b287ecbe93115620a4cb2291ec159faf9815cb1993c18f601453f27cb8ad",
+        "dimensions": [
+          1200,
+          675
+        ],
+        "origin": "Real Grafana browser screenshot",
+        "redaction": "Neutral dashboard labels and legends before capture; values unchanged",
+        "language": "Original Chinese UI retained in both article versions"
+      },
+      {
+        "file": "grafana-control-20261019.png",
+        "sha256": "8b28f13a74b9698584a5d153e8dd8e523259a4aa0207f31a8471e9b77a4af5d3",
+        "dimensions": [
+          1200,
+          675
+        ],
+        "origin": "Real Grafana browser screenshot",
+        "redaction": "Neutral dashboard labels and legends before capture; values unchanged",
+        "language": "Original Chinese UI retained in both article versions"
+      },
+      {
+        "file": "grafana-cni-20261019.png",
+        "sha256": "aa1853e4d3115ca95d8a0bf249c43701eddf931c7cdc9a882c36a54a2b004d5b",
+        "dimensions": [
+          1200,
+          675
+        ],
+        "origin": "Real Grafana browser screenshot",
+        "redaction": "Neutral dashboard labels and legends before capture; values unchanged",
+        "language": "Original Chinese UI retained in both article versions"
+      }
+    ],
+    "raw_evidence": "Private; not published"
+  }
 }

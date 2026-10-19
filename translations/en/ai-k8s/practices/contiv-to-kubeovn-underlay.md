@@ -11,7 +11,7 @@ The difficult part of replacing a container network is often keeping the rules o
 
 This experiment selected one node from a Kubernetes test cluster running a customized Contiv implementation. The node first left the original cluster for an isolated Kube-OVN Underlay test, then rejoined it. **After rejoining, the node became Ready. Two ordinary Pods used physical-network addresses, and bidirectional HTTP between the new Pods and existing Contiv Pods passed. Other nodes retained their original networking.** The canary ran neither Contiv netplugin, Cilium, nor kube-proxy.
 
-This article reconstructs archived observations; the network was not switched again to prepare it. Cluster names, node names, internal domains, IPs, MACs, VLANs, and internal paths have been replaced. Example addresses are not original addresses. Test counts, packet lengths, and success/failure records are preserved. Below, `worker-canary` is the test node and `control-helper` hosts the new network's control components.
+The migration account reconstructs archived observations. Monitoring was added to the still-running single-node environment on October 19, 2026, as described in Section 8.1, without switching the network again. Cluster names, node names, internal domains, IPs, MACs, VLANs, and internal paths have been replaced. Example addresses are not original addresses. Test counts, packet lengths, and success/failure records are preserved. Below, `worker-canary` is the test node and `control-helper` hosts the new network's control components.
 
 ## 1. What the Existing Network Had to Preserve
 
@@ -297,6 +297,38 @@ The [anonymized acceptance data](../../assets/practices/contiv-to-kubeovn-underl
 Both rejoined-stage Pods used the physical default gateway and MTU 1500. Kube-OVN generated MACs different from the original reservation records. Bidirectional HTTP and gateway communication demonstrate that this physical network accepted those MACs, but switch port-security configuration was not inspected. Environments with MAC-count limits, static IP–MAC bindings, or DHCP snooping / ARP inspection must check those policies first.
 
 Service / DNS success belongs to the isolated stage. The rejoined stage installed neither kube-proxy nor Cilium and did not enable Subnet load balancing; earlier results cannot be carried forward. Kube-OVN Underlay supports Services, but that does not establish correct discovery, forwarding, and return paths in every mixed-CNI cluster.
+
+### 8.1 Monitoring Follow-up: Address Pool, Control Plane, and CNI / OVS
+
+On October 19, the controller's `10660/metrics` and CNI's `10665/metrics` endpoints were already enabled, but neither was a target in the existing monitoring stack. We appended one `VMServiceScrape` to the existing VictoriaMetrics K8s Stack, discovering the two components through narrowly selected Headless Services at a **15-second** interval. These services discover actual endpoints without ClusterIP forwarding; they do not constitute additional business-Service validation. [Official monitoring guide](https://kubeovn.github.io/docs/v1.16.x/en/guide/prometheus-grafana/)
+
+All **75 original targets were preserved**, bringing the total to **77**, with both new controller/CNI endpoints UP. vmagent did not restart, and Kube-OVN Deployment/DaemonSet specifications and Pod identities remained unchanged. Grafana reuses the existing VictoriaMetrics datasource, with separate address-pool, control-plane, and CNI/OVS views.
+
+The following are real light-theme dashboard screenshots. Titles and legends use component roles, hiding internal nodes, addresses, and network names while retaining the original values and curves. They show a **short follow-up observation on October 19**, rather than migration-day history or a before/after performance comparison.
+
+![Real Kube-OVN monitoring: business address pool, process CPU, RSS, and two scrape endpoints](../../assets/practices/contiv-to-kubeovn-underlay/grafana-overview-20261019.png)
+
+The business pool still contains **2 used and 4 available addresses, totaling 6 reserved addresses**, matching the rejoin records. The internal node `join` network is excluded; these figures do not represent the entire physical `/22` pool. CPU curves show cores used by the controller/CNI processes. Resident Set Size (RSS) measures resident process memory. Neither measures the entire host's resource usage.
+
+![Real Kube-OVN monitoring: API-client requests, HTTP 4xx, and work queues](../../assets/practices/contiv-to-kubeovn-underlay/grafana-control-20261019.png)
+
+The control-plane view retains observed **403 and 404** responses instead of replacing errors with zero. API-client traffic first reaches the experimental scoped gateway. Logs confirm denied CSR-cache reads, but status-code aggregates cannot attribute every 4xx response to the same resource. Identifying the 404 requests requires request paths or audit records.
+
+No workqueue backlog was observed in the window, and retry rates were zero. A read-only follow-up request to the existing Underlay HTTP endpoint returned **HTTP 200 and 612 bytes**. This establishes that the checked business path remained reachable at that moment; it does not resolve control-plane permission issues. Other previously offline monitoring targets were not restored by this addition either, so new targets being UP must not be presented as full-stack health.
+
+![Real Kube-OVN monitoring: OVS client operations and P95, cumulative CNI operations, and OVS-container CPU](../../assets/practices/contiv-to-kubeovn-underlay/grafana-cni-20261019.png)
+
+Three definitions matter in the third view:
+
+| Panel | Actual meaning | Interpretation to avoid |
+| --- | --- | --- |
+| OVS-client P95 | Operation latency derived from the `ovs_client_request_latency_milliseconds` histogram over a 2-minute window, in milliseconds | Not Pod-to-Pod round-trip latency or business-request latency |
+| CNI ADD / DEL | Current CNI process lifetime counters: ADD 2 and DEL 6 in this screenshot | Not 2 Pods created and 6 deleted during collection; workloads were not recreated for screenshots |
+| OVS-container CPU | Existing cAdvisor data from the single `/metrics/cadvisor` path | Do not add the duplicate `/metrics/resource` counter; this is not total host CPU |
+
+This integration collects built-in controller/CNI metrics and reuses existing container metrics. The bounded deployment has no separate `ovn-monitor` or `kube-ovn-pinger`, so this follow-up includes neither database-internal health and logical-port topology nor dedicated Pod-probe RTT/loss charts. Healthy processes and empty queues do not establish those dimensions. [Official metric definitions](https://kubeovn.github.io/docs/v1.16.x/en/reference/metrics/)
+
+The [anonymized monitoring snapshot](../../assets/practices/contiv-to-kubeovn-underlay/monitoring-evidence-20261019.json) records the observation window, collection-change checks, and chart data.
 
 ## 9. Collect Evidence Layer by Layer
 

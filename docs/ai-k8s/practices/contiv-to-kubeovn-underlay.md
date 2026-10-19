@@ -11,7 +11,7 @@ last_reviewed: 2026-10-19
 
 这次实验从一个使用定制 Contiv 的 Kubernetes 测试集群中选出一台节点，先退出原集群验证 Kube-OVN Underlay，再接回原集群。**接回后，节点恢复 Ready，两个普通 Pod 使用物理网络地址，与原 Contiv Pod 双向 HTTP 通信通过；其他节点保留原网络。** 目标节点没有运行 Contiv netplugin、Cilium 或 kube-proxy。
 
-本文整理已归档的实验记录，没有为写文章再次切换网络。集群名、节点名、内部域名、IP、MAC、VLAN 和内部路径均已替换；示例地址不代表原环境。测试数量、报文长度和成功／失败记录保持原值。下文的 `worker-canary` 是测试节点，`control-helper` 是放置新网络控制组件的辅助节点。
+迁移过程来自已归档的实验记录；2026 年 10 月 19 日又为仍在运行的单节点环境补接监控，见第 8.1 节，没有再次切换网络。集群名、节点名、内部域名、IP、MAC、VLAN 和内部路径均已替换；示例地址不代表原环境。测试数量、报文长度和成功／失败记录保持原值。下文的 `worker-canary` 是测试节点，`control-helper` 是放置新网络控制组件的辅助节点。
 
 ## 1. 原网络有什么必须保留
 
@@ -297,6 +297,38 @@ Node Ready 只证明节点健康条件达标，不能代替 Pod 数据面测试�
 接回后的两个 Pod 默认网关都是物理网关，MTU 为 1500；实际 MAC 由 Kube-OVN 生成，与原 Contiv 占位记录不同。双向 HTTP 与网关通信证明本次物理网络接受这些新 MAC，但没有登录交换机核对端口安全策略。其他环境若存在 MAC 数量限制、静态 IP–MAC 绑定或 DHCP snooping / ARP 检查，必须先核对对应规则。
 
 独立阶段的 Service / DNS 通过结果保留在独立阶段。本次接回原集群没有安装 kube-proxy，也没有启用 Cilium 或 Kube-OVN 的 Subnet 负载均衡，不能把前一阶段结果挪到这里。Kube-OVN Underlay 本身具备 Service 能力，不代表任意混合 CNI 的集群都能自动获得正确的发现、转发和返回路径。
+
+### 8.1 补采监控：地址池、控制面与 CNI / OVS
+
+10 月 19 日复查时，Controller 的 `10660/metrics` 和 CNI 的 `10665/metrics` 已经开启，但现有监控栈没有这两个采集目标。这次在已有 VictoriaMetrics K8s Stack 中追加一个 `VMServiceScrape`，通过两个只选择实验组件的 Headless Service 发现端点，每 **15 秒**采集一次。Headless Service 用于发现实际端点，不依赖 ClusterIP 转发，也不代表补验了业务 Service 能力。[官方监控说明](https://kubeovn.github.io/docs/v1.16.x/en/guide/prometheus-grafana/)
+
+追加后，原有 **75 个采集目标全部保留**，总数变为 **77**，新增 Controller / CNI 两个端点均为 UP。vmagent 没有重启，Kube-OVN 的 Deployment、DaemonSet 配置与 Pod 身份没有变化。Grafana 复用原来的 VictoriaMetrics 数据源，按地址池、控制面、CNI / OVS 分成三组视图。
+
+下面三张是实际浅色看板截图。标题和图例使用组件角色，隐藏内部节点、地址和网络名称，曲线与数值保持原样。它们展示 **10 月 19 日补采后的短时运行状态**，不是迁移当天的历史曲线，也不是改造前后的性能对照。
+
+![Kube-OVN 实际监控：业务地址池、进程 CPU、RSS 与两个采集端点](../../assets/practices/contiv-to-kubeovn-underlay/grafana-overview-20261019.png)
+
+业务子网仍然是 **已用 2 个、可用 4 个、共 6 个保留地址**，与接回阶段的地址分配记录一致。看板排除了节点内部 `join` 网络，不能把这些数字当成物理 `/22` 的总体余量。CPU 曲线表示 Controller / CNI 进程占用的核数；RSS（Resident Set Size，常驻内存集）表示进程驻留内存，都不等于整台节点的资源占用。
+
+![Kube-OVN 实际监控：API client 请求、HTTP 4xx 与工作队列](../../assets/practices/contiv-to-kubeovn-underlay/grafana-control-20261019.png)
+
+控制面视图保留了实际出现的 **403、404**，没有把错误曲线抹成零。这里的 API client 请求先到实验受限入口；日志能够确认 CSR 缓存读取被拒绝，但仅靠按返回码聚合的指标，不能把所有 4xx 都归因于同一资源。404 还需要请求路径或审计记录才能进一步定位。
+
+观察窗口内工作队列未见积压，重试速率为零；同时，对现有 Underlay HTTP 端点的一次只读复核返回 **HTTP 200、612 字节**。这些证据说明当时已测业务路径仍可用，不能据此把控制面权限问题视为已经解决。原有监控中的其他离线目标也未因本次补采而恢复，不应将新增端点 UP 写成全栈健康。
+
+![Kube-OVN 实际监控：OVS 客户端操作、P95、CNI 累计操作与 OVS 容器 CPU](../../assets/practices/contiv-to-kubeovn-underlay/grafana-cni-20261019.png)
+
+第三组图需要注意三个口径：
+
+| 面板 | 实际含义 | 不应作出的解释 |
+| --- | --- | --- |
+| OVS 客户端 P95 | 按 2 分钟窗口，对 `ovs_client_request_latency_milliseconds` 直方图计算的操作延迟，单位毫秒 | 不是 Pod 到 Pod 的网络往返时延，也不是业务请求延迟 |
+| CNI ADD / DEL | 当前 CNI 进程的累计次数，本次截图为 ADD 2、DEL 6 | 不是补采期间新建了 2 个、删除了 6 个 Pod；没有为截图重建工作负载 |
+| OVS 容器 CPU | 使用已有 cAdvisor 的 `/metrics/cadvisor` 单一路径 | 不叠加 `/metrics/resource` 中的同一计数，避免双倍统计；也不等于整台节点 CPU |
+
+目前接入的是 Controller / CNI 自带指标，并复用了已有容器指标。这个有界部署没有安装独立的 `ovn-monitor` 和 `kube-ovn-pinger`，所以本次没有数据库内部健康、逻辑端口拓扑，以及专门的 Pod 探测 RTT／丢包图。不能从进程正常、队列为空进一步推出这些维度也已验收。[官方指标定义](https://kubeovn.github.io/docs/v1.16.x/en/reference/metrics/)
+
+可下载[脱敏监控快照](../../assets/practices/contiv-to-kubeovn-underlay/monitoring-evidence-20261019.json)，查看观察窗口、采集变更核对及图表取数记录。
 
 ## 9. 复用这套排查方法时，按层取证
 

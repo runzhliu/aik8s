@@ -1387,9 +1387,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/practices/contiv-to-kubeovn-underlay.md": {
-      "source_sha256": "ed90eb40f141a63fb9033a4e631e46011cf503c4a54ddad6e96cf9cb2e855fe1",
-      "english_sha256": "63d740136a1efa80a44dddecdb72de2abfd4087ffa0c088a6f1d9681422bd43c",
-      "reviewed_at": "2026-10-19T02:56:18.755045+00:00",
+      "source_sha256": "b6ab6fe02b46312176aa6b3860b93d6c156124987b979e08abbcd1d2751992b3",
+      "english_sha256": "51a9e2b64386fb1d26bc6c7cfc8482b90e0e4caca8570283561f949c6119d432",
+      "reviewed_at": "2026-10-19T04:40:31.745125+00:00",
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/deepseek-search-fetch-agent-cost.md": {
