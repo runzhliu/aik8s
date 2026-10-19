@@ -1,0 +1,18 @@
+{
+  "purpose": "Archive summary; not a monitoring screenshot",
+  "size": [
+    1200,
+    675
+  ],
+  "source": "acceptance-evidence.json",
+  "source_sha256": "57854a7b7d2397de980d00aa884f622fdb05e578873a5389cb1845d469542d12",
+  "generator": "scripts/generate_contiv_kubeovn_visuals.py",
+  "output": "acceptance-record.png",
+  "labels_language": "en",
+  "article_languages": [
+    "zh",
+    "en"
+  ],
+  "diagram_sources": "Editable Mermaid blocks in both article sources",
+  "privacy": "Only allowlisted anonymized records; no original IP, MAC, VLAN, hostname, credentials or private file paths"
+}

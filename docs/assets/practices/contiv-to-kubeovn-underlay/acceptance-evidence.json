@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "record_type": "anonymized archived observations; not a live dashboard",
+  "experiment_date": "2026-10-12",
+  "anonymization": "Node names, namespace, addresses, VLAN IDs and MACs are replaced. Counts and outcomes are preserved. Public examples are not original addressing.",
+  "versions": {
+    "kubernetes": "1.30.4",
+    "kube_ovn": "1.16.12",
+    "containerd": "1.7.14"
+  },
+  "isolated_stage": {
+    "ordinary_underlay_pods": 6,
+    "functional_checks_passed": 10,
+    "pure_underlay_adjustment_seconds": 43.8,
+    "physical_vlan_observed": true,
+    "mtu_ip_bytes": 1500,
+    "icmp_payload_bytes": 1472,
+    "df_echo_sent": 3,
+    "df_echo_received": 3,
+    "service_and_dns_tested": true
+  },
+  "rejoined_stage": {
+    "canary_node": "worker-canary",
+    "control_helper": "control-helper",
+    "node_ready": true,
+    "ordinary_underlay_pods": 2,
+    "reserved_addresses": 6,
+    "allocated_addresses": 2,
+    "remaining_addresses": 4,
+    "node_acceptance": [
+      {
+        "id": "reserved-addresses-only",
+        "label_zh": "仅使用正式预留地址",
+        "label_en": "Only reserved addresses",
+        "passed": true
+      },
+      {
+        "id": "new-pod-to-new-pod",
+        "label_zh": "新 Pod → 新 Pod HTTP",
+        "label_en": "New Pod → new Pod HTTP",
+        "passed": true
+      },
+      {
+        "id": "new-pod-to-old-echo",
+        "label_zh": "新 Pod → 原网络 HTTP",
+        "label_en": "New Pod → old-network HTTP",
+        "passed": true
+      },
+      {
+        "id": "new-pod-to-old-health",
+        "label_zh": "新 Pod → 原网络健康接口",
+        "label_en": "New Pod → old-network health",
+        "passed": true
+      },
+      {
+        "id": "physical-gateway",
+        "label_zh": "物理网关可达",
+        "label_en": "Physical gateway reachable",
+        "passed": true
+      },
+      {
+        "id": "management-network",
+        "label_zh": "跨网段管理地址可达",
+        "label_en": "Management subnet reachable",
+        "passed": true
+      },
+      {
+        "id": "node-to-pod",
+        "label_zh": "宿主机 → 新 Pod HTTP",
+        "label_en": "Host → new Pod HTTP",
+        "passed": true
+      },
+      {
+        "id": "physical-default-gateway-mtu",
+        "label_zh": "物理默认网关 / MTU 1500",
+        "label_en": "Physical default gateway / MTU 1500",
+        "passed": true
+      },
+      {
+        "id": "management-baseline",
+        "label_zh": "管理网络基线保持",
+        "label_en": "Management baseline preserved",
+        "passed": true
+      },
+      {
+        "id": "exclusive-uplink",
+        "label_zh": "业务上联只属于新桥",
+        "label_en": "Business uplink on one bridge",
+        "passed": true
+      },
+      {
+        "id": "no-old-node-agents",
+        "label_zh": "无旧 CNI / Cilium 运行",
+        "label_en": "No old CNI / Cilium running",
+        "passed": true
+      },
+      {
+        "id": "single-primary-cni",
+        "label_zh": "唯一主 CNI 配置",
+        "label_en": "One primary CNI configuration",
+        "passed": true
+      }
+    ],
+    "post_change_checks_passed": 9,
+    "post_change_checks_total": 9,
+    "scope_checks": {
+      "admission": {
+        "passed": 5,
+        "total": 5
+      },
+      "rbac": {
+        "passed": 5,
+        "total": 5
+      },
+      "proxy": {
+        "passed": 12,
+        "total": 12
+      }
+    },
+    "foreign_node_annotation_changes": 0,
+    "foreign_pod_annotation_changes": 0,
+    "cilium_template_unchanged": true,
+    "service_tested": false,
+    "mtu_configured_bytes": 1500,
+    "ssh_samples": 90,
+    "ssh_successes": 89,
+    "ssh_failures": 1,
+    "ssh_failure_attribution": "One rapid authentication-chain exit; available evidence does not distinguish jump authentication failure from target connectivity failure."
+  }
+}

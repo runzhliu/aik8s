@@ -27,6 +27,7 @@
   "网络、数据与模型制品": "Networking, Data, and Model Artifacts",
   "RDMA 与 AI 高速网络": "RDMA and High-Speed AI Networking",
   "Contiv、OVS 与 Cilium 串联网络实战": "Contiv, OVS, and Cilium Chained Networking in Practice",
+  "Contiv 到 Kube-OVN 单节点迁移实战": "Single-Node Migration from Contiv to Kube-OVN",
   "AI 数据、存储与缓存": "AI Data, Storage, and Caching",
   "大数据 on Kubernetes": "Big Data on Kubernetes",
   "模型制品、分发与缓存": "Model Artifacts, Distribution, and Caching",
