@@ -62,6 +62,7 @@ nav = [
       {"推理平台总览" = "ai-k8s/llm-inference.md"},
       {"本地运行与测试" = "ai-k8s/inference/local-testing.md"},
       {"推理引擎选型" = "ai-k8s/inference/engines.md"},
+      {"DeepInfer 架构与源码深度解析" = "ai-k8s/inference/deepinfer-architecture-analysis.md"},
       {"Serving 与微服务框架" = "ai-k8s/inference/serving-frameworks.md"},
       {"推理性能优化" = "ai-k8s/inference/optimization.md"},
       {"KV Cache 原理、应用与 Kubernetes" = "ai-k8s/inference/kv-cache-overview.md"},

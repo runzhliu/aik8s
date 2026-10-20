@@ -1415,6 +1415,12 @@
       "english_sha256": "c158cc281bd40bc0a2cd0d6c28bbc2b9cb8b093e05a2df0805f931483de63771",
       "reviewed_at": "2026-10-19T11:29:05.691851+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/inference/deepinfer-architecture-analysis.md": {
+      "source_sha256": "90540d6caba17d5a49cbd50eabd809e134b7e9f4c599a71e3eae64a407ed88c1",
+      "english_sha256": "b9db9ad2b8572ec7b088e8744eb5bdffdc5b66f8f66f78b6e57bb5115e482d38",
+      "reviewed_at": "2026-10-20T09:26:50.678253+00:00",
+      "review": "reviewed against source"
     }
   }
 }
