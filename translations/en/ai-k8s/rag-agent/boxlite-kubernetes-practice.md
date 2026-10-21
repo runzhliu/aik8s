@@ -31,6 +31,42 @@ One Kubernetes Pod can therefore host multiple Boxes. Each Box does not automati
 
 This also explains the distinction from [OpenKruise Agents](openkruise-agents-kubernetes-practice.md): that project places warm pools, claims, and lifecycle management in Kubernetes controllers and custom resources. BoxLite's embedded path is closer to a virtual machine runtime library inside an application. They operate at different layers, so startup latency alone cannot rank them.
 
+### 1.1 What Kubernetes actually contributes in this experiment
+
+Kubernetes serves as the outer application management platform. The node was selected in advance; the experiment validates running BoxLite there rather than having Kubernetes place individual Boxes across multiple nodes.
+
+| Kubernetes capability | How this experiment uses it |
+| --- | --- |
+| Application deployment and placement | A Deployment manages the SDK application, with a node selector restricting it to the KVM-capable test node |
+| Application process recreation | Recreate the hosting Pod, then have the application reopen the existing Box disk |
+| Outer resource management | Configure CPU and memory requests and limits for the hosting container |
+| Storage and access | A PVC preserves the BoxLite home; a Service and port-forward expose the lab endpoint |
+| Monitoring integration | Reuse the existing VictoriaMetrics, Grafana, and scrape resources |
+
+For example, creating four Boxes inside one Pod still leaves Kubernetes with one Pod to manage. This Pod requests 1 CPU / 2 GiB and its container is limited to 4 CPU / 8 GiB. Configuring each Box with 1 vCPU / 512 MiB **does not automatically create four independent Kubernetes resource requests**. BoxLite or the platform above it must still manage per-Box allocation, instance-count limits, and host resource enforcement.
+
+The dependency chain also allows this single-node SDK experiment to run in a Linux environment providing KVM directly. Kubernetes integrates it with an existing operations platform; it does not automatically give each Box independent Kubernetes scheduling, failover, or task resumption. BoxLite used the node's KVM directly in this run; the existing KubeVirt virtual machines were other workloads on that node.
+
+### 1.2 Does BoxLite have its own scheduling control plane?
+
+**Yes, through separately deployed official platform components.** The embedded SDK manages a local runtime. The repository's `apps/` also contains an API control plane, Runner execution service, Console, and related components. The API receives creation requests and selects a Runner; each Runner manages multiple Boxes. The platform can also run on cloud virtual machines and does not require Kubernetes. [Official platform architecture](https://github.com/boxlite-ai/boxlite/blob/v0.10.7/apps/README.md)
+
+In v0.10.7, the placement path in `RunnerService` works as follows:
+
+1. Filter for READY Runners that allow scheduling, are not draining, and meet the availability-score threshold.
+2. Apply the requested regions, instance class, and exclusion list.
+3. Sort by availability score, take at most ten candidates, and randomly select one. With no candidates, return a no-available-Runner error.
+
+The availability score uses reported CPU, memory, disk, and allocated-resource data. This is the platform's Runner selection logic. It is distinct from kube-scheduler's Pod placement, and score filtering alone does not establish strict resource reservation for each request. [Runner scheduling implementation](https://github.com/boxlite-ai/boxlite/blob/v0.10.7/apps/api/src/box/services/runner.service.ts)
+
+### 1.3 How the two scheduling layers relate, and what was tested
+
+A complete BoxLite platform deployed on Kubernetes could have two placement layers: Kubernetes determines which node hosts a Runner Pod, BoxLite's API determines which Runner receives a new Box, and that Runner starts the guest through local KVM. Kubernetes manages the Runner Pod; the BoxLite platform manages the Box.
+
+**This run deployed only the embedded SDK application, without the official API, Console, or multiple-Runner control plane.** The four-instance concurrency test described below validates execution inside one application Pod. The official scheduling description comes from source inspection and is not a completed cross-node scheduling experiment.
+
+Further shared-sandbox evaluation should deploy at least two independent Runners and test insufficient capacity, draining, failure states, and task assignment, with independent runtime homes and storage for each Runner. Adding application Pod replicas that share one BoxLite home cannot replace control-plane validation.
+
 ## 2. Actual deployment environment
 
 | Item | Configuration |

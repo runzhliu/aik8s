@@ -31,6 +31,42 @@ flowchart TB
 
 这一点也解释了它与 [OpenKruise Agents](openkruise-agents-kubernetes-practice.md) 的区别：后者将预热池、领取和生命周期放进 Kubernetes 控制器与自定义资源模型；BoxLite 的嵌入式路径更接近应用内部的虚拟机运行库。两者的能力层次不同，不能仅用启动耗时排出高低。
 
+### 1.1 这次 Kubernetes 的作用在哪里
+
+本轮将 Kubernetes 作为外层的应用管理平台。节点已经选定，实际验证的是在这个节点上运行 BoxLite，而非让 Kubernetes 在多个节点之间为每个 Box 选择位置。
+
+| Kubernetes 提供的能力 | 本次实际使用方式 |
+| --- | --- |
+| 应用部署与节点选择 | 用 Deployment 管理 SDK 应用，通过节点选择器限定到具备 KVM 的测试节点 |
+| 应用进程重建 | 重建承载 Pod，再由应用重新打开原有 Box 的磁盘 |
+| 外层资源管理 | 对承载容器配置 CPU、内存请求与限额 |
+| 存储与访问 | PVC 保存 BoxLite home，Service 与 port-forward 提供实验入口 |
+| 监控接入 | 复用已有 VictoriaMetrics、Grafana 与采集资源 |
+
+例如，一个 Pod 内启动四个 Box，Kubernetes 仍然只看到一个 Pod。本次 Pod 请求 1 CPU / 2 GiB，容器限制 4 CPU / 8 GiB；四个 Box 各配置 1 vCPU / 512 MiB，**不会自动形成四份独立的 Kubernetes 资源请求**。每个 Box 的资源分配、数量上限和宿主机限额，需要 BoxLite 或上层平台继续管理。
+
+从依赖关系看，这组单节点 SDK 实验也可以在直接提供 KVM 的 Linux 环境中完成。使用 Kubernetes 的收益是接入已有运维体系；它不会让 Box 自动获得独立的 Kubernetes 调度、故障迁移和任务续跑能力。BoxLite 在本轮直接使用节点 KVM，现有 KubeVirt 虚拟机是同节点上的其他工作负载。
+
+### 1.2 BoxLite 有没有自己的调度控制面
+
+**有，但需要部署官方平台组件。**嵌入式 SDK 管理本地运行时；官方仓库的 `apps/` 另有 API 控制面、Runner 执行服务及 Console 等组件。API 接收创建请求并选择 Runner，一个 Runner 再管理多个 Box。该平台也可运行在云虚拟机上，不以 Kubernetes 为必需依赖。[官方平台架构](https://github.com/boxlite-ai/boxlite/blob/v0.10.7/apps/README.md)
+
+核对 v0.10.7 的 `RunnerService`，实例放置流程为：
+
+1. 筛选 READY、允许调度、没有进入排空状态，并达到可用性评分阈值的 Runner。
+2. 根据请求中的区域、实例类别和排除列表进一步过滤。
+3. 按可用性评分降序取最多十个候选，再随机选择一个；没有候选时返回无可用 Runner 的错误。
+
+可用性评分会使用 Runner 上报的 CPU、内存、磁盘和已分配资源等数据。这是平台内部的 Runner 选择逻辑，不能直接理解为 kube-scheduler 的 Pod 调度，也不能仅凭评分筛选就认定已为每次请求完成严格的资源预占。[Runner 调度实现](https://github.com/boxlite-ai/boxlite/blob/v0.10.7/apps/api/src/box/services/runner.service.ts)
+
+### 1.3 两层调度怎样配合，本轮覆盖到哪一层
+
+如果将完整 BoxLite 平台部署到 Kubernetes，可以形成两层放置关系：Kubernetes 决定 Runner Pod 位于哪个节点，BoxLite API 决定新 Box 分配给哪个 Runner，然后由 Runner 通过本机 KVM 启动 guest。Runner Pod 是 Kubernetes 的管理对象，Box 是 BoxLite 平台的管理对象。
+
+**本轮只部署嵌入式 SDK 应用，没有部署官方 API、Console 和多 Runner 控制面。**后文的四实例并发属于单个应用 Pod 内的执行验证；官方调度流程来自源码核对，不能算作已经完成的跨节点调度实测。
+
+要继续评估共享沙箱平台，下一轮应至少部署两个独立 Runner，验证容量不足、排空、故障状态与任务分配，并为各 Runner 使用独立的 runtime home 和存储。增加应用 Pod 副本、共享同一个 BoxLite home，不能替代这项控制面验证。
+
 ## 2. 实际部署环境
 
 | 项目 | 本次配置 |
