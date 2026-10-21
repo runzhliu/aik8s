@@ -49,7 +49,9 @@ The dependency chain also allows this single-node SDK experiment to run in a Lin
 
 ### 1.2 Does BoxLite have its own scheduling control plane?
 
-**Yes, through separately deployed official platform components.** The embedded SDK manages a local runtime. The repository's `apps/` also contains an API control plane, Runner execution service, Console, and related components. The API receives creation requests and selects a Runner; each Runner manages multiple Boxes. The platform can also run on cloud virtual machines and does not require Kubernetes. [Official platform architecture](https://github.com/boxlite-ai/boxlite/blob/v0.10.7/apps/README.md)
+**Yes, through separately deployed official platform components.**
+
+The embedded SDK manages a local runtime. The repository's `apps/` also contains an API control plane, Runner execution service, Console, and related components. The API receives creation requests and selects a Runner; each Runner manages multiple Boxes. The platform can also run on cloud virtual machines and does not require Kubernetes. [Official platform architecture](https://github.com/boxlite-ai/boxlite/blob/v0.10.7/apps/README.md)
 
 In v0.10.7, the placement path in `RunnerService` works as follows:
 
@@ -63,7 +65,9 @@ The availability score uses reported CPU, memory, disk, and allocated-resource d
 
 A complete BoxLite platform deployed on Kubernetes could have two placement layers: Kubernetes determines which node hosts a Runner Pod, BoxLite's API determines which Runner receives a new Box, and that Runner starts the guest through local KVM. Kubernetes manages the Runner Pod; the BoxLite platform manages the Box.
 
-**This run deployed only the embedded SDK application, without the official API, Console, or multiple-Runner control plane.** The four-instance concurrency test described below validates execution inside one application Pod. The official scheduling description comes from source inspection and is not a completed cross-node scheduling experiment.
+**This run deployed only the embedded SDK application, without the official API, Console, or multiple-Runner control plane.**
+
+The four-instance concurrency test described below validates execution inside one application Pod. The official scheduling description comes from source inspection and is not a completed cross-node scheduling experiment.
 
 Further shared-sandbox evaluation should deploy at least two independent Runners and test insufficient capacity, draining, failure states, and task assignment, with independent runtime homes and storage for each Runner. Adding application Pod replicas that share one BoxLite home cannot replace control-plane validation.
 

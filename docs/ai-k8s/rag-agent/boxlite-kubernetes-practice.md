@@ -49,7 +49,9 @@ flowchart TB
 
 ### 1.2 BoxLite 有没有自己的调度控制面
 
-**有，但需要部署官方平台组件。**嵌入式 SDK 管理本地运行时；官方仓库的 `apps/` 另有 API 控制面、Runner 执行服务及 Console 等组件。API 接收创建请求并选择 Runner，一个 Runner 再管理多个 Box。该平台也可运行在云虚拟机上，不以 Kubernetes 为必需依赖。[官方平台架构](https://github.com/boxlite-ai/boxlite/blob/v0.10.7/apps/README.md)
+**有，但需要部署官方平台组件。**
+
+嵌入式 SDK 管理本地运行时；官方仓库的 `apps/` 另有 API 控制面、Runner 执行服务及 Console 等组件。API 接收创建请求并选择 Runner，一个 Runner 再管理多个 Box。该平台也可运行在云虚拟机上，不以 Kubernetes 为必需依赖。[官方平台架构](https://github.com/boxlite-ai/boxlite/blob/v0.10.7/apps/README.md)
 
 核对 v0.10.7 的 `RunnerService`，实例放置流程为：
 
@@ -63,7 +65,9 @@ flowchart TB
 
 如果将完整 BoxLite 平台部署到 Kubernetes，可以形成两层放置关系：Kubernetes 决定 Runner Pod 位于哪个节点，BoxLite API 决定新 Box 分配给哪个 Runner，然后由 Runner 通过本机 KVM 启动 guest。Runner Pod 是 Kubernetes 的管理对象，Box 是 BoxLite 平台的管理对象。
 
-**本轮只部署嵌入式 SDK 应用，没有部署官方 API、Console 和多 Runner 控制面。**后文的四实例并发属于单个应用 Pod 内的执行验证；官方调度流程来自源码核对，不能算作已经完成的跨节点调度实测。
+**本轮只部署嵌入式 SDK 应用，没有部署官方 API、Console 和多 Runner 控制面。**
+
+后文的四实例并发属于单个应用 Pod 内的执行验证；官方调度流程来自源码核对，不能算作已经完成的跨节点调度实测。
 
 要继续评估共享沙箱平台，下一轮应至少部署两个独立 Runner，验证容量不足、排空、故障状态与任务分配，并为各 Runner 使用独立的 runtime home 和存储。增加应用 Pod 副本、共享同一个 BoxLite home，不能替代这项控制面验证。
 

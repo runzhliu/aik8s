@@ -1429,9 +1429,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/boxlite-kubernetes-practice.md": {
-      "source_sha256": "4002be2b8a4483c5af0b0ed6bc84de063ae4d48999b3aed040b9e1d327382fb9",
-      "english_sha256": "80e7afaf0ea74c67e5557c864104bf35354c42534eeccadf4165cd229cb6b637",
-      "reviewed_at": "2026-10-21T06:46:07.721873+00:00",
+      "source_sha256": "479b3baff39ced0749ccf707d24cf76b8b9aef77dc8440fa2c4a799c8658168c",
+      "english_sha256": "92eb31bae46e8db79c7d40ab931a0d89f47d3a08a8f05f77090026eeb3ad475d",
+      "reviewed_at": "2026-10-21T06:59:11.084058+00:00",
       "review": "reviewed against source"
     }
   }
