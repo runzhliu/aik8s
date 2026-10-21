@@ -214,12 +214,12 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "3e743d4c89546fdf2305f19fb17846da7cec10d67d91774fab8bf8902aa4f1db",
-      "english_sha256": "3e0d38214ecb03131610c4062cf9586bd3c9efff1a81fdf63250691d33cfda30",
+      "source_sha256": "af1b0a0cbc2c2a25c726ef03eac3e25c6cd962136ba784a093fcd9b0da8830c9",
+      "english_sha256": "00b3a2a607d20ad5a1f48b687669a8942088085aa55bbe3b660dac109168777e",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-21T03:21:57.781396+00:00"
+      "reviewed_at": "2026-10-21T06:13:36.499269+00:00"
     },
     "ai-k8s/practices/agent-sandbox-red-team.md": {
       "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
@@ -1426,6 +1426,12 @@
       "source_sha256": "fea81931baf8320f8728fc4ea286add256e654209eb9ce3547d48b36bb1c49ad",
       "english_sha256": "d30063c95136e96171eab5b8af8ee3f561a5fe6a7bd2f8c98519b1ac12dbd7ed",
       "reviewed_at": "2026-10-21T03:58:48.431177+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/boxlite-kubernetes-practice.md": {
+      "source_sha256": "6ee3cfc1733260182a727817a73b5eb578ca168f0c7503fd1f75c77197aab287",
+      "english_sha256": "7e45a4b25541d7496d8cd175d3a7f6a5325347dc96de97504a3c17b6d981882e",
+      "reviewed_at": "2026-10-21T06:17:06.187143+00:00",
       "review": "reviewed against source"
     }
   }

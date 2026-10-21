@@ -1,0 +1,18 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: boxlite-lab
+  namespace: victoriametrics
+spec:
+  namespaceSelector:
+    matchNames: [boxlite-lab]
+  selector:
+    matchLabels:
+      app: boxlite-lab
+  endpoints:
+    - port: metrics
+      interval: 5s
+      scrapeTimeout: 3s
+      relabelConfigs:
+        - targetLabel: job
+          replacement: boxlite-lab

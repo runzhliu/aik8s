@@ -1,0 +1,180 @@
+{
+  "boxlite_version": "0.10.7",
+  "source_commit": "e140b56b4c6195292cbcf26de76c406e71ab56f4",
+  "environment": {
+    "kubernetes": "1.30.4",
+    "containerd": "1.7.14",
+    "host_kernel": "5.10.134",
+    "cgroup": "v1",
+    "platform": "linux/amd64",
+    "guest_kernel": "6.12.87"
+  },
+  "first_successful_start_seconds": 5.465623140335083,
+  "prior_attempts": [
+    {
+      "stage": "guest_image_pull",
+      "status": "failed",
+      "cause": "Registry self-signed certificate not trusted; second attempt used an explicit registry-scoped TLS verification exception"
+    },
+    {
+      "stage": "suite_attempt01",
+      "status": "incomplete",
+      "cause": "Harness accessed SimpleBox.id after stop; corrected before independent attempt02; original records retained privately"
+    }
+  ],
+  "attempt02": [
+    {
+      "test": "cached_start",
+      "status": "passed",
+      "attempt": "02",
+      "samples": [
+        {
+          "start_seconds": 1.427200935781002,
+          "first_exec_seconds": 0.08325376361608505,
+          "sdk_create_ms": 1424
+        },
+        {
+          "start_seconds": 0.7516112253069878,
+          "first_exec_seconds": 0.07868310064077377,
+          "sdk_create_ms": 749
+        },
+        {
+          "start_seconds": 0.7436072006821632,
+          "first_exec_seconds": 0.07439356297254562,
+          "sdk_create_ms": 741
+        },
+        {
+          "start_seconds": 0.7295038402080536,
+          "first_exec_seconds": 0.08487080782651901,
+          "sdk_create_ms": 727
+        },
+        {
+          "start_seconds": 0.7525689899921417,
+          "first_exec_seconds": 0.07450994104146957,
+          "sdk_create_ms": 748
+        },
+        {
+          "start_seconds": 0.7302367463707924,
+          "first_exec_seconds": 0.07636857777833939,
+          "sdk_create_ms": 728
+        },
+        {
+          "start_seconds": 0.7254167795181274,
+          "first_exec_seconds": 0.07832775264978409,
+          "sdk_create_ms": 723
+        },
+        {
+          "start_seconds": 0.7208711430430412,
+          "first_exec_seconds": 0.07580407708883286,
+          "sdk_create_ms": 718
+        },
+        {
+          "start_seconds": 0.7137791067361832,
+          "first_exec_seconds": 0.08318872004747391,
+          "sdk_create_ms": 711
+        },
+        {
+          "start_seconds": 0.7792590707540512,
+          "first_exec_seconds": 0.09000051766633987,
+          "sdk_create_ms": 777
+        }
+      ]
+    },
+    {
+      "test": "warm_exec",
+      "status": "passed",
+      "attempt": "02",
+      "samples_seconds": [
+        0.07183033227920532,
+        0.034087441861629486,
+        0.031546108424663544,
+        0.032374002039432526,
+        0.03211659938097,
+        0.03147362917661667,
+        0.03206414729356766,
+        0.03275062143802643,
+        0.031243562698364258,
+        0.032587915658950806,
+        0.03138575702905655,
+        0.03214450925588608,
+        0.03252054750919342,
+        0.03194333612918854,
+        0.03181004524230957,
+        0.03334329277276993,
+        0.0351959764957428,
+        0.0317288413643837,
+        0.0322006493806839,
+        0.03166748583316803
+      ]
+    },
+    {
+      "test": "file_isolation",
+      "status": "passed",
+      "attempt": "02",
+      "separate_boot_ids": true,
+      "file_not_visible_in_other_box": true,
+      "round_trip_sha256": "dfad7207690a80f921fca463c4417ba1fe76ce9646e2edb09c0d961faa3a10a7"
+    },
+    {
+      "test": "timeout",
+      "status": "passed",
+      "attempt": "02",
+      "timeout_seconds": 2,
+      "elapsed_seconds": 2.0106329768896103,
+      "exit_code": -15,
+      "box_still_usable": true
+    },
+    {
+      "test": "parallel_cpu",
+      "status": "passed",
+      "attempt": "02",
+      "concurrency": 4,
+      "guest_cpus_each": 1,
+      "guest_memory_mib_each": 512,
+      "elapsed_seconds": 90.61017628759146,
+      "iterations": [
+        384596,
+        384867,
+        385099,
+        385964
+      ]
+    },
+    {
+      "test": "persistence_prepare",
+      "status": "passed",
+      "attempt": "02",
+      "stopped_before_pod_recreation": true
+    },
+    {
+      "test": "persistence_verify",
+      "status": "passed",
+      "attempt": "02",
+      "same_box_id": true,
+      "disk_marker_preserved": true,
+      "new_guest_boot_id": true,
+      "start_seconds": 0.7123471572995186
+    },
+    {
+      "test": "parallel_cpu_repeat",
+      "status": "passed",
+      "attempt": "02",
+      "concurrency": 4,
+      "guest_cpus_each": 1,
+      "guest_memory_mib_each": 512,
+      "elapsed_seconds": 90.35420352965593,
+      "iterations": [
+        385591,
+        386294,
+        385852,
+        385645
+      ]
+    }
+  ],
+  "monitoring": {
+    "peak_container_cpu_cores_30s_rate": 4.005335670166668,
+    "peak_container_working_set_bytes": 764030976,
+    "sdk_count_during_four_tasks_after_restore": 3,
+    "running_at_end": 0,
+    "kvm_fds_in_container_at_end": 0
+  }
+}
