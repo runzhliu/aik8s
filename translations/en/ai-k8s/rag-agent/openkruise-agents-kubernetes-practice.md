@@ -1,6 +1,6 @@
 ---
 title: "OpenKruise Agents in Practice: Warm Pools, Sandbox Tasks, and Pause/Resume"
-description: Deploy OpenKruise Agents 0.6.0 on Kubernetes 1.30.4, verify the E2B SDK, warm and on-demand creation, filesystem separation and expiry, and investigate a containerd image-reference mismatch blocking resume
+description: Deploy OpenKruise Agents 0.6.0 on Kubernetes 1.30.4, verify the E2B SDK, warm and on-demand creation, filesystem separation and expiry, investigate blocked resume, and compare Kubernetes SIG Apps Agent Sandbox
 status: evolving
 last_reviewed: 2026-10-21
 ---
@@ -170,7 +170,38 @@ The runtime dashboard adds reconcile errors, queue depth, runtime abnormalities,
 
 The example directory includes both dashboards and the scrape manifests for an existing monitoring installation. The experiment neither reinstalls the monitoring stack nor replaces its existing scrape configuration.
 
-## 7. Define Resource and State Boundaries Before Adoption
+## 7. How Does It Compare with Kubernetes SIG Apps Agent Sandbox?
+
+The Kubernetes community also maintains [`kubernetes-sigs/agent-sandbox`](https://github.com/kubernetes-sigs/agent-sandbox), a SIG Apps (Special Interest Group Apps) subproject. It requires a separately installed controller and CRDs; it is not a built-in Kubernetes Pod type. This comparison uses [SIG Agent Sandbox v1.0.7](https://github.com/kubernetes-sigs/agent-sandbox/releases/tag/v1.0.7), current as of October 21, 2026, and OpenKruise Agents v0.6.0, the version tested in this article. [SIG Apps project list](https://www.kubernetes.dev/community/community-groups/sigs/apps/)
+
+Their goals overlap substantially: creating execution environments with stable identities, warming them, claiming them, and reclaiming them. The SIG project now includes warm pools, SDKs, and routing; describing it as just a Sandbox CRD would miss those capabilities.
+
+| Dimension | SIG Agent Sandbox v1.0.7 | OpenKruise Agents v0.6.0 |
+| --- | --- | --- |
+| API groups | Core `agents.x-k8s.io`, extensions `extensions.agents.x-k8s.io` | `agents.kruise.io` |
+| CRD scope | Core Sandbox plus optional SandboxTemplate, SandboxClaim, and SandboxWarmPool: 4 in total | The Controller and Manager Charts used here install 12 in total |
+| Warm inventory | SandboxWarmPool references a template; a Claim takes an existing environment and the pool replenishes | SandboxSet maintains unclaimed inventory and replenishes it after claims |
+| Application access | Its own Python and Go SDKs manage resources through the Kubernetes API, then connect to the sandbox runtime | Manager exposes E2B-compatible APIs, paired with the E2B SDK and agent-runtime |
+| Request routing | Provides a Router; SDK/runtime choices also allow direct Pod IP or optional Service connectivity | Manager handles management requests; an independent Gateway routes data-plane requests to sandboxes |
+| Additional management resources | Organizes the capabilities above around the core Sandbox and three extensions | Also defines PoolAutoscaler, SandboxUpdateOps, Checkpoint, Commit, and traffic/security policy resources |
+
+See the SIG project's [v1.0.7 CRD directory](https://github.com/kubernetes-sigs/agent-sandbox/tree/v1.0.7/k8s/crds) and [Python SDK documentation](https://github.com/kubernetes-sigs/agent-sandbox/blob/v1.0.7/clients/python/agentic-sandbox-client/README.md) for its resource inventory and connectivity, and the [OpenKruise architecture](https://openkruise.io/kruiseagents/architecture) for component responsibilities. CRD counts describe how capabilities are organized; they do not establish resource overhead or maturity. Although both projects use the name Sandbox, their API groups and fields differ, so manifests are not interchangeable.
+
+### 7.1 API Differences Affect Enterprise Integration
+
+With the OpenKruise access path used in this article, an application backend can claim environments through E2B using a service endpoint and API key, without holding Kubernetes credentials. The SIG project's official SDK calls the Kubernetes API to create and observe resources such as Claims, requiring the corresponding cluster permissions. It then uses the selected connectivity mode for command and file operations. An existing enterprise portal can keep those permissions in its platform backend and expose business APIs to users. Similar command-execution capabilities do not make the two management APIs interchangeable.
+
+Based on these API and resource designs, I would evaluate the SIG project as a general sandbox workload foundation and OpenKruise Agents as an implementation integrating more delivery-management capabilities. Teams with existing authentication, quotas, auditing, and portals that mainly need sandbox resource management should examine the SIG project closely. Teams with E2B applications that want to retain that calling pattern and use sandbox pool and upgrade management can prioritize OpenKruise validation. This judgment concerns integration effort, not performance or reliability rankings.
+
+### 7.2 Pause/Resume and Isolation Depend on the Implementation
+
+In SIG v1.0.7, `operatingMode: Suspended` terminates the backing Pod while retaining the Sandbox object and volumes. Switching back to Running creates a Pod again. This resembles the behavior of the OpenKruise `Stop` path tested here. Neither path should be interpreted as automatically preserving Python variables, processes, or the container writable layer. Memory snapshots require a separate check of runtime and platform implementations. [SIG state and type definitions](https://github.com/kubernetes-sigs/agent-sandbox/blob/v1.0.7/api/v1beta1/sandbox_types.go)
+
+Security boundaries likewise depend on the actual runtime and network policies. The SIG project provides a [gVisor integration example](https://agent-sandbox.sigs.k8s.io/docs/use-cases/gvisor-isolation/), but installing a controller does not establish that nodes have gVisor or Kata isolation. Comparisons need to validate both implementations under the same runtime conditions.
+
+This section reviews official documentation and source code; **SIG Agent Sandbox has not been tested in the same environment**. The earlier 52.8 ms median warm-claim time belongs only to this small OpenKruise experiment. Cross-project performance comparisons must align application images, image caches, warm inventory, resource settings, client timing boundaries, and concurrency. This result cannot be ranked directly against another project's examples or promotional figures.
+
+## 8. Define Resource and State Boundaries Before Adoption
 
 For teams already using Kubernetes and frequently delivering agent execution environments, OpenKruise Agents brings inventory, claiming, state, upgrades, and cleanup into one resource-management workflow. Existing agent applications can connect their execution tools to the SDK, obtain a sandbox, and submit code or file operations without changing their model interface.
 

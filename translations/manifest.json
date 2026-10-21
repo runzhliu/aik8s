@@ -1423,9 +1423,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/openkruise-agents-kubernetes-practice.md": {
-      "source_sha256": "9845c592c8a2117e465ca2c2b00d14010dc9232025fe03bb8f04d4e96dddd34e",
-      "english_sha256": "2f6fa270446388583d0f97ac2e8545059ab65f2ebb98679db3fb3c0750f7ebea",
-      "reviewed_at": "2026-10-21T03:32:32.142827+00:00",
+      "source_sha256": "fea81931baf8320f8728fc4ea286add256e654209eb9ce3547d48b36bb1c49ad",
+      "english_sha256": "d30063c95136e96171eab5b8af8ee3f561a5fe6a7bd2f8c98519b1ac12dbd7ed",
+      "reviewed_at": "2026-10-21T03:58:48.431177+00:00",
       "review": "reviewed against source"
     }
   }

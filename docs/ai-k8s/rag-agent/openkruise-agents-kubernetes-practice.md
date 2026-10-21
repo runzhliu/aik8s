@@ -1,6 +1,6 @@
 ---
 title: OpenKruise Agents 实战：预热池、沙箱任务与暂停恢复
-description: 在 Kubernetes 1.30.4 上部署 OpenKruise Agents 0.6.0，验证 E2B SDK、预热与按需创建、文件隔离、超时回收，并排查一次 containerd 镜像引用导致的恢复阻塞
+description: 在 Kubernetes 1.30.4 上部署 OpenKruise Agents 0.6.0，验证 E2B SDK、预热与按需创建、文件隔离、超时回收，排查恢复阻塞，并对比 Kubernetes SIG Apps Agent Sandbox
 status: evolving
 last_reviewed: 2026-10-21
 ---
@@ -170,7 +170,38 @@ Hibernate、内存或 GPU 状态保存需要另外的实现与依赖。本次没
 
 两份看板及采集清单在示例目录中，可导入已有监控环境。本次没有重装监控栈或覆盖原有采集配置。
 
-## 7. 落地时先把资源和状态边界定清楚
+## 7. 与 Kubernetes SIG Apps Agent Sandbox 有什么区别
+
+Kubernetes 社区还有一个 [`kubernetes-sigs/agent-sandbox`](https://github.com/kubernetes-sigs/agent-sandbox) 项目，归属 SIG Apps（Special Interest Group Apps，应用特别兴趣小组）。它同样需要单独安装控制器和 CRD，不是 Kubernetes 内置的 Pod 类型。以下按截至 2026-10-21 的 [SIG 项目 v1.0.7](https://github.com/kubernetes-sigs/agent-sandbox/releases/tag/v1.0.7) 与本文实测的 OpenKruise Agents v0.6.0 对比。[SIG Apps 项目清单](https://www.kubernetes.dev/community/community-groups/sigs/apps/)
+
+两者解决的问题高度重叠：创建有稳定身份的执行环境、预热、领取和回收。SIG 项目现在也有预热池、SDK 与路由服务，不能将它理解为“只有一个 Sandbox CRD”。
+
+| 维度 | SIG Agent Sandbox v1.0.7 | OpenKruise Agents v0.6.0 |
+| --- | --- | --- |
+| API 分组 | 核心 `agents.x-k8s.io`，扩展 `extensions.agents.x-k8s.io` | `agents.kruise.io` |
+| CRD 范围 | 核心 Sandbox，加上可选的 SandboxTemplate、SandboxClaim、SandboxWarmPool，共 4 个 | 本文 Controller 与 Manager 两份 Chart 合计安装 12 个 |
+| 预热库存 | SandboxWarmPool 引用模板，Claim 领取已有环境后补池 | SandboxSet 维持未领取库存，领取后补池 |
+| 应用接入 | 自有 Python、Go SDK，通过 Kubernetes API 管理资源，再连接沙箱运行时 | Manager 提供 E2B 兼容 API，配合 E2B SDK 与 agent-runtime |
+| 请求路由 | 提供 Router，也可按 SDK 与运行时选择直接连接 Pod IP 或可选的 Service | Manager 处理管理请求，独立 Gateway 将数据面请求路由到沙箱 |
+| 其他管理资源 | 以核心 Sandbox 与三个扩展资源组织上述能力 | 另有 PoolAutoscaler、SandboxUpdateOps、Checkpoint、Commit 以及流量安全策略资源 |
+
+SIG 的资源清单和连接方式分别见 [v1.0.7 CRD 目录](https://github.com/kubernetes-sigs/agent-sandbox/tree/v1.0.7/k8s/crds)、[Python SDK 说明](https://github.com/kubernetes-sigs/agent-sandbox/blob/v1.0.7/clients/python/agentic-sandbox-client/README.md)；OpenKruise 的组件职责见[官方架构](https://openkruise.io/kruiseagents/architecture)。CRD 数量反映了功能如何组织，不能直接用来判断资源开销或成熟度。即使资源都叫 Sandbox，两边的 API 分组与字段也不相同，清单不能直接互换。
+
+### 7.1 接口差异会影响企业平台怎么接
+
+在本文的 OpenKruise 接入方式中，应用后端拿到服务入口和 API Key，就能通过 E2B 接口领取环境，不需要持有 Kubernetes 凭据。SIG 官方 SDK 则会调用 Kubernetes API 创建、观察 Claim 等资源，需要配置相应的集群访问权限；随后再通过选定的连接方式执行命令和文件操作。已有企业门户时，可以由平台后端持有这些权限，再向用户暴露业务接口。运行时能执行相似的命令，并不意味着两个项目的管理 API 可以直接替换。
+
+从这些接口和资源设计看，我更倾向于把 SIG 项目作为通用沙箱工作负载的基础，把 OpenKruise Agents 作为集成了更多交付管理能力的实现来评估。已有认证、配额、审计和门户，主要需要沙箱资源管理的团队，值得重点看 SIG 项目；已有 E2B 应用、希望复用其调用方式，并使用沙箱池和升级管理能力的团队，可以优先验证 OpenKruise。这个判断针对集成工作量，不是性能或稳定性排名。
+
+### 7.2 暂停恢复和安全隔离都要看实际实现
+
+SIG v1.0.7 的 `operatingMode: Suspended` 会终止底层 Pod，保留 Sandbox 对象和卷；切回 Running 后再创建 Pod。这与本文验证的 OpenKruise `Stop` 在行为上接近，不能将其中任意一条路径理解为自动保存 Python 变量、进程或容器可写层。内存快照需要另外核对运行时与平台实现。[SIG 状态与类型定义](https://github.com/kubernetes-sigs/agent-sandbox/blob/v1.0.7/api/v1beta1/sandbox_types.go)
+
+安全边界同样取决于实际使用的运行时和网络策略。SIG 项目提供 [gVisor 接入示例](https://agent-sandbox.sigs.k8s.io/docs/use-cases/gvisor-isolation/)，但控制器安装成功，不代表节点已经具备 gVisor 或 Kata 的隔离能力。比较两种方案时，需要在相同运行时条件下验证。
+
+本节是官方文档与源码核对，**尚未在同一环境实测 SIG Agent Sandbox**。前文 52.8 ms 的预热领取中位数，只属于本次 OpenKruise 小样本实验。跨项目性能比较需要统一业务镜像、镜像缓存、预热库存、资源配置、客户端计时起止点和并发，不能直接拿它与另一项目的示例或宣传数字排序。
+
+## 8. 落地时先把资源和状态边界定清楚
 
 对已经使用 Kubernetes、需要给 Agent 高频交付执行环境的团队，OpenKruise Agents 的价值在于把库存、领取、状态、升级和回收纳入同一套资源管理流程。已有 Agent 应用可以把执行工具接到 SDK，先取得沙箱，再把代码或文件任务交进去，不需要更换模型接口。
 
