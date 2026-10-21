@@ -1,0 +1,76 @@
+{
+  "started_at": 1792552460.954805,
+  "cases": [
+    {
+      "name": "Stop_pause_resume_changes_pod_and_loses_rootfs",
+      "status": "passed",
+      "seconds": 16.21773704199586,
+      "evidence": {
+        "pause_seconds": 8.639150334056467,
+        "resume_seconds": 3.1393324580276385,
+        "same_sandbox_id": true,
+        "pod_uid_changed": true,
+        "rootfs_marker_survived": false,
+        "memory_checkpoint": "not_tested"
+      }
+    },
+    {
+      "name": "TTL_reclaims_sandbox",
+      "status": "passed",
+      "seconds": 31.68964841600973,
+      "evidence": {
+        "requested_timeout_seconds": 30,
+        "observed_not_found_after_seconds": 29.770308707957156,
+        "http_status": 404
+      }
+    },
+    {
+      "name": "timeout_below_minimum_rejected",
+      "status": "passed",
+      "seconds": 0.07434879103675485,
+      "evidence": {
+        "requested_timeout_seconds": 20,
+        "http_status": 400,
+        "response": {
+          "code": 400,
+          "headers": null,
+          "message": "timeout should between 30 and 3600",
+          "request_id": "5615420f493ae52596c0d4ed134e3409"
+        }
+      }
+    },
+    {
+      "name": "unauthenticated_creation_rejected",
+      "status": "passed",
+      "seconds": 0.1351859160931781,
+      "evidence": {
+        "missing_key_status": 401
+      }
+    },
+    {
+      "name": "warm_pool_replenished",
+      "status": "passed",
+      "seconds": 0.885645541944541,
+      "evidence": {
+        "available": 2
+      }
+    }
+  ],
+  "warm_create_seconds": [],
+  "cold_create_seconds": [],
+  "conditions": {
+    "warm_pool_size": 2,
+    "warm_rounds": 5,
+    "cold_rounds": 3,
+    "cold_image_cache": "already present on the node",
+    "pause_strategy": "Stop",
+    "sdk": "e2b 2.24.0",
+    "code_interpreter_sdk": "2.4.1"
+  },
+  "cleanup_errors": [],
+  "finished_at": 1792552510.022558,
+  "summary": {
+    "passed": 5,
+    "failed": 0
+  }
+}

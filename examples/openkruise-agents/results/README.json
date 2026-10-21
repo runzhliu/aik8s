@@ -1,0 +1,6 @@
+{
+  "attempt01": "The test incorrectly asserted a return value from pause(), which returns None; its 20-second TTL request was rejected because the API minimum is 30 seconds. Raw outcomes are retained.",
+  "attempt02": "After correcting the harness, Stop resume timed out behind ingress: the controller compared a digest-qualified runtime spec reference with containerd image status. All independent TTL/auth/pool checks continued.",
+  "attempt03": "Only the runtime image reference was changed to a dedicated tag with the same verified manifest content. Stop pause/resume succeeded; the Sandbox ID stayed stable, Pod UID changed, and the rootfs file was absent. No checkpoint or engine patch was used.",
+  "round_count_note": "Attempts 02 and 03 reran lifecycle checks only. Their historical conditions.warm_rounds=5 and cold_rounds=3 are unchanged defaults, not measurements performed in those attempts; the empty timing arrays and cases list show what actually ran. Creation measurements are in attempt 01. The current verifier records zero round counts for lifecycle-only runs."
+}

@@ -1,0 +1,76 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kruise-agents-lab-metrics-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agents-sandbox-controller-metrics-reader
+subjects:
+  - kind: ServiceAccount
+    name: vmagent-vmks
+    namespace: victoriametrics
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: kruise-agents-controller
+  namespace: victoriametrics
+spec:
+  namespaceSelector:
+    matchNames: [sandbox-system]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agents-sandbox-controller
+  endpoints:
+    - port: https-metrics
+      scheme: https
+      path: /metrics
+      interval: 10s
+      scrapeTimeout: 5s
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        insecureSkipVerify: true
+      relabelConfigs:
+        - targetLabel: job
+          replacement: kruise-agents-controller
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: kruise-agents-manager
+  namespace: victoriametrics
+spec:
+  namespaceSelector:
+    matchNames: [sandbox-system]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agents-sandbox-manager
+  endpoints:
+    - port: manager
+      path: /metrics
+      interval: 10s
+      scrapeTimeout: 5s
+      relabelConfigs:
+        - targetLabel: job
+          replacement: kruise-agents-manager
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: kruise-agents-gateway
+  namespace: victoriametrics
+spec:
+  namespaceSelector:
+    matchNames: [sandbox-system]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sandbox-gateway
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 10s
+      scrapeTimeout: 5s
+      relabelConfigs:
+        - targetLabel: job
+          replacement: kruise-agents-gateway

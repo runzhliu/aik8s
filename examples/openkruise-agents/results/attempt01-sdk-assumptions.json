@@ -1,0 +1,161 @@
+{
+  "started_at": 1792552039.301354,
+  "cases": [
+    {
+      "name": "warm_create_command_file_delete_1",
+      "status": "passed",
+      "seconds": 2.7349142080638558,
+      "evidence": {
+        "create_seconds": 0.7680863330606371,
+        "stdout": "5050",
+        "file_roundtrip": true
+      }
+    },
+    {
+      "name": "warm_create_command_file_delete_2",
+      "status": "passed",
+      "seconds": 4.009879208984785,
+      "evidence": {
+        "create_seconds": 0.05071783298626542,
+        "stdout": "5050",
+        "file_roundtrip": true
+      }
+    },
+    {
+      "name": "warm_create_command_file_delete_3",
+      "status": "passed",
+      "seconds": 3.9653260409832,
+      "evidence": {
+        "create_seconds": 0.05279245902784169,
+        "stdout": "5050",
+        "file_roundtrip": true
+      }
+    },
+    {
+      "name": "warm_create_command_file_delete_4",
+      "status": "passed",
+      "seconds": 6.091628041001968,
+      "evidence": {
+        "create_seconds": 0.08544566598720849,
+        "stdout": "5050",
+        "file_roundtrip": true
+      }
+    },
+    {
+      "name": "warm_create_command_file_delete_5",
+      "status": "passed",
+      "seconds": 3.8685579580487683,
+      "evidence": {
+        "create_seconds": 0.0289252910297364,
+        "stdout": "5050",
+        "file_roundtrip": true
+      }
+    },
+    {
+      "name": "cold_create_command_file_delete_1",
+      "status": "passed",
+      "seconds": 4.085519666899927,
+      "evidence": {
+        "create_seconds": 3.907231374992989,
+        "stdout": "5050",
+        "file_roundtrip": true
+      }
+    },
+    {
+      "name": "cold_create_command_file_delete_2",
+      "status": "passed",
+      "seconds": 2.9249421659624204,
+      "evidence": {
+        "create_seconds": 2.8201972920214757,
+        "stdout": "5050",
+        "file_roundtrip": true
+      }
+    },
+    {
+      "name": "cold_create_command_file_delete_3",
+      "status": "passed",
+      "seconds": 3.287214459036477,
+      "evidence": {
+        "create_seconds": 2.8647142499685287,
+        "stdout": "5050",
+        "file_roundtrip": true
+      }
+    },
+    {
+      "name": "separate_sandbox_filesystems",
+      "status": "passed",
+      "seconds": 0.7935353750362992,
+      "evidence": {
+        "different_ids": true,
+        "marker_visible_in_other_sandbox": false
+      }
+    },
+    {
+      "name": "Stop_pause_resume_changes_pod_and_loses_rootfs",
+      "status": "failed",
+      "seconds": 16.298087084083818,
+      "error": "AssertionError: "
+    },
+    {
+      "name": "TTL_reclaims_sandbox",
+      "status": "failed",
+      "seconds": 0.7531872080871835,
+      "error": "SandboxException: 400: timeout should between 30 and 3600"
+    },
+    {
+      "name": "unauthenticated_creation_rejected",
+      "status": "passed",
+      "seconds": 0.11791358306072652,
+      "evidence": {
+        "missing_key_status": 401
+      }
+    },
+    {
+      "name": "warm_pool_replenished",
+      "status": "passed",
+      "seconds": 0.3905222079483792,
+      "evidence": {
+        "available": 2
+      }
+    }
+  ],
+  "warm_create_seconds": [
+    0.7680863330606371,
+    0.05071783298626542,
+    0.05279245902784169,
+    0.08544566598720849,
+    0.0289252910297364
+  ],
+  "cold_create_seconds": [
+    3.907231374992989,
+    2.8201972920214757,
+    2.8647142499685287
+  ],
+  "conditions": {
+    "warm_pool_size": 2,
+    "warm_rounds": 5,
+    "cold_rounds": 3,
+    "cold_image_cache": "already present on the node",
+    "pause_strategy": "Stop",
+    "sdk": "e2b 2.24.0",
+    "code_interpreter_sdk": "2.4.1"
+  },
+  "cleanup_errors": [],
+  "finished_at": 1792552088.671115,
+  "summary": {
+    "passed": 11,
+    "failed": 2
+  },
+  "warm_summary": {
+    "n": 5,
+    "median_seconds": 0.05279245902784169,
+    "min_seconds": 0.0289252910297364,
+    "max_seconds": 0.7680863330606371
+  },
+  "cold_summary": {
+    "n": 3,
+    "median_seconds": 2.8647142499685287,
+    "min_seconds": 2.8201972920214757,
+    "max_seconds": 3.907231374992989
+  }
+}

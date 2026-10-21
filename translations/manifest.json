@@ -214,12 +214,12 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "27940d699651265050c1bfa7c75cc6623846463da4e9b28350aa9fda16bfff25",
-      "english_sha256": "6ddac287c018c93eef7961b4a2c901aff9f5f4963aecf028e923bc3b6e97d0b2",
+      "source_sha256": "3e743d4c89546fdf2305f19fb17846da7cec10d67d91774fab8bf8902aa4f1db",
+      "english_sha256": "3e0d38214ecb03131610c4062cf9586bd3c9efff1a81fdf63250691d33cfda30",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-19T08:57:28.244392+00:00"
+      "reviewed_at": "2026-10-21T03:21:57.781396+00:00"
     },
     "ai-k8s/practices/agent-sandbox-red-team.md": {
       "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
@@ -1420,6 +1420,12 @@
       "source_sha256": "90540d6caba17d5a49cbd50eabd809e134b7e9f4c599a71e3eae64a407ed88c1",
       "english_sha256": "b9db9ad2b8572ec7b088e8744eb5bdffdc5b66f8f66f78b6e57bb5115e482d38",
       "reviewed_at": "2026-10-20T09:26:50.678253+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/openkruise-agents-kubernetes-practice.md": {
+      "source_sha256": "9845c592c8a2117e465ca2c2b00d14010dc9232025fe03bb8f04d4e96dddd34e",
+      "english_sha256": "2f6fa270446388583d0f97ac2e8545059ab65f2ebb98679db3fb3c0750f7ebea",
+      "reviewed_at": "2026-10-21T03:32:32.142827+00:00",
       "review": "reviewed against source"
     }
   }

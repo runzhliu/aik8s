@@ -1,0 +1,69 @@
+{
+  "started_at": 1792552194.550581,
+  "cases": [
+    {
+      "name": "Stop_pause_resume_changes_pod_and_loses_rootfs",
+      "status": "failed",
+      "seconds": 71.3354995829286,
+      "error": "SandboxException: 504: b'<html>\\r\\n<head><title>504 Gateway Time-out</title></head>\\r\\n<body>\\r\\n<center><h1>504 Gateway Time-out</h1></center>\\r\\n<hr><center>nginx</center>\\r\\n</body>\\r\\n</html>\\r\\n'"
+    },
+    {
+      "name": "TTL_reclaims_sandbox",
+      "status": "passed",
+      "seconds": 31.831028749933466,
+      "evidence": {
+        "requested_timeout_seconds": 30,
+        "observed_not_found_after_seconds": 30.25702525000088,
+        "http_status": 404
+      }
+    },
+    {
+      "name": "timeout_below_minimum_rejected",
+      "status": "passed",
+      "seconds": 0.07710370805580169,
+      "evidence": {
+        "requested_timeout_seconds": 20,
+        "http_status": 400,
+        "response": {
+          "code": 400,
+          "headers": null,
+          "message": "timeout should between 30 and 3600",
+          "request_id": "8af06a5786cb0b0a6849b019a9efa910"
+        }
+      }
+    },
+    {
+      "name": "unauthenticated_creation_rejected",
+      "status": "passed",
+      "seconds": 0.08829345891717821,
+      "evidence": {
+        "missing_key_status": 401
+      }
+    },
+    {
+      "name": "warm_pool_replenished",
+      "status": "passed",
+      "seconds": 0.8343255419749767,
+      "evidence": {
+        "available": 2
+      }
+    }
+  ],
+  "warm_create_seconds": [],
+  "cold_create_seconds": [],
+  "conditions": {
+    "warm_pool_size": 2,
+    "warm_rounds": 5,
+    "cold_rounds": 3,
+    "cold_image_cache": "already present on the node",
+    "pause_strategy": "Stop",
+    "sdk": "e2b 2.24.0",
+    "code_interpreter_sdk": "2.4.1"
+  },
+  "cleanup_errors": [],
+  "finished_at": 1792552298.797518,
+  "summary": {
+    "passed": 4,
+    "failed": 1
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "agent-sandbox-controller": {
+    "image": "openkruise-registry.cn-shanghai.cr.aliyuncs.com/openkruise/agent-sandbox-controller:v0.6.0",
+    "digest": "sha256:2d5687595a319bc0483b655d2309c6b23cabe86bbf547653efe921125bd764f6",
+    "mirrored_layers_and_config_verified": true
+  },
+  "sandbox-manager": {
+    "image": "openkruise-registry.cn-shanghai.cr.aliyuncs.com/openkruise/sandbox-manager:v0.6.0",
+    "digest": "sha256:1ab2dbfebc9d6863a9120688fbf32258f65beed9ac8628fe46aa8c6f9d7e9b01",
+    "mirrored_layers_and_config_verified": true
+  },
+  "sandbox-gateway": {
+    "image": "openkruise-registry.cn-shanghai.cr.aliyuncs.com/openkruise/sandbox-gateway:v0.6.0",
+    "digest": "sha256:bebea74bff03b3527e41578ddce591d404d8014bfe52992d299b5dfa99e38786",
+    "mirrored_layers_and_config_verified": true
+  },
+  "agent-runtime": {
+    "image": "openkruise-registry.cn-shanghai.cr.aliyuncs.com/openkruise/agent-runtime:v0.3.0",
+    "digest": "sha256:7d9a1475dd6a9c03b356bc9fe52b0984371d78feaa68f4c562adc14d585b21e9",
+    "mirrored_layers_and_config_verified": true
+  }
+}
