@@ -131,6 +131,8 @@ BoxLite 虽然采用 gvproxy，但 0.10.7 通过库与 FFI（Foreign Function In
 
 本轮没有对 CubeSandbox 注入故障，下面属于固定版本文档核对。
 
+后续已单独完成 [CubeSandbox v0.7.3 组件故障与恢复实测](cubesandbox-failure-recovery-practice.md)，包括实际运行时版本核对、控制面中断、VMM 强杀、计算 Pod 重建失败和真实监控。下文保留本篇原实验的文档分析边界，不追认成已完成的故障注入。
+
 CubeSandbox v0.7.0 的 Kubernetes 部署，将 Cubelet、网络运行时及可选出口组件放进计算侧 Big Pod。文档明确提醒：该版本的 Pod 网络模式下，重建 Big Pod 会更换网络命名空间，已有沙箱网络会中断。TAP 设备和 CubeVS 网络钩子的位置，比 CubeAPI 是否还活着更关键。[v0.7.0 架构](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.0/docs/guide/kubernetes/architecture.md)、[升级与中断说明](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.0/docs/guide/kubernetes/upgrade.md)
 
 这也不能直接推导成“策略丢了，网络全面放通”。网络接口或转发链路消失，可能先表现为断网；部分宿主状态仍保留时，还需要进一步检查程序、Map、路由和代理是否一致。`hostNetwork` 可以改变网络命名空间的生命周期，但不自动解决所有 VMM、规则恢复和代理可用性问题。

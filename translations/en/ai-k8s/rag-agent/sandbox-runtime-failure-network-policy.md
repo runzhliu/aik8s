@@ -131,6 +131,8 @@ Ordinary containers can report the same boot ID as other containers on the node.
 
 No CubeSandbox faults were injected in this experiment. This section reviews pinned-version documentation.
 
+A separate [CubeSandbox v0.7.3 component failure and recovery experiment](cubesandbox-failure-recovery-practice.md) has since been completed, covering actual runtime verification, control-plane outages, VMM termination, failed compute Pod recovery, and real monitoring. The analysis below retains this article's original evidence boundary; it is not retroactively presented as injected faults.
+
 CubeSandbox v0.7.0 places Cubelet, its network runtime, and optional egress components in the compute Big Pod. Its documentation explicitly warns that recreating this Pod in that version's Pod-network configuration changes the network namespace and interrupts existing sandbox networking. TAP-device and CubeVS-hook placement matters more than CubeAPI survival alone. [v0.7.0 architecture](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.0/docs/guide/kubernetes/architecture.md), [Upgrade disruption](https://github.com/TencentCloud/CubeSandbox/blob/v0.7.0/docs/guide/kubernetes/upgrade.md)
 
 This does not establish that policy loss opens every network path. Losing interfaces or forwarding paths can first cause disconnection. Where some host state survives, programs, maps, routes, and proxies must be checked for consistency. `hostNetwork` changes network-namespace lifetime but does not automatically solve every VMM, policy-restoration, and proxy-availability problem.

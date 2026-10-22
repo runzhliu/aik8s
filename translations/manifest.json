@@ -1441,9 +1441,15 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/sandbox-runtime-failure-network-policy.md": {
-      "source_sha256": "2ca876b7d3a21400049df85332c2a1572f1154dd754ec909e24c3f27fdcefc51",
-      "english_sha256": "c130b4e105237ad8e64d824907d3324d3c3a6aa7dfc3142781eed06b51490014",
-      "reviewed_at": "2026-10-22T07:16:13.311076+00:00",
+      "source_sha256": "ef27055733fe04358f134a459d8792dbe7634917c3223d6e1b0304a268199ccd",
+      "english_sha256": "6d8fb133c2009260a052d0672bf9f675cc2fed1bc97f9e1f3ca9d6f86a076def",
+      "reviewed_at": "2026-10-22T10:51:57.581880+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-failure-recovery-practice.md": {
+      "source_sha256": "bd92a69475278f4f2be8f0733147f6da4356c12a69e2d7330fffd336a4afa0c5",
+      "english_sha256": "d752fb55cb5ef9cd2396434be9ad3c48303a00fd1d3160ee20854c1c398ea4eb",
+      "reviewed_at": "2026-10-22T10:53:40.160300+00:00",
       "review": "reviewed against source"
     }
   }
