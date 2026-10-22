@@ -1,0 +1,196 @@
+{
+  "version": "0.7.8",
+  "attempt": "03",
+  "phase": "ready",
+  "busy": false,
+  "records": [
+    {
+      "test": "cached_start",
+      "status": "passed",
+      "at": 1792639560.8666894,
+      "attempt": "02",
+      "code_sha256": "7f594cfedcc4e743a237f2907304d6996fa7707f70a88fa151a9680ebc1acd77",
+      "samples_seconds": [
+        0.34084799140691757,
+        0.22702071070671082,
+        0.2431517392396927,
+        0.23935896158218384,
+        0.2350510060787201,
+        0.23218391835689545,
+        0.23512139916419983,
+        0.245894156396389,
+        0.3135581463575363,
+        0.24266304820775986
+      ],
+      "count": 10
+    },
+    {
+      "test": "warm_exec",
+      "status": "passed",
+      "at": 1792639561.7454865,
+      "attempt": "02",
+      "code_sha256": "7f594cfedcc4e743a237f2907304d6996fa7707f70a88fa151a9680ebc1acd77",
+      "samples_seconds": [
+        0.052006736397743225,
+        0.028109349310398102,
+        0.027964822947978973,
+        0.02795635163784027,
+        0.027842335402965546,
+        0.02816426008939743,
+        0.02788098156452179,
+        0.027985364198684692,
+        0.028068214654922485,
+        0.028112195432186127,
+        0.027731552720069885,
+        0.028215818107128143,
+        0.028289131820201874,
+        0.027789220213890076,
+        0.027866758406162262,
+        0.027890965342521667,
+        0.028749242424964905,
+        0.027389027178287506,
+        0.028300486505031586,
+        0.027804173529148102
+      ],
+      "count": 20
+    },
+    {
+      "test": "isolation",
+      "status": "passed",
+      "at": 1792639562.8474016,
+      "attempt": "02",
+      "code_sha256": "7f594cfedcc4e743a237f2907304d6996fa7707f70a88fa151a9680ebc1acd77",
+      "separate_boot_ids": true,
+      "separate_files": true,
+      "guest_kernel": "6.12.111",
+      "roundtrip_sha256": "311b433f86b9a92e5d5b2d47850d0a5247112df91958ae6f1ec4925fb5a46e7d"
+    },
+    {
+      "test": "timeout",
+      "status": "passed",
+      "at": 1792639565.1793363,
+      "attempt": "02",
+      "code_sha256": "7f594cfedcc4e743a237f2907304d6996fa7707f70a88fa151a9680ebc1acd77",
+      "elapsed_seconds": 2.0033339112997055,
+      "timeout_seconds": 2,
+      "behavior": "ExecTimeoutError",
+      "still_usable": true
+    },
+    {
+      "test": "parallel_cpu",
+      "status": "passed",
+      "at": 1792639656.501308,
+      "attempt": "02",
+      "code_sha256": "7f594cfedcc4e743a237f2907304d6996fa7707f70a88fa151a9680ebc1acd77",
+      "concurrency": 4,
+      "cpus_each": 1,
+      "memory_mib_each": 512,
+      "duration_seconds": 90,
+      "elapsed_seconds": 90.08031006157398,
+      "iterations": [
+        338022,
+        338381,
+        338551,
+        337622
+      ]
+    },
+    {
+      "test": "live_fork",
+      "status": "failed",
+      "at": 1792639657.9197793,
+      "attempt": "02",
+      "code_sha256": "7f594cfedcc4e743a237f2907304d6996fa7707f70a88fa151a9680ebc1acd77",
+      "error": "MicrosandboxError('runtime error: runtime control refused: full capture and fork are unavailable while managed jobs are active; wait for or terminate those jobs first')"
+    },
+    {
+      "test": "snapshot_prepare",
+      "status": "failed",
+      "at": 1792639659.3124983,
+      "attempt": "02",
+      "code_sha256": "7f594cfedcc4e743a237f2907304d6996fa7707f70a88fa151a9680ebc1acd77",
+      "error": "MicrosandboxError('control client error: control operation rejected by peer: full capture and fork are unavailable while managed jobs are active; wait for or terminate those jobs first')"
+    },
+    {
+      "test": "live_fork",
+      "status": "passed",
+      "at": 1792639749.134911,
+      "attempt": "03",
+      "code_sha256": "7e0775eb4c566a1d503a2e5b4c0e9e8c27279c9dae8d47e02339c26f8541fcf7",
+      "fork_seconds": 0.5720512196421623,
+      "same_in_memory_nonce": true,
+      "same_boot_id": true,
+      "source_counter": 41,
+      "child_counter": 42,
+      "disk_cow_isolated": true
+    },
+    {
+      "test": "snapshot_prepare",
+      "status": "passed",
+      "at": 1792639752.9448135,
+      "attempt": "03",
+      "code_sha256": "7e0775eb4c566a1d503a2e5b4c0e9e8c27279c9dae8d47e02339c26f8541fcf7",
+      "archives": {
+        "full": {
+          "path": "/data/snapshots/full-03.msb",
+          "capture_seconds": 2.1955175772309303,
+          "bytes": 25320130,
+          "sha256": "9ef38cdba618474794fe493841fa3a22f3f7bf7291c4db7f36555dff394aeb1f"
+        },
+        "disk": {
+          "path": "/data/snapshots/disk-03.msb",
+          "capture_seconds": 0.07917723059654236,
+          "bytes": 861184,
+          "sha256": "3788b058e54ab6ce729a92b3deb34636b84c345a0724d6df56af90009a119486"
+        }
+      },
+      "counter": 41,
+      "source_stopped_after_capture": true
+    },
+    {
+      "test": "snapshot_verify",
+      "status": "passed",
+      "at": 1792640011.1673636,
+      "attempt": "03",
+      "code_sha256": "7e0775eb4c566a1d503a2e5b4c0e9e8c27279c9dae8d47e02339c26f8541fcf7",
+      "full": {
+        "restore_seconds": 0.809358648955822,
+        "marker_preserved": true,
+        "memory_nonce_preserved": true,
+        "boot_id_preserved": true,
+        "counter": 41
+      },
+      "disk": {
+        "restore_seconds": 0.28678098320961,
+        "marker_preserved": true,
+        "memory_nonce_preserved": false,
+        "boot_id_preserved": false,
+        "counter": 41
+      }
+    }
+  ],
+  "measurement_context": {
+    "date": "2026-10-22",
+    "sdk": "0.7.8",
+    "kubernetes": "1.30.4",
+    "cpu_arch": "x86_64",
+    "cpus_each": 1,
+    "memory_mib_each": 512,
+    "container_cpu_limit": 4,
+    "container_memory_limit_gib": 8,
+    "privileged": false,
+    "pod_recreated": true,
+    "guest_image_manifest_digest": "sha256:2b4f19dae3a777dfc3b76730bda1e82e1f66ab2a2686fa93ca78edbfb4f04ffe",
+    "guest_archive_sha256": "f5c5a8face820ac57026a87360f7e4a93652ab57516c7ce97723a07302ec7b4d",
+    "pod_recreation_evidence": {
+      "before_uid_sha256": "b735b7ef1fc6d4bf6d540cd42c6f297e930c718d4a3230bd684e622f5b90e637",
+      "after_uid_sha256": "3b3fdb144fecc68a09e51381a2a57d03f08e1ea7ba02a692b712e433526020a9",
+      "different": true
+    }
+  },
+  "cleanup": {
+    "all_sandboxes_removed": true,
+    "kvm_descriptor_count": 0,
+    "existing_vm_count": 5,
+    "existing_vms_running": 5
+  }
+}

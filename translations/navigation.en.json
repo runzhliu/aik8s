@@ -192,5 +192,6 @@
   "K3s 集群升级": "K3s Cluster Upgrade",
   "升级与 DRA 预检报告": "Upgrade and DRA Preflight Report",
   "DeepSeek 1017 Day0：vLLM 与百万 Token 实测": "DeepSeek 1017 Day0: vLLM and Million-Token Tests",
-  "DeepSeek 1017：PRO 5000 与 H20 线上观察": "DeepSeek 1017: PRO 5000 and H20 Production Observations"
+  "DeepSeek 1017：PRO 5000 与 H20 线上观察": "DeepSeek 1017: PRO 5000 and H20 Production Observations",
+  "Microsandbox Kubernetes 实战": "Microsandbox on Kubernetes in Practice"
 }

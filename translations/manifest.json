@@ -214,12 +214,12 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "af1b0a0cbc2c2a25c726ef03eac3e25c6cd962136ba784a093fcd9b0da8830c9",
-      "english_sha256": "00b3a2a607d20ad5a1f48b687669a8942088085aa55bbe3b660dac109168777e",
+      "source_sha256": "5822ad719d14130b50afc01dc11d8fa327e2c582e308430c6210250314988508",
+      "english_sha256": "bb7f141c617790fab5cdba850b7f3a61270823757d0db63b1fb0c8dc33828338",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-21T06:13:36.499269+00:00"
+      "reviewed_at": "2026-10-22T03:40:19.521434+00:00"
     },
     "ai-k8s/practices/agent-sandbox-red-team.md": {
       "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
@@ -1432,6 +1432,12 @@
       "source_sha256": "479b3baff39ced0749ccf707d24cf76b8b9aef77dc8440fa2c4a799c8658168c",
       "english_sha256": "92eb31bae46e8db79c7d40ab931a0d89f47d3a08a8f05f77090026eeb3ad475d",
       "reviewed_at": "2026-10-21T06:59:11.084058+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/microsandbox-kubernetes-practice.md": {
+      "source_sha256": "b5f8d88aafc09ea8cb17fbfdbce94c7ea878bd385d0d059da23adf77b69f7738",
+      "english_sha256": "c5e6995d698ad66dd00ef94d08760bc7a12549814251f6348adeff33b897aed5",
+      "reviewed_at": "2026-10-22T03:38:36.768883+00:00",
       "review": "reviewed against source"
     }
   }

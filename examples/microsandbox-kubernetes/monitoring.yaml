@@ -1,0 +1,16 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: microsandbox-lab
+  namespace: victoriametrics
+spec:
+  namespaceSelector:
+    matchNames: [microsandbox-lab]
+  selector:
+    matchLabels:
+      app: microsandbox-lab
+  endpoints:
+    - port: metrics
+      interval: 5s
+      scrapeTimeout: 4s
+  jobLabel: app

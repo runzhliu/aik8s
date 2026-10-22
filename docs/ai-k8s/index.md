@@ -135,6 +135,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [OpenSandbox Kubernetes 实战](rag-agent/opensandbox-kubernetes-practice.md)：官方 Console、文件与命令执行、四并发、访问鉴权、到期回收及真实监控截图。
 - [OpenKruise Agents Kubernetes 实战](rag-agent/openkruise-agents-kubernetes-practice.md)：预热池与按需创建、SDK 任务、文件分离、超时回收，以及镜像引用导致的恢复阻塞排查。
 - [BoxLite Kubernetes 实战](rag-agent/boxlite-kubernetes-practice.md)：嵌入式 SDK 启动 microVM，验证四实例并发、文件隔离与 Pod 重建后的磁盘恢复，并分析资源曲线和恢复后的指标偏差。
+- [Microsandbox Kubernetes 实战](rag-agent/microsandbox-kubernetes-practice.md)：非特权 Pod 使用 KVM，验证四实例并发、Live Fork 与 Pod 重建后的完整内存快照恢复，对比磁盘恢复并保留失败记录。
 - [CubeSandbox Kubernetes 部署条件与生产评估](rag-agent/cubesandbox-kubernetes.md)：60ms 基准口径、KVM/PVM、XFS、eBPF、Helm 与生产上线边界。
 - [CubeSandbox Agent Adapter v0.3 实测](rag-agent/cubesandbox-agent-adapter-v03.md)：OpenClaw、DSH、Hermes 与 Codex 四客户端验收，以及持久租约、异步 Job、PTY、Checkpoint、Redis HA、多租户身份和迁移 Gate。
 - [OpenClaw 作为企业 Agent 平台底座](rag-agent/openclaw-enterprise-agent-platform.md)：可复用能力、企业控制面缺口、安全风险、二次开发边界和推荐架构。
