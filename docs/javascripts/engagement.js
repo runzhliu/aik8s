@@ -399,7 +399,10 @@
     var bounds = diagram.getBoundingClientRect();
     var availableWidth = Math.min(window.innerWidth * 0.96, 1800) - 32;
     var aspect = bounds.height > 0 ? bounds.width / bounds.height : 1;
-    var expandedWidth = aspect > 4 ? Math.min(4800, Math.max(availableWidth, aspect * 280)) : availableWidth;
+    // Keep labels readable on phones instead of fitting a multi-column diagram
+    // back into the same narrow width as the article. The host scrolls natively.
+    var readableWidth = aspect >= 1.5 ? 960 : 640;
+    var expandedWidth = aspect > 4 ? Math.min(4800, Math.max(availableWidth, aspect * 280)) : Math.max(availableWidth, readableWidth);
     var horizontalScroll = expandedWidth > availableWidth + 1;
     if (horizontalScroll) diagram.style.setProperty("--aik8s-diagram-width", expandedWidth + "px");
     var placeholder = element("div", "aik8s-lightbox__placeholder");

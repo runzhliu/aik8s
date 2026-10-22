@@ -119,6 +119,8 @@ Receipt counts help establish task continuity, not component throughput. A 2-sec
 
 ## 3. Control-plane outages separate execution from management
 
+The following 12 diagrams show **experiment steps**, not packet-level topology or product screenshots. Read left to right: blue marks retained or observed execution, orange marks an injection target or failed step, and grey marks preparation and checks. A dashed orange border marks a planned action that was not executed. Arrows between columns show operation order; each diagram is a separate case. Click a diagram to enlarge it.
+
 | Component and fault | A receipts during fault | B receipts | Successful API transport / guest command probes | Execution and recovery |
 | --- | ---: | ---: | --- | --- |
 | Scale CubeAPI to 0 | 40 | 0 | 0/17; 17/17 | Task continued; new-task execution and cleanup passed after recovery |
@@ -131,6 +133,38 @@ Cases ran sequentially, with recovery and acceptance checks before the next faul
 
 ### 3.1 CubeAPI: stop the sole API entry point, retain existing task access
 
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Sandbox already running"]:::kept
+    p0n1["SDK already has access parameters"]:::step
+    p0n2["Other components remain running"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["CubeAPI: 1 → 0<br/>Wait for an empty Pod list"]:::fault
+    p1n1["API-list probe fails"]:::fault
+    p1n2["Commands and guest requests continue"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["CubeAPI: 0 → 1"]:::step
+    p2n1["Recheck original guest identity<br/>and command access"]:::kept
+    p2n2["Separately check creation,<br/>execution, and cleanup"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*Only CubeAPI is stopped. The middle column shows observations during the fault; the right column shows later recovery operations. Existing SDK access does not establish new-sandbox creation during the outage.*
+
 | Item | Conditions, method, and boundary |
 | --- | --- |
 | Preconditions | One sandbox is already probing; the SDK already holds guest-access connection parameters, while CubeProxy, Cubelet, and other control components are healthy |
@@ -140,6 +174,38 @@ Cases ran sequentially, with recovery and acceptance checks before the next faul
 | Exclusions | New-task requests during the outage, fresh credential issuance, multi-replica failover, and longer control-plane outages were not tested |
 
 ### 3.2 CubeMaster: stop management while observing an existing task
+
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["1 guest already running"]:::kept
+    p0n1["CubeProxy / Cubelet available"]:::kept
+    p0n2["CubeOps and dependencies remain"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["CubeMaster: 1 → 0<br/>Wait for an empty Pod list"]:::fault
+    p1n1["API-list probe fails"]:::fault
+    p1n2["Existing commands and<br/>outbound requests continue"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["CubeMaster: 0 → 1"]:::step
+    p2n1["Poll API, commands, and identity"]:::step
+    p2n2["Check new-task execution<br/>and cleanup"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*The management component stops while the existing guest runtime remains. Scheduling and continuous task mutations were not tested during the outage.*
 
 | Item | Conditions, method, and boundary |
 | --- | --- |
@@ -151,6 +217,38 @@ Cases ran sequentially, with recovery and acceptance checks before the next faul
 
 ### 3.3 CubeOps: briefly stop operational metadata management
 
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Node and template already prepared"]:::step
+    p0n1["Artifacts already cached on node"]:::step
+    p0n2["1 guest already running"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["CubeOps: 1 → 0<br/>Other components stay up"]:::fault
+    p1n1["API transport and command<br/>probes show no failures"]:::kept
+    p1n2["Guest keeps sending requests"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["CubeOps: 0 → 1"]:::step
+    p2n1["Deletion succeeds after<br/>transient failures and retries"]:::step
+    p2n2["Then check creation and execution"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*This covers a prepared node and a warm task. Short-window success excludes new-node joining, missing-version downloads, and cache expiry.*
+
 | Item | Conditions, method, and boundary |
 | --- | --- |
 | Preconditions | Node, component artifacts, and template are already prepared; one task is running and other control components remain available |
@@ -161,6 +259,38 @@ Cases ran sequentially, with recovery and acceptance checks before the next faul
 
 ### 3.4 CubeProxy: interrupt command access while observing guest egress
 
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Client commands use CubeProxy"]:::step
+    p0n1["Guest sends requests to A itself"]:::kept
+    p0n2["The two paths are sampled separately"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["CubeProxy: 1 → 0<br/>Wait for an empty Pod list"]:::fault
+    p1n1["Client command access fails"]:::fault
+    p1n2["Guest → A: requests continue"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["CubeProxy: 0 → 1"]:::step
+    p2n1["Retry commands;<br/>check the same guest identity"]:::kept
+    p2n2["Separately check creation<br/>and cleanup"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*The fault removes client command access without deliberately cutting guest egress. Failed commands and continuing business requests can coexist.*
+
 | Item | Conditions, method, and boundary |
 | --- | --- |
 | Preconditions | One running task sends receiver requests independently; client commands take a separately sampled CubeProxy path |
@@ -170,6 +300,38 @@ Cases ran sequentially, with recovery and acceptance checks before the next faul
 | Exclusions | Proxy multi-replica failover, established long connections, streaming reconnection, and safe command retries were not tested |
 
 ### 3.5 Cubelet: suspend and resume the same process
+
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Identify the exact Cubelet PID"]:::step
+    p0n1["Record start time and command hash"]:::step
+    p0n2["Guest and Rust Shim already running"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["Send SIGSTOP to Cubelet only"]:::fault
+    p1n1["Container and network namespace stay"]:::step
+    p1n2["Rust Shim / guest keep running"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["Send SIGCONT to the same process"]:::step
+    p2n1["Check management and guest identity"]:::kept
+    p2n2["No process or container recreation"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*The original process is suspended and then resumed. The container and namespace are not destroyed; this is not a crash-and-rebuild test.*
 
 | Item | Conditions, method, and boundary |
 | --- | --- |
@@ -188,6 +350,38 @@ For incident response, “the sandbox is unreachable” needs a more precise dia
 ## 4. Kill one VMM: recovery returns to the snapshot point
 
 This case added a witness sandbox that received no fault. The main task held its counter steady, completed a full snapshot, resumed execution, and then had its actual Rust Shim killed.
+
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Subject: snapshot at counter 39"]:::kept
+    p0n1["Full local snapshot completed<br/>Subject advances to 46"]:::step
+    p0n2["1 witness task shares the Pod"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["SIGKILL the subject Rust Shim"]:::fault
+    p1n1["Subject guest stops;<br/>commands are unreachable"]:::fault
+    p1n2["Witness task keeps advancing"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["Explicitly create a new sandbox<br/>from the snapshot"]:::step
+    p2n1["Read restored memory counter 39"]:::kept
+    p2n2["Supply A-only network limits again<br/>Then resume the guest probe"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*Recovery creates a new sandbox. Restored guest identity and memory do not mean the original sandbox ID or host process came back.*
 
 | Item | Conditions, method, and boundary |
 | --- | --- |
@@ -223,6 +417,38 @@ Task state and business idempotency still need their own design: persist idempot
 ## 5. Compute Pod recreation stopped tasks and defeated recovery
 
 This case ran both a subject and a witness, then deleted their `cube-node` Pod. The replacement had a different UID, both original Rust Shim processes were gone, and neither guest command channel worked. The main task had 0 / 0 A / B receipts in the fault window. Subsequent automatic-recovery polling did not observe the main task recover.
+
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Subject and witness share<br/>one compute Pod"]:::kept
+    p0n1["hostNetwork=false<br/>Shared Pod network namespace"]:::step
+    p0n2["Only the subject has a snapshot"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["Delete cube-node Pod<br/>No forced deletion"]:::fault
+    p1n1["Replacement Pod: Running<br/>Not guest recovery"]:::step
+    p1n2["Both original runtimes are gone"]:::fault
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["Automatic recovery: not observed"]:::fault
+    p2n1["Explicit snapshot restore: failed"]:::fault
+    p2n2["After orphan-map cleanup:<br/>fresh creation only"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*Replacement startup, original-task recovery, snapshot creation, and fresh-template creation are separate acceptance points. Recovery of the last one does not make the first task recover.*
 
 | Item | Conditions, method, and boundary |
 | --- | --- |
@@ -281,6 +507,38 @@ The same-version official upgrade guide already warns that Big Pod recreation in
 
 ### 6.1 MySQL: single-instance service outage with its volume preserved
 
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Template and sandbox already exist"]:::step
+    p0n1["1 guest runs an HTTP loop"]:::kept
+    p0n2["Original database volume retained"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["MySQL: 1 → 0<br/>Wait for the database Pod to disappear"]:::fault
+    p1n1["Sample listing and existing commands"]:::step
+    p1n2["Guest requests continue<br/>No continuous metadata writes"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["MySQL: 0 → 1<br/>Reattach the original volume"]:::step
+    p2n1["Deletion retries after DNS errors"]:::step
+    p2n2["Then check new-task execution"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*This is a single-instance service outage with its volume retained. Writes and new-task creation were not continuously stressed while the database was unavailable.*
+
 | Item | Conditions, method, and boundary |
 | --- | --- |
 | Preconditions | Template and sandbox already exist; one guest is running, the database volume is preserved, and other components remain healthy |
@@ -291,6 +549,38 @@ The same-version official upgrade guide already warns that Big Pod recreation in
 
 ### 6.2 Redis: preserve the volume and distinguish timeouts from resource state
 
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Guest and existing commands work"]:::kept
+    p0n1["Single Redis instance"]:::step
+    p0n2["Original persistent volume retained"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["Redis: 1 → 0<br/>Wait for an empty Pod list"]:::fault
+    p1n1["API-list probe fails"]:::fault
+    p1n2["Commands and guest requests continue"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["Redis: 0 → 1"]:::step
+    p2n1["After deletion timeouts,<br/>query actual resource inventory"]:::step
+    p2n2["With inventory empty,<br/>verify new-task execution"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*Recovery checks both call results and actual inventory. A timeout is not proof that no action happened. Replication failover was not tested.*
+
 | Item | Conditions, method, and boundary |
 | --- | --- |
 | Preconditions | One guest and its existing command connection work; Redis is a single instance whose persistent volume is retained |
@@ -300,6 +590,38 @@ The same-version official upgrade guide already warns that Big Pod recreation in
 | Boundary | No Redis failover, persistence mechanism, broad cache invalidation, or long-duration TTL (Time to Live) expiry was tested; the management plane cannot be considered independent of Redis |
 
 ### 6.3 MinIO: stop object storage and observe cached local execution
+
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Runtime and template cached locally"]:::step
+    p0n1["Guest already running<br/>Snapshot-package backend is XFS"]:::kept
+    p0n2["Execution loop does not access objects"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["MinIO: 1 → 0<br/>Retain the original volume"]:::fault
+    p1n1["Observe only the warm cached task"]:::step
+    p1n2["Commands and guest requests continue"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["MinIO: 0 → 1"]:::step
+    p2n1["Check creation only<br/>after storage recovers"]:::step
+    p2n2["No cold artifact or remote-snapshot read"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*Continuing execution uses prepared local state. Cold startup and S3 snapshot restoration were not tested during the MinIO outage.*
 
 | Item | Conditions, method, and boundary |
 | --- | --- |
@@ -317,6 +639,38 @@ The MinIO case covered a cached running task and basic operations after recovery
 
 ### 7.1 Suspend CubeEgress Nginx and observe the IP-restricted path
 
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["A and B are two receiver Pods<br/>Use port 8080"]:::step
+    p0n1["IP allowlist permits only A"]:::step
+    p0n2["Restricted baseline:<br/>A receives requests; B has 0"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["SIGSTOP: Nginx<br/>master / workers only"]:::fault
+    p1n1["CubeVS and network<br/>helper stay up"]:::kept
+    p1n2["A keeps receiving<br/>No receipts observed at B"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["Send SIGCONT to the same PIDs"]:::step
+    p2n1["Check task and creation / cleanup"]:::step
+    p2n2["This path did not require<br/>HTTP path rules"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*User-space Nginx is suspended while kernel and network helper remain. This observes the IP-restricted path, not layer-7 proxy-failure safety.*
+
 | Item | Conditions, method, and boundary |
 | --- | --- |
 | Preconditions | Only A is in the IP allowlist; A and B are different receiver Pods on port 8080; the restricted baseline has A receipts and 0 B receipts |
@@ -328,6 +682,38 @@ The MinIO case covered a cached running task and basic operations after recovery
 Layer-3 IP allowlists and layer-7 HTTP path rules follow different enforcement paths. Suspending the CubeEgress Nginx master and workers produced 39 A receipts and 0 B receipts in the IP-allowlist fault window. This establishes continuing allowed traffic and no observed receipts at the denied target under this configuration. Rules were not removed during the fault to make B reachable as a reverse control, so zero receipts alone do not attribute all blocking exclusively to CubeVS or establish HTTP path enforcement during proxy failure.
 
 ### 7.2 HTTP path rules: baseline failure, no fault injected
+
+```mermaid
+flowchart LR
+  subgraph p0["1 Before the fault"]
+    direction TB
+    p0n0["Use the same receiver Pod A<br/>on port 80"]:::step
+    p0n1["Allow /probe/allow*"]:::step
+    p0n2["Deny other paths<br/>Probe /probe/deny"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 Injection / observation"]
+    direction TB
+    p1n0["First sample the restricted baseline"]:::step
+    p1n1["Commands work,<br/>but allowed receipts are insufficient"]:::fault
+    p1n2["Injection gate is not satisfied"]:::fault
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 Recovery / stopping point"]
+    direction TB
+    p2n0["BLOCKED_BASELINE"]:::fault
+    p2n1["Planned SIGSTOP<br/>Not executed"]:::planned
+    p2n2["No proxy fault window<br/>No post-fault safety conclusion"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*This diagram stops before injection. SIGSTOP is an unexecuted plan and cannot be combined with the preceding IP-rule case as successful layer-7 validation.*
 
 | Item | Conditions, method, and boundary |
 | --- | --- |

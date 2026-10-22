@@ -119,6 +119,8 @@ API 与命令探测在每次采样中并行发起，两次采样之间再等待 
 
 ## 3. 控制面中断，任务与管理能力可以分离
 
+下面 12 幅图展示的是**实验步骤**，不是逐跳网络拓扑或产品截图。按左到右阅读：蓝色表示保留或已观测到的运行，橙色表示故障目标或失败步骤，灰色表示准备与检查；橙色虚线框表示未执行的计划动作。列间箭头表示操作顺序，每幅图是一项独立实验。图示均可点击放大。
+
 | 故障对象与动作 | 故障窗口 A 接收数 | B 接收数 | API 传输探针 / guest 命令成功数 | 任务与恢复结果 |
 | --- | ---: | ---: | --- | --- |
 | CubeAPI 缩容至 0 | 40 | 0 | 0/17；17/17 | 任务继续，恢复后新建执行与清理通过 |
@@ -131,6 +133,38 @@ API 与命令探测在每次采样中并行发起，两次采样之间再等待 
 
 ### 3.1 CubeAPI：停止唯一 API 入口，保留既有任务连接
 
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["沙箱已经启动"]:::kept
+    p0n1["SDK 已持有访问参数"]:::step
+    p0n2["其余组件继续运行"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["CubeAPI：1 → 0<br/>等待 Pod 清单为空"]:::fault
+    p1n1["API 列表探针失败"]:::fault
+    p1n2["命令访问、guest 请求继续"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["CubeAPI：0 → 1"]:::step
+    p2n1["重查原 guest<br/>身份与命令"]:::kept
+    p2n2["另做新建、执行<br/>与清理检查"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*仅停止 CubeAPI。中间一列是故障窗口的实际观测，右侧是后续恢复操作；既有 SDK 连接不等于故障期间能新建沙箱。*
+
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
 | 前置条件 | 1 个沙箱已启动探针；SDK 已持有访问该 guest 的连接参数，CubeProxy、Cubelet 和其他控制组件正常 |
@@ -140,6 +174,38 @@ API 与命令探测在每次采样中并行发起，两次采样之间再等待 
 | 不能外推 | 没有测试 API 故障期间的新建请求、新凭据签发、多副本负载切换或更长时间的控制面中断 |
 
 ### 3.2 CubeMaster：停止管理服务，观察已运行任务
+
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["1 个已运行 guest"]:::kept
+    p0n1["CubeProxy / Cubelet 可用"]:::kept
+    p0n2["CubeOps 与依赖服务保留"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["CubeMaster：1 → 0<br/>等待 Pod 清单为空"]:::fault
+    p1n1["API 列表探针失败"]:::fault
+    p1n2["既有命令与<br/>出口请求继续"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["CubeMaster：0 → 1"]:::step
+    p2n1["轮询 API、命令、身份"]:::step
+    p2n2["新建执行<br/>与清理检查"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*停止的是管理组件，既有 guest 的运行时仍在。该实验没有在停机期间验证调度或持续提交任务变更。*
 
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
@@ -151,6 +217,38 @@ API 与命令探测在每次采样中并行发起，两次采样之间再等待 
 
 ### 3.3 CubeOps：短暂停止运营元数据服务
 
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["节点与模板已准备"]:::step
+    p0n1["制品已经在节点缓存"]:::step
+    p0n2["1 个已运行 guest"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["CubeOps：1 → 0<br/>其余组件不停止"]:::fault
+    p1n1["API 传输与<br/>命令探针未失败"]:::kept
+    p1n2["guest 继续发送请求"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["CubeOps：0 → 1"]:::step
+    p2n1["删除短暂失败<br/>随后重试成功"]:::step
+    p2n2["再做新建与执行检查"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*只覆盖已经准备好的节点和热缓存任务；图中的短时成功不包含新节点加入、缺失版本下载或缓存过期。*
+
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
 | 前置条件 | 节点、组件制品与模板已准备，1 个任务已经运行；其他控制组件继续工作 |
@@ -161,6 +259,38 @@ API 与命令探测在每次采样中并行发起，两次采样之间再等待 
 
 ### 3.4 CubeProxy：中断命令入口，直接观察 guest 出口
 
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["客户端经 CubeProxy 发命令"]:::step
+    p0n1["guest 自行向 A 发请求"]:::kept
+    p0n2["两条路径分开采样"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["CubeProxy：1 → 0<br/>等待 Pod 清单为空"]:::fault
+    p1n1["客户端命令访问失败"]:::fault
+    p1n2["guest → A：请求继续"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["CubeProxy：0 → 1"]:::step
+    p2n1["重试命令<br/>核对同一 guest 身份"]:::kept
+    p2n2["另做新建<br/>与清理检查"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*故障切断的是客户端命令入口，没有主动切断 guest 出口。命令失败与业务请求继续可以同时发生。*
+
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
 | 前置条件 | 1 个已运行任务自行向接收端发请求；客户端命令另经 CubeProxy，两个路径分开采样 |
@@ -170,6 +300,38 @@ API 与命令探测在每次采样中并行发起，两次采样之间再等待 
 | 不能外推 | 没有验证代理的多副本切换、既有长连接、流式输出重连或命令请求是否可安全重试 |
 
 ### 3.5 Cubelet：暂停原进程，再继续原进程
+
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["精确识别 Cubelet PID"]:::step
+    p0n1["保存启动时间与命令哈希"]:::step
+    p0n2["guest 与 Rust Shim 已运行"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["只向 Cubelet 发 SIGSTOP"]:::fault
+    p1n1["容器与网络命名空间保留"]:::step
+    p1n2["Rust Shim / guest 继续运行"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["向同一进程发 SIGCONT"]:::step
+    p2n1["检查管理路径与 guest 身份"]:::kept
+    p2n2["未执行进程或容器重建"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*暂停原进程，再继续原进程。没有关闭容器或销毁网络命名空间，不能按进程崩溃后的重建实验理解。*
 
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
@@ -188,6 +350,38 @@ API 与命令探测在每次采样中并行发起，两次采样之间再等待 
 ## 4. 强杀单个 VMM：恢复的是快照时刻
 
 VMM 场景额外启动一个不注入故障的对照沙箱。主任务先暂停自身计数更新，完成完整快照，再继续执行，最后强杀它实际使用的 Rust Shim。
+
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["主任务：快照时计数 39"]:::kept
+    p0n1["本地完整快照已完成<br/>主任务继续到 46"]:::step
+    p0n2["同 Pod 还有 1 个对照任务"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["SIGKILL 主任务 Rust Shim"]:::fault
+    p1n1["主 guest 停止<br/>命令不可达"]:::fault
+    p1n2["对照任务继续推进"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["显式从快照<br/>新建沙箱"]:::step
+    p2n1["读取内存计数回到 39"]:::kept
+    p2n2["重新传入 A 的网络限制<br/>再继续 guest 探针"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*步骤图中的恢复对象是新沙箱。快照中的 guest 身份与内存恢复，不意味着原 sandbox ID 或原宿主进程复活。*
 
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
@@ -223,6 +417,38 @@ VMM 场景额外启动一个不注入故障的对照沙箱。主任务先暂停�
 ## 5. 计算 Pod 重建：原任务停了，恢复也失败了
 
 这一项同时运行主任务与对照任务，然后删除承载它们的 `cube-node` Pod。新 Pod 创建后，UID 已变化，两个原 Rust Shim 进程均不再存活，两个 guest 的命令通道失效。主任务故障窗口 A、B 接收数均为 0；后续自动恢复轮询也未观察到主任务恢复。
+
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["主任务与对照任务<br/>共用一个计算 Pod"]:::kept
+    p0n1["hostNetwork=false<br/>共用 Pod 网络命名空间"]:::step
+    p0n2["只有主任务预先拍快照"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["删除 cube-node Pod<br/>未用强制删除"]:::fault
+    p1n1["替代 Pod 达到 Running<br/>不等于 guest 恢复"]:::step
+    p1n2["两个旧运行时均已消失"]:::fault
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["自动恢复：未观察到"]:::fault
+    p2n1["显式快照恢复：失败"]:::fault
+    p2n2["清理残留映射后<br/>仅全新创建恢复"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*替换 Pod 启动、原任务恢复、从快照创建、从模板全新创建是四个验收点。最后一项恢复，不能替前两项报成功。*
 
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
@@ -281,6 +507,38 @@ cannot map to 20000
 
 ### 6.1 MySQL：保留数据卷的单实例服务停机
 
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["模板和沙箱已经创建"]:::step
+    p0n1["1 个 guest 运行 HTTP 循环"]:::kept
+    p0n2["数据库原持久卷保留"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["MySQL：1 → 0<br/>等待数据库 Pod 消失"]:::fault
+    p1n1["仅采样列表与既有命令"]:::step
+    p1n2["guest 请求继续<br/>未做持续元数据写入"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["MySQL：0 → 1<br/>重新挂载原卷"]:::step
+    p2n1["删除遇到 DNS 错误后重试"]:::step
+    p2n2["再做新建执行检查"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*这是一项保留数据卷的单实例服务停机实验。数据库不可用时，没有持续压测写事务或新建任务。*
+
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
 | 前置条件 | 沙箱与模板已经创建，1 个 guest 在运行；数据库原持久卷保留，其他组件正常 |
@@ -291,6 +549,38 @@ cannot map to 20000
 
 ### 6.2 Redis：保留数据卷，区分命令超时和实际资源状态
 
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["guest 和既有命令连接可用"]:::kept
+    p0n1["单实例 Redis"]:::step
+    p0n2["原持久卷不删除"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["Redis：1 → 0<br/>等待 Pod 清单为空"]:::fault
+    p1n1["API 列表探针失败"]:::fault
+    p1n2["命令与 guest 请求继续"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["Redis：0 → 1"]:::step
+    p2n1["删除超时后<br/>查询真实清单"]:::step
+    p2n2["清单为空后<br/>验证新建执行"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*恢复阶段同时看调用结果和真实资源清单；一次超时不能直接画成“操作没有执行”。没有测试主备切换。*
+
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
 | 前置条件 | 1 个 guest 和既有命令连接已可用；Redis 为单实例，其持久卷不删除 |
@@ -300,6 +590,38 @@ cannot map to 20000
 | 结论边界 | 没有测试 Redis 主备、持久化机制、缓存大范围失效或长时间 TTL（Time to Live，生存时间）到期；不代表整个管理面可脱离 Redis 运行 |
 
 ### 6.3 MinIO：停止对象存储，观察已缓存的本地执行
+
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["运行时与模板已在本地缓存"]:::step
+    p0n1["guest 已运行<br/>快照包后端为 XFS"]:::kept
+    p0n2["执行循环不读写对象存储"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["MinIO：1 → 0<br/>保留原持久卷"]:::fault
+    p1n1["只观察热缓存任务"]:::step
+    p1n2["命令与 guest 请求继续"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["MinIO：0 → 1"]:::step
+    p2n1["存储恢复后<br/>才做新建检查"]:::step
+    p2n2["没有冷制品或远端快照读取"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*图中的继续执行依赖已经准备好的本地状态；没有在 MinIO 停机时验证冷启动或 S3 快照恢复。*
 
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
@@ -317,6 +639,38 @@ MinIO 本项只覆盖已缓存任务和恢复后的基本操作，没有在对�
 
 ### 7.1 暂停 CubeEgress 的 Nginx，观察 IP 限制路径
 
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["A、B 是两个接收 Pod<br/>访问端口 8080"]:::step
+    p0n1["IP 白名单仅允许 A"]:::step
+    p0n2["受限基线<br/>A 有接收，B 为 0"]:::kept
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["SIGSTOP：仅 Nginx<br/>master / worker 进程"]:::fault
+    p1n1["CubeVS 与网络<br/>辅助组件保留"]:::kept
+    p1n2["A 继续接收<br/>未观察到 B 收到请求"]:::kept
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["对同一组 PID 发 SIGCONT"]:::step
+    p2n1["核对任务与新建清理"]:::step
+    p2n2["这条路径未依赖<br/>HTTP 路径规则"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*实际暂停的是用户态 Nginx，而内核与网络辅助组件保留。这里观察 IP 约束路径，没有验证七层代理故障时的安全性。*
+
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
 | 前置条件 | 只配置 A 的 IP 白名单，A、B 为不同接收 Pod 的 8080 端口；受限基线 A 有接收、B 为 0 |
@@ -328,6 +682,38 @@ MinIO 本项只覆盖已缓存任务和恢复后的基本操作，没有在对�
 三层 IP 白名单与七层 HTTP 路径规则，执行路径不同。暂停 CubeEgress 的 Nginx master 和 worker 后，IP 白名单场景故障窗口 A 收到 39 个请求，B 收到 0 个请求。可以确认这组配置下允许流量继续、没有观察到禁止目标收到请求；没有在故障期间撤掉规则再放开 B 作反向对照，不能仅凭 0 次接收认定所有阻断原因都来自 CubeVS，更不能推导成 HTTP 路径过滤也通过了故障验收。
 
 ### 7.2 HTTP 路径规则：基线失败，故障动作没有执行
+
+```mermaid
+flowchart LR
+  subgraph p0["1 故障前"]
+    direction TB
+    p0n0["同一个 A 接收 Pod<br/>使用端口 80"]:::step
+    p0n1["允许 /probe/allow*"]:::step
+    p0n2["拒绝其他路径<br/>用 /probe/deny 作对照"]:::step
+    p0n0 ~~~ p0n1 ~~~ p0n2
+  end
+  subgraph p1["2 注入与观测"]
+    direction TB
+    p1n0["先做受限基线采样"]:::step
+    p1n1["命令可读<br/>但允许路径接收不足"]:::fault
+    p1n2["未达到注入门槛"]:::fault
+    p1n0 ~~~ p1n1 ~~~ p1n2
+  end
+  subgraph p2["3 恢复或停止"]
+    direction TB
+    p2n0["BLOCKED_BASELINE"]:::fault
+    p2n1["原计划 SIGSTOP<br/>实际未执行"]:::planned
+    p2n2["没有代理故障窗口<br/>也没有故障后安全结论"]:::step
+    p2n0 ~~~ p2n1 ~~~ p2n2
+  end
+  p0 --> p1 --> p2
+  classDef kept fill:#eef3ff,stroke:#3157f6,color:#263855,stroke-width:1.5px;
+  classDef fault fill:#fff4e6,stroke:#c77a12,color:#75480a,stroke-width:2px;
+  classDef step fill:#f6f7fa,stroke:#aeb9c9,color:#40506a;
+  classDef planned fill:#fffaf2,stroke:#c77a12,color:#75480a,stroke-dasharray:5 4;
+```
+
+*这幅图停在注入前。图中的 SIGSTOP 是没有执行的计划动作，不能与上一项 IP 规则暂停实验合并为七层验证成功。*
 
 | 项目 | 本项条件、操作与边界 |
 | --- | --- |
