@@ -1447,9 +1447,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/cubesandbox-failure-recovery-practice.md": {
-      "source_sha256": "bd92a69475278f4f2be8f0733147f6da4356c12a69e2d7330fffd336a4afa0c5",
-      "english_sha256": "d752fb55cb5ef9cd2396434be9ad3c48303a00fd1d3160ee20854c1c398ea4eb",
-      "reviewed_at": "2026-10-22T10:53:40.160300+00:00",
+      "source_sha256": "0cb106c871ccb7cdb3da1aa601d71e2c3d719c84535456e693a71463d132f856",
+      "english_sha256": "445678b58c9b7290a3267ac2718d1c3311e6a8d14d262c208fff0f7eb1db6b7c",
+      "reviewed_at": "2026-10-22T11:44:48.588146+00:00",
       "review": "reviewed against source"
     }
   }

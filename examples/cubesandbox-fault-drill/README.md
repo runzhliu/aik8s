@@ -83,7 +83,7 @@ kubectl --context lab-cluster -n cube-fault-lab port-forward svc/cube-fault-deny
   --config .local/cube-drill/private/settings.json --case egress --policy l3 --attempt a02
 ```
 
-程序先做无策略与受限网络预检。七层模式使用 `--case egress --policy l7`；若允许请求本来就失败，不会继续注入。Pod 网络模式下 `--case pod` 是破坏性测试，应最后执行；如需人工分析失败快照，加 `--retain-failed-snapshot`，并单独安排清理。看护只能恢复副本数和精确暂停的进程，不能自动重建网络命名空间或修复快照登记。
+运行故障程序前，需独立验证同时允许 A、B 时两者可达，并记录运行时与配置。`run_drill.py` 每项实际只执行受限基线，不会自动撤规则重复无策略对照：至少观察 10 秒、累计 A 接收不少于 3 次且 B 为 0 才注入。本次独立无策略预检未记录正式矩阵同等的运行时哈希，文章已明确此限制。七层模式使用 `--case egress --policy l7`，比较同一 A 接收 Pod 的 80 端口上的允许与拒绝路径；若允许路径基线失败，不会继续注入。Pod 网络模式下 `--case pod` 是破坏性测试，应最后执行；如需人工分析失败快照，加 `--retain-failed-snapshot`，并单独安排清理。看护只能恢复副本数和精确暂停的进程，不能自动重建网络命名空间或修复快照登记。
 
 每项之后核对原组件恢复、任务是否延续、接收端记录、新建执行删除成功以及清理结果。若任一基础健康检查失败，停止后续注入，先恢复环境。不要自动清空 bpffs、CNI 或 OVS。本次端口孤儿清理由人工在确认所有 CubeSandbox VM 均退出后完成，没有包装成在线一键修复。
 
