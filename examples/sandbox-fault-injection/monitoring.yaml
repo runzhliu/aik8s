@@ -1,0 +1,15 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: sandbox-fault-receivers
+  namespace: victoriametrics
+spec:
+  namespaceSelector:
+    matchNames: [sandbox-fault-lab]
+  selector:
+    matchLabels:
+      fault-receiver: "true"
+  endpoints:
+    - port: metrics
+      interval: 2s
+      scrapeTimeout: 1s

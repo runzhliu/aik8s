@@ -101,6 +101,7 @@ nav = [
       {"OpenKruise Agents Kubernetes 实战" = "ai-k8s/rag-agent/openkruise-agents-kubernetes-practice.md"},
       {"BoxLite Kubernetes 实战" = "ai-k8s/rag-agent/boxlite-kubernetes-practice.md"},
       {"Microsandbox Kubernetes 实战" = "ai-k8s/rag-agent/microsandbox-kubernetes-practice.md"},
+      {"沙箱故障与网络策略实战" = "ai-k8s/rag-agent/sandbox-runtime-failure-network-policy.md"},
       {"Firecracker 与 CubeSandbox 企业选型" = "ai-k8s/rag-agent/firecracker-cubesandbox-enterprise-selection.md"},
       {"CubeSandbox Kubernetes 部署评估" = "ai-k8s/rag-agent/cubesandbox-kubernetes.md"},
       {"CubeSandbox Kubernetes 部署实战" = "ai-k8s/rag-agent/cubesandbox-kubernetes-practice.md"},

@@ -1,0 +1,316 @@
+{
+  "date": "2026-10-22",
+  "kubernetes": "1.30.4",
+  "microsandbox": "0.7.8",
+  "boxlite": "0.10.7",
+  "opensandbox": "1.1.1",
+  "guest_cpus": 1,
+  "guest_memory_mib": 512,
+  "guest_probe_sha256": "0e5626564904815b556e0828a1b46bff6ace426404bd0d1255fd7eaa2101c3eb",
+  "records": [
+    {
+      "case": "microsandbox-sdk-a01",
+      "engine": "microsandbox",
+      "fault": "sdk",
+      "started_at": 1792651830.9769049,
+      "ready_at": 1792651833.680937,
+      "injected_at": 1792651848.960787,
+      "injection_completed_at": 1792651850.884514,
+      "observation_ended_at": 1792651862.884916,
+      "received": {
+        "before": {
+          "allow": 29,
+          "deny": 0
+        },
+        "after": {
+          "allow": 24,
+          "deny": 0
+        }
+      },
+      "status": "measured",
+      "policy_enforced": true,
+      "remaining_kvm_processes": 0,
+      "same_guest_boot_id": true,
+      "effect_zh": "guest 继续运行，可重新连接",
+      "effect_en": "Guest continues; client can reattach",
+      "settled_after": {
+        "allow": 20,
+        "deny": 0
+      },
+      "settling_exclusion_seconds": 2
+    },
+    {
+      "case": "microsandbox-vmm-a01",
+      "engine": "microsandbox",
+      "fault": "vmm",
+      "started_at": 1792652195.3734531,
+      "ready_at": 1792652222.0574331,
+      "injected_at": 1792652234.778568,
+      "injection_completed_at": 1792652235.198693,
+      "observation_ended_at": 1792652247.2564979,
+      "received": {
+        "before": {
+          "allow": 25,
+          "deny": 0
+        },
+        "after": {
+          "allow": 1,
+          "deny": 0
+        }
+      },
+      "status": "measured",
+      "policy_enforced": true,
+      "remaining_kvm_processes": 0,
+      "effect_zh": "命令通道失效，VMM 已退出",
+      "effect_en": "Command channel lost; VMM exited",
+      "settled_after": {
+        "allow": 0,
+        "deny": 0
+      },
+      "settling_exclusion_seconds": 2
+    },
+    {
+      "case": "microsandbox-pod-a01",
+      "engine": "microsandbox",
+      "fault": "pod",
+      "started_at": 1792652387.517888,
+      "ready_at": 1792652416.6717372,
+      "injected_at": 1792652429.395678,
+      "injection_completed_at": 1792652431.7582872,
+      "observation_ended_at": 1792652443.76603,
+      "received": {
+        "before": {
+          "allow": 25,
+          "deny": 0
+        },
+        "after": {
+          "allow": 0,
+          "deny": 0
+        }
+      },
+      "status": "measured",
+      "policy_enforced": true,
+      "remaining_kvm_processes": 0,
+      "pod_uid_changed": true,
+      "effect_zh": "原 guest 未自动续跑",
+      "effect_en": "Original guest did not auto-resume",
+      "settled_after": {
+        "allow": 0,
+        "deny": 0
+      },
+      "settling_exclusion_seconds": 2
+    },
+    {
+      "case": "boxlite-sdk-a02",
+      "engine": "boxlite",
+      "fault": "sdk",
+      "started_at": 1792652553.168262,
+      "ready_at": 1792652579.980695,
+      "injected_at": 1792652592.7174342,
+      "injection_completed_at": 1792652593.197937,
+      "observation_ended_at": 1792652605.201399,
+      "received": {
+        "before": {
+          "allow": 25,
+          "deny": 0
+        },
+        "after": {
+          "allow": 24,
+          "deny": 0
+        }
+      },
+      "status": "measured",
+      "policy_enforced": true,
+      "remaining_kvm_processes": 0,
+      "same_guest_boot_id": true,
+      "effect_zh": "guest 继续运行，可重新连接",
+      "effect_en": "Guest continues; client can reattach",
+      "settled_after": {
+        "allow": 20,
+        "deny": 0
+      },
+      "settling_exclusion_seconds": 2
+    },
+    {
+      "case": "boxlite-vmm-a01",
+      "engine": "boxlite",
+      "fault": "vmm",
+      "started_at": 1792652689.048038,
+      "ready_at": 1792652715.9201121,
+      "injected_at": 1792652728.59526,
+      "injection_completed_at": 1792652729.049599,
+      "observation_ended_at": 1792652741.050914,
+      "received": {
+        "before": {
+          "allow": 25,
+          "deny": 0
+        },
+        "after": {
+          "allow": 0,
+          "deny": 0
+        }
+      },
+      "status": "measured",
+      "policy_enforced": true,
+      "remaining_kvm_processes": 0,
+      "effect_zh": "命令通道失效，VMM 已退出",
+      "effect_en": "Command channel lost; VMM exited",
+      "settled_after": {
+        "allow": 0,
+        "deny": 0
+      },
+      "settling_exclusion_seconds": 2
+    },
+    {
+      "case": "boxlite-pod-a01",
+      "engine": "boxlite",
+      "fault": "pod",
+      "started_at": 1792652744.518602,
+      "ready_at": 1792652771.26035,
+      "injected_at": 1792652783.858161,
+      "injection_completed_at": 1792652786.660207,
+      "observation_ended_at": 1792652798.664932,
+      "received": {
+        "before": {
+          "allow": 25,
+          "deny": 0
+        },
+        "after": {
+          "allow": 0,
+          "deny": 0
+        }
+      },
+      "status": "measured",
+      "policy_enforced": true,
+      "remaining_kvm_processes": 0,
+      "pod_uid_changed": true,
+      "effect_zh": "原 guest 未自动续跑",
+      "effect_en": "Original guest did not auto-resume",
+      "settled_after": {
+        "allow": 0,
+        "deny": 0
+      },
+      "settling_exclusion_seconds": 2
+    },
+    {
+      "case": "opensandbox-controlplane-a02",
+      "engine": "opensandbox",
+      "fault": "controlplane",
+      "started_at": 1792652777.528642,
+      "ready_at": 1792652782.7043579,
+      "injected_at": 1792652794.936076,
+      "injection_completed_at": 1792652798.4458072,
+      "observation_ended_at": 1792652813.4482849,
+      "received": {
+        "before": {
+          "allow": 23,
+          "deny": 23
+        },
+        "after": {
+          "allow": 30,
+          "deny": 30
+        }
+      },
+      "status": "measured",
+      "policy_enforced": false,
+      "remaining_kvm_processes": 0,
+      "same_task_pod_uid": true,
+      "task_removed": true,
+      "control_pods_confirmed_absent": true,
+      "effect_zh": "同一任务 Pod 持续执行",
+      "effect_en": "Same task Pod keeps executing",
+      "settled_after": {
+        "allow": 26,
+        "deny": 26
+      },
+      "settling_exclusion_seconds": 2
+    }
+  ],
+  "other_attempts": [
+    {
+      "case": "microsandbox-control-a01",
+      "status": "measured",
+      "received": {
+        "before": {
+          "allow": 25,
+          "deny": 25
+        },
+        "after": {
+          "allow": 24,
+          "deny": 24
+        }
+      },
+      "error": null
+    },
+    {
+      "case": "boxlite-control-a01",
+      "status": "failed",
+      "received": {
+        "before": {
+          "allow": 0,
+          "deny": 0
+        },
+        "after": {
+          "allow": 0,
+          "deny": 0
+        }
+      },
+      "error": "AssertionError({'allow': 0, 'deny': 0})"
+    },
+    {
+      "case": "boxlite-control-a02",
+      "status": "measured",
+      "received": {
+        "before": {
+          "allow": 25,
+          "deny": 25
+        },
+        "after": {
+          "allow": 8,
+          "deny": 13
+        }
+      },
+      "error": null
+    },
+    {
+      "case": "boxlite-sdk-a01",
+      "status": "interrupted",
+      "received": null,
+      "error": null
+    },
+    {
+      "case": "opensandbox-controlplane-a01",
+      "status": "measured",
+      "received": {
+        "before": {
+          "allow": 23,
+          "deny": 23
+        },
+        "after": {
+          "allow": 30,
+          "deny": 30
+        }
+      },
+      "error": null
+    }
+  ],
+  "not_applicable": [
+    {
+      "test": "separate network-proxy process SIGKILL",
+      "engines": [
+        "microsandbox",
+        "boxlite"
+      ],
+      "reason": "Network stack is embedded in runtime/shim in the tested local versions; no independent proxy PID was present."
+    }
+  ],
+  "not_executed": [
+    "CubeSandbox fault injection",
+    "CNI daemon failure",
+    "Kubernetes NetworkPolicy agent failure",
+    "IPv6 and DNS policy faults",
+    "Established long-lived TCP sessions",
+    "Node reboot and power loss",
+    "OOM killer selection"
+  ]
+}

@@ -214,12 +214,12 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "5822ad719d14130b50afc01dc11d8fa327e2c582e308430c6210250314988508",
-      "english_sha256": "bb7f141c617790fab5cdba850b7f3a61270823757d0db63b1fb0c8dc33828338",
+      "source_sha256": "4a23f8c22f02321eb10c05b76f0a9e299ba9d97a9e07f323d281430be13a7b15",
+      "english_sha256": "251f4a60288fc305c56fb3d0eda36af748fe78616f4600f389134c56c89a1b59",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-22T03:40:19.521434+00:00"
+      "reviewed_at": "2026-10-22T07:13:34.784624+00:00"
     },
     "ai-k8s/practices/agent-sandbox-red-team.md": {
       "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
@@ -1438,6 +1438,12 @@
       "source_sha256": "b5f8d88aafc09ea8cb17fbfdbce94c7ea878bd385d0d059da23adf77b69f7738",
       "english_sha256": "c5e6995d698ad66dd00ef94d08760bc7a12549814251f6348adeff33b897aed5",
       "reviewed_at": "2026-10-22T03:38:36.768883+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/sandbox-runtime-failure-network-policy.md": {
+      "source_sha256": "2ca876b7d3a21400049df85332c2a1572f1154dd754ec909e24c3f27fdcefc51",
+      "english_sha256": "c130b4e105237ad8e64d824907d3324d3c3a6aa7dfc3142781eed06b51490014",
+      "reviewed_at": "2026-10-22T07:16:13.311076+00:00",
       "review": "reviewed against source"
     }
   }

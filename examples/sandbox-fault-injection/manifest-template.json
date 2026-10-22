@@ -1,0 +1,527 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "sandbox-fault-lab"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "fault-allow",
+        "namespace": "sandbox-fault-lab"
+      },
+      "data": {}
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "fault-allow",
+        "namespace": "sandbox-fault-lab"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "fault-allow"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "fault-allow",
+              "fault-receiver": "true",
+              "role": "allow"
+            }
+          },
+          "spec": {
+            "nodeSelector": {
+              "kubernetes.io/hostname": "KVM_NODE"
+            },
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "name": "receiver",
+                "image": "MICROSANDBOX_IMAGE",
+                "command": [
+                  "python",
+                  "/app/receiver.py"
+                ],
+                "env": [
+                  {
+                    "name": "ROLE",
+                    "value": "allow"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "64Mi"
+                  },
+                  "limits": {
+                    "cpu": "300m",
+                    "memory": "128Mi"
+                  }
+                },
+                "ports": [
+                  {
+                    "name": "metrics",
+                    "containerPort": 8080
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "scripts",
+                    "mountPath": "/app"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "scripts",
+                "configMap": {
+                  "name": "fault-allow"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "fault-allow",
+        "namespace": "sandbox-fault-lab",
+        "labels": {
+          "fault-receiver": "true",
+          "role": "allow"
+        }
+      },
+      "spec": {
+        "selector": {
+          "app": "fault-allow"
+        },
+        "ports": [
+          {
+            "name": "metrics",
+            "port": 8080
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "fault-deny",
+        "namespace": "sandbox-fault-lab"
+      },
+      "data": {}
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "fault-deny",
+        "namespace": "sandbox-fault-lab"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "fault-deny"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "fault-deny",
+              "fault-receiver": "true",
+              "role": "deny"
+            }
+          },
+          "spec": {
+            "nodeSelector": {
+              "kubernetes.io/hostname": "KVM_NODE"
+            },
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "name": "receiver",
+                "image": "MICROSANDBOX_IMAGE",
+                "command": [
+                  "python",
+                  "/app/receiver.py"
+                ],
+                "env": [
+                  {
+                    "name": "ROLE",
+                    "value": "deny"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "64Mi"
+                  },
+                  "limits": {
+                    "cpu": "300m",
+                    "memory": "128Mi"
+                  }
+                },
+                "ports": [
+                  {
+                    "name": "metrics",
+                    "containerPort": 8080
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "scripts",
+                    "mountPath": "/app"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "scripts",
+                "configMap": {
+                  "name": "fault-deny"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "fault-deny",
+        "namespace": "sandbox-fault-lab",
+        "labels": {
+          "fault-receiver": "true",
+          "role": "deny"
+        }
+      },
+      "spec": {
+        "selector": {
+          "app": "fault-deny"
+        },
+        "ports": [
+          {
+            "name": "metrics",
+            "port": 8080
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "fault-runtime",
+        "namespace": "microsandbox-lab"
+      },
+      "data": {}
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "fault-runtime",
+        "namespace": "microsandbox-lab"
+      },
+      "spec": {
+        "replicas": 1,
+        "strategy": {
+          "type": "Recreate"
+        },
+        "selector": {
+          "matchLabels": {
+            "app": "fault-runtime"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "fault-runtime",
+              "experiment": "sandbox-faults"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "command": [
+                  "python",
+                  "-c",
+                  "import signal,threading;signal.signal(signal.SIGTERM,lambda *_:exit(0));threading.Event().wait()"
+                ],
+                "env": [
+                  {
+                    "name": "PYTHONUNBUFFERED",
+                    "value": "1"
+                  },
+                  {
+                    "name": "MSB_HOME",
+                    "value": "/data/microsandbox-fault-home"
+                  },
+                  {
+                    "name": "GUEST_IMAGE",
+                    "value": "docker.io/library/python:3.12-slim"
+                  },
+                  {
+                    "name": "REGISTRY_SKIP_VERIFY",
+                    "value": "false"
+                  }
+                ],
+                "image": "MICROSANDBOX_IMAGE",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "runtime",
+                "ports": [
+                  {
+                    "containerPort": 9118,
+                    "name": "metrics",
+                    "protocol": "TCP"
+                  }
+                ],
+                "resources": {
+                  "limits": {
+                    "cpu": "2",
+                    "devices.kubevirt.io/kvm": "1",
+                    "memory": "2Gi"
+                  },
+                  "requests": {
+                    "cpu": "500m",
+                    "devices.kubevirt.io/kvm": "1",
+                    "memory": "1Gi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "privileged": false,
+                  "seccompProfile": {
+                    "type": "RuntimeDefault"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/data",
+                    "name": "data"
+                  },
+                  {
+                    "mountPath": "/app",
+                    "name": "scripts"
+                  },
+                  {
+                    "mountPath": "/dev/shm",
+                    "name": "shm"
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "nodeSelector": {
+              "kubernetes.io/hostname": "KVM_NODE"
+            },
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 5,
+            "volumes": [
+              {
+                "name": "data",
+                "persistentVolumeClaim": {
+                  "claimName": "microsandbox-data"
+                }
+              },
+              {
+                "emptyDir": {
+                  "medium": "Memory",
+                  "sizeLimit": "256Mi"
+                },
+                "name": "shm"
+              },
+              {
+                "name": "scripts",
+                "configMap": {
+                  "name": "fault-runtime"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "fault-runtime",
+        "namespace": "boxlite-lab"
+      },
+      "data": {}
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "fault-runtime",
+        "namespace": "boxlite-lab"
+      },
+      "spec": {
+        "replicas": 1,
+        "strategy": {
+          "type": "Recreate"
+        },
+        "selector": {
+          "matchLabels": {
+            "app": "fault-runtime"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "fault-runtime",
+              "experiment": "sandbox-faults"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "command": [
+                  "python",
+                  "-c",
+                  "import signal,threading;signal.signal(signal.SIGTERM,lambda *_:exit(0));threading.Event().wait()"
+                ],
+                "env": [
+                  {
+                    "name": "PYTHONUNBUFFERED",
+                    "value": "1"
+                  },
+                  {
+                    "name": "MSB_HOME",
+                    "value": "/data/microsandbox-fault-home"
+                  },
+                  {
+                    "name": "GUEST_IMAGE",
+                    "value": "docker.io/library/python:3.12-slim"
+                  },
+                  {
+                    "name": "REGISTRY_SKIP_VERIFY",
+                    "value": "false"
+                  }
+                ],
+                "image": "BOXLITE_IMAGE",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "runtime",
+                "ports": [
+                  {
+                    "containerPort": 9108,
+                    "name": "metrics",
+                    "protocol": "TCP"
+                  }
+                ],
+                "resources": {
+                  "limits": {
+                    "cpu": "2",
+                    "memory": "2Gi"
+                  },
+                  "requests": {
+                    "cpu": "500m",
+                    "memory": "1Gi"
+                  }
+                },
+                "securityContext": {
+                  "privileged": true
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/data",
+                    "name": "data"
+                  },
+                  {
+                    "mountPath": "/dev/kvm",
+                    "name": "kvm"
+                  },
+                  {
+                    "mountPath": "/dev/fuse",
+                    "name": "fuse"
+                  },
+                  {
+                    "mountPath": "/dev/vhost-vsock",
+                    "name": "vsock"
+                  },
+                  {
+                    "mountPath": "/app",
+                    "name": "scripts"
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "nodeSelector": {
+              "kubernetes.io/hostname": "KVM_NODE"
+            },
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "terminationGracePeriodSeconds": 5,
+            "volumes": [
+              {
+                "name": "data",
+                "persistentVolumeClaim": {
+                  "claimName": "boxlite-data"
+                }
+              },
+              {
+                "hostPath": {
+                  "path": "/dev/kvm",
+                  "type": "CharDevice"
+                },
+                "name": "kvm"
+              },
+              {
+                "hostPath": {
+                  "path": "/dev/fuse",
+                  "type": "CharDevice"
+                },
+                "name": "fuse"
+              },
+              {
+                "hostPath": {
+                  "path": "/dev/vhost-vsock",
+                  "type": "CharDevice"
+                },
+                "name": "vsock"
+              },
+              {
+                "name": "scripts",
+                "configMap": {
+                  "name": "fault-runtime"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
