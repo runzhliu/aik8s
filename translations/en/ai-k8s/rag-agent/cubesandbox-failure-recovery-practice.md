@@ -2,7 +2,7 @@
 title: CubeSandbox failure drills — control-plane outages, VMM termination, and snapshot recovery
 description: Inject component faults into a verified v0.7.3 Rust Shim deployment on Kubernetes, observe tasks and network restrictions, and record failed recovery and stale port mappings after compute Pod recreation
 status: evolving
-last_reviewed: 2026-10-22
+last_reviewed: 2026-10-23
 ---
 
 # CubeSandbox failure drills — control-plane outages, VMM termination, and snapshot recovery
@@ -14,6 +14,8 @@ We injected component failures into an initially idle Kubernetes test installati
 Three findings matter most. Existing tasks generally continued during control-plane outages. After one virtual-machine runtime was killed, an explicit full-snapshot restore recovered its saved execution state. However, recreating the compute Pod in this installation's Pod-network mode stopped both original tasks, and subsequent recovery encountered port-map conflicts and `NoResource`. This configuration has not passed compute-Pod recovery acceptance and should not be deployed on the assumption of automatic recovery.
 
 The [scripts, sanitized results, and per-request receiver records](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-fault-drill) are public. This is a component-failure and recovery experiment on one compute node, rather than validation of recovery across nodes, sites, or host power loss.
+
+The subsequent [API, Master and Proxy multi-replica failover experiment](cubesandbox-ha-load-balancer-practice.md) adds real L4/L7 entry points, 33 create/command/delete workflows, command-stream disconnections and two monitoring screenshots. Conditions and denominators remain separate; the later two-replica results are not merged into this article's single-replica matrix.
 
 ## 1. Verify which runtime was actually upgraded
 

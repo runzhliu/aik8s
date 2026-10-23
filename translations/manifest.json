@@ -1447,9 +1447,15 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/cubesandbox-failure-recovery-practice.md": {
-      "source_sha256": "4cc271cc44de687636fd9cfad066ae244f2e8ab4472eac4cffe3d231e3b5693e",
-      "english_sha256": "8251faa892719e3aa88be1bedc2ab2e80f4a4866cd466dbf513fb4cf503e6b44",
-      "reviewed_at": "2026-10-22T12:11:32.963694+00:00",
+      "source_sha256": "d2250230efe1dac92baf138b84cd633009356bc21bab9a0efc42fab5e48cf383",
+      "english_sha256": "e265852481e56b7724204fd3454918be5307f20333e02dc32b127bdefddcb0b7",
+      "reviewed_at": "2026-10-23T00:39:45.904096+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-ha-load-balancer-practice.md": {
+      "source_sha256": "e108bfd5ae59b1f88569c360d72dc37ede028afb9bb0f40d71b034120f6ea7e3",
+      "english_sha256": "ad7b76f7ff536ad3ede839ed315d70c0f7e1e13fc4f199f9e273464881a31520",
+      "reviewed_at": "2026-10-23T00:43:48.376215+00:00",
       "review": "reviewed against source"
     }
   }

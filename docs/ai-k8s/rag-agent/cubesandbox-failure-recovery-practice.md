@@ -2,7 +2,7 @@
 title: CubeSandbox 故障演练：控制面中断、虚拟机强杀与快照恢复
 description: 在 Kubernetes 中对实际 v0.7.3 Rust Shim 进行组件故障注入，观察任务、命令通道和网络限制，并记录计算 Pod 重建后的恢复失败与端口映射残留
 status: evolving
-last_reviewed: 2026-10-22
+last_reviewed: 2026-10-23
 ---
 
 # CubeSandbox 故障演练：控制面中断、虚拟机强杀与快照恢复
@@ -14,6 +14,8 @@ last_reviewed: 2026-10-22
 最值得关注的三个结果是：控制面中断时，已运行任务通常继续；单个虚拟机运行时被强杀后，可以显式从完整快照恢复；但本轮 Pod 网络模式下，计算 Pod 重建让两个原任务都停止，后续恢复还遇到了端口映射冲突和 `NoResource`。这套配置尚未通过计算 Pod 恢复验收，不能按已具备自动恢复能力上线。
 
 [复现脚本、脱敏结果与逐条接收记录](https://github.com/runzhliu/aik8s/tree/main/examples/cubesandbox-fault-drill)同时公开。本文是单计算节点的组件故障与恢复实验，不能代替跨节点、跨机房或节点断电演练。
+
+后续已完成 [API、Master 与 Proxy 多副本故障切换实验](cubesandbox-ha-load-balancer-practice.md)，加入真实四层／七层入口、33 次新建执行删除流程、命令长流中断与两张监控截图。两轮条件与分母分别记录，不能把后续双副本结果混入本文的单副本矩阵。
 
 ## 1. 先确认升级到了哪个运行时
 
