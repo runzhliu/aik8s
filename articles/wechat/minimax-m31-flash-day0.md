@@ -106,6 +106,8 @@ SGLang 的首次尝试停在测试脚本假定存在独立 torchrun 命令，改
 
 部署时还应固定镜像摘要，提前验证混合权重内核、兼容库和协议解析，再预热需要的形状。对于本轮使用的开发构建，升级后要重新核对补丁是否仍然需要。
 
+今天也是 1024 程序员节。祝大家节日快乐，代码少点 Bug，服务稳定运行，也别忘了按时下班。
+
 官方模型卡：https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
 
 官方发布说明：https://www.minimax.io/blog/minimax-m31f
