@@ -72,7 +72,9 @@ Krkn 的场景覆盖节点、网络、存储和其他基础设施，并提供不
 
 Chaos Toolkit 更适合已有内部运维接口、希望按实验规范复用脚本的团队。其规范将稳态假设、动作、探针和回滚分开；但写了 rollback，并不意味着被删数据、失效连接或外部副作用都可以自动撤销。[实验规范](https://chaostoolkit.org/reference/api/experiment/)
 
-对于第一轮 Kubernetes 实验，我倾向于从 **Chaos Mesh + 独立业务探针** 起步；如果重点是多团队实验管理，比较 LitmusChaos；如果重点是节点、网络域和平台级场景，再评估 Krkn 或 ChaosBlade。**Velero 等恢复工具应作为另一条建设线并行推进。**这是针对管理者入门路径的建议，不是通用性能排名。
+对于第一轮 Kubernetes 实验，我倾向于从 **Chaos Mesh + 独立业务探针** 起步；如果重点是多团队实验管理，比较 LitmusChaos；如果重点是节点、网络域和平台级场景，再评估 Krkn 或 ChaosBlade。
+
+**Velero 等恢复工具应作为另一条建设线并行推进**。这是针对管理者入门路径的建议，不是通用性能排名。
 
 ## 3. 集群管理员应该覆盖哪些故障
 

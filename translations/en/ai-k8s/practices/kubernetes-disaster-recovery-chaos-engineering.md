@@ -72,7 +72,9 @@ Krkn provides node, network, storage and other infrastructure scenarios through 
 
 Chaos Toolkit suits teams with existing internal operations APIs that want reusable scripts under an experiment specification. It separates steady-state hypotheses, actions, probes and rollbacks. Defining a rollback does not automatically undo deleted data, broken connections or external side effects. [Experiment specification](https://chaostoolkit.org/reference/api/experiment/)
 
-For an initial Kubernetes program, I would start with **Chaos Mesh plus independent business probes**. Compare LitmusChaos when multi-team experiment management is the priority, and Krkn or ChaosBlade when node, network-domain or platform scenarios dominate. **Develop backup restoration with tools such as Velero in parallel.** This is a suggested learning path for administrators, not a general performance ranking.
+For an initial Kubernetes program, I would start with **Chaos Mesh plus independent business probes**. Compare LitmusChaos when multi-team experiment management is the priority, and Krkn or ChaosBlade when node, network-domain or platform scenarios dominate.
+
+**Develop backup restoration with tools such as Velero in parallel**. This is a suggested learning path for administrators, not a general performance ranking.
 
 ## 3. Which failures should cluster administrators cover?
 

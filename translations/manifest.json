@@ -1460,9 +1460,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/practices/kubernetes-disaster-recovery-chaos-engineering.md": {
-      "source_sha256": "557c36cec67687539df677dc2ecce7d506edd7db5586df74ed25a798f53c174c",
-      "english_sha256": "e7e5ac6b1fcff036ad0674713e1def4b6235d28df381a9afe9f39fb895e41f1f",
-      "reviewed_at": "2026-10-23T01:46:57.853841+00:00",
+      "source_sha256": "da696da818e106146f2fcabca4b9feddec7b40c2218301076651c6dff9cbff3a",
+      "english_sha256": "d0aaffb4b54a2e1493ef21b0148310cd29e06e2e648721eeb943a858a2221d5a",
+      "reviewed_at": "2026-10-23T02:03:14.973060+00:00",
       "review": "reviewed against source"
     }
   }
