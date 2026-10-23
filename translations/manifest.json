@@ -1473,9 +1473,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/practices/minimax-m31-flash-day0.md": {
-      "source_sha256": "401267ea762c0e0ef4c1078c319a65978ce9f1da1703aec5aae90c68683cb062",
-      "english_sha256": "6f88de43da39260792ab48cd2442f8f24fb48e30d9ed57be9423d62511ab795b",
-      "reviewed_at": "2026-10-23T20:17:27.682108+00:00",
+      "source_sha256": "52ce217274d824b8ad68489f018f843f009ef5af903262a5e02b04bcbe336fba",
+      "english_sha256": "abde32a2153fb6b06cf290fdea3a74daf61394450296b94e2509e11a6ade3e8d",
+      "reviewed_at": "2026-10-23T21:16:25.711864+00:00",
       "review": "reviewed against source"
     }
   }

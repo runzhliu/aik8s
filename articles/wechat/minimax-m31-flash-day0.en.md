@@ -1,86 +1,117 @@
 # MiniMax-M3.1-Flash Day0: eight H20-3e GPUs and actual million-token inputs
 
-MiniMax-M3.1-Flash is an open-weight native multimodal Mixture of Experts (MoE) model from MiniMax, designed for coding, agent workflows and computer use. It has approximately **428B total parameters and 23B active parameters per token**, accepts text, images and video, produces text, and supports up to 1M tokens of context.
+MiniMax officially released MiniMax-M3.1-Flash on October 19, 2026, and opened its weights on October 23. It is a native multimodal Mixture of Experts (MoE) model designed for coding, agent workflows and computer use. It has approximately **428B total parameters and 23B active parameters per token**, accepts text, images and video, produces text, and supports up to 1M tokens of context.
 
-Building on MiniMax-M3, the publisher attributes efficiency improvements to sparse attention throughout the model, quantization-aware training and DSpark speculative decoding. MiniMax Sparse Attention (MSA) targets long-context computation efficiency. The released mixed-quantization weights also make kernel compatibility on existing GPUs an important deployment consideration.
+Building on MiniMax-M3, the publisher attributes efficiency improvements to sparse attention throughout the model, quantization-aware training and DSpark speculative decoding. MiniMax Sparse Attention (MSA) targets long-context computation efficiency; the mixed-quantization weights also require matching inference kernels.
 
-Official model card: https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
+This article records Day0 self-hosting tests following the weight release. vLLM and SGLang each use one eight-H20-3e node to validate functions, throughput, latency and million-token input. **Together, the engines completed 132 formal performance rounds and 3,888 requests, with 0 failures.**
 
-For enterprise deployment, the practical questions are whether existing GPUs can run the model, how throughput and latency change with concurrency, and what million-token inputs cost in practice. This run uses a single **8×H20-3e** system with vLLM to test fixed-length performance, tools, images and long-context recall separately.
+## Configuration and common conditions
 
-## Tested configuration and scope
+Both use the same pinned model snapshot. Its 48 main shards contain approximately 232.93 GiB of indexed tensor data, mixing MXFP8 with packed NVFP4 experts. H20 uses Hopper, and both deployments process experts with Marlin.
 
-Active parameters affect computation per token, but a complete deployment still needs all weights. The pinned snapshot has 48 main shards whose indexed tensor data totals approximately 232.93 GiB. Runtime caches and workspaces require additional memory.
+| Condition | vLLM | SGLang |
+| --- | --- | --- |
+| GPUs and parallelism | 8×H20-3e, TP8 | 8×H20-3e, TP8 |
+| Main service | 32,768 context, maximum sequences 32 | 32,768 context, maximum running requests 32 |
+| Long context | 1,048,576 context, maximum sequences 1 | 1,048,576 context, maximum running requests 1 |
+| Key-Value Cache (KV Cache) | FP8 | Automatic FP8 selection confirmed in logs |
+| Prefix cache / DSpark | Disabled / not enabled | Disabled / not enabled |
+| Memory fraction parameter | 0.85 | 0.85 |
 
-The outer configuration specifies MXFP8, while experts use packed NVFP4. H20 is a Hopper GPU; this run uses Marlin's W4A16 path for experts, which differs from native FP4 execution on Blackwell.
+The experiments use different physical nodes, software versions and attention implementations. SGLang explicitly uses 8 tokenizer workers. These are measurements of two concrete deployment configurations; node and frontend settings also contribute to the results.
 
-The test used a single node with eight H20-3e GPUs and TP8. The main performance configuration had a 32,768-token maximum context, 32 maximum sequences and a GPU memory utilization parameter of 0.85. Prefix caching and DSpark speculative decoding were disabled, with FP8 KV and index caches. Million-token tests restarted the service separately with maximum sequences reduced to 1.
+Each case has three rounds. Figures show per-metric medians and ranges across rounds. Each engine runs 57 main rounds plus 9 historical-protocol rounds, with warmups and calibration separate. Fixed-length traffic uses the same client, model tokenizer and request seeds, enforcing output lengths to measure serving performance. Natural-language, tool and image checks are evaluated separately.
 
-The formal performance tests completed **66 rounds and 1,944 requests, with 0 failures**. All 7 separate long-context recall probes also passed, including three inputs exceeding one million tokens. Warmups and calibration are recorded separately, with performance and natural-language checks validated independently.
+TTFT is time to first token, TPOT is average time per subsequent output token, and E2E is complete-request duration. P95 TPOT below is a percentile of per-request averages.
 
-## Short requests: throughput and latency as concurrency increases
+## Short requests: first-token latency matters at low concurrency
 
-Start with 128 input tokens and 128 output tokens. Each case has three rounds of fixed-length synthetic traffic. The chart shows medians, with error bars preserving the range across rounds.
+Start with 128 input tokens and 128 output tokens.
 
-![Short-request throughput and time to first token](assets/minimax-m31-flash-day0/short-en.png)
+![Short-request output throughput](assets/minimax-m31-flash-day0/comparison-short-en.png)
 
-Raising concurrency from 1 to 32 increases output throughput from approximately 142 to 1,585 tokens/s, about 11.2 times. Meanwhile, P95 time per output token rises from 6.14 ms to 16.42 ms, and P95 time to first token rises from approximately 126 ms to 550 ms.
+Across these five concurrency levels, SGLang's output throughput is approximately **5.4%–25.4%** higher. At C1, results are 172.5 versus 141.6 tokens/s; at C32, 1,688.4 versus 1,585.4 tokens/s.
 
-P95 time to first token at concurrency 16 is lower than at concurrency 8. Queuing, batching and overlapping computation affect finite-batch statistics. The chart includes the range across all three rounds to show that variation.
+First-token latency is particularly relevant to interactive traffic. C1 P95 TTFT is 45.6 ms for SGLang and 126.2 ms for vLLM. At C8, it is 152.5 ms versus 404.7 ms.
 
-The following screenshot captures the actual performance window. The eight GPUs approach full utilization during computation. Maximum single-card framebuffer use is approximately 121 GiB, power peaks at 428 W and temperature at 62°C. These are maxima of individual-card metrics, not summed power.
+At C32, P95 TPOT is 16.40 ms versus 16.42 ms. Sustained decoding performance converges at higher concurrency, so the low-concurrency throughput improvement should not be applied to every traffic shape.
 
-![Eight-GPU resources during the main performance matrix](assets/minimax-m31-flash-day0/vllm-gpu-core.jpg)
+The following screenshots cover the respective main test windows, including functional checks, warmups and formal rounds.
 
-## Long inputs and long outputs have different latency profiles
+![vLLM main test resource curves](assets/minimax-m31-flash-day0/vllm-gpu-core.jpg)
 
-Holding concurrency at 8 and changing request shape produces substantial differences.
+![SGLang main test resource curves](assets/minimax-m31-flash-day0/sglang-gpu-core.jpg)
 
-![Different input and output shapes at the same concurrency](assets/minimax-m31-flash-day0/shapes-en.png)
+The maximum single-card framebuffer use in the vLLM window is approximately 121 GiB. SGLang's corresponding measurement: peak single-card memory of approximately 123.9 GiB, power of 431 W and temperature of 62°C. This measures total framebuffer allocation, including weights, preallocated caches, workspaces and graph capture.
 
-A 16K-input, 256-output request reaches 13.90 seconds P95 time to first token. A 128-input, 2K-output request still starts in approximately 0.40 seconds, but its P95 complete-request duration reaches approximately 20.48 seconds.
+## Long inputs and outputs need separate latency targets
 
-The former must process substantial input while competing with ongoing decoding. The latter spends more time generating. Long inputs are common in Retrieval-Augmented Generation and agent workflows, so capacity estimates should follow real request distributions. Choosing concurrency from short-chat throughput alone can lead to unexpectedly long waits.
+At concurrency 8, first-token latency changes with input shape.
 
-## Measured million-token context
+![Long-input time to first token](assets/minimax-m31-flash-day0/comparison-prefill-en.png)
 
-The long-context probes place random codes near 10%, 50% and 90% of a long document and request an exact JSON answer. Validation checks server input counts, complete streams and exact code matches.
+With 16K input and 256 output tokens, P95 TTFT is 13.98 seconds for SGLang and 13.90 seconds for vLLM. These requests must process substantial input first. Throughput alone does not establish whether first-token latency meets the business target.
 
-The 64K, 128K, 256K and 512K tiers passed first. Three independent million-token seeds then produced actual server inputs of 1,040,383, 1,040,384 and 1,040,384 tokens. All three codes were recovered in every run.
+With 8K input and 1K output tokens at C16, output throughput is 601.2 versus 591.4 tokens/s, but P95 complete-request duration is 27.37 versus 36.72 seconds. Similar aggregate throughput can still produce different request tails. Measure complete duration directly rather than adding P95 TTFT and P95 TPOT from different requests.
 
-![Three measured million-token inputs](assets/minimax-m31-flash-day0/long-en.png)
+Short inputs with long outputs depend more on sustained decoding. The following figure shows request-level P95 TPOT for 128 input and 2K output tokens.
 
-The cost is concrete: approximately 168 seconds to the first token and 169–170 seconds for the complete request. This establishes single-request long-input handling and targeted recall. Complex document reasoning and long-running task completion need their own evaluations.
+![Long-output time per token](assets/minimax-m31-flash-day0/comparison-decode-en.png)
 
-The next screenshot shows the actual long-context resource window, where maximum single-card framebuffer use reaches approximately 128 GiB. Both service parameters and traffic differ from the earlier performance configuration, so the memory difference is not a direct estimate of KV cost per million tokens.
+At C8, P95 TPOT is 9.38 ms for SGLang and 9.91 ms for vLLM. Complete-request P95 is 19.29 seconds versus 20.48 seconds. Short chats, long-document retrieval and sustained generation need separate admission limits and latency targets.
 
-![Eight-GPU resources during long-context recall](assets/minimax-m31-flash-day0/vllm-gpu-long.jpg)
+## Million-token context: account for the wait
 
-## Tool calls and image understanding
+The long-context probes place independent random codes near 10%, 50% and 90% of the input and require exact JSON answers. Both services are restarted separately with a maximum context of 1,048,576 and maximum running requests of 1, with prefix caching disabled.
 
-Text and complete-stream checks passed 3/3, tools 4/4 and images 4/4. Tool coverage includes a single tool, a mock result returned to the model, streaming arguments and nested objects. Images cover shape counting, receipt totals, chart values and two-image identification.
+Both pass all 7 probes, including all three codes in each million-token seed. Actual SGLang server inputs are 1,040,383, 1,040,384, 1,040,384 tokens; vLLM inputs are 1,040,383, 1,040,384 and 1,040,384 tokens.
 
-These small cases establish whether templating, reasoning fields, tool arguments and visual inputs work together. Tool results come from a local stub without connecting to production systems. That differs from evaluating complete agent tasks. Video and UI grounding are outside this run's scores.
+![Long-context first-token latency](assets/minimax-m31-flash-day0/comparison-long-en.png)
 
-## Two deployment issues
+Median TTFT across the three million-token seeds is **272.26 seconds** for SGLang and **168.29 seconds** for vLLM. This validates single-request long-input handling and targeted recall; complex document reasoning still needs evaluation on real tasks. Short-request throughput ordering should not determine the choice of a million-token service.
 
-The first startup read all 48 shards, then failed during Marlin expert-weight repacking with an unsupported PTX toolchain error.
+![vLLM long-context resource curves](assets/minimax-m31-flash-day0/vllm-gpu-long.jpg)
 
-The image contained CUDA 13.4 components, but the process initially saw driver API 13.0. Reducing the same repacking operation to a small probe on the same GPU showed a failure with the default library path and a pass when the image's CUDA compatibility libraries were loaded first. The process then reported API 13.4. The formal service used that container configuration without changing the host driver.
+![SGLang long-context resource curves](assets/minimax-m31-flash-day0/sglang-gpu-long.jpg)
 
-The second issue affected streaming: the service could answer questions, but reasoning markers and reasoning text appeared inside the answer. Code inspection showed why: the system prompt described the marker format, while the parser inspected the entire prompt to decide whether reasoning had ended. It counted the example closing marker as current answer state.
+In the long-context window, peak single-card memory is approximately 137.2 GiB for SGLang and 128 GiB for vLLM. The 0.85 setting is a runtime memory-planning parameter; caches, workspaces and graph capture also affect actual peaks. Keep million-token inputs single-request initially, then measure headroom before increasing concurrency.
 
-The fix narrows only the initial-state inspection, preserving the original generated-stream extraction. After prefix regressions and chunked-stream replays passed inside the image, real requests checked complete streams, tools and images. The full command, version digest and plugin are available in the linked public article.
+## Tools, images and deployment compatibility
 
-These issues occurred in the inference kernel and protocol parsing layers respectively. Deployment acceptance needs to cover weight loading, actual generation, and the reasoning and tool fields received by clients.
+| Check | vLLM | SGLang |
+| --- | --- | --- |
+| Text and complete streams | 3/3 | 3/3 |
+| Tools | 4/4 | 4/4 |
+| Images | 4/4 | 4/4 |
+| Reasoning parameters | 5/5 | 5/5 |
+
+Tool cases cover a single tool, mock results returned to the model, streaming arguments and nested objects. Images cover shape counting, receipt totals, chart values and two-image identification. These are fixed small integration probes, with local stubs supplying tool results. Video and UI grounding are outside the scores.
+
+
+Web interaction was checked separately after formal performance tests: the model returned 703 and recalled jade-628 within the same conversation on the next turn. The Chinese interface is preserved in the original screenshot.
+
+![Actual web conversation](assets/minimax-m31-flash-day0/sglang-openwebui-text.jpg)
+
+vLLM encountered a PTX toolchain mismatch during expert-weight repacking and passed after prioritizing CUDA compatibility libraries in the image. Streaming parsing also needed a narrower scope for initial state detection, preventing format examples in the system prompt from being mistaken for the current answer state.
+
+SGLang's first attempt stopped because the test launcher assumed a standalone torchrun executable existed. It continued after switching to the module entry point of the same Python environment. Startup also included DeepGEMM compilation and graph capture. File, node and compilation caches affect these records, so they are not used as a controlled cold-start ranking.
 
 ## Deployment recommendations
 
-This run establishes an eight-GPU vLLM deployment path on existing H20-3e systems. Before connecting business traffic, define separate latency targets for short chats, long inputs and long outputs, then tune concurrency and caching. Million-token capacity works under the tested conditions; where retrieval or segmentation can reduce prefill, measure those alternatives too.
+For a new low-concurrency interactive service, prioritize validating the SGLang configuration tested here. At 128→128 and C8, P95 TTFT is 152.5 ms, versus 404.7 ms for vLLM, a difference directly relevant to perceived latency. Reproduction should also check tokenizer workers, attention implementations and software versions.
 
-This article records the vLLM configuration described above, with prefix caching and DSpark disabled. Weight formats, inference kernels, caches and request lengths all affect performance and should be controlled when comparing deployments.
+For an existing vLLM system dominated by higher-concurrency traffic, retaining the deployment and running workload regressions is a reasonable first choice. The short-request C32 throughput gap is approximately 6.5%, with similar sustained decoding time. Both pass the functional probes. Migration should depend on real prompts, tool protocols and image distributions as well as peak throughput.
 
-The public article includes the complete configuration, per-round data, all 7 long-context probes, and diagnosis and fixes for both deployment issues:
+For inputs close to one million tokens, prioritize validating vLLM, which has the lower first-token wait in this run: three-seed median TTFT is 272.26 seconds for SGLang and 168.29 seconds for vLLM. Configure long-context services and concurrency limits separately. Only single-request operation was tested, without queueing. Retrieval, segmentation and prefix reuse require separate measurements.
+
+Pin image digests, verify mixed-weight kernels, compatibility libraries and protocol parsing, then warm the required shapes. These are development builds: after upgrades, check whether the local patches are still needed.
+
+Official model card: https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
+
+Official launch announcement: https://www.minimax.io/blog/minimax-m31f
+
+Official weight announcement: https://x.com/MiniMax_AI/status/2113436864904610008
 
 Read the full MiniMax-M3.1-Flash Day0 article:
 
