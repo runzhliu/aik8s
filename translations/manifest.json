@@ -95,12 +95,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/practices/index.md": {
-      "source_sha256": "39ce8228bf07a9d14c347f7917deaa3e3cfaba783d70c8cdc678725c675d5c2e",
-      "english_sha256": "6f72b0d06fa635556e9aeaea2319caf8f4a22ff8883ec069133c3039e42392b8",
+      "source_sha256": "d16c6a86b48a911383725451b6c1383b86a8dbb9e6894435d02d6164b9a5c658",
+      "english_sha256": "974cf2de3d1d027c4dd9770f8cd0f41a171ca5b21bc4de1892d62e4b4b6ef6ef",
       "translated_at": "2026-10-16T08:50:57.637630+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-19T02:51:23.399896+00:00"
+      "reviewed_at": "2026-10-23T01:46:02.640715+00:00"
     },
     "assets/practices/gpu-notebook-platform-evolution/README.md": {
       "source_sha256": "3cdac55cfe726d6d73b60ba5e93b682cb2047e8c27980cc8fd320c0b0da4a8bb",
@@ -367,11 +367,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/reliability.md": {
-      "source_sha256": "1f66d3075e92ba73a10964a4b7b2c0de27acfb7e0e005f67b6f80164131af5ca",
-      "english_sha256": "45ea1330f7f8933adf02c6a6b9a65840600d9f537af941c5232a970358348162",
+      "source_sha256": "e0223bc91a6b5461e7d9f4bc08abd22f71560fc472063e45c8c206ecc89d6758",
+      "english_sha256": "17e35a79f7394dae4d65880b844e8294128cb6180ff74b1f6d8b8a4ec2aca559",
       "translated_at": "2026-10-16T08:59:54.296202+00:00",
       "method": "model-assisted translation; structural checks passed",
-      "review": "pending editorial review"
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-23T01:46:02.571920+00:00"
     },
     "ai-k8s/security-governance.md": {
       "source_sha256": "21b25d9881d27b95917fda7f745b22434c72674a0c741faa9159ab85993045c5",
@@ -1456,6 +1457,12 @@
       "source_sha256": "e108bfd5ae59b1f88569c360d72dc37ede028afb9bb0f40d71b034120f6ea7e3",
       "english_sha256": "ad7b76f7ff536ad3ede839ed315d70c0f7e1e13fc4f199f9e273464881a31520",
       "reviewed_at": "2026-10-23T00:43:48.376215+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/kubernetes-disaster-recovery-chaos-engineering.md": {
+      "source_sha256": "557c36cec67687539df677dc2ecce7d506edd7db5586df74ed25a798f53c174c",
+      "english_sha256": "e7e5ac6b1fcff036ad0674713e1def4b6235d28df381a9afe9f39fb895e41f1f",
+      "reviewed_at": "2026-10-23T01:46:57.853841+00:00",
       "review": "reviewed against source"
     }
   }

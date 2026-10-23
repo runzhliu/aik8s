@@ -2,7 +2,7 @@
 title: 实战、排障与选型
 description: 用可复现的实验、性能数字、事故证据和决策树回答 AI/LLM on Kubernetes 的高频问题
 status: evolving
-last_reviewed: 2026-09-26
+last_reviewed: 2026-10-23
 ---
 
 # 实战、排障与选型
@@ -17,6 +17,7 @@ last_reviewed: 2026-09-26
 - [看似 NCCL 故障，实际是 Host Memory OOM](nccl-unhandled-cuda-error-host-memory-oom.md)
 - [AI 集群事故复盘方法](incident-review.md)
 - [数百个 Kubernetes 集群的稳定性建设](kubernetes-fleet-reliability.md)
+- [Kubernetes 容灾演练综述：故障注入、备份恢复与验收](kubernetes-disaster-recovery-chaos-engineering.md)
 - [万节点 Kubernetes 集群优化实战：控制面、etcd、调度与网络](large-scale-kubernetes-optimization.md)
 - [Kube-apiserver 负载均衡实战：HTTP/2、TLS 终结与四层/七层选型](kube-apiserver-load-balancing.md)
 - [Contiv、OVS 与 Cilium 串联网络实战：kube-proxy 为什么可能接不到报文](contiv-ovs-cilium-network.md)

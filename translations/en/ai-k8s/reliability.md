@@ -2,12 +2,14 @@
 title: "Reliability, Checkpoint, and Failure Recovery"
 description: "Failure models, RPO, RTO, graceful exit, Spot, and recovery drills for AI jobs"
 status: stable
-last_reviewed: 2026-08-02
+last_reviewed: 2026-10-23
 ---
 
 # Reliability, Checkpoint, and Failure Recovery
 
 AI workloads often mistake "Pod restarted successfully" for "business recovered successfully." For training that runs for days, inference replicas spanning multiple machines and GPUs, and models of hundreds of GB, what really needs to be measured is progress loss, recovery time, data consistency, and service capacity.
+
+For administrator-oriented tools, control-plane and storage scenarios, and full recovery acceptance, see the [Kubernetes disaster recovery drill review](practices/kubernetes-disaster-recovery-chaos-engineering.md). This page remains focused on AI jobs and checkpoints.
 
 ## 1. Define the Failure Domain First
 

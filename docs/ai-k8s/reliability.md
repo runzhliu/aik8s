@@ -2,12 +2,14 @@
 title: 可靠性、Checkpoint 与故障恢复
 description: AI 作业的故障模型、RPO、RTO、优雅退出、Spot 和恢复演练
 status: stable
-last_reviewed: 2026-08-02
+last_reviewed: 2026-10-23
 ---
 
 # 可靠性、Checkpoint 与故障恢复
 
 AI 工作负载经常把“Pod 重启成功”误认为“业务恢复成功”。对于运行数天的训练、占用多机多卡的推理副本和数百 GB 的模型，真正需要衡量的是进度损失、恢复耗时、数据一致性和服务容量。
+
+面向集群管理员的工具选型、控制面与存储场景、完整恢复验收，见 [Kubernetes 容灾演练综述](practices/kubernetes-disaster-recovery-chaos-engineering.md)。本文继续聚焦 AI 作业与 Checkpoint。
 
 ## 1. 先定义故障域
 

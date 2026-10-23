@@ -48,6 +48,7 @@
   "W&B Local 与 SwanLab 选型": "W&B Local vs. SwanLab Selection",
   "Ray 大模型训练与推理": "Ray for Large Model Training and Inference",
   "可靠性与故障恢复": "Reliability and Failure Recovery",
+  "Kubernetes 容灾演练综述": "Kubernetes Disaster Recovery and Chaos Engineering",
   "LLM 推理": "LLM Inference",
   "推理平台总览": "Inference Platform Overview",
   "本地运行与测试": "Local Running and Testing",

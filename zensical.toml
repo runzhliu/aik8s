@@ -137,6 +137,7 @@ nav = [
       {"MLOps 与平台工程" = "ai-k8s/mlops.md"},
       {"GPU、训练与推理可观测性" = "ai-k8s/observability.md"},
       {"大规模 Kubernetes 监控与时序数据库选型" = "ai-k8s/practices/large-scale-kubernetes-monitoring-tsdb.md"},
+      {"Kubernetes 容灾演练综述" = "ai-k8s/practices/kubernetes-disaster-recovery-chaos-engineering.md"},
       {"OpenTelemetry 与 Kubernetes 入门" = "ai-k8s/opentelemetry-kubernetes-fundamentals.md"},
       {"OpenTelemetry × Grafana：Kubernetes 组件实战" = "ai-k8s/practices/opentelemetry-kubernetes-components-grafana.md"},
       {"OpenTelemetry Kubernetes 应用与实战" = "ai-k8s/practices/opentelemetry-kubernetes-practice.md"},

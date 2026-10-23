@@ -2,7 +2,7 @@
 title: "Practical Experience, Troubleshooting, and Selection"
 description: "Answering common AI/LLM on Kubernetes questions with reproducible experiments, performance numbers, incident evidence, and decision trees"
 status: evolving
-last_reviewed: 2026-09-26
+last_reviewed: 2026-10-23
 ---
 
 # Practical Experience, Troubleshooting, and Selection
@@ -17,6 +17,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 - [Seemingly NCCL failure, actually Host Memory OOM](nccl-unhandled-cuda-error-host-memory-oom.md)
 - [AI Cluster Incident Retrospective Methods](incident-review.md)
 - [Stability Building for Hundreds of Kubernetes Clusters](kubernetes-fleet-reliability.md)
+- [Kubernetes disaster recovery drills: fault injection, backup restoration and acceptance](kubernetes-disaster-recovery-chaos-engineering.md)
 - [Practical Optimization of a 10,000-Node Kubernetes Cluster: Control Plane, etcd, Scheduling, and Networking](large-scale-kubernetes-optimization.md)
 - [Kube-apiserver Load Balancing in Practice: HTTP/2, TLS Termination, and Layer 4/Layer 7 Selection](kube-apiserver-load-balancing.md)
 - [Contiv, OVS, and Cilium Chained Networking in Practice: Why kube-proxy Might Not Receive Packets](contiv-ovs-cilium-network.md)
