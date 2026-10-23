@@ -10,6 +10,8 @@ last_reviewed: 2026-10-24
 
 ## 1. Understand the model before deploying it
 
+MiniMax officially released MiniMax-M3.1-Flash on **October 19, 2026**, and opened its weights on **October 23**. Day0 in this article refers to self-hosting tests following the weight release; the model launch and weight availability are separate milestones. [Official launch announcement](https://www.minimax.io/blog/minimax-m31f), [weight announcement](https://x.com/MiniMax_AI/status/2113436864904610008)
+
 MiniMax-M3.1-Flash is a native multimodal Mixture of Experts (MoE) model. Its publisher reports approximately 428B total parameters and 23B active parameters, text, image and video inputs, text output, and a 1M-token context window. For an existing GPU fleet, weight formats, inference kernels and the actual cost of long-context caches matter alongside active parameter count. [Official model card](https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash)
 
 This test pins official weight revision `54e4e69dfc452b1e94a426c24a4fdeeaa8e3ad5e`. The outer configuration specifies `quant_method=mxfp8`; the expert configuration also contains `moe_quant_algo=NVFP4` and `moe_quant_format=nvfp4-pack-quantized`. Serving therefore needs to handle both MXFP8 and packed NVFP4 experts. [Pinned configuration](https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash/blob/54e4e69dfc452b1e94a426c24a4fdeeaa8e3ad5e/config.json)

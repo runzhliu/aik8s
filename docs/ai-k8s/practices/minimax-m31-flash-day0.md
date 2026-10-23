@@ -10,6 +10,8 @@ last_reviewed: 2026-10-24
 
 ## 1. 先看模型，再看能否部署
 
+MiniMax 于 **2026 年 10 月 19 日**正式发布 MiniMax-M3.1-Flash，并于 **10 月 23 日**开放模型权重。本文的 Day0 以权重开放为起点，记录自部署测试；模型上线与权重开放是两个不同的时间点。[官方发布说明](https://www.minimax.io/blog/minimax-m31f)、[权重开放公告](https://x.com/MiniMax_AI/status/2113436864904610008)
+
 MiniMax-M3.1-Flash 是原生多模态混合专家模型（Mixture of Experts，MoE），官方给出约 428B 总参数、23B 激活参数，支持文字、图片和视频输入、文字输出，最长上下文为 1M Token。对现有 GPU 集群而言，值得关注的不只是激活参数，还有权重格式、推理内核和长上下文缓存的实际成本。[官方模型卡](https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash)
 
 本次使用官方权重快照 `54e4e69dfc452b1e94a426c24a4fdeeaa8e3ad5e`。配置外层为 `quant_method=mxfp8`，专家部分还包含 `moe_quant_algo=NVFP4`、`moe_quant_format=nvfp4-pack-quantized`。因此，这是一套混合格式权重，部署路径需要同时处理 MXFP8 和打包后的 NVFP4 专家。[锁定版本配置](https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash/blob/54e4e69dfc452b1e94a426c24a4fdeeaa8e3ad5e/config.json)
