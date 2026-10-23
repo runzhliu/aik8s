@@ -8,7 +8,9 @@ Beyond throughput, two deployment failures were particularly useful: one happene
 
 ## A 428B model still needs a close look at weight formats
 
-MiniMax-M3.1-Flash is a native multimodal Mixture of Experts model. The publisher reports approximately 428B total parameters and 23B active parameters, text, image and video inputs, text output, and up to 1M tokens of context. [Official model card](https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash)
+MiniMax-M3.1-Flash is a native multimodal Mixture of Experts model. The publisher reports approximately 428B total parameters and 23B active parameters, text, image and video inputs, text output, and up to 1M tokens of context.
+
+Official model card: https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
 
 Active parameters affect computation per token, but a complete deployment still needs all weights. The pinned snapshot has 48 main shards whose indexed tensor data totals approximately 232.93 GiB. Runtime caches and workspaces require additional memory.
 
@@ -78,4 +80,6 @@ All performance results in this article come from vLLM. Complete SGLang results 
 
 The public article includes the complete configuration, per-round data, all 7 long-context probes, and diagnosis and fixes for both deployment issues:
 
-[Read the full MiniMax-M3.1-Flash Day0 article](https://aik8s.run/en/ai-k8s/practices/minimax-m31-flash-day0/)
+Read the full MiniMax-M3.1-Flash Day0 article:
+
+https://aik8s.run/en/ai-k8s/practices/minimax-m31-flash-day0/

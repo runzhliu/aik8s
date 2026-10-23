@@ -8,7 +8,9 @@ MiniMax-M3.1-Flash 开放权重后，我最想确认两件事：现有的 H20-3e
 
 ## 428B 的模型，为什么还要看权重格式
 
-MiniMax-M3.1-Flash 是原生多模态混合专家模型，官方给出的规模约为 428B 总参数、23B 激活参数，支持文字、图片、视频输入和文字输出，最长上下文为 1M Token。[官方模型卡](https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash)
+MiniMax-M3.1-Flash 是原生多模态混合专家模型，官方给出的规模约为 428B 总参数、23B 激活参数，支持文字、图片、视频输入和文字输出，最长上下文为 1M Token。
+
+官方模型卡：https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
 
 激活参数影响每个 Token 的计算量，完整部署仍需放下全部权重。本次固定快照的 48 个主分片，索引张量数据约 232.93 GiB，运行时还要为缓存和计算留空间。
 
@@ -78,4 +80,6 @@ MiniMax-M3.1-Flash 是原生多模态混合专家模型，官方给出的规模�
 
 公开文档包含完整配置、逐轮数据、7 个长上下文样例，以及这次两类问题的定位与修复：
 
-[阅读全文：MiniMax-M3.1-Flash Day0](https://aik8s.run/ai-k8s/practices/minimax-m31-flash-day0/)
+阅读全文：MiniMax-M3.1-Flash Day0
+
+https://aik8s.run/ai-k8s/practices/minimax-m31-flash-day0/
