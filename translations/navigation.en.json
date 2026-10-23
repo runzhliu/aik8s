@@ -198,5 +198,6 @@
   "DeepSeek 1017 Day0：vLLM 与百万 Token 实测": "DeepSeek 1017 Day0: vLLM and Million-Token Tests",
   "DeepSeek 1017：PRO 5000 与 H20 线上观察": "DeepSeek 1017: PRO 5000 and H20 Production Observations",
   "Microsandbox Kubernetes 实战": "Microsandbox on Kubernetes in Practice",
-  "沙箱故障与网络策略实战": "Sandbox Failures and Network Policies"
+  "沙箱故障与网络策略实战": "Sandbox Failures and Network Policies",
+  "MiniMax-M3.1-Flash：Day0 首测": "MiniMax-M3.1-Flash: Day0 measurements"
 }

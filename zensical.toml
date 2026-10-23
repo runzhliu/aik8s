@@ -171,6 +171,7 @@ nav = [
       {"从半小时到五分钟：大模型冷启动全链路优化" = "ai-k8s/practices/llm-cold-start-optimization.md"},
       {"vLLM Sleep：L20 单卡双模型实测" = "ai-k8s/practices/vllm-sleep-model-switch-l20.md"},
       {"大模型权重分发与加载加速" = "ai-k8s/practices/model-weight-delivery-acceleration.md"},
+      {"MiniMax-M3.1-Flash：Day0 首测" = "ai-k8s/practices/minimax-m31-flash-day0.md"},
       {"MiniMax-M3：H20 双引擎实测" = "ai-k8s/practices/minimax-m3-h20-benchmark.md"},
       {"MiniMax-M3：部署故障与修复" = "ai-k8s/practices/minimax-m3-h20-deployment-fixes.md"},
       {"MiniMax H3：H20-3e 音视频实测" = "ai-k8s/practices/minimax-h3-h20-benchmark.md"},

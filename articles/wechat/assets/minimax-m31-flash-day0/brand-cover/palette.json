@@ -1,0 +1,17 @@
+{
+  "source": "https://www.minimax.io/",
+  "source_scope": "M3 hero title accentGradient, not a corporate brand manual",
+  "official_m3_gradient": [
+    "#FF276F",
+    "#FF7038"
+  ],
+  "editorial_palette": {
+    "background": "#FFF8F6",
+    "ink": "#35252A",
+    "muted": "#866A70",
+    "red_text": "#CF254C",
+    "orange_text": "#D74C26"
+  },
+  "layout": "Original M3 light cover retained; only color treatment changes",
+  "article_charts": "Keep blue/orange engine comparison colors"
+}
