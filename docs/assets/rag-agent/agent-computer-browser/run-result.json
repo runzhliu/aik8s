@@ -1,0 +1,31 @@
+{
+  "kind": "scripted-executor-rehearsal",
+  "modelInference": false,
+  "mcpProtocolTested": false,
+  "desktopControlTested": false,
+  "playwright": "1.64.1",
+  "viewport": {
+    "width": 1200,
+    "height": 675
+  },
+  "coordinateUnit": "CSS pixels",
+  "oldPoint": {
+    "x": 280.5546875,
+    "y": 287
+  },
+  "buttonBefore": {
+    "x": 218.875,
+    "y": 268,
+    "width": 123.359375,
+    "height": 38
+  },
+  "buttonAfter": {
+    "x": 55,
+    "y": 459,
+    "width": 123.359375,
+    "height": 38
+  },
+  "staleCoordinateResult": "pending",
+  "freshLocatorResult": "done",
+  "afterReload": "done"
+}

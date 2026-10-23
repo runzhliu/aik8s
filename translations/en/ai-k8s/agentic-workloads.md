@@ -2,7 +2,7 @@
 title: "AI Agent, Sandbox, and Tool Execution"
 description: "Runtime isolation, networking, identity, tool permissions, and audit design for Agent workloads"
 status: evolving
-last_reviewed: 2026-08-03
+last_reviewed: 2026-10-23
 ---
 
 # AI Agent, Sandbox, and Tool Execution
@@ -10,6 +10,8 @@ last_reviewed: 2026-08-03
 Agent workloads differ from ordinary Deployments: they may hold state for long periods, proactively access external tools, generate and execute code, process untrusted web pages or repository content, and take actions without step-by-step human confirmation.
 
 Kubernetes can provide identity, quotas, networking, storage, and lifecycle foundations, but it cannot automatically prove that Agent behavior is safe.
+
+For how agents read pages, click elements or use screenshots to operate desktops, including Codex and other public implementations, see [Computer Use and Browser Implementation](rag-agent/agent-computer-use-browser-implementation.md).
 
 If you are comparing Kubernetes Agent Sandbox, gVisor, Kata, Firecracker, or managed execution platforms, first read [Agent Sandbox Selection and Architecture Analysis](rag-agent/agent-sandbox-selection.md). If you plan to use OpenClaw as the foundation for an internal Agent platform, see [OpenClaw Enterprise Platform Pros/Cons and Secondary Development Boundaries](rag-agent/openclaw-enterprise-agent-platform.md). This chapter continues the discussion of tool authorization, Prompt Injection, networking, budgets, auditing, and release boundaries after selection.
 

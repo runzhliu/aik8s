@@ -1,0 +1,7 @@
+{
+  "name": "agent-browser-mechanics",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": { "demo": "node run.cjs" },
+  "dependencies": { "playwright": "1.64.1" }
+}

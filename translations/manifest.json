@@ -389,11 +389,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/agentic-workloads.md": {
-      "source_sha256": "dad3b05859b8a497b88c4c74fbfa0bc6837b6f9f1e9fa7e23db3156453a8271b",
-      "english_sha256": "059b8416efa895cac3ca7ee4d62e622fd4851a724f250961a5065e4dd6c6d716",
+      "source_sha256": "acabf1441f2af82990eec997ae889cf57a590d4a47d6d99e1d49915bc7d89b6d",
+      "english_sha256": "a491b8f5c075564ac411cf23db5247ab0c7869c07905e35384d1d1e737fb6b60",
       "translated_at": "2026-10-16T09:01:56.178943+00:00",
       "method": "model-assisted translation; structural checks passed",
-      "review": "pending editorial review"
+      "review": "reviewed against source",
+      "reviewed_at": "2026-10-23T03:37:06.377308+00:00"
     },
     "ai-k8s/mlops.md": {
       "source_sha256": "8fda15b231e25aefca4ec5cd2cf497b35e992b339553613e827d02cec15a4e36",
@@ -1463,6 +1464,12 @@
       "source_sha256": "da696da818e106146f2fcabca4b9feddec7b40c2218301076651c6dff9cbff3a",
       "english_sha256": "d0aaffb4b54a2e1493ef21b0148310cd29e06e2e648721eeb943a858a2221d5a",
       "reviewed_at": "2026-10-23T02:03:14.973060+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/agent-computer-use-browser-implementation.md": {
+      "source_sha256": "fa1d82549ba110849e17727d264f29d426f2538894ca948f93e73de802790756",
+      "english_sha256": "dd5b7dec13570430813d158c5df3d0ad17ff1a5814cca0698f2f7eaa7981ec38",
+      "reviewed_at": "2026-10-23T03:38:05.080912+00:00",
       "review": "reviewed against source"
     }
   }

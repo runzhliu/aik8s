@@ -2,7 +2,7 @@
 title: AI Agent、沙箱与工具执行
 description: Agent 工作负载的运行时隔离、网络、身份、工具权限和审计设计
 status: evolving
-last_reviewed: 2026-08-03
+last_reviewed: 2026-10-23
 ---
 
 # AI Agent、沙箱与工具执行
@@ -10,6 +10,8 @@ last_reviewed: 2026-08-03
 Agent 工作负载与普通 Deployment 不同：它可能长时间保持状态，主动访问外部工具，生成并执行代码，处理不可信网页或仓库内容，并在没有人逐步确认的情况下采取动作。
 
 Kubernetes 可以提供身份、配额、网络、存储和生命周期底座，但不能自动证明 Agent 的行为安全。
+
+关于 Agent 怎样读取页面、点击元素或通过截图操作桌面，以及 Codex 和其他项目的开源实现，参见 [Computer Use 与 Browser 实现解析](rag-agent/agent-computer-use-browser-implementation.md)。
 
 如果正在比较 Kubernetes Agent Sandbox、gVisor、Kata、Firecracker 或托管执行平台，先阅读 [Agent Sandbox 选型与架构分析](rag-agent/agent-sandbox-selection.md)。如果计划使用 OpenClaw 作为内部 Agent 平台底座，参见 [OpenClaw 企业平台优缺点与二次开发边界](rag-agent/openclaw-enterprise-agent-platform.md)。本章继续讨论选型之后的工具授权、Prompt Injection、网络、预算、审计和发布边界。
 

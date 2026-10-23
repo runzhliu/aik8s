@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Browser executor lab</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fc;color:#25324a;font-family:Arial,sans-serif}
+header{padding:26px 32px 20px;border-bottom:1px solid #dde3f0;background:#fff}h1{font-size:27px;margin:0 0 10px}header p{margin:0;color:#60708c;font-size:15px}.badge{float:right;font-size:12px;padding:8px 12px;border:1px solid #c8d2ff;border-radius:20px;color:#3555b8}
+main{padding:24px 32px;display:grid;grid-template-columns:1fr 1fr;gap:22px}.card{background:#fff;border:1px solid #dbe2f0;border-radius:12px;padding:22px;min-width:0}h2{font-size:19px;margin:0 0 18px}label{display:block;font-size:14px;margin:14px 0 7px}input{width:100%;border:1px solid #ccd6e8;border-radius:6px;padding:10px;font-size:15px}button{font-size:14px;border-radius:6px;padding:11px 15px;cursor:pointer;background:#244cf5;color:white;border:0;margin-top:14px}.secondary{background:#edf1fc;color:#304166;margin-right:8px}#status{font-size:15px;margin:16px 0 0;padding:12px;background:#fff5dd;border-radius:6px}#status[data-state=done]{background:#e4f5ec;color:#17603a}#diagnostics{height:125px;background:#f0f3fa;color:#596c88;padding:16px;font-size:14px;border-radius:6px;margin-top:14px}pre{font:13px/1.5 monospace;white-space:pre-wrap;margin:0;max-height:275px;overflow:auto;background:#f6f8fc;padding:12px;border-radius:6px}#events{font-size:13px;line-height:1.65;padding-left:20px;margin-bottom:0}.small{font-size:12px;color:#64758f;margin-top:12px}.state{color:#3554bd}
+</style>
+<header><span class="badge">Scripted rehearsal · no model inference</span><h1>Browser executor lab</h1><p>One local page · semantic locators, screenshots and stale coordinates</p></header>
+<main>
+ <section class="card" id="workspace" aria-label="Local ticket fixture">
+  <h2>Review ticket LAB-0042</h2>
+  <label for="note">Review note</label><input id="note" value="Local fixture only" autocomplete="off">
+  <button class="secondary" id="expand">Expand diagnostics</button>
+  <div id="diagnostics" hidden>Additional diagnostic content changes the layout.<br><br>The confirmation button has moved down.</div>
+  <button id="confirm">Confirm review</button>
+  <p id="status" role="status" data-state="pending">Status: pending</p>
+ </section>
+ <aside class="card" aria-label="Driver evidence">
+  <h2 id="phase">Actual accessibility snapshot</h2>
+  <pre id="snapshot">The runner inserts the actual Playwright ariaSnapshot() result here.</pre>
+  <ol id="events"></ol>
+  <div class="small">Not a commercial product UI. No real account, external API or model call.</div>
+ </aside>
+</main>
+<script>
+const statusElement=document.querySelector('#status');
+function render(){const done=localStorage.getItem('reviewed')==='yes';statusElement.dataset.state=done?'done':'pending';statusElement.textContent=done?'Status: reviewed and saved locally':'Status: pending';}
+document.querySelector('#expand').onclick=()=>{document.querySelector('#diagnostics').hidden=false;};
+document.querySelector('#confirm').onclick=()=>{localStorage.setItem('reviewed','yes');render();};
+render();
+</script>
+</html>
