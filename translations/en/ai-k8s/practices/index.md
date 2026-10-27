@@ -28,6 +28,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 ## Performance, Cost, and Capacity
 
 - [DeepSeek-V4.1-Flash-1017 Day0: vLLM on Eight H20 GPUs and Million-Token Tests](deepseek-v41-flash-1017-day0.md)
+- [DeepSeek-V4.1-Flash: vLLM 0.32.0 Upgrade Comparison](deepseek-v41-vllm032-upgrade.md)
 - [vLLM Sleep Single-GPU Dual-Model Test: Recovery Time, GPU Memory, and DRA Design](vllm-sleep-model-switch-l20.md)
 - [MiMo-V2.6-Pro-RL First Test: vLLM Deployment and Performance on Eight H20-3e GPUs](mimo-v26-pro-rl-h20-first-test.md)
 - [Qwen-Image-2.1: SGLang and vLLM-Omni Test on a Single L20 GPU](qwen-image21-l20-benchmark.md)

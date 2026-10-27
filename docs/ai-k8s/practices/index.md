@@ -28,6 +28,7 @@ last_reviewed: 2026-10-23
 ## 性能、成本与容量
 
 - [DeepSeek-V4.1-Flash-1017 Day0：八卡 H20 的 vLLM 部署与百万 Token 实测](deepseek-v41-flash-1017-day0.md)
+- [DeepSeek-V4.1-Flash：vLLM 0.32.0 升级对比实测](deepseek-v41-vllm032-upgrade.md)
 - [vLLM Sleep 单卡双模型实测：恢复耗时、显存与 DRA 设计](vllm-sleep-model-switch-l20.md)
 - [MiMo-V2.6-Pro-RL 首测：八张 H20-3e 的 vLLM 部署与性能实测](mimo-v26-pro-rl-h20-first-test.md)
 - [Qwen-Image-2.1：单卡 L20 的 SGLang 与 vLLM-Omni 实测](qwen-image21-l20-benchmark.md)

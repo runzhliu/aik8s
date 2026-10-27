@@ -182,6 +182,7 @@ nav = [
       {"Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录" = "ai-k8s/practices/qwen38-27b-day0.md"},
       {"GLM-5.2 FP8 H20 AIBrix + vLLM 实测" = "ai-k8s/practices/glm52-fp8-h20-aibrix-vllm.md"},
       {"DeepSeek-V4.1-Flash Day 0：双引擎实测" = "ai-k8s/practices/deepseek-v41-flash-h20-day0.md"},
+      {"DeepSeek V4.1：vLLM 0.32.0 升级实测" = "ai-k8s/practices/deepseek-v41-vllm032-upgrade.md"},
       {"DeepSeek 1017 Day0：vLLM 与百万 Token 实测" = "ai-k8s/practices/deepseek-v41-flash-1017-day0.md"},
       {"DeepSeek 1017：PRO 5000 与 H20 线上观察" = "ai-k8s/practices/deepseek-v41-pro5000-h20-observation.md"},
       {"DeepSeek V4 Flash H20 部署与压测" = "ai-k8s/practices/deepseek-v4-flash-h20-evaluation.md"},
