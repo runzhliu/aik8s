@@ -2,7 +2,7 @@
 title: 实战、排障与选型
 description: 用可复现的实验、性能数字、事故证据和决策树回答 AI/LLM on Kubernetes 的高频问题
 status: evolving
-last_reviewed: 2026-10-23
+last_reviewed: 2026-10-29
 ---
 
 # 实战、排障与选型
@@ -75,6 +75,7 @@ last_reviewed: 2026-10-23
 - [SwanLab 自托管：从 Kubernetes 部署到真实 SFT 指标](../training/swanlab-self-hosted.md)
 - [从 W&B Local 到 SwanLab：两年团队实验追踪实践与选型](../training/wandb-vs-swanlab.md)
 - [用 SGLang-Omni 部署 MiniMax-Music3：从一句创意到完整歌曲](minimax-music3-sglang-omni.md)
+- [Qwen3-TTS 部署与试用：把技术文章变成可以听的旁白](qwen3-tts-article-narration.md)
 - [Qwen3.8-27B Day 0：vLLM 与 SGLang 测试记录](qwen38-27b-day0.md)
 - [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](deepseek-harness-kubernetes.md)
 - [GLM-5.2 FP8 在 8×H20 141GB 上的 AIBrix + vLLM 实测](glm52-fp8-h20-aibrix-vllm.md)

@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tts-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen3-tts
+  namespace: tts-demo
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qwen3-tts
+  template:
+    metadata:
+      labels:
+        app: qwen3-tts
+    spec:
+      containers:
+        - name: tts
+          # Replace this placeholder with your validated image and immutable digest.
+          image: registry.example.com/ai/qwen3-tts:validated
+          command: ["vllm", "serve", "/models/Qwen3-TTS-12Hz-1.7B-CustomVoice", "--omni", "--host", "0.0.0.0", "--port", "8000", "--deploy-config", "/config/qwen3_tts.yaml"]
+          env:
+            - {name: HF_HUB_OFFLINE, value: "1"}
+            - {name: TRANSFORMERS_OFFLINE, value: "1"}
+            - {name: PYTHONUNBUFFERED, value: "1"}
+          ports:
+            - {name: http, containerPort: 8000}
+          resources:
+            requests: {cpu: "4", memory: 24Gi, nvidia.com/gpu: "1"}
+            limits: {cpu: "12", memory: 48Gi, nvidia.com/gpu: "1"}
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+            failureThreshold: 120
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 5
+          volumeMounts:
+            - {name: models, mountPath: /models, readOnly: true}
+            - {name: config, mountPath: /config, readOnly: true}
+            - {name: dshm, mountPath: /dev/shm}
+            - {name: cache, mountPath: /root/.cache}
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: tts-models
+        - name: config
+          configMap:
+            name: qwen3-tts-config
+        - name: dshm
+          emptyDir: {medium: Memory, sizeLimit: 4Gi}
+        - name: cache
+          emptyDir: {sizeLimit: 4Gi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen3-tts
+  namespace: tts-demo
+spec:
+  selector: {app: qwen3-tts}
+  ports:
+    - {name: http, port: 8000, targetPort: http}

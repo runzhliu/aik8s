@@ -2,7 +2,7 @@
 title: "Practical Experience, Troubleshooting, and Selection"
 description: "Answering common AI/LLM on Kubernetes questions with reproducible experiments, performance numbers, incident evidence, and decision trees"
 status: evolving
-last_reviewed: 2026-10-23
+last_reviewed: 2026-10-29
 ---
 
 # Practical Experience, Troubleshooting, and Selection
@@ -75,6 +75,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 - [SwanLab Self-Hosting: From Kubernetes Deployment to Real SFT Metrics](../training/swanlab-self-hosted.md)
 - [From W&B Local to SwanLab: Two-Year Team Experiment Tracking Practice and Selection](../training/wandb-vs-swanlab.md)
 - [Deploying MiniMax-Music3 with SGLang-Omni: From a Creative Idea to a Complete Song](minimax-music3-sglang-omni.md)
+- [Deploying and Trying Qwen3-TTS: Turn a Technical Article into Narration](qwen3-tts-article-narration.md)
 - [Qwen3.8-27B Day 0: vLLM and SGLang Test Records](qwen38-27b-day0.md)
 - [From Docker to Kubernetes: DeepSeek Harness, Built-in Chromium, and DSH Plugin Practice](deepseek-harness-kubernetes.md)
 - [GLM-5.2 FP8 on 8×H20 141GB: AIBrix + vLLM Test](glm52-fp8-h20-aibrix-vllm.md)

@@ -1,0 +1,350 @@
+{
+  "date": "2026-10-29",
+  "runtime": {
+    "gpu": "NVIDIA L20",
+    "reported_memory_mib": 46068,
+    "driver": "580.173.02",
+    "vllm": "0.29.0b1+cu129",
+    "vllm_omni": "0.16.0.dev0+pr7759",
+    "torch": "2.13.0+cu129",
+    "transformers": "5.14.1",
+    "image_digest": "sha256:79ceaf76d522867e80c50ea1273d3d14d2489eb4ae867600a8e32a0acbb56d40"
+  },
+  "comparison": [
+    {
+      "name": "espeak-cmn",
+      "file": "espeak-cmn.wav",
+      "duration_seconds": 43.44267573696145,
+      "sample_rate": 22050,
+      "bytes": 1915866,
+      "sha256": "eec50ecbd09d81fff26a9a92917cb4de20eeb7e880f5bf77e5aa2fed7d10c885",
+      "gain_db": -2.4365248480341415,
+      "engine": "eSpeak NG 1.51",
+      "voice": "cmn",
+      "rate_parameter": 165
+    },
+    {
+      "name": "qwen-uncle-fu",
+      "file": "qwen-uncle-fu.wav",
+      "duration_seconds": 28.64,
+      "sample_rate": 24000,
+      "bytes": 1374764,
+      "sha256": "698a676cdd3dc0c99ac05349859a8e329aa60ff4ac3c301cfe73bbf049c39b3f",
+      "gain_db": -7.428986138812138e-07,
+      "request_seconds": 4.525644207998994,
+      "instructions": "自然亲切地讲解技术文章，语速适中，有自然停顿，不要播音腔，不添加内容。"
+    },
+    {
+      "name": "qwen-serena",
+      "file": "qwen-serena.wav",
+      "duration_seconds": 23.92,
+      "sample_rate": 24000,
+      "bytes": 1148204,
+      "sha256": "474405ca6a7c2efd2b36ed39ec9b8878691f1e618e8d0546057a6363646bad8f",
+      "gain_db": 8.836058451594422e-05,
+      "request_seconds": 3.9009768329997314,
+      "instructions": "自然亲切地讲解技术文章，语速适中，有自然停顿，不要播音腔，不添加内容。"
+    },
+    {
+      "name": "qwen-vivian",
+      "file": "qwen-vivian.wav",
+      "duration_seconds": 25.84,
+      "sample_rate": 24000,
+      "bytes": 1240364,
+      "sha256": "964caad15470be81d3457e33717ef67b4fb5422c89fcff1dd1d180727ca9fc9c",
+      "gain_db": -3.131455212146604e-06,
+      "request_seconds": 4.04757354100002,
+      "instructions": "自然亲切地讲解技术文章，语速适中，有自然停顿，不要播音腔，不添加内容。"
+    }
+  ],
+  "long_narration": {
+    "date": "2026-10-28",
+    "voice": "uncle_fu",
+    "segments": 39,
+    "characters": 3159,
+    "audio_without_gaps_seconds": 688.4,
+    "final_seconds": 703.5,
+    "sum_request_seconds": 112.379,
+    "rtf": 0.163246658919233,
+    "output": "article-uncle-fu.m4a",
+    "output_bytes": 5741704,
+    "source_sha256": "7d09fd54cfedde1ee04a39c1e197192404e1e97720a94426b71d9ed3efebfac6",
+    "instructions": "自然亲切地讲解技术文章，成熟男声，清晰平稳，语速适中，句间和段落间有自然停顿，不要播音腔，不要夸张，不添加内容，准确朗读英文技术名词和数字。",
+    "segments_data": [
+      {
+        "duration_s": 10.88,
+        "sha256": "1a28d3e632e4e6eedd918a363151cecedc16d7f5c958117f3ac0595116f73207",
+        "index": 1,
+        "characters": 54,
+        "generation_s": 1.846
+      },
+      {
+        "duration_s": 25.04,
+        "sha256": "80cfac2b86962bf6599ca7d2f9668386380f2327065fa2377a86b70b9285b406",
+        "index": 2,
+        "characters": 127,
+        "generation_s": 3.964
+      },
+      {
+        "duration_s": 23.92,
+        "sha256": "69c4aa5d5cd6b06ec4e0e63d6ef16b28361a05f16d7771e3d3d7e77b7676f985",
+        "index": 3,
+        "characters": 107,
+        "generation_s": 3.772
+      },
+      {
+        "duration_s": 15.12,
+        "sha256": "238cdf9169759a81d6e0fcbfe2bf2bc685ae460fa9e6c96582a21b19e1530978",
+        "index": 4,
+        "characters": 64,
+        "generation_s": 2.418
+      },
+      {
+        "duration_s": 26.4,
+        "sha256": "dbb5d863a5ee492aa26cf902a32784e20945c4fde6770c3539f5d8e335c0bfcb",
+        "index": 5,
+        "characters": 114,
+        "generation_s": 4.163
+      },
+      {
+        "duration_s": 3.2,
+        "sha256": "afcd4e9d1a7dbef32a3043586c030e7ef4e4465a35c671889820b14d926118db",
+        "index": 6,
+        "characters": 13,
+        "generation_s": 0.62
+      },
+      {
+        "duration_s": 21.68,
+        "sha256": "38e12480a6af335c8bfde451b4866228f4089d807fc0f2ccb5876fa79fa85337",
+        "index": 7,
+        "characters": 118,
+        "generation_s": 3.487
+      },
+      {
+        "duration_s": 17.84,
+        "sha256": "50ef76594b41327c0178cf28e8af486cc21405effc9c77586abab2fc0b5d7dc6",
+        "index": 8,
+        "characters": 90,
+        "generation_s": 2.859
+      },
+      {
+        "duration_s": 16.8,
+        "sha256": "b1fed044c57041b24052b75c21feee2be2d791d8dd646529a401d4462d478fe0",
+        "index": 9,
+        "characters": 82,
+        "generation_s": 2.815
+      },
+      {
+        "duration_s": 4.4,
+        "sha256": "9c7d854464a86400e5ba1d308d308268bf441034affb3f9dc4257c8973b9367c",
+        "index": 10,
+        "characters": 16,
+        "generation_s": 0.828
+      },
+      {
+        "duration_s": 22.8,
+        "sha256": "2e02fcd6c559492f0253fc151eb701eca39b79efaff0879682400317a664ee5c",
+        "index": 11,
+        "characters": 104,
+        "generation_s": 3.72
+      },
+      {
+        "duration_s": 28.08,
+        "sha256": "1b2210e6dff704b0df42f7c1fb398908ddbb4b750a0162fa7c986f25127553ec",
+        "index": 12,
+        "characters": 137,
+        "generation_s": 4.386
+      },
+      {
+        "duration_s": 10.72,
+        "sha256": "aa738aca273b3151e209f80b148d22edacc8cd50fff3bc05d48defc09ec26cff",
+        "index": 13,
+        "characters": 47,
+        "generation_s": 1.82
+      },
+      {
+        "duration_s": 32.72,
+        "sha256": "7bf89357049101bfab85b8855e1f95987952775f9b3c6a661640cffa623ffff7",
+        "index": 14,
+        "characters": 163,
+        "generation_s": 5.259
+      },
+      {
+        "duration_s": 20.96,
+        "sha256": "093fa3a201591a5e1d3dbce8a2028309b0e380bbf6808a1c749ead193b010273",
+        "index": 15,
+        "characters": 95,
+        "generation_s": 3.656
+      },
+      {
+        "duration_s": 4.16,
+        "sha256": "27bbb12543cc8c927472fa6e07fd9af87905ab51c092bf20fd3c292d6b269ad9",
+        "index": 16,
+        "characters": 14,
+        "generation_s": 0.824
+      },
+      {
+        "duration_s": 22.72,
+        "sha256": "807c4ac7e7298cfe31a1df665b78c2947da10831ce17497b2e35fb11964cda39",
+        "index": 17,
+        "characters": 88,
+        "generation_s": 3.724
+      },
+      {
+        "duration_s": 20.4,
+        "sha256": "d16eb89f9f3e9f587a286260c5edff86206e0585a4a1a768851de85032c0cf5d",
+        "index": 18,
+        "characters": 88,
+        "generation_s": 3.256
+      },
+      {
+        "duration_s": 25.28,
+        "sha256": "1496cebf2d86a61a320b831f0684672b5ae1df17342b3edbb5ea71ca6f3668e3",
+        "index": 19,
+        "characters": 115,
+        "generation_s": 4.152
+      },
+      {
+        "duration_s": 10.4,
+        "sha256": "85b36d273940ccdc7f333a22bfad03db29a6a54e9294371992b3830d6b78a906",
+        "index": 20,
+        "characters": 37,
+        "generation_s": 1.739
+      },
+      {
+        "duration_s": 27.76,
+        "sha256": "9fbb91d56d83ac2380922f8a4da9f7c8c6190597832405999cee2ddc99154b4f",
+        "index": 21,
+        "characters": 112,
+        "generation_s": 4.391
+      },
+      {
+        "duration_s": 11.2,
+        "sha256": "0c4780a4e0cf2e34fadf9ae54f92f5d611864ba3c035cfb322f500102fd6651d",
+        "index": 22,
+        "characters": 55,
+        "generation_s": 1.994
+      },
+      {
+        "duration_s": 32.08,
+        "sha256": "bbf7319556f63666e25718e5b48926fc23b409b97b1d896c28d8a9f9f0c0c21e",
+        "index": 23,
+        "characters": 135,
+        "generation_s": 5.082
+      },
+      {
+        "duration_s": 5.36,
+        "sha256": "26d4aa73edaff8bccbbd021746969d217e0f590a76eac473d60e509a84522831",
+        "index": 24,
+        "characters": 23,
+        "generation_s": 0.973
+      },
+      {
+        "duration_s": 17.04,
+        "sha256": "8e2e3521258f4b80efcb7fc89d36693c597c69efc72eb911ed662ed6191503d3",
+        "index": 25,
+        "characters": 72,
+        "generation_s": 2.839
+      },
+      {
+        "duration_s": 14.4,
+        "sha256": "f927b433ef7d147dc936c4519c59380485f3d5bcf5f707d50274178a1c140f16",
+        "index": 26,
+        "characters": 62,
+        "generation_s": 2.447
+      },
+      {
+        "duration_s": 21.92,
+        "sha256": "4ee7e4b6cf8fa34e9b62bfe8d3b5d368d2ba4f643268e2128067ca48f6a3f97a",
+        "index": 27,
+        "characters": 86,
+        "generation_s": 3.46
+      },
+      {
+        "duration_s": 30.16,
+        "sha256": "e39105a145b083dc6cf9b68e0d85e548faf738c71b3b37a295fabab4f4af1111",
+        "index": 28,
+        "characters": 131,
+        "generation_s": 4.717
+      },
+      {
+        "duration_s": 2.8,
+        "sha256": "939844f7656c9640caae597334771cc3aac105a6307107db710f89e81ce9daf6",
+        "index": 29,
+        "characters": 11,
+        "generation_s": 0.551
+      },
+      {
+        "duration_s": 12.8,
+        "sha256": "c5e9306ccb698c1be92a0edcb33bedf79d5a43a715de54e12724af4d660ccbaf",
+        "index": 30,
+        "characters": 56,
+        "generation_s": 2.118
+      },
+      {
+        "duration_s": 23.52,
+        "sha256": "d81c646021dde9d19e1de35dc5a53e2a893801c80a338eea9fca48a9d30aaf78",
+        "index": 31,
+        "characters": 101,
+        "generation_s": 3.727
+      },
+      {
+        "duration_s": 21.04,
+        "sha256": "94679b50f5cea82e73ef3fcec909c12f7785394f5e0ab4c5153946e77cd1998f",
+        "index": 32,
+        "characters": 86,
+        "generation_s": 3.363
+      },
+      {
+        "duration_s": 17.92,
+        "sha256": "ba9cdef2c8dbb9bd85e61bb7af7b59badf615a8097fda366c418043aaf3cfea0",
+        "index": 33,
+        "characters": 87,
+        "generation_s": 2.946
+      },
+      {
+        "duration_s": 2.72,
+        "sha256": "a90cfbe4af4df946b19342bbeac72abc6a6ec42cbb362de402c3f826823d1a8e",
+        "index": 34,
+        "characters": 11,
+        "generation_s": 0.544
+      },
+      {
+        "duration_s": 18.56,
+        "sha256": "7adf71fb48aea111669d7e18c6391bc0a5972deedf43d38a8987fd803469f8e3",
+        "index": 35,
+        "characters": 87,
+        "generation_s": 3.044
+      },
+      {
+        "duration_s": 16.56,
+        "sha256": "83cf7e4926c8473825f05ebe8f193299303a4661cb8154e7425807034be3a5bd",
+        "index": 36,
+        "characters": 74,
+        "generation_s": 2.742
+      },
+      {
+        "duration_s": 16.0,
+        "sha256": "04abb70a4778af4f855091016becce9fd0b82ebc9a51f3fa04a69ef22d262aaa",
+        "index": 37,
+        "characters": 63,
+        "generation_s": 2.664
+      },
+      {
+        "duration_s": 14.4,
+        "sha256": "79a15c01b71087e815907ad33f5de4cfa5b58c43c37f7d003fba2e70d76f0d5c",
+        "index": 38,
+        "characters": 67,
+        "generation_s": 2.483
+      },
+      {
+        "duration_s": 18.64,
+        "sha256": "8751172d9c6164feddb189d5dadeae156cb0a1f361838da6ec4969b1457c15f5",
+        "index": 39,
+        "characters": 90,
+        "generation_s": 2.986
+      }
+    ]
+  },
+  "processing": "All comparison clips: paragraph RMS target -23 dBFS, maximum +6 dB, peak capped at 0.9. No speed or pitch changes. Not an EBU R128 loudness match."
+}

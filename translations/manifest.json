@@ -95,12 +95,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/practices/index.md": {
-      "source_sha256": "6a089175072cf4e70460a6a7fb7fb40a04c6f2b75fdd3e335333cc1aee8e708b",
-      "english_sha256": "bbb22f1c3e95dbbe3dbd2a9e24638d046bc31221962dbc3e9d8601b00bee205e",
+      "source_sha256": "090d7d3a94d612b5d079b719b5881e2aa5635604471b86b50388d5eb0d77c2a6",
+      "english_sha256": "3d182ea70544242d457dd6932a7e985bfba3b7ddf22189aff58566e27e910db0",
       "translated_at": "2026-10-16T08:50:57.637630+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-10-27T03:16:51.434749+00:00"
+      "reviewed_at": "2026-10-29T01:26:19.877416+00:00"
     },
     "assets/practices/gpu-notebook-platform-evolution/README.md": {
       "source_sha256": "3cdac55cfe726d6d73b60ba5e93b682cb2047e8c27980cc8fd320c0b0da4a8bb",
@@ -1482,6 +1482,12 @@
       "source_sha256": "c771423dfc01b9e22e91154cdbd7d987ee349f890a38d149417abbfa14965af3",
       "english_sha256": "e1ac22f8d4e1877386e7b8cb9514cc9df2efb091b8319992526a51bfeaa5e277",
       "reviewed_at": "2026-10-27T03:58:49.298112+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/qwen3-tts-article-narration.md": {
+      "source_sha256": "abd46f766148e11319e90562ef3f20a2d3970e58772fc4aab23a6f54b8a291e0",
+      "english_sha256": "11721f26d67b9ce0cd0ed3d2dd7b0f343d17dbed0f8979779da2dc4719a50710",
+      "reviewed_at": "2026-10-29T01:26:19.762901+00:00",
       "review": "reviewed against source"
     }
   }
