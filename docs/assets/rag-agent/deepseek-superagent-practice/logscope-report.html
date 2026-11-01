@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LogScope report</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f6f7f9;
+    color: #1f2937;
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 20px 48px; }
+  h1 { margin: 0 0 4px; font-size: 28px; }
+  h2 { margin: 0 0 12px; font-size: 19px; }
+  .subtitle { margin: 0; color: #6b7280; }
+  section { margin-top: 28px; }
+  .filters { margin-top: 18px; color: #4b5563; }
+  code { background: #e5e7eb; border-radius: 4px; padding: 1px 5px; font-size: 13px; }
+  .cards { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+  .card {
+    flex: 1 1 150px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .card .label { display: block; color: #6b7280; font-size: 13px; }
+  .card strong { display: block; margin-top: 4px; font-size: 24px; }
+  .card .detail { display: block; margin-top: 2px; color: #6b7280; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+  th, td { padding: 9px 12px; border-bottom: 1px solid #eef0f3; text-align: left; vertical-align: top; }
+  th { background: #f9fafb; color: #4b5563; font-size: 13px; font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  .number { width: 90px; font-variant-numeric: tabular-nums; }
+  .name { font-weight: 500; }
+  .bar-cell { width: 34%; }
+  .bar { display: block; height: 9px; min-width: 2px; background: #2563eb; border-radius: 999px; }
+  .message { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .empty { color: #6b7280; font-style: italic; }
+  footer { margin-top: 34px; color: #6b7280; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>LogScope report</h1>
+  <p class="subtitle">Streaming JSONL log summary</p>
+</header>
+
+<p class="filters"><strong>Filters:</strong> none (all valid records)</p>
+
+<section class="cards" aria-label="Totals">
+  <div class="card"><span class="label">Valid records</span><strong>100000</strong></div>
+  <div class="card"><span class="label">Errors</span><strong>5000</strong></div>
+  <div class="card"><span class="label">Warnings</span><strong>8636</strong></div>
+  <div class="card"><span class="label">Invalid lines skipped</span><strong>0</strong></div>
+  <div class="card"><span class="label">Latency</span><strong>100000</strong><span class="detail">min 20 · avg 144.50 · max 269 ms</span></div>
+</section>
+
+<section>
+  <h2>Service distribution</h2>
+  <table>
+    <thead><tr><th>Service</th><th class="number">Records</th><th class="number">Errors</th><th>Relative volume</th></tr></thead>
+    <tbody>
+<tr>
+        <td class="name">api</td>
+        <td class="number">33334</td>
+        <td class="number">1667</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">auth</td>
+        <td class="number">33333</td>
+        <td class="number">1667</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">worker</td>
+        <td class="number">33333</td>
+        <td class="number">1666</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Per-minute trend (UTC)</h2>
+  <table>
+    <thead><tr><th>Minute</th><th class="number">Records</th><th class="number">Errors</th><th class="number">Warnings</th><th>Relative volume</th></tr></thead>
+    <tbody>
+<tr>
+        <td class="name">2026-01-01T00:00Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:01Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:02Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:03Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:04Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:05Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:06Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:07Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:08Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:09Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:10Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:11Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:12Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:13Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:14Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:15Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:16Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:17Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:18Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:19Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:20Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:21Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:22Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:23Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:24Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:25Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:26Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:27Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:28Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:29Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:30Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:31Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:32Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:33Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:34Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:35Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:36Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:37Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:38Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:39Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:40Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:41Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:42Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:43Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:44Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:45Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:46Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:47Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:48Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:49Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:50Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:51Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:52Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:53Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:54Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:55Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:56Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">145</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:57Z</td>
+        <td class="number">1667</td>
+        <td class="number">84</td>
+        <td class="number">143</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:58Z</td>
+        <td class="number">1667</td>
+        <td class="number">83</td>
+        <td class="number">144</td>
+        <td class="bar-cell"><span class="bar" style="width:100%"></span></td>
+      </tr>
+<tr>
+        <td class="name">2026-01-01T00:59Z</td>
+        <td class="number">1647</td>
+        <td class="number">82</td>
+        <td class="number">142</td>
+        <td class="bar-cell"><span class="bar" style="width:98.8%"></span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Top error messages</h2>
+  <table>
+    <thead><tr><th>Message</th><th class="number">Count</th></tr></thead>
+    <tbody>
+<tr>
+        <td class="message">synthetic upstream timeout</td>
+        <td class="number">5000</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>Generated by tools/logscope from synthetic demo data. This page loads no external resources.</footer>
+</main>
+</body>
+</html>

@@ -23,12 +23,12 @@
       "review": "pending editorial review"
     },
     "index.md": {
-      "source_sha256": "8ed1c83623980be8fd59498f4d1a8412b504e0cd211f0ebeb5ad4393002bdbcb",
-      "english_sha256": "1e51949dc1b9a91a27f311a8450418bd85ed10b0e417d9a8d0aaaa1acf877239",
+      "source_sha256": "13136864d23b29e0336274c71e7b4918794fa2ceee23739ed0d1aefa337adf51",
+      "english_sha256": "1d9041a1947cb3d9d82cf2c99d0b1fe4a1d5ebe336e45f792c1324ecd58a1bae",
       "translated_at": "2026-10-16T08:48:54.703821+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-11-01T02:17:34.427014+00:00"
+      "reviewed_at": "2026-11-01T06:19:09.268844+00:00"
     },
     "ai-k8s/rag-agent/omarchy-agent-os-overview.md": {
       "source_sha256": "0496759b611c1d132db2ecf032c2bccb240293b4632e4e4b09b8e1eddc56e312",
@@ -214,12 +214,12 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "6d82e8f219b7a5497bf57bb0c4fbccd1268ccd46990796fb5993aad1f8a13507",
-      "english_sha256": "70cd71194fb750bfb67dd173823d87ce72cdb6727d4dda9cf9ac944aee23ec89",
+      "source_sha256": "396856039faf319a867ccd1a9a845718037856b82111a9d3aeb82a21eac3890b",
+      "english_sha256": "cdb8431d7d5b25ec8eea425bdbb3e236098a633a26fc55a51d1d92346bf55440",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-11-01T02:17:34.481425+00:00"
+      "reviewed_at": "2026-11-01T06:19:09.372255+00:00"
     },
     "ai-k8s/practices/agent-sandbox-red-team.md": {
       "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
@@ -1494,6 +1494,12 @@
       "source_sha256": "78691a4c8063541ab4fa373c7e023fc41aafcba3c9651f8a44f9b90e90008ebf",
       "english_sha256": "c6f00d652c703fb2f2031752696bc51905c7b13233657c7adf3405f4b28ba450",
       "reviewed_at": "2026-11-01T02:17:34.353350+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/deepseek-superagent-kubernetes-practice.md": {
+      "source_sha256": "aa757b3dfdc2faa0852100addd6c0598cfb75c8a23af792e185a1ac70808a016",
+      "english_sha256": "9f1a3883c6a750c77a733b1a7607ae829f00ed0f583e96de5e3c12169082bdb8",
+      "reviewed_at": "2026-11-01T11:47:03.646055+00:00",
       "review": "reviewed against source"
     }
   }

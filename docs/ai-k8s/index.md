@@ -129,6 +129,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 - [HiRoute Agent 路由与模型协作](rag-agent/hiroute-overview.md)：Higress 团队的本地路由引擎，解析阶段选模、Jev 决策、上下文保持和企业接入。
 - [DeepSeek Harness GitHub 仓库深度解析](rag-agent/deepseek-harness-repository-analysis.md)：源码目录、Cordis 插件树、Profile 与 Bundle、Agent Loop、事件溯源会话和能力 seam。
 - [DeepSeek Super-agent 解析](rag-agent/deepseek-superagent-prototype-analysis.md)：事件准入、任务授权、并发执行、持久恢复、Web 面板与企业接入边界。
+- [DeepSeek Super-agent Kubernetes 实战](rag-agent/deepseek-superagent-kubernetes-practice.md)：接入 Gitea 与 Mattermost，验证复杂编码任务、独立验收、真实页面和恢复边界。
 - [DeepSeek Harness Docker、Compose 与 Helm 部署实战](rag-agent/deepseek-harness-runtime-containerization.md)：多架构镜像、EROFS 修复、状态持久化、StatefulSet、Helm 与安全暴露边界。
 - [从 Docker 到 Kubernetes：DeepSeek Harness、内置 Chromium 与 DSH Plugin 实战](practices/deepseek-harness-kubernetes.md)：all-in-one 浏览器桌面、自研 DSH Plugin、Tailscale 远程入口、状态卷、Cilium 探针冲突和安全边界。
 - [RAG 基础设施](rag-agent/rag-infrastructure.md)：采集、切分、Embedding、向量数据库、检索、重排和权限过滤。

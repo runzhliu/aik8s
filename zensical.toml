@@ -95,6 +95,7 @@ nav = [
       {"ChatGPT Dots 常驻智能体解析" = "ai-k8s/rag-agent/chatgpt-dots-overview.md"},
       {"DeepSeek Harness 仓库深度解析" = "ai-k8s/rag-agent/deepseek-harness-repository-analysis.md"},
       {"DeepSeek Super-agent 团队任务系统解析" = "ai-k8s/rag-agent/deepseek-superagent-prototype-analysis.md"},
+      {"DeepSeek Super-agent Kubernetes 实战" = "ai-k8s/rag-agent/deepseek-superagent-kubernetes-practice.md"},
       {"DeepSeek Harness 容器化部署" = "ai-k8s/rag-agent/deepseek-harness-runtime-containerization.md"},
       {"数字员工与企业岗位型 Agent" = "ai-k8s/rag-agent/digital-employees-enterprise-design.md"},
       {"从 WorkBuddy 看企业 Agent 技术栈" = "ai-k8s/rag-agent/workbuddy-enterprise-agent-stack.md"},

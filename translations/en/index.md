@@ -136,6 +136,7 @@ Direct entry points to official documentation organized by technical layer. Proj
 - [2026 AI Agent Current State, Implementation Principles & Trends](ai-k8s/rag-agent/agent-landscape-2026.md)
 - [Agent Harness Technical Survey](ai-k8s/rag-agent/agent-harness-technology-overview.md)
 - [DeepSeek Super-agent Analysis: From Chat Sessions to a Team Task System](ai-k8s/rag-agent/deepseek-superagent-prototype-analysis.md)
+- [DeepSeek Super-agent on Kubernetes: Chat Tasks, Complex Coding and PRs](ai-k8s/rag-agent/deepseek-superagent-kubernetes-practice.md)
 - [Omarchy Linux & Agent OS Survey](ai-k8s/rag-agent/omarchy-agent-os-overview.md)
 - [ChatGPT Dots Technical Analysis: Resident Agents, Cloud Computers & Enterprise Applications](ai-k8s/rag-agent/chatgpt-dots-overview.md)
 - [Agent Long-task Interruption & Resume Principles and Community Practices](ai-k8s/rag-agent/agent-long-running-durable-execution.md)

@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-01",
+  "scope": "Synthetic fixtures only. Independent black-box acceptance, not a model benchmark or production certification.",
+  "webhookFinal": {
+    "task": "relay",
+    "commit": "8ba2da4bbc768e3292766c7de5febe3fdd36c8bd",
+    "oracleSha256": "518868c63f639978ebabcc8129c3dd9e1133067c4e688337979b0d7c863dcb60",
+    "results": [
+      {
+        "name": "relay exposes real health and an operator HTML page",
+        "passed": true,
+        "durationMs": 38
+      },
+      {
+        "name": "relay idempotency, two transient failures, stable event ID and HMAC",
+        "passed": true,
+        "durationMs": 386
+      },
+      {
+        "name": "relay marks a permanent HTTP 400 dead without retrying",
+        "passed": true,
+        "durationMs": 46
+      },
+      {
+        "name": "relay rejects invalid JSON and a missing idempotency key without crashing",
+        "passed": true,
+        "durationMs": 5
+      },
+      {
+        "name": "relay SQLite queue and idempotency survive a real service restart",
+        "passed": true,
+        "durationMs": 1564
+      }
+    ],
+    "passed": 5,
+    "failed": 0
+  },
+  "logscopeFinal": {
+    "task": "logscope",
+    "commit": "66fc963206a0aa6b1dddd2175b13681c8109b809",
+    "oracleSha256": "518868c63f639978ebabcc8129c3dd9e1133067c4e688337979b0d7c863dcb60",
+    "results": [
+      {
+        "name": "logscope valid counts, invalid input accounting and latency aggregation",
+        "passed": true,
+        "durationMs": 73
+      },
+      {
+        "name": "logscope inclusive since, exclusive until and exact service filtering",
+        "passed": true,
+        "durationMs": 87
+      },
+      {
+        "name": "logscope prototype-like service name remains a real data key",
+        "passed": true,
+        "durationMs": 76
+      },
+      {
+        "name": "logscope strict mode exits 2 on malformed input",
+        "passed": true,
+        "durationMs": 64
+      },
+      {
+        "name": "logscope HTML escapes synthetic hostile log text",
+        "passed": true,
+        "durationMs": 79
+      },
+      {
+        "name": "logscope streams 100000 records under a 64 MiB Node heap",
+        "passed": true,
+        "durationMs": 726
+      }
+    ],
+    "passed": 6,
+    "failed": 0
+  },
+  "logscopeFirstRun": {
+    "passed": 5,
+    "failed": 1,
+    "reason": "Oracle strict floating-point comparison: expected 49.5, actual 49.500000000000036. Product unchanged; oracle corrected to absolute tolerance 1e-9."
+  },
+  "dag": {
+    "delivered": false,
+    "plannedAcceptanceGroups": 5,
+    "executedAcceptanceGroups": 0,
+    "outcome": "Stopped at the bounded retry deadline after repeated max-tokens endings. No implementation or PR."
+  },
+  "unmergedDemoPRs": [
+    1,
+    2,
+    3
+  ],
+  "mainModified": false
+}
