@@ -1,12 +1,32 @@
 # Deploying DeepSeek Super-agent on Kubernetes: From Chat Requests to Code PRs
 
-DeepSeek recently published **dsh-superagent-prototype**, a research prototype for a team coding agent built on DeepSeek Harness. It listens to collaboration events, turns authorized requests into traceable tasks, executes them in independent sessions, and returns results to their original discussions.
+To experience how DeepSeek Super-agent participates in team development, I designed a Kubernetes demo: submit a request in chat, let the agent change code and run tests, then review the Pull Request (PR) it delivers.
 
-I adapted it into a Kubernetes demo with Mattermost for requests and Gitea for code. Real tasks checked admission, parallel execution, follow-up requirements, and continuation after restart. Of three complex tasks, two produced reviewable Pull Requests (PRs) and one did not finish. First, the design; then the deployed demo and its results.
+Testing began with a pricing-function fix, followed by three multi-file projects. I wanted to observe parallel tasks, follow-up requirements reaching their original work items, and continuation after restarting the service during execution. All work stayed in an isolated demonstration repository.
+
+## How the demo was built
+
+Mattermost is the chat entry point, while Gitea holds code and reviews. A person gives the bot a request in a private channel. After accepting it, Super-agent creates an independent execution session and code branch, makes changes, runs tests, and returns the PR link and results to the original thread. Users can add requirements in chat and inspect the code in Gitea.
+
+The demo has four long-running Pods: DeepSeek Harness (DSH), Gitea, Mattermost, and PostgreSQL. Super-agent runs inside the DSH instance and handles admission and dispatch. Gitea uses SQLite; PostgreSQL stores Mattermost data. No Redis, message broker, or object store was added. The orchestration and tool-execution layer requests no GPUs and uses an existing model API for inference.
+
+The versions are DSH `0.2.2-alpha.2`, image `0.2.2-alpha.2-r1`, Gitea `28.2.0`, Mattermost Team Edition `12.0.1`, and PostgreSQL `17.11`. The DSH image comes from `runzhliu/deepseek-harness-docker`. An independent Profile, or runtime configuration, and new persistent volumes hold the experiment; no personal session directory is mounted.
+
+Deployment started with PostgreSQL, Mattermost, and Gitea, followed by a private channel, demo repository, and dedicated bot. An independent DSH instance then loaded the compiled Super-agent Bundle, connected to the model API, and configured allowed requesters, the single writable repository, and two execution slots. This creates a path from chat request to admission and dispatch, code changes and tests, PR, and feedback in the original thread.
+
+![Deployment and delivery relationships in this demo](../../docs/assets/rag-agent/deepseek-superagent-practice/workflow.png)
+
+The two executors are DSH sessions sharing this demo instance, each with its own working directory and code branch. Directory separation in the diagram does not establish independent sandboxes.
+
+**Mattermost and Gitea require source adapters.** Identity, event cursors, thread context, reply channels, and PR-to-Ticket binding all need implementation; replacing a GitHub hostname is insufficient. Dedicated demo-channel and repository permissions were configured for the bot.
+
+One practical issue involved Mattermost's `update_at`, which can change with thread-related metadata. Using it as a message identity treated old requests as new inputs. The corrected identity uses the message ID and body-edit version, `edit_at`, so an actual edit creates a new event. Such deduplication details determine whether an agent accepts the same work repeatedly.
+
+This integration includes custom code. The following is a design and acceptance record, not a one-click deployment supplied by the upstream image.
 
 ## How Super-agent turns messages into tasks
 
-DeepSeek Harness, or DSH, provides model access, sessions, context, file tools, and command execution. Super-agent runs on Harness as a Bundle, a combination of plugins and configuration that adds task lifecycles and team-work rules.
+DSH provides model access, sessions, context, file tools, and command execution. Super-agent runs on Harness as a Bundle, a combination of plugins and configuration that adds task lifecycles and team-work rules.
 
 A piece of work passes through six steps: receive an event, check identity and rules, establish scope, create a work item, assign an executor, and deliver a result.
 
@@ -23,24 +43,6 @@ A task is also distinct from an execution attempt. An Assignment binds a Ticket 
 Finally, finishing and delivering are separate. The Outbox persists pending messages and receipts, then a Channel writes them back to the original conversation. SQLite and durable pending effects make unfinished dispatches, input deliveries, and replies recoverable after restart. External writes still need reconciliation: a remote write can succeed before its local receipt is recorded, leaving a duplication window on retry.
 
 Proactive admission also has boundaries. The prototype provides `off`, `observe`, and `auto` for work inferred from team rules. The default, `observe`, records the judgement without accepting that inferred work. Valid explicit requests can execute in all three modes, so disabling proactive admission and stopping an active task are separate operations.
-
-## Why the demo uses Mattermost and Gitea
-
-To make the interactions visible, I retained full chat and code-review interfaces. A person submits a request in Mattermost, the agent creates a branch and PR in Gitea, and the original chat thread receives the link and test results.
-
-The demo has four long-running Pods: DSH, Gitea, Mattermost, and PostgreSQL. Gitea uses SQLite; PostgreSQL stores Mattermost data. No Redis, message broker, or object store was added. The orchestration and tool-execution layer requests no GPUs and uses an existing model API for inference.
-
-The versions are DSH `0.2.2-alpha.2`, image `0.2.2-alpha.2-r1`, Gitea `28.2.0`, Mattermost Team Edition `12.0.1`, and PostgreSQL `17.11`. The DSH image comes from `runzhliu/deepseek-harness-docker`. An independent Profile, or runtime configuration, and new persistent volumes hold the experiment; no personal session directory is mounted.
-
-![Deployment and delivery relationships in this demo](../../docs/assets/rag-agent/deepseek-superagent-practice/workflow.png)
-
-The two executors are DSH sessions sharing this demo instance, each with its own working directory and code branch. Directory separation in the diagram does not establish independent sandboxes.
-
-**Mattermost and Gitea require source adapters.** Identity, event cursors, thread context, reply channels, and PR-to-Ticket binding all need implementation; replacing a GitHub hostname is insufficient. Dedicated demo-channel and repository permissions were configured for the bot.
-
-One practical issue involved Mattermost's `update_at`, which can change with thread-related metadata. Using it as a message identity treated old requests as new inputs. The corrected identity uses the message ID and body-edit version, `edit_at`, so an actual edit creates a new event. Such deduplication details determine whether an agent accepts the same work repeatedly.
-
-This integration includes custom code. The following is a design and acceptance record, not a one-click deployment supplied by the upstream image.
 
 ## How users submit tasks and follow results
 

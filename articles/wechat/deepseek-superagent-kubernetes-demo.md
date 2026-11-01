@@ -1,36 +1,18 @@
 # 把 DeepSeek Super-agent 部署到 Kubernetes：从群聊需求到代码 PR
 
-DeepSeek 最近公开了 **dsh-superagent-prototype**：一套基于 DeepSeek Harness 的团队编程 Agent 研究原型。它监听协作系统中的消息，把获准的请求变成可追踪的任务，交给独立会话执行，再将结果送回原来的讨论。
+为了实际感受 DeepSeek Super-agent 怎么参与团队开发，我在 Kubernetes 上设计了一套 Demo：在聊天里提交需求，让 Agent 修改代码、运行测试，再交付拉取请求（Pull Request，PR），由人审核。
 
-我把它改造成一套 Kubernetes Demo，用 Mattermost 接收需求、Gitea 保存代码，再用真实任务检查它能否接单、并行执行、接受追加要求以及在重启后继续工作。三个复杂任务中，两个交付了待审核的拉取请求（Pull Request，PR），一个没有完成。下面先解释它如何工作，再看这套 Demo 的设计和结果。
+这次测试从修复一个计价函数开始，再增加三个多文件项目，观察多个任务能否并行推进、追加要求能否回到原任务，以及执行过程中重启服务后能否继续。所有任务都在独立演示仓库里完成。
 
-## Super-agent 怎样把消息变成任务
+## Demo 是怎么搭起来的
 
-DeepSeek Harness，简称 DSH，提供模型接入、会话、上下文、文件与命令工具。Super-agent 以 Bundle，也就是插件和配置组合的形式运行在 Harness 上，增加任务生命周期与团队协作规则。
+我用 Mattermost 作为聊天入口，Gitea 作为代码仓库和评审入口。用户在私有频道里给机器人发需求，Super-agent 接单后创建独立的执行会话和代码分支，完成修改与测试，再把 PR 链接和结果发回原线程。用户可以在聊天里追加要求，也可以去 Gitea 审核代码。
 
-可以把一次工作分成六步：接收事件，检查身份与规则，确定授权范围，建立工单，派给执行器，交付结果。
-
-![从事件到可追踪工作的原理示意](assets/deepseek-superagent-demo/principles.png)
-
-图中是官方原型的简化流程。它内置 GitHub 来源和可选的飞书入口，围绕一个 GitHub 仓库工作；后文的 Mattermost、Gitea 是本次增加的适配。
-
-这里最值得理解的是三个区别。
-
-**消息和任务有各自的身份。** 来源 Source 把消息转换成不可变事件 Trigger，讨论 Thread 保存持续上下文。接受工作后才创建工单 Ticket，并记录授权 Mandate。后续讨论可以补充上下文，但不会自动扩大任务权限。
-
-任务和某次执行也分开管理。一次派工 Assignment 将工单交给执行器；执行中断后可以重新派工，而工单、讨论关系与待处理输入仍然保留。一个模型回合结束，只能说明这轮生成结束，不能据此认定代码已经交付。
-
-最后，做完和送达是两件事。Outbox 保存待发送的消息与回执，再通过 Channel 写回原线程。SQLite 和持久化待执行动作，使重启后能够找回尚未完成的派工、输入投递和回复。外部写入仍需核对：远端已经成功、本地还没记录时，重试存在重复窗口。
-
-主动接单也有范围。原型提供 `off`、`observe`、`auto` 三种模式，分别控制规则推断出来的工作；默认 `observe` 只记录判断，不实际接这种任务。合法的明确请求在这三种模式下仍可执行，因此关闭主动接单与停止正在运行的任务需要分别操作。
-
-## Demo 为什么选 Mattermost 和 Gitea
-
-为了让交互过程看得见，我保留完整的聊天与代码评审界面：用户在 Mattermost 提需求，Agent 在 Gitea 创建分支和 PR，最后在原聊天线程中给出链接和测试结果。
-
-整套 Demo 只有四个长期运行的 Pod：DSH、Gitea、Mattermost 和 PostgreSQL。Gitea 使用 SQLite，PostgreSQL 为 Mattermost 提供存储；没有增加 Redis、消息队列或对象存储。控制与工具执行部分没有申请 GPU，推理使用已有模型 API。
+整套 Demo 只有四个长期运行的 Pod：DeepSeek Harness（DSH）、Gitea、Mattermost 和 PostgreSQL。Super-agent 装在 DSH 实例中，负责接单与派工。Gitea 使用 SQLite，PostgreSQL 为 Mattermost 提供存储；没有增加 Redis、消息队列或对象存储。控制与工具执行部分没有申请 GPU，推理使用已有模型 API。
 
 本次版本为 DSH `0.2.2-alpha.2`、镜像 `0.2.2-alpha.2-r1`，Gitea `28.2.0`、Mattermost Team Edition `12.0.1`、PostgreSQL `17.11`。DSH 镜像来自 `runzhliu/deepseek-harness-docker`。独立 Profile，也就是运行配置，以及新的持久卷用于保存本次实验，没有挂入个人会话目录。
+
+部署时先启动 PostgreSQL、Mattermost 和 Gitea，创建私有频道、演示仓库和专用机器人。随后给独立的 DSH 实例加载编译后的 Super-agent Bundle，接入模型 API，配置允许发起任务的用户、唯一可修改的仓库和两个执行名额。这样就形成了“聊天提需求 → 接单与派工 → 修改和测试 → PR → 原线程反馈”的流程。
 
 ![本次 Demo 的部署与交付关系](../../docs/assets/rag-agent/deepseek-superagent-practice/workflow.png)
 
@@ -41,6 +23,26 @@ DeepSeek Harness，简称 DSH，提供模型接入、会话、上下文、文件
 实际接入时遇到过一个小问题：Mattermost 的 `update_at` 会随线程相关元数据变化。用它构造消息身份，会把旧需求再次当作新输入。修正后，事件身份使用消息 ID 和正文编辑版本 `edit_at`，原文真正被编辑才产生新事件。这样的去重细节，直接决定 Agent 会不会重复接活。
 
 这套集成包含自定义代码，下面展示的是设计与验收记录，不是上游镜像直接附带的一键部署方案。
+
+## Super-agent 怎样把消息变成任务
+
+DSH 提供模型接入、会话、上下文、文件与命令工具。Super-agent 以 Bundle，也就是插件和配置组合的形式运行在 Harness 上，增加任务生命周期与团队协作规则。
+
+可以把一次工作分成六步：接收事件，检查身份与规则，确定授权范围，建立工单，派给执行器，交付结果。
+
+![从事件到可追踪工作的原理示意](assets/deepseek-superagent-demo/principles.png)
+
+图中是官方原型的简化流程。它内置 GitHub 来源和可选的飞书入口，围绕一个 GitHub 仓库工作；本文 Demo 中的 Mattermost、Gitea 是本次增加的适配。
+
+这里最值得理解的是三个区别。
+
+**消息和任务有各自的身份。** 来源 Source 把消息转换成不可变事件 Trigger，讨论 Thread 保存持续上下文。接受工作后才创建工单 Ticket，并记录授权 Mandate。后续讨论可以补充上下文，但不会自动扩大任务权限。
+
+任务和某次执行也分开管理。一次派工 Assignment 将工单交给执行器；执行中断后可以重新派工，而工单、讨论关系与待处理输入仍然保留。一个模型回合结束，只能说明这轮生成结束，不能据此认定代码已经交付。
+
+最后，做完和送达是两件事。Outbox 保存待发送的消息与回执，再通过 Channel 写回原线程。SQLite 和持久化待执行动作，使重启后能够找回尚未完成的派工、输入投递和回复。外部写入仍需核对：远端已经成功、本地还没记录时，重试存在重复窗口。
+
+主动接单也有范围。原型提供 `off`、`observe`、`auto` 三种模式，分别控制规则推断出来的工作；默认 `observe` 只记录判断，不实际接这种任务。合法的明确请求在这三种模式下仍可执行，因此关闭主动接单与停止正在运行的任务需要分别操作。
 
 ## 用户怎样提交任务、追踪结果
 
