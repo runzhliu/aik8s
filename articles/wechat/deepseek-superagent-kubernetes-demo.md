@@ -1,8 +1,6 @@
 # 把 DeepSeek Super-agent 部署到 Kubernetes：从群聊需求到代码 PR
 
-DeepSeek 最近公开了 **dsh-superagent-prototype**：一套基于 DeepSeek Harness 的团队编程 Agent 研究原型。它监听协作系统中的消息，把获准的请求变成可追踪的任务，交给独立会话执行，再将结果送回原来的讨论。GitHub 记录显示，仓库创建于 2026 年 10 月 31 日；这个日期是仓库创建时间，不是正式产品发布日期。
-
-官方说明很直接：这是供研究参考的原型，公开版本与内部实现、设计文章并不完全一致。它没有发布新的模型权重，主要探索的是模型之外的工作组织方式。本文采用提交 `6337fc823ce20251c8de8085948165c81aaa701e`，原理依据官方 README、领域模型与执行文档。
+DeepSeek 最近公开了 **dsh-superagent-prototype**：一套基于 DeepSeek Harness 的团队编程 Agent 研究原型。它监听协作系统中的消息，把获准的请求变成可追踪的任务，交给独立会话执行，再将结果送回原来的讨论。
 
 我把它改造成一套 Kubernetes Demo，用 Mattermost 接收需求、Gitea 保存代码，再用真实任务检查它能否接单、并行执行、接受追加要求以及在重启后继续工作。三个复杂任务中，两个交付了待审核的拉取请求（Pull Request，PR），一个没有完成。下面先解释它如何工作，再看这套 Demo 的设计和结果。
 

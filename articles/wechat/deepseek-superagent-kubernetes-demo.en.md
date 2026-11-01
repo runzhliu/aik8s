@@ -1,8 +1,6 @@
 # Deploying DeepSeek Super-agent on Kubernetes: From Chat Requests to Code PRs
 
-DeepSeek recently published **dsh-superagent-prototype**, a research prototype for a team coding agent built on DeepSeek Harness. It listens to collaboration events, turns authorized requests into traceable tasks, executes them in independent sessions, and returns results to their original discussions. GitHub records the repository's creation on October 31, 2026; this is a repository-creation date, not an official product-release date.
-
-The official description is explicit: this is a research reference, and the public implementation differs from the internal version and design article. It introduces no new model weights; its focus is organizing work around the model. This article uses commit `6337fc823ce20251c8de8085948165c81aaa701e`, with principles drawn from the official README, domain model, and execution documentation.
+DeepSeek recently published **dsh-superagent-prototype**, a research prototype for a team coding agent built on DeepSeek Harness. It listens to collaboration events, turns authorized requests into traceable tasks, executes them in independent sessions, and returns results to their original discussions.
 
 I adapted it into a Kubernetes demo with Mattermost for requests and Gitea for code. Real tasks checked admission, parallel execution, follow-up requirements, and continuation after restart. Of three complex tasks, two produced reviewable Pull Requests (PRs) and one did not finish. First, the design; then the deployed demo and its results.
 
