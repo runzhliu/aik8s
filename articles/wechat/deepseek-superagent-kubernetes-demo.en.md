@@ -26,6 +26,57 @@ One practical issue involved Mattermost's `update_at`, which can change with thr
 
 This integration includes custom code. The following is a design and acceptance record, not a one-click deployment supplied by the upstream image.
 
+## Connecting Gitea and Mattermost to Super-agent
+
+### Prepare two dedicated identities
+
+Gitea uses the dedicated account `demo-agent`, which owns the private demonstration repository `demo-agent/agent-demo`. Its token scopes in this deployment are `write:repository`, `write:issue`, and `read:user`, used for repository operations, issue comments, and identity lookup. It is not a Gitea system administrator, but it owns this demo repository; this must not be described as server-enforced permission to edit only one subdirectory.
+
+Code goes to `agent/<ticket-name>` branches. The `main` protection rule disables pushes and force pushes, requires one approval, and restricts the merge allowlist to the human demo account `demo-admin`. Repository rules work alongside the task's no-merge requirement; a prompt alone does not protect main.
+
+![Actual main-branch protection settings in Gitea](../../docs/assets/rag-agent/deepseek-superagent-practice/gitea-main-protection.jpg)
+
+The screenshot shows “Disable push” selected. The other merge constraints are configured in the same branch rule. Main was neither changed nor merged into during this run.
+
+Mattermost has a bot `@demo-agent`, displayed as **DSH Super-agent**, with the ordinary `Member` role. It is added to the demo team and private Coding Demo channel. The additional global posting permissions `post:all` and `post:channels` remain disabled. The bot reads messages and replies with its own API token, rather than an administrator's token.
+
+![Role and additional permissions of the Mattermost bot account](../../docs/assets/rag-agent/deepseek-superagent-practice/mattermost-bot-permissions.jpg)
+
+This is the actual bot configuration: Member role, with both additional permissions unchecked. All identities shown are demonstration accounts; no token is included.
+
+### How API credentials reach DSH
+
+A dedicated command-line adapter, `demo-bridge`, calls the Gitea and Mattermost REST APIs. It is separate from the model-access bridge described earlier.
+
+Collaboration settings are projected read-only from the Kubernetes Secret `agent-integrations` to `/run/demo/integrations.json`. The adapter reads this path by default, or a path supplied through `DSH_DEMO_CONFIG_FILE`. These key fields come from the demo's custom implementation:
+
+| Field | Purpose in this demo |
+| --- | --- |
+| `giteaURL`, `giteaToken` | Internal Gitea API address and bot token; the service address here is `http://gitea:3000` |
+| `repository` | Fixed repository `demo-agent/agent-demo` |
+| `mattermostURL`, `mattermostToken` | Internal Mattermost API address and bot token; the service address here is `http://mattermost:8065` |
+| `channelId`, `botId` | Fixed channel ID and bot user ID for reading messages, filtering the bot's own posts, and replying in the original thread |
+
+This describes selected fields, not an official upstream schema or a complete runnable configuration file. Actual tokens are absent from the article, chat prompts, and screenshots. A read-only mount restricts writes; tools able to read files in the same container may still read credentials, so the mount is not an isolation boundary against malicious code.
+
+The compiled custom plugin registers `gitea` and `mattermost` Source kinds with Super-agent. Sources use the adapter to read events, retrieve thread context, and send replies. A separate Git credential helper checks the hostname and full repository path; the PR creation tool is also fixed to the demo repository. These integration steps cannot be replaced by merely entering a bot name.
+
+### Enable sources, then define who may request work
+
+After installing the adapted Bundle, open **Superagent → Settings → Sources** and enable Gitea and Mattermost. This demo polls them every 10 and 5 seconds respectively. It uses API polling; no Mattermost outgoing Webhook was configured for this path.
+
+![Enabled custom sources and their polling intervals in DSH](../../docs/assets/rag-agent/deepseek-superagent-practice/dsh-source-settings.jpg)
+
+This page controls enabled state and polling frequency. URLs and tokens are read through the Secret and adapter above; the page has no URL or token input fields for these custom sources.
+
+Next, open **Settings → Evaluation → Per-source policy** and configure allowed task initiators. Gitea allows the login `demo-admin`; Mattermost allows that demo user's ID. These identify the human requester, a different identity from the bot's own `botId`.
+
+![Allowed task initiator for the Mattermost source](../../docs/assets/rag-agent/deepseek-superagent-practice/dsh-mattermost-admission.jpg)
+
+The screenshot permits one demo user. Admission remains in `observe` mode; valid explicit requests can still be accepted, so this does not disable all work. Execution capacity is set to two.
+
+Finally, follow one small request through the complete path: read the channel message, create its Ticket and execution session, create a branch and PR in Gitea, and return the result to the original thread. A healthy source establishes polling health. These further checks establish that identity, tool execution, and delivery are connected too.
+
 ## How Super-agent turns messages into tasks
 
 DSH provides model access, sessions, context, file tools, and command execution. Super-agent runs on Harness as a Bundle, a combination of plugins and configuration that adds task lifecycles and team-work rules.
@@ -67,6 +118,20 @@ To check concurrency, I submitted three independent projects restricted to diffe
 ![Two running tasks and one queued task in the actual control panel](../../docs/assets/rag-agent/deepseek-superagent-practice/execution.png)
 
 Each task has an independent session, working directory, and branch, avoiding repeated branch switches in one shared workspace. Changes to a common interface still require integration tests. Increasing execution slots also increases requests and budget pressure on the downstream model service.
+
+## Open DSH to inspect what the task actually did
+
+The task list shows orchestration state. To inspect execution, open the task's execution session from **Superagent → Execution**, switch to **Trace**, and search for a filename, tool name, or test output. The left side lists calls; opening one exposes parameters, results, and timing separately. The main Session handles admission and dispatch. File changes and tests belong in the task's execution Session.
+
+For the log-analysis tool, searching the trace for `component_exit=0` locates the final `bash` test invocation. Its result retains actual command output rather than only a natural-language claim that tests passed.
+
+![Actual component and repository test results in the DSH execution trace](../../docs/assets/rag-agent/deepseek-superagent-practice/dsh-trace-tests.jpg)
+
+The component command exited with 0 and passed 31 tests. The repository command also exited with 0 and passed 33 tests. The latter includes the 31 component tests and 2 existing tests; adding them into 64 tests would double-count. These are agent-run self-tests. The 6 independent acceptance groups below are recorded separately.
+
+The trace also gives a concrete troubleshooting path. A request with no execution session points to admission or dispatch. Continued text generation without file-tool calls calls for inspection of the effective output budget. A test invocation returning nonzero calls for inspecting its command and failed output. Completed code and tests without a PR or thread reply require checking external writes and receipts. A zero exit code covers only the executed cases; assertions and independent acceptance still need review before judging product correctness.
+
+The screenshot preserves real tool calls and output without presenting the model's internal reasoning as delivery evidence. The incomplete DAG task remains in the results below rather than disappearing because other work succeeded.
 
 ## What the complex tasks delivered
 

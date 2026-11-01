@@ -1497,9 +1497,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/deepseek-superagent-kubernetes-practice.md": {
-      "source_sha256": "aa757b3dfdc2faa0852100addd6c0598cfb75c8a23af792e185a1ac70808a016",
-      "english_sha256": "9f1a3883c6a750c77a733b1a7607ae829f00ed0f583e96de5e3c12169082bdb8",
-      "reviewed_at": "2026-11-01T11:47:03.646055+00:00",
+      "source_sha256": "b4ece0bc277168019e6ed3d4132900c9f474b4e62fb78141b2fdd044a727b721",
+      "english_sha256": "aa2bba569790943e18cd81a400560b095e138d6e638a003559a362f958defe33",
+      "reviewed_at": "2026-11-01T12:53:56.096335+00:00",
       "review": "reviewed against source"
     }
   }

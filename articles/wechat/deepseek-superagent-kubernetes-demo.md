@@ -26,6 +26,57 @@ DeepSeek 最近公开了 **dsh-superagent-prototype**，一套基于 DeepSeek Ha
 
 这套集成包含自定义代码，下面展示的是设计与验收记录，不是上游镜像直接附带的一键部署方案。
 
+## Gitea、Mattermost 怎样接到 Super-agent
+
+### 先准备两个专用身份
+
+Gitea 使用专用账号 `demo-agent`，由它持有私有演示仓库 `demo-agent/agent-demo`。本次令牌范围为 `write:repository`、`write:issue`、`read:user`，分别供仓库操作、工单评论和身份读取使用。它不是 Gitea 系统管理员，但它拥有这个演示仓库，不能把这套配置描述成服务端只授予了某个子目录的权限。
+
+代码写入 `agent/<ticket-name>` 分支。仓库的 `main` 配置为禁止推送、禁止强制推送，合并要求一人批准，并将合并白名单限定为人工演示账号 `demo-admin`。这些仓库规则与任务里的“不合并”要求共同控制交付，不能只靠提示词约束主分支。
+
+![Gitea 中 main 分支的实际保护设置](../../docs/assets/rag-agent/deepseek-superagent-practice/gitea-main-protection.jpg)
+
+图中选中了“禁用推送”。其他合并约束在同一条分支规则中配置；本次没有修改或合并主分支。
+
+Mattermost 创建机器人 `@demo-agent`，显示名称为 **DSH Super-agent**，角色是普通 `Member`。将它加入演示团队和私有的 Coding Demo 频道，不启用 `post:all` 或 `post:channels` 这两项额外的全局发帖权限。机器人使用自己的 API 令牌读取消息和回复，不借用管理员令牌。
+
+![Mattermost 机器人账号的角色与额外权限](../../docs/assets/rag-agent/deepseek-superagent-practice/mattermost-bot-permissions.jpg)
+
+这张图是实际机器人配置：Member 角色，两项额外权限均未勾选。本文使用的都是演示身份，截图不包含令牌。
+
+### API 凭据怎样进入 DSH
+
+本次增加了一个名为 `demo-bridge` 的专用命令行适配器，负责调用 Gitea、Mattermost 的 REST API。它与前面访问模型的桥接进程是两个不同组件。
+
+协作系统配置通过 Kubernetes Secret `agent-integrations` 只读挂载为 `/run/demo/integrations.json`。适配器默认读这个文件，也可以通过 `DSH_DEMO_CONFIG_FILE` 指定路径。关键字段如下，名称来自本次定制代码：
+
+| 字段 | 本次用途 |
+| --- | --- |
+| `giteaURL`、`giteaToken` | Gitea 内网 API 地址和机器人令牌；本例服务地址为 `http://gitea:3000` |
+| `repository` | 固定仓库 `demo-agent/agent-demo` |
+| `mattermostURL`、`mattermostToken` | Mattermost 内网 API 地址和机器人令牌；本例服务地址为 `http://mattermost:8065` |
+| `channelId`、`botId` | 固定频道 ID、机器人用户 ID，用于读取消息、过滤自身消息和原线程回复 |
+
+这是关键字段说明，不是上游官方配置格式，也不是完整可直接运行的配置文件。真实令牌没有放进文章、聊天提示词或截图。只读挂载约束的是文件写入；同一容器内具备文件读取能力的工具仍可能读到凭据，因此它也不构成恶意代码的隔离边界。
+
+编译后的自定义插件向 Super-agent 注册 `gitea`、`mattermost` 两种 Source。Source 通过适配器读取事件、补齐线程上下文和发送回复。Git 凭据助手另行检查主机名和完整仓库路径，PR 创建工具也固定到该演示仓库；这些是本次集成的实现，不能省略后只填写一个机器人名字。
+
+### 页面里启用来源，再配置谁可以提任务
+
+安装适配后的 Bundle，进入 **Superagent → 设置 → 来源**，启用 Gitea 和 Mattermost。本次分别每 10 秒、5 秒轮询一次，使用的是 API 轮询，没有为这条链路配置 Mattermost 出站 Webhook。
+
+![DSH 中两个自定义消息源的启用状态与轮询间隔](../../docs/assets/rag-agent/deepseek-superagent-practice/dsh-source-settings.jpg)
+
+这里的页面管理启用状态和轮询频率；URL、令牌由前面的 Secret 和适配器读取，页面里没有让用户粘贴这两类凭据的输入框。
+
+然后进入 **设置 → 评估 → 在各来源上**，配置允许发起任务的人。Gitea 按登录名允许 `demo-admin`；Mattermost 按该演示用户的 ID 允许。这个白名单标识的是发需求的人，与机器人自己的 `botId` 是不同身份。
+
+![Mattermost 来源的任务发起人白名单](../../docs/assets/rag-agent/deepseek-superagent-practice/dsh-mattermost-admission.jpg)
+
+图中只允许一个演示用户。接单模式保持 `observe`（仅观察），合法的明确请求仍然可以接单；不能把它理解成所有任务都停用。执行名额设为两个。
+
+最后用同一条小需求核对整条链路：频道消息被读取，出现对应工单和执行会话，Gitea 出现新分支及 PR，机器人把结果发回原消息线程。来源显示正常只能证明轮询在工作，完成这些检查才证明身份、工具调用和交付都已连通。
+
 ## Super-agent 怎样把消息变成任务
 
 DSH 提供模型接入、会话、上下文、文件与命令工具。Super-agent 以 Bundle，也就是插件和配置组合的形式运行在 Harness 上，增加任务生命周期与团队协作规则。
@@ -67,6 +118,20 @@ Agent 完成修改后创建 PR #1，并回到原线程报告结果。随后在�
 ![实际控制台中的两个运行任务与一个排队任务](../../docs/assets/rag-agent/deepseek-superagent-practice/execution.png)
 
 每个任务使用独立会话、工作目录和分支，减少多个任务反复切换同一个工作区的问题。如果它们修改共同接口，仍然需要集成测试；增加执行名额，也会增加下游模型服务的请求和预算压力。
+
+## 打开 DSH，看看任务具体做了什么
+
+任务列表展示的是编排状态。要检查实际工作，在 **Superagent → 执行** 中打开对应执行会话，切到 **轨迹**，再搜索文件名、工具名或测试输出。左侧是调用记录，点开后可以分别查看参数、结果和计时；主 Session 负责接单与派工，真正的文件修改和测试要到该任务的执行 Session 中查看。
+
+以日志分析工具为例，在轨迹中搜索 `component_exit=0`，可以定位最后一次测试的 `bash` 调用。工具结果保留了命令输出，而不是只有一段“测试已通过”的自然语言报告。
+
+![DSH 执行轨迹中实际运行的组件与仓库测试结果](../../docs/assets/rag-agent/deepseek-superagent-practice/dsh-trace-tests.jpg)
+
+图中组件命令退出码为 0，31 项测试通过；仓库命令退出码也为 0，33 项测试通过。后者包含 31 项组件测试和原有的 2 项测试，不能相加写成 64 项。这里是 Agent 执行的自测，后面的 6 组独立验收另行记录。
+
+这也给排查提供了具体入口：收到需求但没有执行会话，查接单和派工；会话一直生成文字却没有文件工具调用，查有效输出预算；已经调用测试但返回非零，查命令和失败输出；代码及测试完成但没有 PR 或线程回复，再查外部写入与回执。测试退出码为 0 只覆盖被执行的用例，仍需要检查断言和独立验收，不能直接等同于产品正确。
+
+截图保留实际工具调用与输出，没有把模型的内部推理当作交付证据。下文的未完成 DAG 任务也保留在结果中，不因为其他任务成功而省去。
 
 ## 复杂任务做到了什么
 
