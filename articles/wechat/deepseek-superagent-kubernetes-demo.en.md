@@ -1,5 +1,7 @@
 # Deploying DeepSeek Super-agent on Kubernetes: From Chat Requests to Code PRs
 
+DeepSeek recently published **dsh-superagent-prototype**, a research prototype for a team coding agent built on DeepSeek Harness. It listens to collaboration events, turns authorized requests into traceable tasks, executes them in independent sessions, and returns results to their original discussions. Follow-up requirements and review comments can continue to feed into the same task.
+
 To experience how DeepSeek Super-agent participates in team development, I designed a Kubernetes demo: submit a request in chat, let the agent change code and run tests, then review the Pull Request (PR) it delivers.
 
 Testing began with a pricing-function fix, followed by three multi-file projects. I wanted to observe parallel tasks, follow-up requirements reaching their original work items, and continuation after restarting the service during execution. All work stayed in an isolated demonstration repository.

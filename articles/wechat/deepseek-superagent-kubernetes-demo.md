@@ -1,5 +1,7 @@
 # 把 DeepSeek Super-agent 部署到 Kubernetes：从群聊需求到代码 PR
 
+DeepSeek 最近公开了 **dsh-superagent-prototype**，一套基于 DeepSeek Harness 的团队编程 Agent 研究原型。它监听协作系统中的消息，把获准的请求变成可追踪的任务，交给独立会话执行，再将结果送回原来的讨论。后续的补充需求和评审意见，也可以继续进入同一项任务。
+
 为了实际感受 DeepSeek Super-agent 怎么参与团队开发，我在 Kubernetes 上设计了一套 Demo：在聊天里提交需求，让 Agent 修改代码、运行测试，再交付拉取请求（Pull Request，PR），由人审核。
 
 这次测试从修复一个计价函数开始，再增加三个多文件项目，观察多个任务能否并行推进、追加要求能否回到原任务，以及执行过程中重启服务后能否继续。所有任务都在独立演示仓库里完成。
