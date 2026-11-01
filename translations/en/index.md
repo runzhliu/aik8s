@@ -135,6 +135,7 @@ Direct entry points to official documentation organized by technical layer. Proj
 - [GPU Notebook Platform & Storage Selection in the LLM Era](ai-k8s/development/gpu-notebook-platform.md)
 - [2026 AI Agent Current State, Implementation Principles & Trends](ai-k8s/rag-agent/agent-landscape-2026.md)
 - [Agent Harness Technical Survey](ai-k8s/rag-agent/agent-harness-technology-overview.md)
+- [DeepSeek Super-agent Analysis: From Chat Sessions to a Team Task System](ai-k8s/rag-agent/deepseek-superagent-prototype-analysis.md)
 - [Omarchy Linux & Agent OS Survey](ai-k8s/rag-agent/omarchy-agent-os-overview.md)
 - [ChatGPT Dots Technical Analysis: Resident Agents, Cloud Computers & Enterprise Applications](ai-k8s/rag-agent/chatgpt-dots-overview.md)
 - [Agent Long-task Interruption & Resume Principles and Community Practices](ai-k8s/rag-agent/agent-long-running-durable-execution.md)
