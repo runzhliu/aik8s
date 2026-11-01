@@ -1,0 +1,15 @@
+{
+  "layout_reference": "articles/wechat/assets/minimax-m3-h20/brand-cover/",
+  "editorial_palette": {
+    "background": "#F6F8FF",
+    "accent": "#4D63CB",
+    "ink": "#252A29",
+    "muted": "#747D79"
+  },
+  "scope": "Editorial blue for the DeepSeek topic, not an official brand specification.",
+  "evidence": "Covers and principles diagram are schematics. Product screenshots are separate original evidence.",
+  "fonts": {
+    "Chinese": "Hiragino Sans GB W3, TTC face 0",
+    "English": "Helvetica Neue Light, TTC face 7"
+  }
+}
