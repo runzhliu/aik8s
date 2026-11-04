@@ -1208,11 +1208,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/rag-agent/hiroute-overview.md": {
-      "source_sha256": "9a83ad83d06351f0f1473826d491d557c6f692964987ac19350eb9642fea126f",
-      "english_sha256": "e41596dd526fea415e21f515ffdc042d86d4e689023531183410c3acd35e328a",
+      "source_sha256": "d8159842822d717a016792bacf674752a55684f98969646bac654d80efcfe869",
+      "english_sha256": "fbf0105cc3d1ee35bb46e3223a836666423fd65f40a91e968333582b0aa5a701",
       "translated_at": "2026-10-16T12:45:29.824445+00:00",
       "method": "model-assisted translation; structural checks passed",
-      "review": "pending editorial review"
+      "review": "reviewed against source",
+      "reviewed_at": "2026-11-04T11:22:17.069545+00:00"
     },
     "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md": {
       "source_sha256": "4b43dadc2d3a593b3e47213dba1ff5b71762298553d882775a70e441e11ddbb1",

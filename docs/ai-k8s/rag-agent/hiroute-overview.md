@@ -2,7 +2,7 @@
 title: HiRoute 技术综述：Higress 团队的 Agent 路由与模型协作引擎
 description: 解析 HiRoute 的任务路由、模型路由、Jev 决策、ContextHold、阶段胜任评分与有限故障接力，讨论官方降本实验，并记录 Docker 接入 DSH、协议兼容、故障接力与重启续跑实测
 status: evolving
-last_reviewed: 2026-10-15
+last_reviewed: 2026-11-04
 ---
 
 # HiRoute 技术综述：Higress 团队的 Agent 路由与模型协作引擎
@@ -11,7 +11,7 @@ last_reviewed: 2026-10-15
 
 Higress 团队推出的 **HiRoute** 尝试管理这类选择。它在本机提供 Agent 任务委派、模型接入、路由计划和执行记录，让用户继续使用已有 Agent，同时为不同工作选择合适的模型。项目采用 Apache-2.0 许可证，提供桌面应用及无界面的命令行版本。[项目介绍](https://github.com/higress-group/HiRoute)、[开源说明](https://github.com/higress-group/HiRoute/blob/main/news/hiroute-open-source.zh-CN.md)
 
-本文核查时间为 **2026 年 10 月 15 日**。发行情况以正式 Release 为准；机制同时对照 `v0.3.1` 与主分支快照 [`b4c1a927`](https://github.com/higress-group/HiRoute/commit/b4c1a92765bc94d0cfba273316275ba4e4231c78)。第 7 节整理上游实验；第 8.3 节是本文实际完成的 Docker 与 DSH 接入测试。企业接入图为分析建议。
+本文于 **2026 年 11 月 4 日**补充核查 `v0.5.0` 正式发行及官方指南。原文的机制分析以 `v0.3.1` 和当时主分支快照 [`b4c1a927`](https://github.com/higress-group/HiRoute/commit/b4c1a92765bc94d0cfba273316275ba4e4231c78) 为基础；第 4.3—4.4 节补充新版的信任度与决策机制。第 7 节整理上游实验，第 8.3 节是我们基于 **0.3.1** 完成的 Docker 与 DSH 实测，并非 0.5.0 的实测。企业接入图为分析建议。
 
 ## 1. 它和 Higress 是什么关系
 
@@ -38,12 +38,13 @@ HiRoute 的设计复用了 Higress 团队的网关工程经验，但采用独立
 | `v0.2.0` | 2026-10-08 | 发行包扩展到 macOS、Linux 的两种 CPU 架构 |
 | `v0.3.0` | 2026-10-11 | 继续迭代桌面端与无界面版本 |
 | `v0.3.1` | 2026-10-12 | 修复订阅配置、原生会话关联、升级恢复和模型目录等问题 |
+| `v0.5.0` | 2026-11-03 | 新增 Windows x64 Desktop 和带认证的 Linux Web UI，改进模型试用与阶段评价 |
 
-来源：[v0.1.0](https://github.com/higress-group/HiRoute/releases/tag/v0.1.0)、[v0.2.0](https://github.com/higress-group/HiRoute/releases/tag/v0.2.0)、[v0.3.0](https://github.com/higress-group/HiRoute/releases/tag/v0.3.0)、[v0.3.1](https://github.com/higress-group/HiRoute/releases/tag/v0.3.1)。
+来源：[v0.1.0](https://github.com/higress-group/HiRoute/releases/tag/v0.1.0)、[v0.2.0](https://github.com/higress-group/HiRoute/releases/tag/v0.2.0)、[v0.3.0](https://github.com/higress-group/HiRoute/releases/tag/v0.3.0)、[v0.3.1](https://github.com/higress-group/HiRoute/releases/tag/v0.3.1)、[v0.5.0](https://github.com/higress-group/HiRoute/releases/tag/v0.5.0)。
 
-截至核查，最新稳定版为 **0.3.1**，提供 macOS Desktop 和 Linux CLI 的 x86_64、ARM64 包。发行说明明确 Windows 不在该版本的支持范围；不同架构的验证深度也不同，不能把“打包成功”当成相同程度的实际使用验证。
+截至 2026 年 11 月 4 日核查，最新正式版本为 **0.5.0**：macOS Desktop 支持 ARM64、x86_64，Windows Desktop 支持 x64，Linux 支持 ARM64、x86_64 的 CLI 与带认证的 Web UI。macOS 安装包为自签名，Windows 安装包未签名；各平台的发行验证和未覆盖范围不同，应查看[发行说明](https://github.com/higress-group/HiRoute/releases/tag/v0.5.0)和对应安装指南。0.3.1 当时不支持 Windows，不能把本文的旧实验当作新版各平台验收。
 
-有图形界面时，可以从 Desktop 管理连接、计划、任务和会话；Linux 则通过 CLI 与后台守护进程 `hirouted` 使用这些能力。路由本身不要求配置 GPU，只有选择在本地运行执行模型或决策模型时，才需要另外评估其推理资源。
+有图形界面时，可以从 Desktop 管理连接、计划、任务和会话；0.5.0 的 Linux 也可使用带认证的 Web UI，或通过 CLI 与后台守护进程 `hirouted` 操作。路由本身不要求配置 GPU，只有选择在本地运行执行模型或决策模型时，才需要另外评估其推理资源。
 
 ## 3. 两种路由：工作交给谁，这一阶段用什么模型
 
@@ -95,6 +96,30 @@ HiRoute 的设计复用了 Higress 团队的网关工程经验，但采用独立
 源码中的低分保护还检查评分是否属于上一实际阶段、是否与本轮类别和已发布计划版本一致，以及评分标准是否匹配。没有评分、证据不完整或跨类别的评分不会被当成零分；历史低分也不会无限延续成永久升级状态。[组选择实现](https://github.com/higress-group/HiRoute/blob/v0.3.1/crates/gateway/src/core_runtime/classification/group_policy.rs)
 
 判断服务本身也可能超时或返回无效结果。当前规则为智能省钱提供启发式回退，自定义分支则回到预先配置的默认类别；类别内需要两组模型而复杂度不可用时，选择主力。应同时观察正常路径和回退路径，否则计划写的是“审稿”，实际执行可能已回到默认分支。[决策操作与执行边界](https://github.com/higress-group/HiRoute/blob/v0.3.1/crates/gateway/README.md)
+
+### 4.3 0.5：用真实工作逐步决定是否信任新模型
+
+[新版介绍](https://mp.weixin.qq.com/s/n8Qd63JFUQrIK8QybwWuOg)和[官方智能路由说明](https://aliyun.github.io/ai-agent-handbook/run/chapter-09/intelligent-routing.html)强调：公开榜单适合初筛，但不等于模型能胜任自己的代码库和工作。可以先接入新模型作为常规组、保留熟悉的主力组，再从简单任务开始观察。
+
+1. **建立路由**：从首页的新模型试用入口，或手动配置常规组、主力组与决策模型；发布后将路由接入原有 Agent。
+2. **设置信任度**：新版提供“试用、熟悉、信任、放手、托付”五档，也可填写精确值。实际改变的是简单概率阈值：阈值越低，越多任务有机会进入常规组；新计划“熟悉”的默认阈值为 0.8。信任度不改变工具审批、Agent 权限或沙箱边界。[模型路由指南](https://hiroute.ai/docs/model-routing/)
+3. **观察并回放**：在会话时间线核对实际模型、选择原因、用量及评分覆盖；在模型表现报告查看建议。官方介绍的上调条件包括调整后至少 30 个已评分步骤、至少 3 个会话、评分覆盖至少 60%，且已评分步骤中至少 85% 达到胜任线；至少 30 个已评分步骤中达标不足 70% 时建议下调。这是官方所述的建议规则，不是生产质量保证。
+4. **人工决定是否发布**：调整前使用历史记录回放，看哪些阶段可能改变分配，再由用户确认并发布。回放是基于历史的估算，不会重跑历史任务，也不能保证未来收益或质量。
+
+这里的“胜任度”来自决策模型对执行阶段的评价，并非人工验收结论。建议结合测试通过率、人工抽样、任务完成率、返工次数和总费用；未评分与部分证据要单独统计，不能当作成功，也不要把一次低分外推为模型全面不适用。业务代码或用户输入发送给外部决策服务前，还要确认数据权限及出口策略。
+
+### 4.4 从两个判断到三个问题：低分是否仍与当前任务有关
+
+新版介绍将决策拆成三个问题：**当前工作有多简单、上一阶段表现如何、上一阶段的问题是否仍影响当前工作**。程序按已发布的规则和阈值选择模型组，而不是把完整策略交给模型直接决定。比如上一轮文档写得不符合要求，下一轮仍在改写时可由主力接手；问题解决后，如果用户转而要求导出数据，则重新判断该工作是否适合常规组。低分适用性、历史完整性和失败回退仍需按具体版本与客户端核查。[官方模型路由指南](https://hiroute.ai/docs/model-routing/)
+
+官方还给出了直接选组与三问组合的离线对照：
+
+| 场景 | 决策模型 A：直接选组 → 三问 | 决策模型 B：直接选组 → 三问 |
+| --- | --- | --- |
+| 工程 | 67.31% → 96.15% | 50.00% → 91.35% |
+| 数学依赖状态 | 54.86% → 100% | 65.97% → 88.89% |
+
+这些数字来自[官方对照实验的介绍](https://aliyun.github.io/ai-agent-handbook/run/chapter-09/intelligent-routing.html)，衡量的是该数据和策略下的**选组规则符合度**，不是任务成功率、实际节省的账单或所有模型的通用结论；评分模型也可能出错。做企业验证时，应保留决策输入的合规边界、样本与评分覆盖，并对实际交付设置独立验收。
 
 ## 5. ContextHold：为什么不在每次工具调用后换模型
 
@@ -158,6 +183,8 @@ HiRoute 公开了研究交付、HTTPX 编码以及后续写作实验。阅读时
 初次接入可以先建立一条固定模型路径，确认原生工具调用、流式结束和用量记录，再引入决策模型与两个模型组。这样出现问题时，容易区分协议接入、路由判断和执行模型本身。
 
 ### 8.1 Desktop 与 Linux
+
+0.5.0 的 Linux Web UI 需要先按官方指南启用并认证；如需远程访问，应检查监听地址、认证和网络访问边界。Windows x64 为用户级安装；版本升级和回退应遵循官方恢复指南，保留匹配版本的程序和完整数据。以下 CLI 命令提供入门路径；第 8.2—8.3 节保留的是 0.3.1 的历史操作，不代表已验证新版命令与页面完全相同。[安装入口](https://hiroute.ai/docs/)
 
 桌面版从 [官方 Release](https://github.com/higress-group/HiRoute/releases) 选择平台对应的软件包。Linux 官方安装器运行于当前用户，不需要 sudo；如需先查看脚本，可以分步执行：
 
@@ -353,7 +380,7 @@ docker cp hiroute-dsh-lab:/workspace/submission-demo ./submission-demo-result
 
 ### 8.3 Docker 实测：接上 DSH 之后，哪些能力真正跑通了
 
-这次在独立 Docker 容器中安装 **HiRoute 0.3.1**，接入一个已有的 OpenAI 兼容模型 API，再由 DeepSeek Harness 执行文件操作与测试。容器限制为 **2 vCPU、4 GiB 内存**，使用 Linux ARM64；DSH 为 **0.2.1-alpha.3**，Node.js 为 **24.22.0**。这里验证的是路由与 Agent 集成，不涉及本地模型加载或 GPU 吞吐测试。
+这次在独立 Docker 容器中安装 **HiRoute 0.3.1**，接入一个已有的 OpenAI 兼容模型 API，再由 DeepSeek Harness 执行文件操作与测试。容器限制为 **2 vCPU、4 GiB 内存**，使用 Linux ARM64；DSH 为 **0.2.1-alpha.3**，Node.js 为 **24.22.0**。这里验证的是路由与 Agent 集成，不涉及本地模型加载或 GPU 吞吐测试。 本次实验没有部署到 Kubernetes 或 sr1 集群，也没有实测 0.5.0 的 Linux Web UI、信任度建议或历史回放。
 
 安装包固定为官方 `v0.3.1` 的 ARM64 standalone 包，先校验发行清单中的文件名、大小和 SHA-256，再运行官方安装器。容器使用独立 HOME、工作区与证据卷，不挂载宿主机的 Agent 配置。服务以前台 `hiroute service run` 启动，不依赖容器中存在 systemd 用户服务。
 
@@ -496,6 +523,10 @@ HiRoute 最有价值的地方，是把阶段选模做成可以配置、追踪和
 ## 参考资料
 
 - [HiRoute 官方仓库](https://github.com/higress-group/HiRoute)
+- [0.5.0 发行说明](https://github.com/higress-group/HiRoute/releases/tag/v0.5.0)
+- [新版介绍：结合真实工作选择模型](https://mp.weixin.qq.com/s/n8Qd63JFUQrIK8QybwWuOg)
+- [智能路由：如何利用便宜模型提升智价比](https://aliyun.github.io/ai-agent-handbook/run/chapter-09/intelligent-routing.html)
+- [当前模型路由指南](https://hiroute.ai/docs/model-routing/)
 - [0.3.1 发行说明](https://github.com/higress-group/HiRoute/releases/tag/v0.3.1)
 - [模型路由指南](https://github.com/higress-group/HiRoute/blob/v0.3.1/apps/website/content/guides/model-routing.zh.md)
 - [任务路由指南](https://github.com/higress-group/HiRoute/blob/v0.3.1/apps/website/content/guides/task-routing.zh.md)

@@ -2,7 +2,7 @@
 title: "HiRoute Technical Overview: Higress Team's Agent Routing and Model Collaboration Engine"
 description: "An analysis of HiRoute's task routing, model routing, Jev decision-making, ContextHold, stage competence scoring, and limited failover, with a discussion of official cost-reduction experiments, plus hands-on testing of Docker integration with DSH, protocol compatibility, failover, and restart-resume behavior"
 status: evolving
-last_reviewed: 2026-10-15
+last_reviewed: 2026-11-04
 ---
 
 # HiRoute Technical Overview: Higress Team's Agent Routing and Model Collaboration Engine
@@ -11,7 +11,7 @@ A programming task may start with researching materials and reading code, then m
 
 **HiRoute**, developed by the Higress team, attempts to manage this kind of choice. It provides local Agent task delegation, model integration, routing plans, and execution records, letting users keep their existing Agents while choosing appropriate models for different work. The project is licensed under Apache-2.0 and offers both a desktop application and a headless command-line version. [Project introduction](https://github.com/higress-group/HiRoute), [open-source description](https://github.com/higress-group/HiRoute/blob/main/news/hiroute-open-source.zh-CN.md)
 
-This article was verified on **October 15, 2026**. Release status is based on official Releases; mechanisms are cross-checked against `v0.3.1` and the main branch snapshot [`b4c1a927`](https://github.com/higress-group/HiRoute/commit/b4c1a92765bc94d0cfba273316275ba4e4231c78). Section 7 summarizes upstream experiments; Section 8.3 covers the Docker and DSH integration tests actually performed for this article. The enterprise integration diagram is an analytical suggestion.
+This article was updated on **November 4, 2026** against the official `v0.5.0` release and guides. The original mechanism analysis used `v0.3.1` and the then-current main branch snapshot [`b4c1a927`](https://github.com/higress-group/HiRoute/commit/b4c1a92765bc94d0cfba273316275ba4e4231c78); Sections 4.3–4.4 cover the newer trust and decision workflow. Section 7 summarizes upstream experiments. Our Docker and DSH test in Section 8.3 used **0.3.1** and is not a test of 0.5.0. The enterprise integration diagram is an analytical suggestion.
 
 ## 1. How It Relates to Higress
 
@@ -38,12 +38,13 @@ Based on official release records, HiRoute already has downloadable packages but
 | `v0.2.0` | 2026-10-08 | Release packages expanded to both CPU architectures for macOS and Linux |
 | `v0.3.0` | 2026-10-11 | Continued iteration of desktop and headless versions |
 | `v0.3.1` | 2026-10-12 | Fixed issues with subscription configuration, native session association, upgrade recovery, and model catalog |
+| `v0.5.0` | 2026-11-03 | Added Windows x64 Desktop and an authenticated Linux Web UI; improved model trials and stage assessment |
 
-Sources: [v0.1.0](https://github.com/higress-group/HiRoute/releases/tag/v0.1.0), [v0.2.0](https://github.com/higress-group/HiRoute/releases/tag/v0.2.0), [v0.3.0](https://github.com/higress-group/HiRoute/releases/tag/v0.3.0), [v0.3.1](https://github.com/higress-group/HiRoute/releases/tag/v0.3.1).
+Sources: [v0.1.0](https://github.com/higress-group/HiRoute/releases/tag/v0.1.0), [v0.2.0](https://github.com/higress-group/HiRoute/releases/tag/v0.2.0), [v0.3.0](https://github.com/higress-group/HiRoute/releases/tag/v0.3.0), [v0.3.1](https://github.com/higress-group/HiRoute/releases/tag/v0.3.1), [v0.5.0](https://github.com/higress-group/HiRoute/releases/tag/v0.5.0).
 
-As of this review, the latest stable version is **0.3.1**, providing macOS Desktop and Linux CLI packages for x86_64 and ARM64. The release notes explicitly state that Windows is not supported in this version; different architectures also have different levels of verification depth, so "successfully packaged" should not be treated as the same level of real-world usage verification.
+As of November 4, 2026, the latest release is **0.5.0**: macOS Desktop supports ARM64 and x86_64, Windows Desktop supports x64, and Linux provides an authenticated Web UI and CLI for ARM64 and x86_64. macOS packages are self-signed and the Windows installer is unsigned. Platform validation and unassessed cases differ; check the [release notes](https://github.com/higress-group/HiRoute/releases/tag/v0.5.0) and platform installation guides. Windows was not supported by 0.3.1, and our older experiment is not validation of the newer release on these platforms.
 
-With a GUI, connections, plans, tasks, and sessions can be managed from Desktop; on Linux, these capabilities are used via the CLI and the background daemon `hirouted`. Routing itself does not require GPU configuration; only when choosing to run execution models or decision models locally do you need to separately evaluate their inference resources.
+With a graphical interface, Desktop can manage connections, plans, tasks, and sessions; Linux in 0.5.0 also offers an authenticated Web UI, as well as the CLI and background daemon `hirouted`. Routing itself does not require GPU configuration; only when choosing to run execution models or decision models locally do you need to separately evaluate their inference resources.
 
 ## 3. Two Kinds of Routing: Who Gets the Work, and Which Model for This Stage
 
@@ -95,6 +96,30 @@ The default simple probability threshold for the two-model-group setup is **0.8*
 The low-score protection in the source code also checks whether the score belongs to the previous actual stage, whether it matches the current round's category and the published plan version, and whether the scoring criteria match. Missing scores, incomplete evidence, or cross-category scores are not treated as zero; historical low scores do not indefinitely persist as a permanent upgrade state. [Group selection implementation](https://github.com/higress-group/HiRoute/blob/v0.3.1/crates/gateway/src/core_runtime/classification/group_policy.rs)
 
 The judgment service itself can also time out or return invalid results. Current rules provide a heuristic fallback for smart savings, while custom branching falls back to the preconfigured default category; when a category requires two model groups and complexity is unavailable, the primary group is selected. Both the normal path and the fallback path should be observed; otherwise the plan may say "review" while actual execution has already fallen back to the default branch. [Decision operations and execution boundaries](https://github.com/higress-group/HiRoute/blob/v0.3.1/crates/gateway/README.md)
+
+### 4.3 Version 0.5: Build Trust in a New Model Through Real Work
+
+The [new release introduction](https://mp.weixin.qq.com/s/n8Qd63JFUQrIK8QybwWuOg) and [official intelligent-routing discussion](https://aliyun.github.io/ai-agent-handbook/run/chapter-09/intelligent-routing.html) emphasize that public leaderboards can shortlist models but cannot establish whether they work on your own codebase and tasks. Put the new model in the regular group, keep a familiar primary group, and begin with simpler work.
+
+1. **Create a route:** Start from the home page's new-model trial or configure the regular group, primary group, and decision model manually. Publish the route and connect it to the existing Agent.
+2. **Set trust:** The newer interface offers five levels—Trial, Familiar, Trusted, Hands-off, and Entrusted—or an exact value. The setting changes the simple-probability threshold: lowering it allows more work to reach the regular group. New plans default to Familiar at 0.8. Trust does not change tool approvals, Agent permissions, or sandbox boundaries. [Model routing guide](https://hiroute.ai/docs/model-routing/)
+3. **Observe and replay:** Inspect the session timeline for the actual model, selection reason, usage, and score coverage, then review the model-performance report. The official article describes an increase suggestion after at least 30 scored steps since the last adjustment, at least three sessions, at least 60% score coverage, and at least 85% of scored steps meeting the competence floor; it suggests decreasing trust if fewer than 70% of at least 30 scored steps meet it. These are reported suggestion rules, not a production quality guarantee.
+4. **Decide whether to publish:** Replay the proposed setting against historical records, inspect which stages might change group, then confirm and publish. Replay estimates historical allocation; it does not rerun the old tasks or guarantee future savings or quality.
+
+The competence score is a decision model's assessment of a stage, not a human acceptance verdict. Also examine test success, human samples, task completion, rework, and total cost. Report unscored and partially evidenced stages separately rather than treating them as successes or generalizing one low score to the whole model. Check authorization and data-egress rules before sending business code or user input to an external decision service.
+
+### 4.4 From Two Judgments to Three Questions: Does the Previous Problem Still Matter?
+
+The new explanation separates three questions: **how simple is the current work, how did the preceding stage perform, and does its problem still affect the current work?** Code then selects a group using the published policy and thresholds instead of asking the model to apply the whole policy directly. For example, if a document failed to meet requirements, the primary model may take over a related rewrite; once the problem is resolved and the user asks for a data export, the new work is assessed again. Check low-score applicability, history completeness, and fallback behavior for the specific version and client. [Official model routing guide](https://hiroute.ai/docs/model-routing/)
+
+The upstream comparison reports the following offline results for direct selection versus the three-question approach:
+
+| Scenario | Decision model A: direct → three questions | Decision model B: direct → three questions |
+| --- | --- | --- |
+| Engineering | 67.31% → 96.15% | 50.00% → 91.35% |
+| Mathematical dependency state | 54.86% → 100% | 65.97% → 88.89% |
+
+These figures from the [official experiment discussion](https://aliyun.github.io/ai-agent-handbook/run/chapter-09/intelligent-routing.html) measure **conformance to the stated group-selection policy** for that dataset, not task completion, actual billed savings, or a universal result across models. The scoring model can also be wrong. Enterprise evaluation should retain compliant decision inputs, sample and scoring coverage, and independent acceptance of the actual deliverable.
 
 ## 5. ContextHold: Why Not Switch Models After Every Tool Call
 
@@ -159,7 +184,9 @@ For initial integration, it is best to first establish a fixed model path, confi
 
 ### 8.1 Desktop and Linux
 
-For the desktop version, choose the package matching your platform from the [official Release](https://github.com/higress-group/HiRoute/releases). The official Linux installer runs under the current user and does not require sudo; if you want to inspect the script first, you can execute it step by step:
+Enable and authenticate the Linux Web UI in 0.5.0 according to the official guide. For remote access, review the listening address, authentication, and network access boundary. Windows x64 installs for the current user. Follow the official recovery guides for upgrades or rollback and retain matching programs and complete data. The CLI commands below are an introduction; Sections 8.2–8.3 preserve the historical 0.3.1 workflow and do not establish that the new commands and screens are identical. [Installation entry point](https://hiroute.ai/docs/)
+
+For Desktop, choose the package matching your platform from the [official Release](https://github.com/higress-group/HiRoute/releases). The official Linux installer runs under the current user and does not require sudo; if you want to inspect the script first, you can execute it step by step:
 
 ```sh
 curl -fsSLo hiroute-install.sh https://hiroute.ai/install.sh
@@ -353,7 +380,7 @@ This completes the basic flow from preparing input, submitting, querying, to ret
 
 ### 8.3 Docker Measured Test: After Connecting DSH, Which Capabilities Actually Worked
 
-This test installed **HiRoute 0.3.1** in an independent Docker container, connected to an existing OpenAI-compatible model API, and had DeepSeek Harness perform file operations and tests. The container was limited to **2 vCPU, 4 GiB memory**, running Linux ARM64; DSH was **0.2.1-alpha.3**, Node.js was **24.22.0**. This verifies routing and Agent integration, and does not involve local model loading or GPU throughput testing.
+This test installed **HiRoute 0.3.1** in an independent Docker container, connected to an existing OpenAI-compatible model API, and had DeepSeek Harness perform file operations and tests. The container was limited to **2 vCPU, 4 GiB memory**, running Linux ARM64; DSH was **0.2.1-alpha.3**, Node.js was **24.22.0**. This verifies routing and Agent integration, and does not involve local model loading or GPU throughput testing. The experiment was not deployed to Kubernetes or the sr1 cluster, and it did not test the 0.5.0 Linux Web UI, trust recommendations, or historical replay.
 
 The installation package was pinned to the official ARM64 standalone package from `v0.3.1`. The file name, size, and SHA-256 in the release manifest were verified first, then the official installer was run. The container used an independent HOME, workspace, and evidence volume, and did not mount the host's Agent configuration. The service was started in the foreground with `hiroute service run`, without relying on a systemd user service existing in the container.
 
@@ -496,6 +523,10 @@ Related content: [Higress AI Gateway](../inference/higress-ai-gateway.md), [AI G
 ## References
 
 - [HiRoute official repository](https://github.com/higress-group/HiRoute)
+- [0.5.0 release notes](https://github.com/higress-group/HiRoute/releases/tag/v0.5.0)
+- [New release introduction: choosing models based on real work](https://mp.weixin.qq.com/s/n8Qd63JFUQrIK8QybwWuOg)
+- [Intelligent routing and economical models](https://aliyun.github.io/ai-agent-handbook/run/chapter-09/intelligent-routing.html)
+- [Current model routing guide](https://hiroute.ai/docs/model-routing/)
 - [0.3.1 release notes](https://github.com/higress-group/HiRoute/releases/tag/v0.3.1)
 - [Model routing guide](https://github.com/higress-group/HiRoute/blob/v0.3.1/apps/website/content/guides/model-routing.zh.md)
 - [Task routing guide](https://github.com/higress-group/HiRoute/blob/v0.3.1/apps/website/content/guides/task-routing.zh.md)
