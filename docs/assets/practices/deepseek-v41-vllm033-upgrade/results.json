@@ -1,0 +1,890 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-03",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "model_revision": "fb2764a5cf321eaa5070ca8f9e892818f477c16d",
+  "hardware": "8 x H20-3e",
+  "comparison": "historical 0.32 vs 0.33 on different dates and nodes; not a strict paired test",
+  "client_sha256": "1c02882a16a8ce4db7188f418e89339502bbd5e25f2ac36028275e5527988184",
+  "main_cases": [
+    {
+      "case": "short-c32",
+      "v032": {
+        "median_output_tps": 1015.7661639055079,
+        "success": 190,
+        "requests": 192
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "FAILED",
+            "requests": 64,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "410856b3026146c3d3ce67ecefca8eee376dd5ded72eb0f30114fae336f3af8f",
+            "completed": 63,
+            "failed": 1,
+            "duration": 6.348582970909774,
+            "output_throughput": 1270.2047113427582,
+            "p95_ttft_ms": 1324.7806267812848,
+            "p95_tpot_ms": 22.012838821374174,
+            "p95_e2el_ms": 3486.925929086283
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 64,
+            "error": null,
+            "source_sha256": "40a75fb6e4410276e941408b4555bf0a4732bfd4a637fcf56bc202c322b06414",
+            "completed": 64,
+            "failed": 0,
+            "duration": 6.182918226812035,
+            "output_throughput": 1324.9406994379522,
+            "p95_ttft_ms": 1337.657592119649,
+            "p95_tpot_ms": 20.66941139357912,
+            "p95_e2el_ms": 3214.247126597911
+          },
+          {
+            "repeat": 3,
+            "status": "PASS",
+            "requests": 64,
+            "error": null,
+            "source_sha256": "796246c9ba3db5f090f321b874971b883df4a784b03cfb1536e34efc90b34f35",
+            "completed": 64,
+            "failed": 0,
+            "duration": 6.193194307852536,
+            "output_throughput": 1322.7422865794988,
+            "p95_ttft_ms": 1340.0856709340587,
+            "p95_tpot_ms": 21.134706867279437,
+            "p95_e2el_ms": 3442.6444021984935
+          }
+        ],
+        "median_output_tps": 1322.7422865794988,
+        "success": 191,
+        "requests_completed_rounds": 192
+      }
+    },
+    {
+      "case": "prefill-c1",
+      "v032": {
+        "median_output_tps": 82.9356958346799,
+        "success": 24,
+        "requests": 24
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "PASS",
+            "requests": 8,
+            "error": null,
+            "source_sha256": "adee08053f5a206b3b5384a9cc53909183daecfe3eb06ab2fd4f4657ed55a501",
+            "completed": 8,
+            "failed": 0,
+            "duration": 11.091135488357395,
+            "output_throughput": 92.32598421279002,
+            "p95_ttft_ms": 328.5714990692213,
+            "p95_tpot_ms": 8.34791608884432,
+            "p95_e2el_ms": 1386.955624539405
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 8,
+            "error": null,
+            "source_sha256": "50aa0da93e57c5837093137aee3dd3fe0173b34be7a4d91fa1a0ef0bdededf82",
+            "completed": 8,
+            "failed": 0,
+            "duration": 11.103745572268963,
+            "output_throughput": 92.22113325051212,
+            "p95_ttft_ms": 328.8600620115176,
+            "p95_tpot_ms": 8.358888617005405,
+            "p95_e2el_ms": 1388.5958889033645
+          },
+          {
+            "repeat": 3,
+            "status": "PASS",
+            "requests": 8,
+            "error": null,
+            "source_sha256": "f92b3995b1cd65770c57d7711d966a4e63b55e0ce5d6479656c66aff3df0a5f1",
+            "completed": 8,
+            "failed": 0,
+            "duration": 11.123147649224848,
+            "output_throughput": 92.06027217227138,
+            "p95_ttft_ms": 333.8373110629618,
+            "p95_tpot_ms": 8.347463567088557,
+            "p95_e2el_ms": 1391.929474612698
+          }
+        ],
+        "median_output_tps": 92.22113325051212,
+        "success": 24,
+        "requests_completed_rounds": 24
+      },
+      "change_pct_historical_reference": 11.19594804430335
+    },
+    {
+      "case": "prefill-c8",
+      "v032": {
+        "median_output_tps": 217.46371006155644,
+        "success": 48,
+        "requests": 48
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "PASS",
+            "requests": 16,
+            "error": null,
+            "source_sha256": "b9c32b93cf232f9805d90cf48c8c6dc0e158e9f4a4fa652db0cabd999b49618d",
+            "completed": 16,
+            "failed": 0,
+            "duration": 7.010820631869137,
+            "output_throughput": 292.1198683489907,
+            "p95_ttft_ms": 2356.6669018473476,
+            "p95_tpot_ms": 24.484403870493818,
+            "p95_e2el_ms": 4169.388896087185
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 16,
+            "error": null,
+            "source_sha256": "a87ffee735098aed0264a43899b3c90850a063a159eeff47a35e9ead6b1a31d2",
+            "completed": 16,
+            "failed": 0,
+            "duration": 7.0568874310702085,
+            "output_throughput": 290.2129331102865,
+            "p95_ttft_ms": 2349.167028791271,
+            "p95_tpot_ms": 24.63440197120296,
+            "p95_e2el_ms": 4190.9492128761485
+          },
+          {
+            "repeat": 3,
+            "status": "PASS",
+            "requests": 16,
+            "error": null,
+            "source_sha256": "e8eb30cfb5dad40b0f877d5fffbb983116dd409276631247357e387e1d386635",
+            "completed": 16,
+            "failed": 0,
+            "duration": 7.019957304932177,
+            "output_throughput": 291.73966607476206,
+            "p95_ttft_ms": 2364.9962205672637,
+            "p95_tpot_ms": 22.90632906663195,
+            "p95_e2el_ms": 4180.957852979191
+          }
+        ],
+        "median_output_tps": 291.73966607476206,
+        "success": 48,
+        "requests_completed_rounds": 48
+      },
+      "change_pct_historical_reference": 34.155563699423986
+    },
+    {
+      "case": "prefill-c32",
+      "v032": {
+        "median_output_tps": 263.13658615903825,
+        "success": 190,
+        "requests": 192
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "PASS",
+            "requests": 64,
+            "error": null,
+            "source_sha256": "e7f0df32e6a6e51d0452208e7f11374f267d84030ae0b2dc560cb3c3c94fd960",
+            "completed": 64,
+            "failed": 0,
+            "duration": 21.833459618967026,
+            "output_throughput": 375.20393666258445,
+            "p95_ttft_ms": 8967.456403723916,
+            "p95_tpot_ms": 75.04049354254846,
+            "p95_e2el_ms": 17764.917766535655
+          },
+          {
+            "repeat": 2,
+            "status": "FAILED",
+            "requests": 64,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "ebe56c3e3a02efff2c8617182afdeeb20d5ba4643d58b30f6b1df66db40f3035",
+            "completed": 62,
+            "failed": 2,
+            "duration": 21.84950148779899,
+            "output_throughput": 363.21194808181565,
+            "p95_ttft_ms": 8711.294423812067,
+            "p95_tpot_ms": 75.61411208227483,
+            "p95_e2el_ms": 18037.6391014317
+          },
+          {
+            "repeat": 3,
+            "status": "PASS",
+            "requests": 64,
+            "error": null,
+            "source_sha256": "baa1e9338a8fce60547e65dcfd1372a39ddeaf60f913f0b1418eedc8924f5f52",
+            "completed": 64,
+            "failed": 0,
+            "duration": 21.806851972825825,
+            "output_throughput": 375.66174201614695,
+            "p95_ttft_ms": 8672.037538606672,
+            "p95_tpot_ms": 74.61564410789539,
+            "p95_e2el_ms": 17725.09471043013
+          }
+        ],
+        "median_output_tps": 375.20393666258445,
+        "success": 190,
+        "requests_completed_rounds": 192
+      }
+    },
+    {
+      "case": "decode-c1",
+      "v032": {
+        "median_output_tps": 113.69485272974184,
+        "success": 24,
+        "requests": 24
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "PASS",
+            "requests": 8,
+            "error": null,
+            "source_sha256": "703211e6c2157c1bf2630d85cc1d9b3173c0a970973906f8f6da55d5cd1c6209",
+            "completed": 8,
+            "failed": 0,
+            "duration": 35.51509393425658,
+            "output_throughput": 115.33124500760916,
+            "p95_ttft_ms": 157.13091793004423,
+            "p95_tpot_ms": 8.405542398170512,
+            "p95_e2el_ms": 4449.4935910450295
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 8,
+            "error": null,
+            "source_sha256": "22267b356591fa386120efeb7bad041d459bc32c615ae50382621121733fa9b2",
+            "completed": 8,
+            "failed": 0,
+            "duration": 35.518285082653165,
+            "output_throughput": 115.32088304568659,
+            "p95_ttft_ms": 148.03115911781788,
+            "p95_tpot_ms": 8.425296246167091,
+            "p95_e2el_ms": 4451.899289549328
+          },
+          {
+            "repeat": 3,
+            "status": "PASS",
+            "requests": 8,
+            "error": null,
+            "source_sha256": "90b2f12e2663cc35f08330321b14e5fcf8e61e5f1c6d3eef7cb85d2f845b5c78",
+            "completed": 8,
+            "failed": 0,
+            "duration": 35.534613406751305,
+            "output_throughput": 115.26789255069794,
+            "p95_ttft_ms": 157.37498889211565,
+            "p95_tpot_ms": 8.400008674854972,
+            "p95_e2el_ms": 4448.148916382343
+          }
+        ],
+        "median_output_tps": 115.32088304568659,
+        "success": 24,
+        "requests_completed_rounds": 24
+      },
+      "change_pct_historical_reference": 1.430170563490596
+    },
+    {
+      "case": "decode-c8",
+      "v032": {
+        "median_output_tps": 676.9298843019969,
+        "success": 48,
+        "requests": 48
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "PASS",
+            "requests": 16,
+            "error": null,
+            "source_sha256": "c74f480b1e48e58989b4b37ea1485dbc53238ea0a47baab5ff80aa62b2a4f0d5",
+            "completed": 16,
+            "failed": 0,
+            "duration": 10.688399266917259,
+            "output_throughput": 766.4384343646185,
+            "p95_ttft_ms": 435.0502217421308,
+            "p95_tpot_ms": 10.111073159827775,
+            "p95_e2el_ms": 5344.663039199077
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 16,
+            "error": null,
+            "source_sha256": "7979380fd894b2e913db56c1aed335d771cd1431448ee8daf74b020f88eab5e7",
+            "completed": 16,
+            "failed": 0,
+            "duration": 10.770787581801414,
+            "output_throughput": 760.5757645653882,
+            "p95_ttft_ms": 435.97504682838917,
+            "p95_tpot_ms": 10.151518080948529,
+            "p95_e2el_ms": 5457.469821791165
+          },
+          {
+            "repeat": 3,
+            "status": "FAILED",
+            "requests": 16,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "bb54c16328bf4d0a36aedb4525cbc1d1bdc88b8874b6b784109340cdde09ba84",
+            "completed": 15,
+            "failed": 1,
+            "duration": 10.496279531158507,
+            "output_throughput": 731.6878306452967,
+            "p95_ttft_ms": 438.5671488009393,
+            "p95_tpot_ms": 9.887356482584707,
+            "p95_e2el_ms": 5310.58164681308
+          }
+        ],
+        "median_output_tps": 760.5757645653882,
+        "success": 47,
+        "requests_completed_rounds": 48
+      }
+    },
+    {
+      "case": "decode-c32",
+      "v032": {
+        "median_output_tps": 1576.3884807289908,
+        "success": 190,
+        "requests": 192
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "FAILED",
+            "requests": 64,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "eb4748f85f07c303538e062ad6466d9b9bf596753f09774ef7d7c737d528ca5d",
+            "completed": 63,
+            "failed": 1,
+            "duration": 17.049597710371017,
+            "output_throughput": 1891.8921459583269,
+            "p95_ttft_ms": 1338.1504049059004,
+            "p95_tpot_ms": 16.033699828675726,
+            "p95_e2el_ms": 8655.7710618712
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 64,
+            "error": null,
+            "source_sha256": "29fe0080d95d77f74a75034878a99d999dbafa162c5c98e020af45f9ec7e7a9a",
+            "completed": 64,
+            "failed": 0,
+            "duration": 16.771918260958046,
+            "output_throughput": 1953.7419328043056,
+            "p95_ttft_ms": 1342.7690512500703,
+            "p95_tpot_ms": 15.49596986979421,
+            "p95_e2el_ms": 8567.375753098167
+          },
+          {
+            "repeat": 3,
+            "status": "FAILED",
+            "requests": 64,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "681a6e341271a78310b2cf981011ce876b3ae40cd959a8935caa828ad5c23d6d",
+            "completed": 63,
+            "failed": 1,
+            "duration": 16.685073686763644,
+            "output_throughput": 1933.2249054188387,
+            "p95_ttft_ms": 1345.0793630909175,
+            "p95_tpot_ms": 15.606916701209727,
+            "p95_e2el_ms": 8429.977039527148
+          }
+        ],
+        "median_output_tps": 1933.2249054188387,
+        "success": 190,
+        "requests_completed_rounds": 192
+      }
+    },
+    {
+      "case": "long-c1",
+      "v032": {
+        "median_output_tps": 52.24903549561852,
+        "success": 23,
+        "requests": 24
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "FAILED",
+            "requests": 8,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "6b38aa6bd9132f09b71d7cc4b0ef01b3721e804ec2a3441c07833ffa8b01ee44",
+            "completed": 7,
+            "failed": 1,
+            "duration": 16.153824598994106,
+            "output_throughput": 55.46674067860027,
+            "p95_ttft_ms": 975.2465298399329,
+            "p95_tpot_ms": 8.265917015254615,
+            "p95_e2el_ms": 2020.1727882027626
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 8,
+            "error": null,
+            "source_sha256": "5d7be074e3c8b8ae3d382bee50a88aaf8a843768555bc93e163d6cfed95ad342",
+            "completed": 8,
+            "failed": 0,
+            "duration": 16.152279988862574,
+            "output_throughput": 63.39662268769952,
+            "p95_ttft_ms": 969.5845012087375,
+            "p95_tpot_ms": 8.337274010065855,
+            "p95_e2el_ms": 2020.0663150288162
+          },
+          {
+            "repeat": 3,
+            "status": "PASS",
+            "requests": 8,
+            "error": null,
+            "source_sha256": "f04d770b4a3b8b140dd551969841cf67bd5bb2323cdd10a87bf64e8a18f41643",
+            "completed": 8,
+            "failed": 0,
+            "duration": 16.158814682159573,
+            "output_throughput": 63.370984824187964,
+            "p95_ttft_ms": 974.0702622802928,
+            "p95_tpot_ms": 8.333652109039697,
+            "p95_e2el_ms": 2021.320556337014
+          }
+        ],
+        "median_output_tps": 63.370984824187964,
+        "success": 23,
+        "requests_completed_rounds": 24
+      }
+    },
+    {
+      "case": "long-c8",
+      "v032": {
+        "median_output_tps": 87.57200997911679,
+        "success": 47,
+        "requests": 48
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "FAILED",
+            "requests": 16,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "9535e613f9140ed95394f25e3d28517ce9109828be85c122805f8704e2879012",
+            "completed": 15,
+            "failed": 1,
+            "duration": 16.553162946831435,
+            "output_throughput": 115.98991722409895,
+            "p95_ttft_ms": 6873.869898729025,
+            "p95_tpot_ms": 48.35408114439507,
+            "p95_e2el_ms": 11114.502424933014
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 16,
+            "error": null,
+            "source_sha256": "830a3a4eebd45eaa42e2f56c42b5b9f8e9127b4d39caeb5739082c7e2ba9bfe9",
+            "completed": 16,
+            "failed": 0,
+            "duration": 16.510806770063937,
+            "output_throughput": 124.03997142727565,
+            "p95_ttft_ms": 6848.61232212279,
+            "p95_tpot_ms": 53.28286929866372,
+            "p95_e2el_ms": 11048.900843248703
+          },
+          {
+            "repeat": 3,
+            "status": "PASS",
+            "requests": 16,
+            "error": null,
+            "source_sha256": "f4e92e28ca285a9f1413621b1b9f6d0eb5b93c0ddbd45be3acdfa8fd4ed82f10",
+            "completed": 16,
+            "failed": 0,
+            "duration": 16.574968194123358,
+            "output_throughput": 123.55981477696692,
+            "p95_ttft_ms": 6664.558793418109,
+            "p95_tpot_ms": 53.337847839630264,
+            "p95_e2el_ms": 11118.24518314097
+          }
+        ],
+        "median_output_tps": 123.55981477696692,
+        "success": 47,
+        "requests_completed_rounds": 48
+      }
+    },
+    {
+      "case": "long-c32",
+      "v032": {
+        "median_output_tps": 94.78169369859354,
+        "success": 189,
+        "requests": 192
+      },
+      "v033": {
+        "rounds": [
+          {
+            "repeat": 1,
+            "status": "FAILED",
+            "requests": 64,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "bfffea9df58cc00f2e83d4b314b233da9bedee15e584d532c8a66eec028b7f15",
+            "completed": 63,
+            "failed": 1,
+            "duration": 58.52237204974517,
+            "output_throughput": 137.7934577420314,
+            "p95_ttft_ms": 25965.773546416312,
+            "p95_tpot_ms": 206.65713685828695,
+            "p95_e2el_ms": 50943.31464292481
+          },
+          {
+            "repeat": 2,
+            "status": "PASS",
+            "requests": 64,
+            "error": null,
+            "source_sha256": "7edaffd8173f0d47949f50c64ab29e0c08464ef9672e3b645674c2c3a0946e6c",
+            "completed": 64,
+            "failed": 0,
+            "duration": 58.555977505631745,
+            "output_throughput": 139.9003201545413,
+            "p95_ttft_ms": 25877.639585197896,
+            "p95_tpot_ms": 208.44060835798865,
+            "p95_e2el_ms": 51142.16848842333
+          },
+          {
+            "repeat": 3,
+            "status": "FAILED",
+            "requests": 64,
+            "error": "AssertionError('Incomplete/invalid requests; original denominator retained')",
+            "source_sha256": "53bcb5a97236dd0d34d926de25fdd2c7724f1af59f1ccc5b8351c18c77630f44",
+            "completed": 63,
+            "failed": 1,
+            "duration": 58.53272791719064,
+            "output_throughput": 137.76907871795365,
+            "p95_ttft_ms": 25080.612492235374,
+            "p95_tpot_ms": 208.77508332725526,
+            "p95_e2el_ms": 50381.44595581107
+          }
+        ],
+        "median_output_tps": 137.7934577420314,
+        "success": 190,
+        "requests_completed_rounds": 192
+      }
+    }
+  ],
+  "supplement_cases": [
+    {
+      "case": "short-c1",
+      "variants": {
+        "v032": {
+          "rounds": [
+            {
+              "case": "short-c1",
+              "repeat": 1,
+              "requests": 8,
+              "completed": 8,
+              "duration": 9.865081225521863,
+              "output_throughput": 103.80046312754313,
+              "p95_ttft_ms": 161.8334754370153,
+              "p95_tpot_ms": 8.531800621211177,
+              "p95_e2el_ms": 1234.1909926384687,
+              "source_sha256": "c9e5ceccf23b0edfc4d36bac858689cef187f8f8d0f8c4fa68a6a5e7dc6c39ed"
+            },
+            {
+              "case": "short-c1",
+              "repeat": 2,
+              "requests": 8,
+              "completed": 8,
+              "duration": 9.871326483786106,
+              "output_throughput": 103.7347920446097,
+              "p95_ttft_ms": 151.1614377144724,
+              "p95_tpot_ms": 8.552266581819987,
+              "p95_e2el_ms": 1235.6225989293307,
+              "source_sha256": "773693a54e4405093d4f1b9a2d30f8ed04b4a029fa5c26ad61c697ad70f64104"
+            },
+            {
+              "case": "short-c1",
+              "repeat": 3,
+              "requests": 8,
+              "completed": 8,
+              "duration": 9.853729349561036,
+              "output_throughput": 103.9200452614032,
+              "p95_ttft_ms": 166.42401819117367,
+              "p95_tpot_ms": 8.511405320852761,
+              "p95_e2el_ms": 1236.992962518707,
+              "source_sha256": "50449ea83ffd56960fc51e55171ccb29053b8ee098bdd29bf107e0c8b4f329b3"
+            }
+          ],
+          "output_token_per_s_median": 103.80046312754313,
+          "success": 24,
+          "requests": 24
+        },
+        "v033": {
+          "rounds": [
+            {
+              "case": "short-c1",
+              "repeat": 1,
+              "requests": 8,
+              "completed": 8,
+              "duration": 9.735079821199179,
+              "output_throughput": 105.18660543184559,
+              "p95_ttft_ms": 161.21861143037677,
+              "p95_tpot_ms": 8.405254411467123,
+              "p95_e2el_ms": 1218.7659437768161,
+              "source_sha256": "4f870b36f406520eee8ce38f39f532290d91cd51f3b4c484800b4748cce36231"
+            },
+            {
+              "case": "short-c1",
+              "repeat": 2,
+              "requests": 8,
+              "completed": 8,
+              "duration": 9.733035361859947,
+              "output_throughput": 105.20870025939342,
+              "p95_ttft_ms": 150.57420255616307,
+              "p95_tpot_ms": 8.431890535381013,
+              "p95_e2el_ms": 1218.6945983441547,
+              "source_sha256": "5279618f0db489a3044d9ccc8ac59af7fda07c4f7adad3fcde5aafce428a54a3"
+            },
+            {
+              "case": "short-c1",
+              "repeat": 3,
+              "requests": 8,
+              "completed": 8,
+              "duration": 9.72324366075918,
+              "output_throughput": 105.31464969171071,
+              "p95_ttft_ms": 159.43281664513052,
+              "p95_tpot_ms": 8.397899945926538,
+              "p95_e2el_ms": 1215.2974410913885,
+              "source_sha256": "5586bf6bb3eb526536879aec3bab8e296a1e3596fd1a051f015b4f083e66b9a1"
+            }
+          ],
+          "output_token_per_s_median": 105.20870025939342,
+          "success": 24,
+          "requests": 24
+        }
+      },
+      "request_fingerprints_match": true
+    },
+    {
+      "case": "short-c8",
+      "variants": {
+        "v032": {
+          "rounds": [
+            {
+              "case": "short-c8",
+              "repeat": 1,
+              "requests": 16,
+              "completed": 16,
+              "duration": 3.8267570165917277,
+              "output_throughput": 535.1790017292594,
+              "p95_ttft_ms": 583.3993547130376,
+              "p95_tpot_ms": 13.550121846836149,
+              "p95_e2el_ms": 1931.2006356194615,
+              "source_sha256": "ee495efaa627daf5bd53307014a0fbd9afa489e6154ab2bdd143d191cf81a203"
+            },
+            {
+              "case": "short-c8",
+              "repeat": 2,
+              "requests": 16,
+              "completed": 16,
+              "duration": 3.8577701123431325,
+              "output_throughput": 530.876630892888,
+              "p95_ttft_ms": 555.3658613935113,
+              "p95_tpot_ms": 13.828981440426327,
+              "p95_e2el_ms": 1940.3507832903415,
+              "source_sha256": "24ac68dd0b46386f632a6a3663f2848a1326a51c277a72f704f096e11ed4439c"
+            },
+            {
+              "case": "short-c8",
+              "repeat": 3,
+              "requests": 16,
+              "completed": 16,
+              "duration": 3.7559170685708523,
+              "output_throughput": 545.2729553422423,
+              "p95_ttft_ms": 564.3693222664297,
+              "p95_tpot_ms": 13.397051254287362,
+              "p95_e2el_ms": 1896.4248271659017,
+              "source_sha256": "654198c9d4cf8651556f33a629290abdce32804a7d1eb59fbe6418a02bb2ecc9"
+            }
+          ],
+          "output_token_per_s_median": 535.1790017292594,
+          "success": 48,
+          "requests": 48
+        },
+        "v033": {
+          "rounds": [
+            {
+              "case": "short-c8",
+              "repeat": 1,
+              "requests": 16,
+              "completed": 16,
+              "duration": 3.287966731004417,
+              "output_throughput": 622.8773486933584,
+              "p95_ttft_ms": 439.0522231115028,
+              "p95_tpot_ms": 11.53473437884749,
+              "p95_e2el_ms": 1648.9145688246936,
+              "source_sha256": "788eb222e9af3ce50360e817a5e5d07fb9545914ebee7850762ea964b1716e33"
+            },
+            {
+              "case": "short-c8",
+              "repeat": 2,
+              "requests": 16,
+              "completed": 16,
+              "duration": 3.3081304589286447,
+              "output_throughput": 619.0807845780228,
+              "p95_ttft_ms": 437.1376804774627,
+              "p95_tpot_ms": 11.66757956370858,
+              "p95_e2el_ms": 1673.0626133503392,
+              "source_sha256": "073587408f9f96ef8ab1efe196a0f48ef11aa7d9c4946bb489d69495befa8342"
+            },
+            {
+              "case": "short-c8",
+              "repeat": 3,
+              "requests": 16,
+              "completed": 16,
+              "duration": 3.2541524772532284,
+              "output_throughput": 629.3497352431008,
+              "p95_ttft_ms": 441.7135837720707,
+              "p95_tpot_ms": 11.469180977125983,
+              "p95_e2el_ms": 1641.1279203603044,
+              "source_sha256": "d117d52c18f726e6c0d70aaa4fe47f8e84ead6b8c4f57bf1ade43eff98c24854"
+            }
+          ],
+          "output_token_per_s_median": 622.8773486933584,
+          "success": 48,
+          "requests": 48
+        }
+      },
+      "request_fingerprints_match": true
+    },
+    {
+      "case": "4k-c32",
+      "variants": {
+        "v032": {
+          "rounds": [
+            {
+              "case": "4k-c32-block1",
+              "repeat": 1,
+              "requests": 128,
+              "completed": 128,
+              "duration": 35.56599119864404,
+              "output_throughput": 460.6647937489408,
+              "p95_ttft_ms": 5830.809566145763,
+              "p95_tpot_ms": 63.29298009692624,
+              "p95_e2el_ms": 12724.882684554901,
+              "source_sha256": "5b4279efa2212502664e8b67b13e2348756c130db1651fd274ebab5becfe4ba6"
+            },
+            {
+              "case": "4k-c32-block2",
+              "repeat": 1,
+              "requests": 128,
+              "completed": 128,
+              "duration": 35.37126320041716,
+              "output_throughput": 463.2008731824644,
+              "p95_ttft_ms": 5825.637404248118,
+              "p95_tpot_ms": 63.282169667475905,
+              "p95_e2el_ms": 12481.124730315056,
+              "source_sha256": "aa29bb806ed7d56abcb5960fe043e5698a6de11bbfc7ee8eb7d9ecbff0d5c47f"
+            },
+            {
+              "case": "4k-c32-block3",
+              "repeat": 1,
+              "requests": 128,
+              "completed": 128,
+              "duration": 35.302626391872764,
+              "output_throughput": 464.1014472444991,
+              "p95_ttft_ms": 5821.842067549005,
+              "p95_tpot_ms": 63.09613520059528,
+              "p95_e2el_ms": 12494.689917052161,
+              "source_sha256": "4b9d2fa325f9140a1bd5858b0c12a416675281ca1ffd5137121e4b05628aac4f"
+            }
+          ],
+          "output_token_per_s_median": 463.2008731824644,
+          "success": 384,
+          "requests": 384
+        },
+        "v033": {
+          "rounds": [
+            {
+              "case": "4k-c32-block1",
+              "repeat": 1,
+              "requests": 128,
+              "completed": 128,
+              "duration": 25.768624452874064,
+              "output_throughput": 635.8119747510478,
+              "p95_ttft_ms": 4164.967595273627,
+              "p95_tpot_ms": 45.81960165766837,
+              "p95_e2el_ms": 9202.667202427983,
+              "source_sha256": "890719a2cc9a0282269a2d1c6f394bc102fcc53f49076c18d613501135ba336b"
+            },
+            {
+              "case": "4k-c32-block2",
+              "repeat": 1,
+              "requests": 128,
+              "completed": 128,
+              "duration": 25.461504194885492,
+              "output_throughput": 643.4812285478047,
+              "p95_ttft_ms": 3976.831980678253,
+              "p95_tpot_ms": 45.80135998723103,
+              "p95_e2el_ms": 8799.384257104246,
+              "source_sha256": "80ba49ebdaadfba41caebbeffbe17053d3391e61cd0f0679356d5225a85dd5bb"
+            },
+            {
+              "case": "4k-c32-block3",
+              "repeat": 1,
+              "requests": 128,
+              "completed": 128,
+              "duration": 25.491902565117925,
+              "output_throughput": 642.7138954476939,
+              "p95_ttft_ms": 3979.805623809807,
+              "p95_tpot_ms": 45.83569791252306,
+              "p95_e2el_ms": 8637.151353107765,
+              "source_sha256": "f5250519fc2d8db9df98bea11397b5eaf7503ddb52fd786dd9a456fa4d338ecb"
+            }
+          ],
+          "output_token_per_s_median": 642.7138954476939,
+          "success": 384,
+          "requests": 384
+        }
+      },
+      "request_fingerprints_match": true
+    }
+  ],
+  "main_requests": {
+    "v032": {
+      "successful": 973,
+      "total": 984
+    },
+    "v033": {
+      "successful": 974,
+      "total": 984
+    }
+  },
+  "supplement_requests": {
+    "v032": {
+      "successful": 456,
+      "total": 456
+    },
+    "v033": {
+      "successful": 456,
+      "total": 456
+    }
+  },
+  "main_invalid_033": {
+    "http_200_and_done_and_usage": 10,
+    "empty_text": 10,
+    "finish_reason_length": 10,
+    "completion_tokens_128": 7,
+    "completion_tokens_512": 3
+  },
+  "open_loop": "not rerun on 0.33"
+}
