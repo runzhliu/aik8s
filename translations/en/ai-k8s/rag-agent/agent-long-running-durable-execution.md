@@ -2,7 +2,7 @@
 title: "Principles and Community Practice of Agent Long-Task Interruption and Resumption"
 description: "Explains how hour-long agent tasks recover after process crashes, network disconnects, and manual pauses, comparing LangGraph, Temporal, Restate, DBOS, Mastra, and session recovery, with reproducible interruption experiments and Kubernetes architecture recommendations"
 status: evolving
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-04
 ---
 
 # Principles and Community Practice of Agent Long-Task Interruption and Resumption
@@ -140,6 +140,23 @@ The table below is an engineering selection recommendation based on the executio
 | TypeScript agent product, already using Mastra | Mastra Durable Agents | Persistent storage, actual recovery switches, sub-agent granularity |
 | Already using Pydantic AI | Corresponding durable execution integration | Choose one execution engine and verify its actual semantics |
 
+### 4.8 New Developments: Managed Recovery and Open Runtimes
+
+As of November 4, 2026, several approaches beyond the workflow engines above deserve attention. This table is an **analysis of public documentation, not a fault-injection test of these products**. Version, deployment, and storage configuration change the recovery boundary.
+
+| Approach | Publicly described recovery | Boundaries the application still owns |
+| --- | --- | --- |
+| Google Agent Executor (AX) | Open-source agent runtime; Google describes event logs and snapshots for agent execution and recovery. Check the actual project version | Whether a particular tool survives control-plane restart, whether storage is durable, and how external effects are deduplicated. A demo or design target is not a production service-level promise. [Project](https://github.com/google/ax) · [Google technical overview](https://cloud.google.com/blog/products/ai-machine-learning/agent-executor-googles-distributed-agent-runtime) |
+| Microsoft Foundry Hosted Agents | Can persist task identity and input, recover using leases, and replay event streams. Crash recovery on the Responses path requires explicit opt-in and stored background requests | Handler reentry does not save every application phase automatically; define checkpoints or upstream recovery and business deduplication. [Recovery guide](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/recover-long-running-work) |
+| OpenAI Agents API | Durable sessions and saved items support later turns and rebuilding a view after stream disconnection; self-hosted execution environments can reconnect | The event stream does not replay every missed event; disconnection does not automatically restart a killed process, and replacement compute does not automatically restore files. [Events and items](https://developers.openai.com/api/docs/guides/agents-api/sessions/events) · [Environment lifecycle](https://developers.openai.com/api/docs/guides/agents-api/environments/lifecycle) |
+| OpenClaw | Current upstream documentation describes recovering eligible main sessions and subagents after Gateway restart, while retaining uncertain delivery outcomes | A running background process does not come back merely because the Gateway session recovers. Current permissions, retry budgets, and external effects still need checking. [Restart recovery](https://github.com/openclaw/openclaw/blob/main/docs/gateway/restart-recovery.md) |
+
+These mechanisms operate at different layers: AX concerns runtime and execution; Foundry offers recoverable tasks in hosted environments; Agents API retains sessions and recorded work; OpenClaw focuses on Gateway and session recovery. **None of this implies that an arbitrary long command or every external action resumes at the exact interrupted instruction.**
+
+For the Foundry Responses path, documentation requires explicitly enabling `resilient_background=True`, with requests using both `store=true` and `background=true`; without the opt-in, crashed background responses are marked failed. The handler may be reinvoked after opt-in, but without using application checkpoints it can rerun the whole turn from the beginning. This applies to the documented path, not necessarily every platform API. [Official recovery guide](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/recover-long-running-work)
+
+For a disconnected OpenAI Agents API stream, reconnect and buffer new events, retrieve the Session and saved Items, merge by Item ID, then resume live event handling. Saved items reconstruct recorded work, but not every missed intermediate event; a closed connection or idle Session does not establish success. If the Session has failed, follow the official error guidance and create a new Session when needed rather than reconnecting indefinitely. [Official events and items](https://developers.openai.com/api/docs/guides/agents-api/sessions/events) · [Errors and recovery](https://developers.openai.com/api/docs/guides/agents-api/errors)
+
 ## 5. The Hardest Window Is When the Tool Has Succeeded but the Agent Has Not Yet Recorded It
 
 For example, the tool has already created a ticket, and the Worker crashes before saving the tool result. The recovered checkpoint does not contain this ticket, and a direct retry may create a second one.
@@ -165,6 +182,23 @@ Model requests have a similar window: the provider has already generated and bil
 A transactional Outbox can reliably save "actions pending sending," but it cannot alone guarantee that the external system executes only once. Consumers still need idempotency or verification on redelivery. Only within boundaries controllable by the same transaction is it possible to commit business writes and result registration together.
 
 For generated artifacts, the typical approach is to write a temporary object first, verify the hash, and then update the final reference. For side effects such as sending notifications, publishing content, and payments, the corresponding system's receipts and authorization rules must be used; success cannot be judged from a file or a single log entry alone.
+
+### 5.1 Recovery Must Revalidate the Decision as Well as the Outcome
+
+Suppose an agent was approved to refund 80 yuan, then paused for an hour. Three very different changes are possible on recovery: a customer's display name changed, which does not affect the refund; the refund limit fell from 100 yuan to 50 yuan, invalidating the decision; or another system already issued the refund, requiring prevention of a duplicate payment.
+
+Recovery should distinguish four questions: **can the current identity still dispatch the action, do the decision's preconditions still hold, did the original action occur, and is the current identity allowed to query and reconcile it?** Revoked authority must not be used to dispatch, and authority to read sensitive external records cannot be assumed. If the outcome cannot be safely determined, retain an unknown state and escalate to an authorized person or system.
+
+| Finding on recovery | Recommended handling |
+| --- | --- |
+| Only presentation data changed and decision conditions remain true | Refresh presentation data; still check approval scope and target-system conditions |
+| Amount, target, or policy changed and the original decision is invalid | Stop the action and replan or seek new approval |
+| The previous outcome is unknown and the external system supports stable-key lookup | Reconcile using the original action key and receipt before deciding whether to retry |
+| The outcome is unknown and lookup is unauthorized or cannot uniquely determine it | Keep UNKNOWN and escalate; do not retry blindly or claim success |
+
+The 2026 preprints [Permission to Retry](https://arxiv.org/abs/2610.31916) and [Selective Revalidation](https://arxiv.org/abs/2609.08015) study changes in authority, uncertain external outcomes, and revalidation of decision premises. These controlled experiments help decompose the problem; they do not prove that every business system can resume automatically and safely.
+
+There is another race between revalidation and commit: if a refund limit is checked in one request and payment is made in another, the limit can change between them. For important writes, bind the check to the commit at the target using a transaction, conditional update, or version comparison. Where that is impossible, document residual risk and a human-handling path. Another model judgment or a version number in a log alone cannot close the window.
 
 ## 6. Local Experiment Demonstrating Actual Recovery Boundaries
 
@@ -195,6 +229,8 @@ EXECUTE finish
 ```
 
 `plan` was not re-run; `write_draft` was re-run once, and the simulation tool used a stable action key to return the old receipt. Finally, a completed Run was restored again, and no nodes were re-executed.
+
+On November 4, 2026, both fault scenarios were rerun and verification passed again. This remains a local simulation with no model or remote API calls.
 
 This verifies the boundary that "steps can be re-run, but business results must be deduplicated." The simulation service can place the write and the receipt in the same SQLite transaction; a real remote interface must provide an equivalent guarantee on its own, or the caller must verify. This short experiment does not prove recovery capability for one-hour runs, node failures, or real business services.
 
@@ -236,6 +272,20 @@ In particular, OpenClaw should not be summarized as "can only recover chat histo
 A low-cost improvement when running long tasks on these assistants is to maintain structured progress: goals, verified steps, current file versions, running task IDs, failure reasons, and next actions. For changes to the same repository, use Git and test results as evidence rather than relying only on conversation summaries.
 
 Anthropic's long-task Harness practice uses an initialization phase followed by incremental execution phases, combined with a feature list, progress files, Git records, and end-to-end tests, to help a new session continue the work. It mainly addresses handoff across context windows, not a general-purpose business-side-effect deduplication protocol. [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
+
+### 7.1 Practical Steps After a Terminal Disconnect
+
+For a local CLI, a closed terminal, an exited agent process, a lost execution environment, and a failed external job are four different conditions. Codex CLI provides `codex resume` to return to a saved chat; it does not promise to restore a previous process, network connection, or external business state to the interrupted instant. [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
+
+A useful order is:
+
+1. Check whether the original session or task is still running; do not resubmit simply because output is no longer visible.
+2. Reconnect to an available session or task and inspect the working directory, Git Diff, test results, job IDs, and external receipts.
+3. Query the original ID for a started job with an unknown outcome; restart only if it is confirmed absent and repetition is allowed.
+4. Check current permissions, budget, and whether the user canceled; clarify the next action before asking the agent to continue.
+5. If the task result was already committed, return or verify the existing result rather than delivering it again.
+
+For long commands, `tmux` or `nohup` only helps detach from a terminal while the relevant process and machine remain alive. Important jobs are better hosted by a queryable, cancellable job system that retains logs and artifacts.
 
 ## 8. Long Tool Calls Should Be Re-Attachable
 
@@ -295,6 +345,12 @@ Database records and external tools must know who owns the current execution rig
 During ordered termination, stop accepting new tasks, attempt to save progress at safe boundaries, and reserve time for normal shutdown. But a hard crash gives the program no opportunity to run exit callbacks; recovery capability must hold even without callbacks.
 
 Old tasks should retain the versions of workflows, tools, and state schemas. When a new Worker is incompatible, route old tasks to old-version Workers, or implement explicit state migration; do not retry replay errors indefinitely.
+
+### 9.5 How Multi-Agent Work Joins After Interruption
+
+Multi-agent tasks also need durable parent-child relationships, dependencies, input versions, subtask results, and separate attempt counts. When recovering a lead agent, read each child's current state: reuse completed artifacts, re-subscribe to or query running work, reconcile unknown outcomes, and handle failures under their own budgets. Restarting the parent must not automatically redispatch every child.
+
+Persist the join rule too: for example, all three read-only investigations must finish before the final conclusion; when one fails, explicitly choose to wait, retry within limits, or deliver with the missing item disclosed. Before synthesis, check that results refer to the same cluster, time window, and input version. Duplicate writes in a shared workspace or external system still need separate handling; child recovery and joining do not replace business idempotency.
 
 ## 10. Which Interruptions Can Automatically Continue
 

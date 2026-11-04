@@ -965,11 +965,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/rag-agent/agent-long-running-durable-execution.md": {
-      "source_sha256": "afe5faa514b13cedc02ad03afd6168e1152a122467a612bf57ad95797f10807e",
-      "english_sha256": "eaf1599bac962e63bf6bbd88ff67138aca86865a0aa254d63fc021472a363159",
+      "source_sha256": "2cbc4fc66fcf42a6f66f45234685ba48ad8d6b4eb53f9dfd503cf0532d80fdf4",
+      "english_sha256": "4aad59be027a11c220fc319e822da7bf82a8ba8f2546c58814495470b5f5c727",
       "translated_at": "2026-10-16T11:24:43.882594+00:00",
       "method": "model-assisted translation; structural checks passed",
-      "review": "pending editorial review"
+      "review": "reviewed against source",
+      "reviewed_at": "2026-11-04T04:34:19.668744+00:00"
     },
     "ai-k8s/inference/distributed-serving.md": {
       "source_sha256": "f830654f99c686434ac37a508c0241c9ac157b8cf07a48bfd48d510a28ceef9e",

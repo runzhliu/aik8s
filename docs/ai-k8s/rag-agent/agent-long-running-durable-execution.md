@@ -2,7 +2,7 @@
 title: Agent 长任务中断续跑原理与社区实践
 description: 解释一小时级智能体任务如何在进程崩溃、网络断开和人工暂停后恢复，对比 LangGraph、Temporal、Restate、DBOS、Mastra 与会话恢复，附可复现的中断实验和 Kubernetes 架构建议
 status: evolving
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-04
 ---
 
 # Agent 长任务中断续跑原理与社区实践
@@ -140,6 +140,23 @@ Pydantic AI 已提供 Temporal、DBOS、Prefect、Restate 等持久执行集成�
 | TypeScript Agent 产品，已有 Mastra | Mastra Durable Agents | 持久存储、实际恢复开关、子 Agent 粒度 |
 | 已使用 Pydantic AI | 对应持久执行集成 | 选定一个执行引擎，核对其实际语义 |
 
+### 4.8 新进展：托管恢复与开源运行时
+
+截至 2026 年 11 月 4 日，除了前述工作流引擎，值得关注以下路线。下表是**基于公开文档的能力分析，不是本文对产品的故障注入实测**。不同版本、部署方式和存储配置会改变恢复边界。
+
+| 路线 | 已公开的恢复机制 | 仍需自己处理的边界 |
+| --- | --- | --- |
+| Google Agent Executor（AX） | 开源 Agent 运行时；Google 介绍利用事件日志和快照处理 Agent 执行与恢复，项目以实际版本为准 | 控制面重启后能否恢复特定工具、存储是否持久、外部副作用如何去重；不能把演示或设计目标当生产服务等级承诺。 [项目](https://github.com/google/ax) · [Google 技术介绍](https://cloud.google.com/blog/products/ai-machine-learning/agent-executor-googles-distributed-agent-runtime) |
+| Microsoft Foundry Hosted Agents | 可持久化任务身份和输入、通过租约恢复并重放事件流；Responses 路径的崩溃恢复须显式开启，且请求需存储并在后台运行 | 重入处理函数不自动保存所有应用阶段；需要明确检查点或上游恢复与业务去重。 [恢复指南](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/recover-long-running-work) |
+| OpenAI Agents API | 持久会话和已保存条目用于后续轮次和断流后重建视图；自托管执行环境可重新连接 | 事件流不重放所有遗漏事件；连接断开不自动重启被杀进程，替换计算环境也不自动恢复文件。 [事件与条目](https://developers.openai.com/api/docs/guides/agents-api/sessions/events) · [环境生命周期](https://developers.openai.com/api/docs/guides/agents-api/environments/lifecycle) |
+| OpenClaw | 当前上游文档描述 Gateway 重启时恢复符合条件的主会话与子任务，并保留投递结果不确定状态 | 运行中后台进程不因 Gateway 会话恢复而复活；当前权限、重试预算和外部副作用仍需核对。 [重启恢复](https://github.com/openclaw/openclaw/blob/main/docs/gateway/restart-recovery.md) |
+
+这几类机制覆盖的层次不同：AX 关注运行时与执行，Foundry 提供托管运行环境中的可恢复任务，Agents API 保留会话和已记录工作，OpenClaw 聚焦 Gateway 和会话恢复。**不能据此推断任意长命令或所有外部动作都能从同一条指令原位恢复。**
+
+在 Foundry 的 Responses 路径，文档要求显式启用 `resilient_background=True`，请求同时满足 `store=true` 和 `background=true`；未开启时，崩溃后的后台响应标记失败。开启后处理函数可以被重新调用，但如果处理函数没有利用应用检查点，就可能从头重新执行整个回合。此结论仅针对该文档描述的路径，不代表平台上每一种 API 都相同。[官方恢复指南](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/recover-long-running-work)
+
+OpenAI Agents API 的断流处理则是：先重新连接并暂存新事件，同时读取 Session 和已保存 Items，再按 Item ID 合并，最后继续处理实时事件。保存条目可恢复已记录的工作，但不能补齐每条遗漏的中间事件；连接终止或 Session 空闲也不等于任务成功。如果 Session 已失败，按官方指导排查并在需要时新建 Session，不要无限重连。[官方事件与条目](https://developers.openai.com/api/docs/guides/agents-api/sessions/events) · [错误与恢复](https://developers.openai.com/api/docs/guides/agents-api/errors)
+
 ## 5. 最难的窗口是工具已成功而 Agent 尚未记下来
 
 例如工具已经创建了工单，Worker 在保存工具结果前崩溃。恢复后的检查点没有这张工单，直接重试就可能创建第二张。
@@ -165,6 +182,23 @@ receipt         可核验的返回值与证据
 事务 Outbox 可以可靠保存“待发送动作”，但不能独自保证外部系统只执行一次。消费者重发时仍需幂等或核实。只有在可以由同一事务控制的边界内，才可能把业务写入和结果登记一起提交。
 
 对于生成制品，通常可以先写临时对象，验证哈希后更新最终引用。对于发通知、发布内容和付款等副作用，则应使用对应系统的回执与授权规则，不能只凭文件或一条日志判断成功。
+
+### 5.1 恢复时不仅要查执行结果，还要重新校验决策
+
+假设 Agent 已获得批准，准备退款 80 元，随后暂停一小时。恢复时可能发生三种完全不同的变化：客户昵称变了，不影响退款；退款上限从 100 元降到 50 元，原决定不再合法；另一个系统已经完成退款，则应避免再次支付。
+
+恢复流程应区分四件事：**当前身份是否还能发起动作、决策前提是否仍成立、原动作实际是否发生、当前身份是否有权查询和核实**。权限撤销后不应继续执行，也不能简单假定仍有权读取外部敏感记录；若无法安全确认结果，保留未知状态，转交有权限的人或系统处理。
+
+| 恢复时发现 | 处理建议 |
+| --- | --- |
+| 只有展示字段变化，决策条件仍成立 | 更新展示信息；仍需确认原审批范围和目标系统条件 |
+| 金额、目标或政策改变，原决定不成立 | 停止动作，重新规划或重新审批 |
+| 之前的结果未知、外部系统支持按稳定键查询 | 先按原动作键和回执核实，确认后再决定是否重试 |
+| 结果未知，且无权查询或无法唯一确定 | 保持 UNKNOWN 并升级处理，不盲目重试或宣称成功 |
+
+[Permission to Retry](https://arxiv.org/abs/2610.31916) 与 [Selective Revalidation](https://arxiv.org/abs/2609.08015) 两篇 2026 年预印本分别研究了授权变化、外部结果不确定和决策前提重验。这些受控实验帮助拆解问题，但并不能证明任意业务系统自动安全续跑。
+
+重验与实际提交之间还存在竞态：如果先检查退款额度，再在另一次请求中支付，额度可能在两者之间变化。对于重要写操作，应在目标系统用事务、条件更新或版本比较把检查与提交绑定；无法做到时明确剩余风险及人工处理路径。单独增加一次模型判断或把版本号写进日志，都不能消除这个窗口。
 
 ## 6. 本地实验展示实际恢复边界
 
@@ -195,6 +229,8 @@ EXECUTE finish
 ```
 
 `plan` 没有重跑，`write_draft` 重跑了一次，模拟工具利用稳定动作键返回旧回执。最后再恢复一个已结束的 Run，也没有再次执行节点。
+
+2026 年 11 月 4 日重新运行上述两个故障场景，验证再次通过，仍为本地模拟且不调用模型或远端 API。
 
 这验证了“步骤可以重跑、业务结果需要去重”的边界。模拟服务能把写入和回执放在同一 SQLite 事务；真实远端接口必须自己提供等价保证，或者由调用方核实。这个短实验不证明一小时运行、节点故障或真实业务服务的恢复能力。
 
@@ -236,6 +272,20 @@ with SqliteSaver.from_conn_string("checkpoints.sqlite") as saver:
 在这些助手上执行长任务，一个低成本的改进是维护结构化进度：目标、已验证步骤、当前文件版本、正在运行的任务 ID、失败原因和下次动作。对同一仓库的改动，用 Git 与测试结果作为证据，避免只依赖对话摘要。
 
 Anthropic 的长任务 Harness 实践采用初始化阶段和后续增量执行阶段，配合功能列表、进度文件、Git 记录和端到端测试，帮助新会话接着工作。它主要解决跨上下文窗口的工作交接，不是通用的业务副作用去重协议。[Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
+
+### 7.1 终端断开后的实用处理顺序
+
+对于本地 CLI，终端关闭、Agent 进程退出、任务执行环境消失和外部作业失败是四种不同情况。Codex CLI 提供 `codex resume` 返回已保存的聊天；它并不承诺把先前的进程、网络连接或外部业务状态恢复到中断瞬间。[Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
+
+可以按下面的顺序处理：
+
+1. 先查原会话或任务是否仍在运行；不要因为看不到输出就重新提交。
+2. 重新连接可用的会话或任务，并查看工作目录、Git Diff、测试结果、作业 ID 和外部回执。
+3. 对已启动但结果不明的作业，按原 ID 查询；确认不存在且允许重跑时才重新启动。
+4. 检查当前权限、预算和用户是否已取消；明确下一步后再让 Agent 继续。
+5. 若任务结果已经提交，只回传或验证既有结果，避免再执行一次交付。
+
+对于长命令，`tmux` 或 `nohup` 仅能在相应进程与机器仍存活时帮助脱离终端；重要任务更适合由可查询、可取消并能保存日志与制品的作业系统承载。
 
 ## 8. 长时间工具调用应可以重新接入
 
@@ -295,6 +345,12 @@ get_result(external_job_id) → logs / artifacts / exit_code
 有序终止时停止接收新任务，尝试在安全边界保存进度，并为正常收尾预留时间。但硬崩溃不会给程序执行退出回调的机会，恢复能力必须在没有回调时也成立。
 
 旧任务应保留工作流、工具和状态 Schema 的版本。新 Worker 不兼容时，将旧任务路由到旧版本 Worker，或者实施明确的状态迁移；不能把重放错误无限重试。
+
+### 9.5 多 Agent 中断后如何汇合
+
+多 Agent 任务还要保存父子任务关系、依赖、任务输入版本、子任务结果和各自尝试次数。恢复主 Agent 时，先读取每个子任务的当前状态：已完成的复用产物，仍在运行的重新订阅或查询，结果未知的先核实，失败的按独立预算处理；不能因为父任务重启就重新派发所有子任务。
+
+汇合条件也应持久化：例如三个只读调查都完成才生成最终结论；其中一个失败时，明确等待、有限重试，还是带缺失项交付。生成汇总之前还需校验多个结果是否针对相同集群、时间窗口和输入版本。共享工作区或外部系统上的重复写入仍需要独立解决；子 Agent 恢复和结果汇合不能代替业务幂等。
 
 ## 10. 哪些中断可以自动继续
 
