@@ -1508,6 +1508,12 @@
       "english_sha256": "7cd7b761fffb3db67f7705b75a97b1875fc6db589bf163c4c038b2d26ea181e4",
       "reviewed_at": "2026-11-04T00:15:10.769535+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/multi-agent-subagent-collaboration-overview.md": {
+      "source_sha256": "ea2a1cc47c53ef512142e2158c2cc8f40f47b79f936d923bc0b5e4697f3340b9",
+      "english_sha256": "28da75207f09a26ce026a7d3fffcedfb00327e0c72677acd8bfc6a00a5dee538",
+      "reviewed_at": "2026-11-04T02:59:19.034811+00:00",
+      "review": "reviewed against source"
     }
   }
 }
