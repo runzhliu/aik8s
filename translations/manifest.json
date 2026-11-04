@@ -1156,11 +1156,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/rag-agent/grok-bot-overview.md": {
-      "source_sha256": "5d38c67f5fa198977c8755a2b6ac53b43bfac2edaccb9cbeeec46e27a97c095f",
-      "english_sha256": "6bfb9019465b4f997131e37327fb608950cb96a7133e7b5475e437b65322eaa2",
+      "source_sha256": "1572feebcb9da8506bcc75d4afcff66de1cc35c5b614dfddfbb0fedf5d16a77f",
+      "english_sha256": "0a6f949225aa6fa7808610481874ee1bd6493eda65ddf60f65c644e64649f790",
       "translated_at": "2026-10-16T13:16:20.624472+00:00",
       "method": "model-assisted translation; structural checks passed",
-      "review": "pending editorial review"
+      "review": "reviewed against source",
+      "reviewed_at": "2026-11-04T02:35:52.365183+00:00"
     },
     "ai-k8s/practices/kubernetes-fleet-reliability.md": {
       "source_sha256": "66e6d4ed2ac26709b51ff16eea74dfc6d0e77890e0bdca1c33d24cd470493689",

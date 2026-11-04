@@ -2,7 +2,7 @@
 title: "Grok Bot Technical Overview: Persistent Cloud Computers, Multi-Agent Collaboration, and Enterprise Governance"
 description: "A systematic introduction to the differences between Grok Bot, Grok, @grok, and the xAI API, with analysis of its persistent cloud computer, Skills, Routines, multi-Bot collaboration, approvals, security boundaries, and Kubernetes enterprise integration"
 status: evolving
-last_reviewed: 2026-09-14
+last_reviewed: 2026-11-04
 ---
 
 # Grok Bot Technical Overview: Persistent Cloud Computers, Multi-Agent Collaboration, and Enterprise Governance
@@ -11,11 +11,11 @@ In August 2026, xAI released Grok Bot. It is not merely an "auto-execute" button
 
 If an ordinary chat assistant is like a phone consultation, Grok Bot is more like a remote colleague with a permanent workstation and a company computer. The computer is not destroyed after each conversation round; browser logins, files, and command-line environments can be persistently retained. At the same time, a permanent workstation means accounts, networking, approvals, auditing, and data cleanup must all be governed as enterprise systems.
 
-Based on official materials available as of September 14, 2026, this article discusses Grok Bot's product boundaries, implementation structure, suitable tasks, and production integration approaches. The product is still evolving rapidly; plans and management capabilities should be confirmed against the current official pages.
+Based on official materials available as of November 4, 2026, this article discusses Grok Bot's product boundaries, implementation structure, suitable tasks, and production integration approaches. The product is still evolving rapidly; plans and management capabilities should be confirmed against the current official pages.
 
 ## One-Page Summary
 
-1. **Grok Bot is a hosted Computer-use Agent, not a downloadable Grok model to deploy.** Work actually runs on persistent computers in Cursor's cloud; the local desktop and mobile apps are primarily responsible for chat, reviewing progress, and approvals.
+1. **Grok Bot is a hosted Computer-use Agent, not a downloadable Grok model to deploy.** Work generally runs on persistent computers in Cursor's cloud. The desktop client can also act on the local machine when permitted; mobile supports chat, reviewing progress, and approvals.
 2. **"Persistence" is its most obvious difference from ordinary chat assistants.** Bots can retain job context, history summaries, and preferences; cloud computers can retain files, browser sessions, and command-line environments. Tasks can continue after the user closes their laptop.
 3. **The isolation boundary is between users, not between a single user's Bots.** The official architecture provides each user with an independent Firecracker microVM; all Bots created by the same user share that computer, including its logins, files, and CLI credentials.
 4. **Skills and Routines turn a one-time successful operation into reusable automation.** A Skill describes how to do something; a Routine describes when to do it. The safe path is to first complete a low-risk task, then stabilize the steps, solidify them into a Skill, and finally add scheduled or event triggers.
@@ -26,6 +26,55 @@ Based on official materials available as of September 14, 2026, this article dis
 9. **Grok Bot can participate in Kubernetes operations, but it should not directly hold cluster admin credentials.** A safer path is read-only APIs, GitOps Pull Requests, controlled operations gateways, and short-lived identities, with changes placed in a separate approval chain.
 10. **The core reason to choose it is to quickly obtain a complete "cloud computer + Agent + everyday applications" experience.** If the enterprise must run on its own cluster, needs custom images, strict data residency, or full control over the execution runtime, it should evaluate building its own Agent Harness and Sandbox.
 
+## Recent Updates: From a Personal Assistant to a Team Workspace
+
+As checked on November 4, 2026, the latest version listed in the official changelog is 0.78.1, dated October 27, 2026. This section distinguishes **documented product behavior** from our engineering assessment; it is not a hands-on acceptance test. Availability can vary by account, region, and plan. [Official changelog](https://x.ai/changelog/bot)
+
+| Date and version | Official update | What it means |
+| --- | --- | --- |
+| September 19, 2026 | Some SuperGrok Heavy users can use Grok Bot on grok.com ([web release notes](https://grok.com/release-notes/sep-19-2026)) | Access is expanding beyond the standalone client; check the account's actual entitlements |
+| October 24, 2026, 0.75.8 | A Bot can propose adding, changing, or removing Auto Review rules through a card the user confirms | Rules can change during work, but their scope still needs review |
+| October 26, 2026, 0.77.0 | The changelog lists 1Password sign-in approval and memory import from another AI assistant; some features require a minimum client version | Migration is easier, while imported long-lived context and third-party accounts need management |
+| October 27, 2026, 0.78.1 | Product cards, subscription-management templates, and team Bot sharing and credential improvements | Automation extends from lookup and generation to cross-application actions; configure explicit approval for payments and subscription changes |
+
+### Entry points: Desktop, Mobile, Web, and X
+
+For eligible accounts and regions, users can mention `@bot` in an X post or reply to hand the post to their own main Bot. The public reply primarily confirms the handoff; work and results remain in the Bot conversation, and the request consumes usage. It requires linked X and Grok accounts, Grok Bot access, and a Bot the user owns; shared Bots cannot receive these mentions and regional restrictions apply. `@bot` is a task entry point, distinct from `@grok` for public Q&A. [Tag a Bot on X](https://docs.x.ai/grok-bot/tag-on-x)
+
+### Shared Bots: Sharing a Role Does Not Share Everyone's Chats
+
+The [official Shared Bots documentation](https://docs.x.ai/grok-bot/shared-bots) distinguishes **sharing one Bot** from **sharing a template that each user copies**. An owner or Manager can grant access to a team, people, or groups. A Collaborator can chat; a Manager can also change instructions, skills, memory, and apps. Personal chats with the shared Bot are private from one another, although the Bot can retain common team knowledge. Before sharing, review the owner's apps and Secrets: authorized teammates can use them in their chats; a member's personal connector has a separate consent flow.
+
+Execution location depends on the entry point. A user's own chat or Slack DM usually uses that user's cloud computer; shared contexts such as group chats and Slack channels can use the shared Bot's computer. Stricter privacy settings can instead result in a separate conversation computer. Thus, one shared computer per user is the basic personal-Bot model, not a universal description of every team interaction. A reply usually consumes the recipient's usage; some Slack automation messages without linked accounts use the owner's allowance.
+
+### Governance: Enforced Review, Local Execution, and Model-Input Checks
+
+The earlier article said enterprises could not prevent members from disabling Auto Review; **that statement is now outdated**. Enterprise admins can enable Enforce Auto-review and configure team rules; enforcement is off by default, and the official documentation describes directory-group exceptions. It covers commands, app calls, Computer Use, automation writes, and delegation, but does not cover every side effect, including memory writes and most settings changes. Check the actual switch, group exceptions, and target-system permissions; model review cannot be the sole security boundary. [Enterprise controls](https://docs.x.ai/grok-bot/teams-and-enterprises)
+
+When enabled and authorized, the desktop client can also act on a user's local machine: run commands and read, write, or transfer files. Per-command approval is the default; administrators can cap the local execution policy. This is **access to a user's device**, not self-hosting the managed cloud computer in enterprise Kubernetes. Cloud-computer traffic can also be routed via the desktop network; that permission and local execution are separate settings. [Execution environment and local permissions](https://docs.x.ai/grok-bot/computer-and-apps)
+
+Enterprise beta Inference Hooks can send model requests and context to an enterprise security service for an allow or deny decision. They inspect **model inputs**, not every action as it executes. A new configuration starts in Shadow mode, which records without blocking; other modes can fail open or closed when checks fail. Even in block mode, the official documentation says unavailable configuration causes a logged fail-open; sampling below 100% and skipped Shadow checks also leave requests unchecked. It is not a bypass-free control. The endpoint must use a publicly routable HTTPS address on port 443 with a trusted certificate; private and loopback addresses, redirects, and reverse tunnels are rejected. This is a practical integration constraint for security gateways available only on an enterprise intranet. [Inference Hooks](https://docs.x.ai/grok-bot/inference-hooks)
+
+### Models and Data: A Managed Product Does Not Guarantee Model Choice
+
+The current [security documentation](https://docs.x.ai/grok-bot/security) says Grok Bot manages model selection, provides no customer model picker, and may use first- or third-party models. A team model allowlist configured for other Cursor products does not necessarily govern Grok Bot. Organizations with contractual restrictions on providers or subprocessors should confirm the applicable scope before a pilot.
+
+Privacy Mode, provider zero data retention, persistent files on cloud computers, and security auditing are separate questions. The documentation says customer data is not used for training with Privacy Mode enabled; this does not mean cloud-computer files are nonpersistent, nor does it replace contractual checks on data residency, retention, and audit. This article has not verified which models were actually invoked or audited a specific provider.
+
+### Plans and Allowances: No Token Invoice Does Not Mean Unlimited Usage
+
+The [official plans and billing guide](https://cursor.com/help/grok-bot/plans) distinguishes the new The X Subscription from legacy Cursor / SuperGrok-linked plans. On the former, Premium, Super, and Ultra include Grok Bot and draw from a weekly pool shared with Cursor and Grok apps; prepaid credits can cover additional usage. Legacy plans use their own Cursor weekly allowances and optional on-demand billing. Legacy Cursor and linked SuperGrok allowances do not stack: the higher grant is used. Check the account interface and current contract for the applicable terms.
+
+This changes **how usage is shown and billed**, not whether inference consumes tokens or has a cost. The official guide describes trial consumption in terms of work such as agent steps and tokens; multi-Bot handoffs and background Routines also consume usage. The legacy on-demand monthly limit is not a hard interrupt for a run already in progress, which may finish beyond the limit before new on-demand usage stops. Budget controls should also bound task time, frequency, approvals, and monitoring.
+
+Usage limits also became a topic of discussion in early November 2026. TechCrunch reported that some users saw their weekly allowance suddenly exhausted; Musk responded that serving costs were too high relative to revenue, but a complete breakdown of future limits by plan had not been disclosed at the time of the report. **Individual reports do not establish a uniform limit or a fixed percentage reduction across all plans.** Enterprise pilots should record the account plan, task types, and weekly consumption when assessing budget and sustainability. [TechCrunch report](https://techcrunch.com/2026/11/02/elon-musk-throttles-grok-bot-limits-due-to-unsustainably-high-costs/) · [Musk’s response](https://x.com/elonmusk/status/2116992258520064397)
+
+### New Action Boundaries: Shopping and Subscriptions
+
+The 0.78.1 product cards can show price, store, and delivery progress, alongside templates for subscription lookup, trials, and cancellation. Actual actions depend on connectors, region, and authorization. A subtle boundary in the official Vault documentation is that **a saved payment card may be filled at checkout without a separate approval each time**. If every payment must be approved, the official guidance is not to save the card, or to use a payment method that offers one-time authorization, and to verify the final charge in the payment system. [Vault and secure sign-in](https://docs.x.ai/grok-bot/vault)
+
+A practical pilot starts with retrieval and drafts, checking citations and source-system state. Next, narrow connector, network, and local-machine permissions independently. Only then should business-approved interfaces perform limited writes. For login verification, sensitive payments, or irreversible actions, present the target, amount, and side effects for human review first.
+
 ## 1. First, Distinguish Four Similarly Named Products
 
 "Grok Bot" is easily confused with Grok, `@grok` on X, and the xAI API. They share the brand and some model capabilities, but their delivery forms are completely different.
@@ -35,7 +84,7 @@ Based on official materials available as of September 14, 2026, this article dis
 | Grok Chat Assistant | grok.com, mobile apps | Primarily session- and product-memory-based | Primarily chat, search, file, image, and voice capabilities | xAI product | Q&A, research, content generation |
 | `@grok` on X | X posts and replies | Tied to social context | Does not provide a user-dedicated persistent computer | X / xAI | Explaining posts, answering public questions |
 | xAI API Models | HTTP API / SDK | Requests are typically stateless | Requires developers to integrate tools, state, and sandboxes themselves | Caller | Building custom applications and Agents |
-| Grok Bot | Desktop, mobile | Bot and memory persist long-term; cloud computer is persistent | Browser, file system, terminal, connectors | Cursor cloud hosting | Cross-application, multi-step, scheduled, and collaborative tasks |
+| Grok Bot | Desktop, mobile, selected web access | Bot and memory persist long-term; cloud computer is persistent | Browser, file system, terminal, connectors | Cursor cloud hosting | Cross-application, multi-step, scheduled, and collaborative tasks |
 
 xAI has published partial system prompts for the Grok chat assistant and `@grok` on X, but this does not mean the Grok Bot product is open source. The official [`grok-prompts`](https://github.com/xai-org/grok-prompts) repository is suitable for studying the behavioral boundaries of the chat product; it cannot be used to reproduce Grok Bot's cloud computer, approvals, connectors, and organization management capabilities locally.
 
@@ -43,7 +92,7 @@ Grok Bot's official launch page describes it as "always-on agents." A more preci
 
 ## 2. Grok Bot's Logical Architecture
 
-The official documentation does not disclose the complete server-side implementation, but it reveals enough architecture to determine security boundaries: the desktop and mobile apps are thin clients; each user has an independent Firecracker microVM in Cursor's cloud; Bots use Shell, browser, and graphical interfaces within it, and can also call MCP tools through Cursor's connector policies.
+The official documentation does not disclose the complete server-side implementation, but it reveals enough architecture to determine security boundaries: desktop, mobile, and selected web entry points provide interaction; personal Bots generally use Shell, browser, and graphical interfaces inside the user's dedicated Firecracker microVM in Cursor's cloud, and can call MCP tools through Cursor's connector policies. Optional local execution through the desktop is a separate permission path.
 
 ```mermaid
 flowchart TB
@@ -95,6 +144,8 @@ Traditional browser agents often place each task in a fresh environment: the sec
 - Background Turns and Routines can continue running after the user closes their local device;
 - Each Bot has its own screen and can reason in parallel, use connectors, and process files;
 - A single screen of a single Bot executes only one Computer-use task at a time.
+
+An important limit: persistence is not a complete backup. The documentation says normal updates or recovery generally retain saved files, browser state, and sign-ins, but a full computer update, Recover, or Reset removes installed apps and packages and can lose the latest unsaved changes. Keep important results in the shared workspace and back them up separately. After a long task is interrupted, inspect external side effects before deciding where to resume. [Use the computer and apps](https://docs.x.ai/grok-bot/computer-and-apps)
 
 ### 3.2 It Changes the Threat Model
 
@@ -185,7 +236,7 @@ If a short task involves only one application, handing it directly to a single B
 
 ## 6. The Real Boundaries of Approvals and Auto Review
 
-Grok Bot can request approval before sending messages, publishing content, making payments, deleting, modifying permissions, performing production operations, or accepting legal terms. Users can choose to allow or reject an action for that instance, or save long-term rules within a certain scope; if an allow rule conflicts with a mandatory approval rule, Require Approval takes precedence.
+Grok Bot can request approval before sending messages, publishing content, making payments, deleting, modifying permissions, performing production operations, or accepting legal terms. Do not assume every payment will prompt for confirmation: a saved card may be filled automatically. Users can choose to allow or reject an action for that instance, or save long-term rules within a certain scope; if an allow rule conflicts with a mandatory approval rule, Require Approval takes precedence.
 
 A complete action chain more closely resembles the following structure:
 
@@ -204,10 +255,10 @@ flowchart TD
 
 Four limitations need particular understanding:
 
-1. **What is approved is a specific action.** It is not unlimited authorization for all subsequent similar actions.
+1. **Distinguish one-time approval from a lasting rule.** Allow once approves this action; Always allow can save a rule for matching actions, so review its scope and targets.
 2. **Approval does not undo prior side effects.** If the user sends "Stop now" mid-way, already-sent emails or completed external modifications still exist.
 3. **Auto Review does not cover every type of side effect.** The official documentation explicitly notes that memory writes and most settings changes do not all go through the same review.
-4. **The user-side toggle remains a boundary.** The official Security FAQ states that organizations currently cannot lock Auto Review so that members cannot disable it, so it cannot be treated as the sole mandatory control.
+4. **Enterprises can enforce it, but must check exceptions.** Enterprise can enable Enforce Auto-review and team rules; enforcement is off by default, directory groups can have exceptions, and it does not cover every side effect.
 
 Production systems should still implement, on the target system side:
 
@@ -245,18 +296,21 @@ The official key plan boundaries are currently as follows:
 | Public template sharing | Yes | Yes | Controls whether Bot templates can be shared publicly |
 | Connector policy | Yes | Yes | Allows or blocks connectors; MCP allowlist is an Enterprise capability |
 | Network Controls | No | Yes | Restricts domains, IPs, and ports accessible from cloud computers |
+| Enforce Auto-review / team approval rules | No | Yes | Enforces review and team rules; check group exceptions |
+| Execution on Local Computer | Yes | Yes | Caps a Bot's permissions to act on a member's machine |
+| Inference Hooks | No | Yes (beta) | Lets an enterprise security service inspect model inputs |
 | Team Setup | No | Yes | Installs enterprise tools or network clients on cloud computer startup |
 | Action Recording | No | Yes | Records Bot actions, off by default |
 | Audit logs / OpenTelemetry Export | No | Yes | Outputs administration, security, and action evidence |
 | SCIM | No | Yes | Automatically provisions and deprovisions member identities |
 
-Self-service Teams has no network policy, so target access defaults to allow-all; Network Controls is an Enterprise capability. When evaluating for enterprise use, you cannot simply confirm "the Teams plan was purchased" — you must also check item by item whether the required controls are actually included. [Grok Bot for teams and enterprises](https://docs.x.ai/grok-bot/teams-and-enterprises)
+Self-service Teams has no network policy, so target access defaults to allow-all; Network Controls is an Enterprise capability. A cloud-computer destination allowlist does not by default constrain remote MCP servers accessed from Cursor's backend: explicitly enable Apply to MCP servers in an allowlist mode and verify the hosts each connector actually calls. When evaluating for enterprise use, you cannot simply confirm "the Teams plan was purchased" — you must also check item by item whether the required controls are actually included. [Grok Bot for teams and enterprises](https://docs.x.ai/grok-bot/teams-and-enterprises)
 
 In addition, the official offering provides shared static egress addresses across multiple customers, and does not provide a dedicated egress IP per customer. If intranet allowlists, security domains, or audit policies depend on a dedicated source address, this needs to be resolved at the integration design stage, not patched after go-live.
 
 ## 8. How to connect enterprise private networks
 
-Grok Bot's cloud computers run in the Cursor cloud and do not support deployment into the enterprise's own Kubernetes, private cloud, or on-premises data center, nor do they support bringing your own VM images. Enterprise Team Setup can install customer-maintained Linux network clients on each cloud computer; the official documentation lists Tailscale and Cloudflare Tunnel, and also allows other VPN, Zero Trust, or Mesh clients.
+Grok Bot's managed cloud computers run in the Cursor cloud and do not support deployment into the enterprise's own Kubernetes, private cloud, or on-premises data center, nor do they support bringing your own VM images. Optional local command execution does not change that hosting boundary. Enterprise Team Setup can install customer-maintained Linux network clients on each cloud computer; the official documentation lists Tailscale and Cloudflare Tunnel, and also allows other VPN, Zero Trust, or Mesh clients.
 
 ```mermaid
 flowchart LR
@@ -374,7 +428,7 @@ Grok Bot's advantage is not that it lets developers freely combine every Runtime
 
 | Route | Time to launch | Programmability | Execution environment control | Suitable tasks | Main costs |
 | --- | --- | --- | --- | --- | --- |
-| Grok Bot | Fast | Medium | Low, runs in the Cursor cloud | Everyday cross-application work, browser workflows, personal and team automation | Managed boundaries, plan capabilities, shared computer governance |
+| Grok Bot | Fast | Medium | Low, managed cloud with optional authorized local actions | Everyday cross-application work, browser workflows, personal and team automation | Managed boundaries, plan capabilities, shared computer governance |
 | Ordinary chat assistant | Fastest | Low to medium | Low | Research, Q&A, content drafting | Difficult to continuously operate real systems |
 | API + Agent Framework | Medium | High | Determined by the developer | In-product Agents, structured business processes | Requires self-developed state, tools, permissions, and evaluation |
 | RPA / workflow platform | Medium | Medium | Medium to high | UI flows with stable steps and clear rules | Fragile to page changes, weak adaptability to open-ended tasks |
