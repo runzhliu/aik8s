@@ -13,6 +13,9 @@
 .wechat-output/
 .social-drafts/
 site/
+# Topic frequencies are regenerated from the paired source articles at build time.
+/docs/assets/topic-cloud-zh.json
+/docs/assets/topic-cloud-en.json
 /.zensical-*.generated.toml
 __pycache__/
 *.py[cod]

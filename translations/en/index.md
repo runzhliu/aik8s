@@ -16,6 +16,18 @@ This is a set of engineering documentation for platform engineers, SREs, data pl
 
 Content starts with GPU nodes, heterogeneous devices, big data, scheduling queues, RDMA, and data provisioning, then extends to distributed training, LLM inference, RAG, Agent sandboxes, observability, security, cost, and production operations. Each topic strives to explain component boundaries, selection criteria, key metrics, failure paths, and rollout checklists, rather than merely listing project names.
 
+<section class="topic-cloud" data-topic-cloud aria-labelledby="topic-cloud-title">
+  <div class="topic-cloud__heading">
+    <div><span class="topic-cloud__eyebrow">EXPLORE THE KNOWLEDGE BASE</span><div class="topic-cloud__title" role="heading" aria-level="2" id="topic-cloud-title">Technology topic cloud</div></div>
+    <span class="topic-cloud__badge">TOPICS · ENGLISH</span>
+  </div>
+  <p class="topic-cloud__intro">Larger words occur more often in the documentation. Select a word to see its statistics.</p>
+  <div class="topic-cloud__words" data-topic-words aria-label="Technology topics"></div>
+  <p class="topic-cloud__status" data-topic-status role="status" aria-live="polite">The topic cloud requires JavaScript; you can still browse the technical map below.</p>
+  <p class="topic-cloud__detail" data-topic-detail aria-live="polite"></p>
+  <p class="topic-cloud__note">Method: based on a technical dictionary, counted separately for each language; index pages, code and other non-prose content are excluded. Frequency reflects mentions in the documentation, not a skill rating.</p>
+</section>
+
 [Enter the Full Technical Map](ai-k8s/index.md){ .md-button .md-button--primary }
 [View Production Reference Architecture](ai-k8s/guides/reference-architectures.md){ .md-button }
 [Hands-on Practice & Troubleshooting](ai-k8s/practices/index.md){ .md-button }

@@ -16,6 +16,18 @@ Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大�
 
 内容从 GPU 节点、异构设备、大数据、调度队列、RDMA 和数据供给开始，延伸到分布式训练、LLM 推理、RAG、Agent 沙箱、可观测性、安全、成本和生产运维。每个专题尽量说明组件边界、选型条件、关键指标、故障路径和上线检查，而不只是罗列项目名称。
 
+<section class="topic-cloud" data-topic-cloud aria-labelledby="topic-cloud-title">
+  <div class="topic-cloud__heading">
+    <div><span class="topic-cloud__eyebrow">EXPLORE THE KNOWLEDGE BASE</span><div class="topic-cloud__title" role="heading" aria-level="2" id="topic-cloud-title">技术主题词云</div></div>
+    <span class="topic-cloud__badge">TOPICS · 中文</span>
+  </div>
+  <p class="topic-cloud__intro">文字越大，在文档中出现的次数越多。选择一个词查看统计。</p>
+  <div class="topic-cloud__words" data-topic-words aria-label="技术主题词"></div>
+  <p class="topic-cloud__status" data-topic-status role="status" aria-live="polite">词云需要 JavaScript；你仍可通过下方技术地图浏览文档。</p>
+  <p class="topic-cloud__detail" data-topic-detail aria-live="polite"></p>
+  <p class="topic-cloud__note">统计口径：基于技术词典，中英文独立统计；排除目录页、代码等内容。词频反映文档中的出现次数，不代表技能评级。</p>
+</section>
+
 [进入完整技术地图](ai-k8s/index.md){ .md-button .md-button--primary }
 [查看生产参考架构](ai-k8s/guides/reference-architectures.md){ .md-button }
 [实战与排障](ai-k8s/practices/index.md){ .md-button }

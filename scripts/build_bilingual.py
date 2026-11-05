@@ -85,6 +85,8 @@ def prepare(preview=False):
     if not report["current"]:
         raise ValueError("no verified English pages")
     print(f"Bilingual coverage: {len(report['current'])}/{report['total']}" + (" (private partial preview)" if preview else ""), flush=True)
+    # Generate both language datasets before the English asset tree is staged.
+    subprocess.run([sys.executable, "scripts/generate_topic_cloud.py"], cwd=ROOT, check=True)
     WORK.mkdir(parents=True, exist_ok=True)
     staged = WORK / "english-docs"
     if staged.exists():

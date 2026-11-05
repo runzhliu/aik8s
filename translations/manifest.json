@@ -23,8 +23,8 @@
       "review": "pending editorial review"
     },
     "index.md": {
-      "source_sha256": "13136864d23b29e0336274c71e7b4918794fa2ceee23739ed0d1aefa337adf51",
-      "english_sha256": "1d9041a1947cb3d9d82cf2c99d0b1fe4a1d5ebe336e45f792c1324ecd58a1bae",
+      "source_sha256": "792c7d73409fd889a98694495e9f4f0e58009ed821e4e8abf2ec1d10a5c00d79",
+      "english_sha256": "381834267116927e8123d17a8d265139431043cbe8829006901c800c042924f1",
       "translated_at": "2026-10-16T08:48:54.703821+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",

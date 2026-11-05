@@ -41,6 +41,7 @@ jobs:
           node --check docs/javascripts/timeline.js
           node --check docs/javascripts/engagement.js
           node --check docs/javascripts/search-polish.js
+          node --check docs/javascripts/topic-cloud.js
 
       - name: Build Chinese and English documentation
         run: python scripts/build_bilingual.py
@@ -60,6 +61,7 @@ jobs:
           node scripts/test_engagement_browser.cjs
           node scripts/test_blog_polish_browser.cjs
           node scripts/test_search_browser.cjs
+          node scripts/test_topic_cloud_browser.cjs
 
       - name: Add production-only AdSense
         env:

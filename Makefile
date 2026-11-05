@@ -13,6 +13,7 @@ DOCKER_RUN = docker run --rm --user "$$(id -u):$$(id -g)" -v "$(CURDIR):/docs"
 .PHONY: dev build build-production distribution wechat-editor wechat-cover wechat-preview wechat-draft
 
 dev:
+	python3 scripts/generate_topic_cloud.py
 	$(DOCKER_RUN) -it -p 8000:8000 $(ZENSICAL_IMAGE)
 
 build:

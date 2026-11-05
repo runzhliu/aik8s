@@ -715,7 +715,8 @@ def version_discovery_assets(site_dir: Path) -> None:
     replacements = []
     names = ['stylesheets/timeline.css', 'javascripts/timeline.js',
              'stylesheets/engagement.css', 'javascripts/engagement.js',
-             'stylesheets/article-tools.css', 'javascripts/search-polish.js']
+             'stylesheets/article-tools.css', 'javascripts/search-polish.js',
+             'stylesheets/topic-cloud.css', 'javascripts/topic-cloud.js']
     names.extend(bundle.relative_to(site_dir).as_posix() for bundle in (site_dir / 'assets/javascripts').glob('bundle.*.min.js'))
     for name in names:
         asset = site_dir / name
