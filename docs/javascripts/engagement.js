@@ -101,6 +101,11 @@
       bar.appendChild(commentsLink);
     }
 
+    var status = element("span", "aik8s-share__status");
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    bar.appendChild(status);
+
     var heading = article.querySelector("h1");
     var anchor = article.querySelector(".aik8s-article-info") || article.querySelector(".aik8s-article-dates") || heading;
     if (anchor) anchor.parentNode.insertBefore(bar, anchor.nextSibling);
@@ -109,10 +114,10 @@
 
   function copyUrl(button, url) {
     function done() {
-      var textNode = button.querySelector(".aik8s-share__text");
-      var original = textNode.textContent;
-      textNode.textContent = t("已复制，可粘贴到微信", "Copied to clipboard");
-      window.setTimeout(function () { textNode.textContent = original; }, 2200);
+      var status = button.closest(".aik8s-share").querySelector(".aik8s-share__status");
+      status.textContent = t("链接已复制", "Link copied");
+      window.clearTimeout(status._clearTimer);
+      status._clearTimer = window.setTimeout(function () { status.textContent = ""; }, 2200);
     }
 
     if (navigator.clipboard && window.isSecureContext) {

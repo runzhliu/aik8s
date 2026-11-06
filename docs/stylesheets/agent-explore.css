@@ -1,0 +1,31 @@
+/* Home-only exploration panel, aligned with the site's light and dark palettes. */
+.md-typeset .agent-explore { --explore-ink: var(--md-default-fg-color); --explore-muted: var(--md-default-fg-color--light); --explore-accent: var(--md-primary-fg-color); --explore-bg: #f5f5fb; --explore-line: #dddded; background: var(--explore-bg); border: 1px solid var(--explore-line); border-radius: 18px; color: var(--explore-ink); margin: 1.8rem 0; padding: 1.45rem; }
+[data-md-color-scheme="slate"] .md-typeset .agent-explore { --explore-ink: #ececf4; --explore-muted: #b9bacb; --explore-accent: #c2c8ff; --explore-bg: #252532; --explore-line: #45455d; }
+.agent-explore__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.agent-explore__eyebrow { color: var(--explore-accent); font-size: .56rem; font-weight: 700; letter-spacing: .15em; }
+.md-typeset .agent-explore__title { font-size: 1.25rem; font-weight: 650; letter-spacing: -.025em; margin-top: .24rem; }
+.md-typeset .agent-explore__intro { color: var(--explore-muted); font-size: .72rem; margin: .3rem 0 1rem; }
+.agent-explore__mascot { align-items: center; border: 1px solid var(--explore-line); border-radius: 14px; color: var(--explore-accent); display: flex; font-size: 1.5rem; height: 2.3rem; justify-content: center; width: 2.3rem; flex: 0 0 auto; }
+.agent-explore__label { display: block; font-size: .67rem; font-weight: 600; margin-bottom: .35rem; }
+.agent-explore__input-row { display: flex; gap: .45rem; }
+.md-typeset .agent-explore__input-row input { background: var(--md-default-bg-color); border: 1px solid var(--explore-line); border-radius: 9px; box-sizing: border-box; color: var(--md-default-fg-color); flex: 1; font: inherit; font-size: .72rem; min-width: 0; padding: .65rem .8rem; }
+.md-typeset .agent-explore button { cursor: pointer; font: inherit; }
+.md-typeset .agent-explore__input-row button { background: var(--md-primary-fg-color); border: 0; border-radius: 9px; color: #fff; flex: 0 0 auto; font-size: .72rem; font-weight: 600; padding: .65rem .9rem; }
+.agent-explore__shortcuts { align-items: center; display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .7rem; }
+.agent-explore__shortcuts span { color: var(--explore-muted); font-size: .62rem; margin-right: .15rem; }
+.md-typeset .agent-explore__shortcuts button { background: transparent; border: 1px solid var(--explore-line); border-radius: 99px; color: var(--explore-ink); font-size: .62rem; padding: .22rem .58rem; }
+.md-typeset .agent-explore__shortcuts button:hover, .md-typeset .agent-explore__actions button:hover { border-color: var(--explore-accent); color: var(--explore-accent); }
+.agent-explore__result, .agent-explore__trace { background: var(--md-default-bg-color); border: 1px solid var(--explore-line); border-radius: 10px; margin-top: .85rem; padding: .75rem .9rem; }
+.agent-explore__result[hidden], .agent-explore__trace[hidden] { display: none; }
+.agent-explore__result strong, .agent-explore__trace strong { font-size: .73rem; }
+.md-typeset .agent-explore__result p, .md-typeset .agent-explore__trace p { color: var(--explore-muted); font-size: .65rem; margin: .3rem 0; }
+.md-typeset .agent-explore__result ol, .md-typeset .agent-explore__trace ol { font-size: .69rem; margin: .4rem 0 0 1.1rem; }
+.md-typeset .agent-explore__result li, .md-typeset .agent-explore__trace li { margin: .18rem 0; }
+.md-typeset .agent-explore__result a, .md-typeset .agent-explore__trace a { color: var(--explore-accent); }
+.agent-explore__trace a { font-size: .68rem; }
+.agent-explore__actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: .85rem; }
+.md-typeset .agent-explore__actions button { background: transparent; border: 0; color: var(--explore-ink); font-size: .66rem; font-weight: 600; padding: .15rem 0; }
+.md-typeset .agent-explore__footnote { border-top: 1px solid var(--explore-line); color: var(--explore-muted); font-size: .59rem; line-height: 1.5; margin: .75rem 0 0; padding-top: .65rem; }
+.agent-explore :is(button,input,a):focus-visible { outline: 2px solid var(--explore-accent); outline-offset: 3px; }
+@media (max-width: 480px) { .md-typeset .agent-explore { border-radius: 14px; padding: 1rem; } .agent-explore__input-row { flex-direction: column; } .agent-explore__input-row button { align-self: stretch; } }
+@media (prefers-reduced-motion: reduce) { .agent-explore * { scroll-behavior: auto; } }

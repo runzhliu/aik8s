@@ -10,6 +10,17 @@ hide:
 [简体中文](/){ .md-button .md-button--primary }
 [English](/en/){ .md-button }
 
+<section class="agent-explore" data-agent-explore aria-labelledby="explore-title">
+  <div class="agent-explore__header"><div><span class="agent-explore__eyebrow">AIK8S · EXPLORE</span><div class="agent-explore__title" role="heading" aria-level="2" id="explore-title">Start exploring with a question</div><p class="agent-explore__intro">Tell us what you want to learn and find practical guides and reading paths.</p></div><span class="agent-explore__mascot" aria-hidden="true">✳</span></div>
+  <form class="agent-explore__form" data-explore-form><label class="agent-explore__label" for="explore-query">Your question</label><div class="agent-explore__input-row"><input id="explore-query" data-explore-query type="search" maxlength="200" placeholder="For example: how do I troubleshoot a Pending Pod?"><button type="submit">Explore <span aria-hidden="true">↗</span></button></div></form>
+  <div class="agent-explore__shortcuts" aria-label="Suggested tasks"><span>Try these</span><button type="button" data-explore-preset="pending">Pending Pod</button><button type="button" data-explore-preset="gpu">GPU inference</button><button type="button" data-explore-preset="sandbox">Agent sandboxes</button></div>
+  <div class="agent-explore__result" data-explore-result aria-live="polite" hidden></div>
+  <div class="agent-explore__actions"><button type="button" data-explore-random>✳ Surprise me</button><button type="button" data-explore-trace aria-expanded="false" aria-controls="explore-trace">↗ See how an agent works</button></div>
+  <div class="agent-explore__trace" id="explore-trace" data-explore-trace-panel hidden><strong>An example read-only troubleshooting trace</strong><ol><li>Understand the task: investigate a Pending Pod</li><li>Choose a tool: read Pod status and scheduling events</li><li>Organize evidence: inspect constraints such as node selectors</li><li>Ask a person to review before deciding on changes</li></ol><p>This example is based on the kagent lab; this page does not connect to a live cluster.</p><a href="ai-k8s/rag-agent/kagent-kubernetes-practice/">Read the kagent lab →</a></div>
+  <p class="agent-explore__footnote">Site navigation · Curated paths and keyword matching; no language model is called. Input stays in your browser.</p>
+  <noscript><p>Enable JavaScript to explore, or <a href="ai-k8s/index.md">browse the technical map</a>.</p></noscript>
+</section>
+
 Hi~Hello👋, this is runzhliu's work notebook. I am an engineer with ten years of experience in AI/LLM/Big Data/Kubernetes, and I am also a note-taking fanatic🤔 who particularly loves taking notes. This site is a collection of notes summarized from my work experience in AI/LLM Infras over the past few years, polished with the help of large language models. I hope to exchange ideas and learn together with everyone, and do a little🤏 something in the era of large models. Whether it's about the content itself or work, feel free to reach out to me😄👏! (runzhliu@163.com)
 
 This is a set of engineering documentation for platform engineers, SREs, data platform, training, and model serving teams, systematically organizing the infrastructure knowledge required to run AI/LLM workloads on Kubernetes.

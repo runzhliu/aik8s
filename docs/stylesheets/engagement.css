@@ -25,10 +25,9 @@
   margin: -0.25rem 0 1.4rem;
 }
 
-.aik8s-share__label {
-  color: var(--md-default-fg-color--light);
-  font-size: 0.68rem;
-  margin-right: 0.15rem;
+.aik8s-share__label,
+.aik8s-share__text {
+  display: none;
 }
 
 .aik8s-share__button {
@@ -40,13 +39,20 @@
   color: var(--md-default-fg-color);
   cursor: pointer;
   display: inline-flex;
+  justify-content: center;
   font: inherit;
   font-size: 0.65rem;
-  gap: 0.35rem;
+  height: 2rem;
   line-height: 1.25;
-  padding: 0.34rem 0.62rem;
+  padding: 0;
   text-decoration: none;
   transition: border-color 120ms ease, color 120ms ease, transform 120ms ease;
+  width: 2rem;
+}
+
+.aik8s-share__status {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.65rem;
 }
 
 .aik8s-share__icon {
@@ -313,10 +319,6 @@ body.aik8s-lightbox-open {
 @media screen and (max-width: 44.984375em) {
   .aik8s-calculator {
     grid-template-columns: 1fr;
-  }
-
-  .aik8s-share__label {
-    flex-basis: 100%;
   }
 
   .aik8s-lightbox {

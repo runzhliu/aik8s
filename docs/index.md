@@ -10,6 +10,17 @@ hide:
 [简体中文](/){ .md-button .md-button--primary }
 [English](/en/){ .md-button }
 
+<section class="agent-explore" data-agent-explore aria-labelledby="explore-title">
+  <div class="agent-explore__header"><div><span class="agent-explore__eyebrow">AIK8S · EXPLORE</span><div class="agent-explore__title" role="heading" aria-level="2" id="explore-title">让探索从一个问题开始</div><p class="agent-explore__intro">告诉我你想了解什么，一起找到站内的工程实践和阅读路径。</p></div><span class="agent-explore__mascot" aria-hidden="true">✳</span></div>
+  <form class="agent-explore__form" data-explore-form><label class="agent-explore__label" for="explore-query">你的问题</label><div class="agent-explore__input-row"><input id="explore-query" data-explore-query type="search" maxlength="200" placeholder="例如：Pod Pending 应该怎么排查？"><button type="submit">开始探索 <span aria-hidden="true">↗</span></button></div></form>
+  <div class="agent-explore__shortcuts" aria-label="快捷任务"><span>试试这些</span><button type="button" data-explore-preset="pending">Pod Pending</button><button type="button" data-explore-preset="gpu">GPU 推理</button><button type="button" data-explore-preset="sandbox">Agent 沙箱</button></div>
+  <div class="agent-explore__result" data-explore-result aria-live="polite" hidden></div>
+  <div class="agent-explore__actions"><button type="button" data-explore-random>✳ 随机探索</button><button type="button" data-explore-trace aria-expanded="false" aria-controls="explore-trace">↗ 看看 Agent 如何工作</button></div>
+  <div class="agent-explore__trace" id="explore-trace" data-explore-trace-panel hidden><strong>一次只读排障的示例轨迹</strong><ol><li>理解任务：定位 Pending Pod</li><li>选择工具：读取 Pod 状态与调度事件</li><li>整理证据：分析节点选择器等约束</li><li>交给人审核：确认后再决定是否执行变更</li></ol><p>这是基于 kagent 实战整理的示例，并非当前页面实时连接集群。</p><a href="ai-k8s/rag-agent/kagent-kubernetes-practice/">阅读 kagent 实战 →</a></div>
+  <p class="agent-explore__footnote">站内导航 · 基于预设路径与关键词匹配，不调用大模型。输入仅在浏览器内处理。</p>
+  <noscript><p>启用 JavaScript 后可使用探索功能；也可直接<a href="ai-k8s/index.md">浏览技术地图</a>。</p></noscript>
+</section>
+
 Hi~你好👋, 这里是 runzhliu 的工作笔记，我是一名在 AI/LLM/大数据/Kubernetes 领域工作了十年的工程师，同时我也是一个记录狂人🤔，特别爱记笔记，这个站点是我基于这几年在 AI/LLM Infras 的工作经历总结的一些笔记，同时也经过一些大模型的润色发布的，希望和大家一起交流和学习，一起在大模型时代做一点🤏小事，无论是内容本身还是工作，欢迎大家找我交流😄👏!(runzhliu@163.com)
 
 这是一套面向平台工程师、SRE、数据平台、训练和模型服务团队的工程文档，系统整理 AI/LLM 工作负载运行在 Kubernetes 上需要的基础设施知识。
