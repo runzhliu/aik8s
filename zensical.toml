@@ -77,6 +77,7 @@ nav = [
       {"RAG 基础设施" = "ai-k8s/rag-agent/rag-infrastructure.md"},
       {"2026 Agent 现状与趋势" = "ai-k8s/rag-agent/agent-landscape-2026.md"},
       {"Agent Harness 技术综述" = "ai-k8s/rag-agent/agent-harness-technology-overview.md"},
+      {"腾讯 CNB 与 GitHub、GitLab、Gitee 对比" = "ai-k8s/rag-agent/tencent-cnb-vs-github-gitlab-gitee.md"},
       {"多 Agent 与子 Agent 协作综述" = "ai-k8s/rag-agent/multi-agent-subagent-collaboration-overview.md"},
       {"Computer Use 与 Browser 实现解析" = "ai-k8s/rag-agent/agent-computer-use-browser-implementation.md"},
       {"Agent RL：veRL 与 Miles" = "ai-k8s/rag-agent/agent-rl-verl-miles-overview.md"},

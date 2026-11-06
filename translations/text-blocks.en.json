@@ -1,4 +1,10 @@
 {
+  "e54eeb97b9b0bdf07a967ddc9d80f598aee860946b3355573f24b19c502a706d": {
+    "translation": "Developer / reviewer                 AI user\n        │                                │ @NPC, subject to role and mode\n        ▼                                ▼\nGit repository ── PR / Issue ──► Human review and protected branches\n        │                                ▲\n        ├── Cloud development             │ AI advice / optional branch and PR\n        │                                │\n        └── push / PR events ─► CNB pipeline ─┘\n                                 │ test, scan, build\n                                 ▼\n                           Artifact / OCI registry\n                                 │ environment approvals and authorization\n                                 ▼\n                       GitOps controller or deployment pipeline\n                                 │\n                                 ▼\n                          Kubernetes cluster",
+    "pages": [
+      "ai-k8s/rag-agent/tencent-cnb-vs-github-gitlab-gitee.md"
+    ]
+  },
   "768c6291162495b8a7c4771cb715c44bc1e27a74c8503b0dc3eee59c5f4f9f1b": {
     "translation": "Vendor Device Plugin DaemonSet\n  → Discovers devices on each node\n  → Registers resource names with kubelet\n  → kubelet updates Node Capacity/Allocatable\n  → Pod requests integer quantities via resources.limits\n  → scheduler selects nodes with sufficient extended resources\n  → kubelet calls Allocate\n  → Runtime receives device nodes, mounts, environment variables, or CDI device names",
     "pages": [

@@ -1,6 +1,12 @@
 {
   "schema_version": 1,
   "pages": {
+    "ai-k8s/rag-agent/tencent-cnb-vs-github-gitlab-gitee.md": {
+      "source_sha256": "92651e2a33718eff0568672789979c1daa0b567090e559de936f584172b1c313",
+      "english_sha256": "43e33f79b7af5f7ddd1783d1f8ecf747f46f6b289e576fc67d864093c9c7afbd",
+      "reviewed_at": "2026-11-06T00:38:56+00:00",
+      "review": "reviewed against source"
+    },
     "ai-k8s/foundations/kubernetes-for-ai.md": {
       "source_sha256": "99533f64b1f3cb8575f371b9ee4204377b88d121e19847efcf3383a30da62899",
       "english_sha256": "ee8621d326b631b66b342ed0caed7731d025713525159ee57f98860b445ad999",
@@ -214,8 +220,8 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "396856039faf319a867ccd1a9a845718037856b82111a9d3aeb82a21eac3890b",
-      "english_sha256": "cdb8431d7d5b25ec8eea425bdbb3e236098a633a26fc55a51d1d92346bf55440",
+      "source_sha256": "fd74c0f11f6104749b3bb87c1df4b05d4a04329bcd0e2c422f27745ec453b661",
+      "english_sha256": "ddf6a3c38c39079c5b0ed6198e56b359566c260d48f1c1b4cc469aa89fd484c3",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
