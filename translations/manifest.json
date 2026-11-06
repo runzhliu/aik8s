@@ -1522,6 +1522,12 @@
       "english_sha256": "28da75207f09a26ce026a7d3fffcedfb00327e0c72677acd8bfc6a00a5dee538",
       "reviewed_at": "2026-11-04T02:59:19.034811+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/kagent-kubernetes-practice.md": {
+      "source_sha256": "aa6d70dfbe708634a03cd4ca33af228f35d2dacf267dc7db9d6f4888998c1c70",
+      "english_sha256": "2c8450974fff53469d09c1ed831700f1bb6c3730efd7b017955f4ca88261461e",
+      "reviewed_at": "2026-11-06T04:19:15.843231+00:00",
+      "review": "reviewed against source"
     }
   }
 }
