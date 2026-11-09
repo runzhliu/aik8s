@@ -1530,9 +1530,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/multica-agent-team-platform.md": {
-      "source_sha256": "79a9d6ff3534f63a1f2cbe581d851dacebaecb1eba2e3a4e9bac21d0675f403f",
-      "english_sha256": "35ec8657a9fa72d126b821df271b73d62ae58ca03fc52ef8d0927a08d5fd05b5",
-      "reviewed_at": "2026-11-09T02:31:31.428900+00:00",
+      "source_sha256": "eb5e98639abc9d232665f270d70c67f9db291cd8970575bc687aca72ff707a92",
+      "english_sha256": "c334900de5b743cfa9f10a72e6e69b339aaaed2d6f01602c1265536c9881eb0e",
+      "reviewed_at": "2026-11-09T04:23:34.384922+00:00",
       "review": "reviewed against source"
     }
   }

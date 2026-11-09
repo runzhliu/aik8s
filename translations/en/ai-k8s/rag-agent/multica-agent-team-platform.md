@@ -36,6 +36,58 @@ flowchart LR
 
 This is a logical diagram derived from project documentation; it does not imply every step is a separate process or network call. An agent defines identity, instructions, capabilities, and configuration; a runtime determines the machine and tool; a run records an execution. An agent need not run continuously. If a runtime is offline, identity and history remain, but new tasks wait for an available execution environment. [Agent concepts](https://github.com/multica-ai/multica/blob/main/apps/docs/content/docs/agents.mdx)
 
+### 1.1 Architecture layers: coordinating work and executing it
+
+This architecture section is based on the v0.8.0 source snapshot `9b1ab4f9` used in the deployment. The diagram follows that version. Arrows represent logical connections, not a claim that all data flows in only one direction. Web, desktop, and CLI are entry points; the backend owns collaboration data, authorization, and task management; the daemon runs on the machine that actually performs work. In our test the daemon ran in a separate Pod in the test cluster; it can also run on a developer workstation or another server. [Project architecture source](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/developers/architecture.mdx)
+
+```mermaid
+flowchart LR
+  U[User] --> UI[Web / Desktop / CLI]
+  UI -->|HTTP and realtime events| API[Go API and task service]
+  API <--> DB[(PostgreSQL)]
+  API <-.->|Notifications and state| WS[Realtime connections]
+  WS <-.-> D[Daemon on execution machine]
+  D --> R[Runtime / provider adapters]
+  R --> CLI[Coding agent CLI]
+  CLI --> M[Model service]
+  CLI --> W[Local work directory and tools]
+  D -->|Progress, results, status| API
+```
+
+| Layer | Main responsibility | Considerations |
+| --- | --- | --- |
+| Client | Display issues, agents, run status, and logs; accept user actions | A realtime page is a view of state, not a substitute for persisted server results |
+| Go backend | Authentication, workspace authorization, task and collaboration data, runtime notification | The internal `task` corresponds to a product Run; one issue can produce multiple runs |
+| PostgreSQL | Store business data including collaboration and tasks | The source of truth for business state; clients must query again after missed realtime events |
+| Daemon and runtime | The daemon registers environments, claims work, prepares directories, starts tools, and reports results; a runtime describes a concrete execution environment available to a workspace | One daemon can represent multiple runtimes; runtime, agent, and run are different concepts |
+| Provider and model | Adapt startup, output, cancellation, and usage for coding CLIs; the CLI calls its model and tools | Multica is not the model itself; protocol and resume support depend on the adapter |
+
+Backend requests in the source generally follow `router → middleware → handler → service → sqlc query → PostgreSQL`. `internal/realtime/` pushes changes to user clients, while `internal/daemonws/` wakes daemons and handles daemon RPC. These WebSocket paths serve different purposes. WebSocket reduces notification latency and should not be treated as the sole reliable task database. Redis is optional in this architecture for cross-instance realtime events, caching, or temporary coordination; multi-replica deployments still require explicit consistency and recovery testing. [Architecture documentation](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/developers/architecture.mdx)
+
+### 1.2 How one Run executes internally
+
+1. A user assigns an issue, mentions an agent in a comment, sends a chat message, or triggers automation. The issue holds the longer-lived goal and discussion; each trigger creates a Run.
+2. The backend's `TaskService` creates a queued task and notifies the target runtime. The daemon claims it through the API; periodic polling backs up realtime wakeups when notifications are missed or connections fail.
+3. The server issues temporary credentials bound to the task and agent. The daemon prepares a work directory and starts an installed coding CLI through a provider adapter. The CLI calls its configured model and tools.
+4. The daemon reports status, messages, and tool events; the server updates the task and issue and sends realtime updates to clients. On completion a person still needs to inspect logs, files, and tests, rather than relying on `completed` alone.
+
+These are three separate responsibilities: <strong>the server manages the queue and state, the execution environment runs commands, and the chosen model service performs inference.</strong> Separate task directories organize files but are not automatically security sandboxes. In the screenshot from our test, the sandbox backend was unavailable and the run retried with wider permissions: runtime access needs separate verification. [Run lifecycle](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/tasks.mdx)
+
+### 1.3 Queueing, concurrency, and failure recovery
+
+A Run may move through `queued`, `dispatched`, and `running` before `completed`, `failed`, or `cancelled`; `waiting_local_directory` is also possible when the target local directory is locked. A run's state describes one execution, while an issue's state represents workflow progress. Changing the assignee or issue status does not automatically stop an already running Run; stop it in the execution log. [Run lifecycle](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/tasks.mdx)
+
+In the documentation for this snapshot, the daemon sends a heartbeat every 15 seconds by default; the server combines heartbeats and connection state to determine availability. When a runtime goes offline, already queued work waits for that specific runtime rather than automatically moving to another machine. It can fail after the reconnect grace and other conditions are met; eligible failures can be retried. Recovery or retry means another execution attempt: <strong>it does not ensure exactly-once external writes or lossless continuation from any arbitrary line of code.</strong> Make side effects such as releases and database writes idempotent, and test cancellation and recovery in a test environment.
+
+The same snapshot documents defaults of up to 20 concurrent Runs per daemon and 6 per agent. Actual concurrency is limited by the smaller applicable cap, configuration, resources, directory locks, and other conditions. These are product defaults, not performance measurements. Our test observed only a small number of overlapping tasks; it did not test capacity, fault injection, or high availability. [Daemon and runtimes](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/daemon-runtimes.mdx)
+
+### 1.4 Where data and permissions reside
+
+The official documentation says CLI login credentials and local code directories remain on the execution machine and the server does not automatically upload the whole working directory. Task context, logs, comments, and agent replies may nevertheless contain code fragments, so redaction and retention still matter. Agent custom environment variables and MCP configuration are stored on the server: “local execution” does not mean every secret remains only on the local machine. [Daemon and runtimes](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/daemon-runtimes.mdx)
+
+Task credentials may be passed to a CLI in its process environment and inherited by child processes by default. Permission reviews must cover the execution identity, files, network, model credentials, and subprocesses, not just Multica workspace permissions. A production design needs dedicated identities and isolated execution environments, network and secret controls, log retention, and review for operations with external side effects.
+
+
 ## 2. What capabilities does it provide?
 
 | Capability | Purpose | How to interpret it |

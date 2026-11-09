@@ -36,6 +36,58 @@ flowchart LR
 
 这张图是根据项目文档整理的逻辑示意，不代表每一步都在独立进程或网络调用中完成。Agent 定义了身份、指令、能力和配置；runtime 决定在哪台机器及使用什么工具执行；run 记录一次执行。Agent 并非必须始终运行，runtime 离线时身份和历史可保留，但新任务需要等待可用执行环境。[Agent 概念](https://github.com/multica-ai/multica/blob/main/apps/docs/content/docs/agents.mdx)
 
+### 1.1 架构分层：控制任务与执行任务
+
+以下架构以本次部署的 v0.8.0 源码快照 `9b1ab4f9` 为依据。下图按该版本梳理，箭头表示逻辑连接，不代表所有数据都只沿一个方向流动。Web、桌面端和 CLI 是入口；后端负责协作数据、授权和任务管理；daemon 则部署在真正执行工作的机器上。本次实操将 daemon 放在测试集群的独立 Pod 中，它也可以运行在开发机或其他服务器上。[项目架构源码](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/developers/architecture.mdx)
+
+```mermaid
+flowchart LR
+  U[用户] --> UI[Web / Desktop / CLI]
+  UI -->|HTTP 与实时事件| API[Go API 与任务服务]
+  API <--> DB[(PostgreSQL)]
+  API <-.->|通知与状态| WS[实时连接]
+  WS <-.-> D[执行机上的 daemon]
+  D --> R[Runtime / Provider 适配层]
+  R --> CLI[编码 Agent CLI]
+  CLI --> M[模型服务]
+  CLI --> W[本地工作目录与工具]
+  D -->|进度、结果、状态| API
+```
+
+| 层次 | 主要职责 | 要注意什么 |
+| --- | --- | --- |
+| 客户端 | 展示 Issue、Agent、运行状态与日志，接收用户操作 | 实时页面是状态视图，不能代替服务端持久化结果 |
+| Go 后端 | 认证和工作空间授权、维护任务与协作数据、通知运行时 | 内部实现中的 `task` 对应产品界面的 Run；一个 Issue 可产生多个 Run |
+| PostgreSQL | 保存协作与任务等业务数据 | 是业务状态的事实来源；实时消息丢失后需要重新查询状态 |
+| daemon 与 runtime | daemon 注册可用环境、领取任务、准备目录、启动工具并回传结果；runtime 描述工作空间中的具体执行环境 | 一个 daemon 可对应多个 runtime；runtime 与 Agent、Run 不是同一个概念 |
+| Provider 与模型 | 适配不同编码 CLI 的启动、输出、取消与用量；CLI 再调用其模型与工具 | Multica 并非模型本身，实际协议和恢复能力随适配器而变化 |
+
+源码中的后端请求一般经过 `router → middleware → handler → service → sqlc query → PostgreSQL`；`internal/realtime/` 面向用户界面推送变化，`internal/daemonws/` 面向 daemon 唤醒及远程调用。两条 WebSocket 路径用途不同，WebSocket 是降低延迟的通知通道，不应当作唯一可靠的任务数据库。Redis 在该架构中可选，用于跨实例实时事件、缓存或临时协调；多副本部署仍需逐项验证一致性与故障恢复。[架构文档](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/developers/architecture.mdx)
+
+### 1.2 一次 Run 在内部怎样执行
+
+1. 用户指派 Issue、在评论中提及 Agent、发送聊天消息或由自动化触发；Issue 保存长期目标和讨论，一次触发创建一条 Run 记录。
+2. 后端的 `TaskService` 创建排队任务并通知目标 runtime。daemon 通过接口领取；实时唤醒之外还有周期性轮询，作为通知遗漏或连接中断时的补救路径。
+3. 服务端签发与任务及 Agent 绑定的临时凭据；daemon 准备工作目录，通过 provider 适配层启动已安装的编码 CLI。CLI 使用其配置调用模型和工具。
+4. daemon 回传运行状态、消息和工具事件；服务端更新任务和 Issue，界面收到实时事件后刷新。执行结束后，用户仍需检查日志、文件和测试，而不是只看 `completed`。
+
+这解释了图中三个边界：<strong>队列与状态由服务端管理，命令由执行环境运行，模型推理由所选模型服务完成。</strong> 任务目录隔开文件布局，不自动等于安全沙箱。本次截图中出现沙箱后端不可用、随后采用更宽权限重试，正是需要单独核验运行时权限的例子。[Run 生命周期](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/tasks.mdx)
+
+### 1.3 排队、并发和故障恢复
+
+一条 Run 可能经历 `queued`、`dispatched`、`running`，最终进入 `completed`、`failed` 或 `cancelled`；目标本地目录被占用时还可能处于 `waiting_local_directory`。状态是一次执行的结果，Issue 的状态是工作流状态，二者不能混为一谈。修改 Issue 的负责人或状态也不会自动停止已经启动的 Run，需要在执行记录中主动停止。[Run 生命周期](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/tasks.mdx)
+
+在该快照的官方说明中，daemon 默认每 15 秒心跳一次，服务端结合心跳和连接状态判断在线情况。离线时，已经排队的任务等待指定 runtime 恢复，不会因此自动换到另一台机器；超出重连宽限期等条件后才可能失败，符合条件的故障可触发重试。恢复或重试意味着新的执行尝试，<strong>不保证外部写入恰好一次，也不等于从任意一行代码无损续跑</strong>。应让发布、写数据库等副作用具备幂等性，并在测试环境验证取消与恢复。
+
+同一快照说明 daemon 默认最多并发 20 个 Run，每个 Agent 默认最多 6 个；实际受两者较小值及配置、资源、目录锁等限制。这是产品默认配置，不是性能指标；本次只观察到少量任务时间重叠，尚未做容量、故障注入或高可用测试。[daemon 与 runtime](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/daemon-runtimes.mdx)
+
+### 1.4 数据和权限在哪里
+
+按官方说明，CLI 的本地登录凭据和代码目录保留在执行机，服务端不会自动上传整个工作目录；但任务上下文、日志、评论及 Agent 写回的结果可能包含代码片段，因此仍需考虑脱敏与保留期。Agent 自定义环境变量和 MCP 配置会保存在服务端，不能把“本地执行”理解成所有秘密都只在本机。[daemon 与 runtime](https://github.com/multica-ai/multica/blob/9b1ab4f9eed9153a94719596eb8a728d2770f065/apps/docs/content/docs/daemon-runtimes.mdx)
+
+任务凭据可通过进程环境提供给 CLI，子进程默认可能继承；权限评估要覆盖执行用户、文件、网络、模型凭据和子进程，而不仅是 Multica 工作空间权限。生产方案应使用专用身份和隔离执行环境、控制网络和密钥、制定日志留存，并对有外部副作用的操作设置审核。
+
+
 ## 2. 它提供了哪些能力
 
 | 能力 | 作用 | 应如何理解 |
