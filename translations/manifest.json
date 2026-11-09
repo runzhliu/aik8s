@@ -1536,9 +1536,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/agent-rl-training-sandboxes.md": {
-      "source_sha256": "a0b050b79c57aa655bc7ff2bb4cfdafd5b00773371c4ad7a65b438799a501184",
-      "english_sha256": "59a19f24ab3c21b8d232fe4684ad4fd2a9eb5734a73318874418cd515b8d102c",
-      "reviewed_at": "2026-11-09T06:53:31.346531+00:00",
+      "source_sha256": "59afac411d90b1f8c12cc27e47ef1a49cecdf5061346e211002fff0bdbcb9eb7",
+      "english_sha256": "f3355eb9276d9519cd3810329c13c552d0728fb50f7fd34938943732c8b0fd17",
+      "reviewed_at": "2026-11-09T11:14:22.391218+00:00",
       "review": "reviewed against source"
     }
   }

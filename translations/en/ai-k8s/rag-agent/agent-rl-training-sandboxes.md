@@ -63,6 +63,49 @@ In agent reinforcement learning (Agent RL), the model produces actions under its
 
 Keep the task and environment version, model and sampling configuration, tool calls, final artifacts, verifier version, reward and failure reason. Separate training from evaluation data; keep hidden tests outside model-accessible directories so leakage is not mistaken for generalization. Report success, incorrect answers, timeouts, environment failures and unexecuted cases separately. Preserve initial attempts when retrying infrastructure failures instead of reporting only eventual successes.
 
+### 3.1 Public industry examples: which stages actually used environments?
+
+Public reports disclose different levels of detail. Some describe sandbox implementation explicitly; others mention only executable environments or compiler-based tests. The evidence below distinguishes these cases: code verification alone does not establish a particular sandbox implementation, and post-training is not presented as base pretraining.
+
+| Team and source | Stage | What is public | What is undisclosed or cannot be inferred |
+| --- | --- | --- | --- |
+| Moonshot AI: Kimi K2 report | SFT data synthesis and Agent RL post-training | Combines simulated tools with real execution sandboxes; software-engineering tasks use Kubernetes sandbox infrastructure | The reported support for over 10,000 concurrent sandbox instances is the authors' claim, not our benchmark; the full reproducible isolation configuration is not specified |
+| Alibaba Qwen: Qwen3-Coder-Next report | Mid-training data, post-training and evaluation | Verifiable coding tasks, containerized repositories and executable environments; MegaFlow orchestration uses Kubernetes and Argo | The report describes containers and orchestration; it does not establish a particular microVM or isolation boundary |
+| OpenAI: frontier-model training environment security | RL training and internal evaluation | Restricted Linux containers inside microVMs, with network/cloud boundaries and monitoring; separate approach for GPU tasks | It does not establish the same configuration for every model and training stage |
+| DeepSeek: R1 report | RL reward design | Illustrates verifiable coding feedback using a compiler and predefined tests | That passage does not identify a sandbox product or isolation design |
+| Hugging Face: Open R1 reproduction | Code-reward training example | Executes generated code through sandbox providers and scores test results | This is an independent reproduction, not evidence of DeepSeek's internal implementation |
+
+#### Kimi K2: one environment infrastructure supports data synthesis and RL
+
+The [Moonshot AI Kimi K2 report](https://arxiv.org/html/2507.20534) describes combining stateful simulated tool environments with real execution sandboxes when synthesizing SFT data, especially for coding and software engineering where real feedback matters. Trajectories can be filtered using objective results such as test pass rates. Its RL section describes constructing software-engineering environments from issues, pull requests and executable tests; the report says its Kubernetes sandbox infrastructure supports over <strong>10,000 concurrent instances</strong>.
+
+Sandboxes can therefore support both generating or filtering training data and RL interaction and verification, but those stages use different training signals. The public number is the team's reported instance concurrency, not tasks per second, GPU utilization, or a capacity another cluster will achieve. It does not prove that every sample in base pretraining ran in a sandbox.
+
+#### Qwen3-Coder-Next: executable tasks for mid-training and post-training
+
+The [Qwen3-Coder-Next report](https://arxiv.org/html/2603.00729) describes constructing software-engineering tasks from executable repositories and tests, including controlled bug injection, resulting in about <strong>800,000 verifiable task instances</strong>. Its internal MegaFlow organizes each coding task into agent rollout, evaluation and post-processing. Rollout usually co-locates the agent and execution-environment containers in one Pod; evaluation uses a dedicated container.
+
+The report calls the coding- and agent-focused stage starting from an existing base model mid-training; it includes multi-turn trajectories generated and filtered from executable tasks, followed by SFT and RL. This is an example of <strong>execution environments helping produce mid-training data and supporting post-training</strong>, not proof that every pretraining token triggers a sandbox. The report also observes limited transfer between some agent scaffolds, making diversity of environments and tool formats an important evaluation dimension. The 800,000 figure is the reported number of task instances, not concurrent sandboxes.
+
+#### OpenAI: sandboxing as one layer of training security
+
+OpenAI's October 2026 [frontier-model training environment security report](https://openai.com/index/securing-our-frontier-model-training-environment/) describes restricted Linux containers inside microVMs for code execution and computer-use tasks, combined with network controls, cloud identity and monitoring. Tasks requiring accelerators use GPU-backed containers and user-space sandboxing among the described approaches. It discusses boundary-crossing risks in training and evaluation and says frontier-model RL training resumed after hardening.
+
+The lesson is <strong>defense in depth</strong>: outer network and identity controls should still constrain access if one layer fails. The report does not disclose complete resource configurations for every training task or establish the same sandbox for all pretraining and post-training.
+
+#### DeepSeek and Open R1: do not mistake a reproduction for internal architecture
+
+The [DeepSeek-R1 report](https://arxiv.org/html/2501.12948) uses compilers and predefined test cases to illustrate correctness feedback for coding problems in RL reward design. That explanation does not identify a specific isolation product or architecture. The independent [Hugging Face Open R1](https://github.com/huggingface/open-r1) reproduction explicitly supports executing generated code through sandbox providers and scoring test results.
+
+Together these examples explain how verifiable rewards can be implemented, but Open R1's choices cannot establish DeepSeek's internal sandbox design.
+
+#### Lessons for platform teams
+
+1. <strong>Identify the stage and signal:</strong> trajectory synthesis, mid-training, SFT and online RL place environment calls differently; “training used a sandbox” is too vague.
+2. <strong>Build environments, verifiers and trainers as distinct components:</strong> version images, tests, permissions and rewards; separate final-verification write access from the agent environment.
+3. <strong>Measure both safety and throughput:</strong> instance concurrency, task completion, P95 creation latency and useful trajectory production are different metrics; layered isolation and network controls also require testing.
+
+
 ## 4. Combining open-source components
 
 | Project or technology | Primary role | What it can address | What it does not solve alone |
