@@ -208,5 +208,6 @@
   "MiniMax-M3.1-Flash：Day0 首测": "MiniMax-M3.1-Flash: Day0 measurements",
   "DeepSeek V4.1：vLLM 0.32.0 升级实测": "DeepSeek V4.1: vLLM 0.32.0 Upgrade Benchmark",
   "Qwen3-TTS 部署与文章旁白": "Qwen3-TTS Deployment and Article Narration",
-  "DeepSeek V4.1：vLLM 0.33.0 升级实测": "DeepSeek V4.1: vLLM 0.33.0 Upgrade Benchmark"
+  "DeepSeek V4.1：vLLM 0.33.0 升级实测": "DeepSeek V4.1: vLLM 0.33.0 Upgrade Benchmark",
+  "大模型训练沙箱综述": "Sandboxes for LLM Training"
 }
