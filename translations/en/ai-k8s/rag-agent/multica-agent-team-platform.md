@@ -2,7 +2,7 @@
 title: "Multica Survey: Bringing Coding Agents into a Team Task System"
 description: "An analysis of Multica tasks, runtimes, execution records, DeepSeek Harness integration, self-hosting, and security boundaries."
 status: evolving
-last_reviewed: 2026-11-06
+last_reviewed: 2026-11-09
 ---
 
 # Multica Survey: Bringing Coding Agents into a Team Task System
@@ -70,7 +70,7 @@ The official Compose example binds to localhost by default. Cross-machine access
 
 ### 4.1 Hands-on test: deployment through one completed task
 
-The official **v0.8.0** Helm Chart was installed into a dedicated test namespace. The frontend, backend, and PostgreSQL formed the control plane; separate 5 GiB persistent volumes backed the database and uploads. The frontend was accessed through a local port-forward, without creating an external Ingress. The workspace, account, and task in the public screenshots are test data; internal addresses and credentials are omitted.
+The official **v0.8.0** Helm Chart was installed into a dedicated test namespace. The frontend, backend, and PostgreSQL formed the control plane; separate 5 GiB persistent volumes backed the database and uploads. The frontend was accessed through a local port-forward, without creating an external Ingress. The workspace, account, and task in this public article are test data; internal addresses and credentials are omitted.
 
 | Item | Configuration or observation |
 | --- | --- |
@@ -81,7 +81,7 @@ The official **v0.8.0** Helm Chart was installed into a dedicated test namespace
 | Model | Existing model service reached through a separate office-workstation bridge; the workstation and bridge must remain online |
 | Test task | Explain three common scheduling causes of Pod Pending and provide read-only troubleshooting commands, without accessing or modifying a real cluster |
 
-The sequence was to install the control plane with Helm and wait for Pods and volumes; start a separate runtime Pod and install the CLI, DSH, and bridge plugin; authenticate a test account and connect the runtime; then create an agent, submit a task, and inspect its run. The light-theme screenshots below are from the real test and have not been redrawn.
+The sequence was to install the control plane with Helm and wait for Pods and volumes; start a separate runtime Pod and install the CLI, DSH, and bridge plugin; authenticate a test account and connect the runtime; then create an agent, submit a task, and inspect its run. The results below come from the real test.
 
 From the root of the official v0.8.0 source tree, prepare an environment-specific `values.yaml`, then use the following control-plane installation and local access commands. Configure secrets, image registries, and storage for your environment; see the [official chart](https://github.com/multica-ai/multica/tree/v0.8.0/deploy/helm/multica) for the full options.
 
@@ -92,23 +92,43 @@ kubectl -n multica-lab get pods,pvc
 kubectl -n multica-lab port-forward svc/multica-frontend 19888:3000
 ```
 
-The separate runtime Pod also requires a supported CLI, a built DSH plugin, and model configuration. Authenticate interactively with `multica login --token=` before starting the daemon; do not put real tokens in command arguments, images, or public values. The following screenshot shows the runtime actually recognized by the application.
-
-![Multica test runtime online](../../assets/practices/multica-sr1/runtime-online.jpg)
-
-*The test workspace shows one online runtime; the runtime actually runs in a separate Pod in the test cluster.*
-
-![Real Multica task execution record](../../assets/practices/multica-sr1/execution-trace.jpg)
-
-*The run shows completion, about 1 minute 35 seconds, and model and command steps. This is one functional demonstration, not a performance benchmark. The displayed cost was not checked against billing and is not a cost conclusion.*
-
-![Agent reply posted to the task](../../assets/practices/multica-sr1/issue-result.jpg)
-
-*The agent posted its reply to the task. The screenshot preserves the original model output; its opening paragraph contains the factual error described below.*
+The separate runtime Pod also requires a supported CLI, a built DSH plugin, and model configuration. Authenticate interactively with `multica login --token=` before starting the daemon; do not put real tokens in command arguments, images, or public values. The application recognized one online runtime. The first task's run record showed completion, about 1 minute 35 seconds, and model and command steps. This is one functional demonstration, not a performance benchmark. The displayed cost was not checked against billing and is not a cost conclusion.
 
 The test exercised the path “assignment in the UI → claim by the in-cluster daemon → DSH model and tool calls → reply to the issue.” The run completed with 15 recorded steps. **The opening of the model's answer is inaccurate**, however: `Pending` can occur before scheduling or after a Pod has been bound while its containers are not yet ready, such as during image pulling. `Pending` alone does not prove that a node has not been assigned. Consult [Kubernetes Pod lifecycle](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase), and inspect `PodScheduled`, the node field, container states, and events together. A complete execution trace does not guarantee a correct answer; human review remains necessary.
 
-**Boundaries of this test:** repository changes, multi-agent parallelism, failure recovery, high availability, and load performance were not tested. The runtime was assembled in a temporary Pod with ephemeral in-container files; it must be reconfigured after Pod recreation and is not a recoverable production deployment. Although automatic cluster token mounting was disabled and no additional Kubernetes role granted, network isolation was not validated and this was not a complete security sandbox; DSH could still execute local commands. Production use needs a dedicated identity, secrets management, persistence, network restrictions, resource quotas, and runtime recovery. The demonstration model bridge depends on the office workstation and is not presented as a recommended production architecture.
+**Boundaries of this test:** changes to a real repository, agent collaboration, failure recovery, high availability, and load performance were not tested. The runtime was assembled in a temporary Pod with ephemeral in-container files; it must be reconfigured after Pod recreation and is not a recoverable production deployment. Although automatic cluster token mounting was disabled and no additional Kubernetes role granted, network isolation was not validated and this was not a complete security sandbox; DSH could still execute local commands. Production use needs a dedicated identity, secrets management, persistence, network restrictions, resource quotas, and runtime recovery. The demonstration model bridge depends on the office workstation and is not presented as a recommended production architecture.
+
+### 4.2 Four additional hands-on cases: from analysis to running tests
+
+On 2026-11-09, the same test environment was used with two agents: a Kubernetes troubleshooting agent and a Python test-development agent, handling fictional operational scenarios and a local coding task respectively. Multica assigned each issue to a runtime. The durations below are individual observations of the workflow, not product or model benchmarks. The three analysis tasks did not connect to a real cluster; the coding task ran in its runtime task directory.
+
+| Case | Input and acceptance goal | Observed result | Single run |
+| --- | --- | --- | --- |
+| Application configuration review | Review a fictional configuration lacking probes and resource settings, using `latest`, and with mismatched Service labels | Produced prioritized findings, example Deployment/Service changes, and validation suggestions; the example was not deployed | 4 min 15 sec |
+| Service troubleshooting | Pod Ready and DNS resolving, but Service selector `app=api` and Pod label `app=web` | Identified the selector mismatch and suggested inspecting EndpointSlices; other network causes still require real-world validation | 4 min 32 sec |
+| HPA scale calculation | Three replicas, 90% CPU utilization, target 60%, maximum 10 | Calculated `ceil(3 × 90 / 60) = 5`; listed checks for metrics, capacity, and scaling behavior | 2 min 36 sec |
+| Python code and tests | Create a billing function using `Decimal`, covering rounding, zero, and invalid inputs | Generated code and tests; the agent reported 17 passing tests, and an independent rerun in the same task directory also passed all 17 | 3 min 19 sec |
+
+![Multica desktop view of the HPA analysis](../../assets/practices/multica-sr1/desktop-hpa-analysis.jpg)
+
+*The desktop view shows the hands-on task list and the fictional HPA inputs and agent calculation. The original model output is preserved; actual scaling also depends on metrics, policies, and other conditions.*
+
+![Multica desktop view of the Python unit-test case](../../assets/practices/multica-sr1/desktop-code-tests.jpg)
+
+*The Python agent reports the generated files, test command, and 17 passing tests. We independently reran the tests in the task directory; this did not validate a real billing system.*
+
+![Multica desktop execution trace](../../assets/practices/multica-sr1/desktop-run-trace.jpg)
+
+*The HPA task's actual execution trace shows model and tool steps. It also shows a retry with wider access after the sandbox backend was unavailable: this test environment did not provide a complete execution sandbox. Displayed costs were not reconciled with billing.*
+
+**How to reproduce the workflow:** create an agent and select an online runtime; when creating an issue, state its inputs, acceptance criteria, and resources it must not access, then assign it to the agent. On completion, inspect the result and tool calls in the task's activity and execution log. For a coding task, also inspect the actual files and independently run the tests. All four issues entered “In review”; this is not proof that a person has accepted the answers.
+
+One detail in the Service case deserves review: the model correctly identified the selector/label mismatch, but made overly absolute claims about where NetworkPolicy applies and about timeouts versus connection refusals. Different CNIs, proxy modes, rules, and client paths can behave differently; the example cannot rule out policies or establish the likelihood of a second problem. The P0/P1 priorities in the configuration review are also model suggestions and require review against business impact, change risk, and the actual environment.
+
+The HPA example is an idealized calculation assuming valid, complete metrics for the relevant Pods and leaving tolerance, scaling policies, and other metrics aside; the actual controller status determines the real outcome. The coding case created new files; it did not modify an existing repository or submit a PR. Seventeen passing tests do not cover every business edge case. The Kubernetes cases were static reasoning exercises, not induced failures or applied fixes.
+
+Run records show that the HPA and Service tasks both started at 01:46:16 UTC and their execution intervals overlapped; a different agent received the Python task. This demonstrates overlapping execution in this run, **not collaboration between agents**, a concurrency limit, or reliability.
+
 
 ## 5. Security boundary and license
 
