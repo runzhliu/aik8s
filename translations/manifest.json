@@ -1552,6 +1552,12 @@
       "english_sha256": "2d5b4932ff20213bc3f1720bdf5850fd96d49608aa7145b71ab1be7f015ded0a",
       "reviewed_at": "2026-11-10T06:04:08.085174+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/lobehub-kubernetes-practice.md": {
+      "source_sha256": "b4f2c929745fdff23119c538085840945c64056c9449280820ee08b4bc7e68fb",
+      "english_sha256": "5e44aee12c56eab37303bb52e0e81e4d0e229cff039c2aa3a455e91ec9168704",
+      "reviewed_at": "2026-11-10T10:17:30.379529+00:00",
+      "review": "reviewed against source"
     }
   }
 }

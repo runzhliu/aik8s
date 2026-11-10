@@ -211,5 +211,6 @@
   "Qwen3-TTS 部署与文章旁白": "Qwen3-TTS Deployment and Article Narration",
   "DeepSeek V4.1：vLLM 0.33.0 升级实测": "DeepSeek V4.1: vLLM 0.33.0 Upgrade Benchmark",
   "大模型训练沙箱综述": "Sandboxes for LLM Training",
-  "CubeSandbox 与 Qwen 微调实战": "CubeSandbox and Qwen Fine-Tuning in Practice"
+  "CubeSandbox 与 Qwen 微调实战": "CubeSandbox and Qwen Fine-Tuning in Practice",
+  "LobeHub Kubernetes 实战": "LobeHub on Kubernetes in Practice"
 }
