@@ -1548,9 +1548,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/agentteams-kubernetes-practice.md": {
-      "source_sha256": "53f006c378b90c7cbccc4e583c820292e0571a67ad10f685716fe2cf6d7ce75a",
-      "english_sha256": "46ee23485af310a406eba3f6023a5997237b0d0ba034fb8cae55217f7f165968",
-      "reviewed_at": "2026-11-10T05:21:23.637655+00:00",
+      "source_sha256": "d1b9f802d54d06537d5e496fde593407cfa8f3a54f10cab3076a1aeacb507019",
+      "english_sha256": "2d5b4932ff20213bc3f1720bdf5850fd96d49608aa7145b71ab1be7f015ded0a",
+      "reviewed_at": "2026-11-10T06:04:08.085174+00:00",
       "review": "reviewed against source"
     }
   }

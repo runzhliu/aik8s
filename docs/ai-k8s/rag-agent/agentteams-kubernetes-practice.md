@@ -46,20 +46,34 @@ AgentTeams 把「创建和维护 Agent」与「Agent 如何思考、使用工具
 
 一次典型请求从聊天进入 Manager，经任务说明和消息分派到 Worker；Worker 调模型、运行工具、输出文件，再将结果汇报。用户与评审者仍需检查实际文件、执行日志和边界条件。本次测试中模型经网关后还依赖办公机桥接，该桥接是实验适配而非 AgentTeams 必需组件。
 
-## 与 Multica 实测对比
+## AgentTeams 与 Multica：产品功能怎么选
 
-此前也在测试集群部署过 [Multica v0.8.0](multica-agent-team-platform.md)。两次实验的模型、任务和执行配置不同，下表比较架构与观察，不是同条件性能对比。
+两者都能让人和多个 Agent 协作，但组织工作的中心不同：AgentTeams 以 Manager/Worker、团队和房间协作为核心，强调管理 Agent 的运行环境；Multica 以 Workspace、Issue、Project 和 Run 为核心，强调把编码 Agent 接到日常项目管理流程。两者都支持多 Agent 和聊天，下面不是“谁有聊天、谁有多 Agent”的二选一。
 
-| 维度 | AgentTeams | Multica |
-| --- | --- | --- |
-| 主要入口 | Matrix/Element 房间对话，Manager 协调 Worker | 工作空间中的 Issue、Agent、执行记录 |
-| 运行模型 | 本次 Controller 按自定义资源启动独立 Worker Pod；Agent 运行时和模型可配置 | 本次控制面与独立 runtime Pod 分离，daemon 启动 DSH CLI |
-| 协作和产物 | 房间消息、任务文件与共享对象存储；本次实际有人补发提示 | Issue 指派、评论和 run；本次测试观察到任务重叠，未证明 Agent 间协作 |
-| 排查入口 | 聊天、Worker 状态/Pod 日志和共享文件；项目视图取决于插件 | Issue 活动与 run 时间线、工具事件；仍需核验代码和测试 |
-| 已见风险 | 本次 Worker 报错并进入重启循环；状态文件问题需进一步定位 | 本次运行时沙箱不可用，执行曾退回更宽权限；两者都不能仅靠提示词隔离 |
-| 适用切入点 | 想探索聊天驱动的角色分工和 Kubernetes 原生 Worker 管理 | 想围绕 Issue 跟踪编码 Agent 的工作、执行记录和人工审核 |
+本表以 AgentTeams **v1.2.6** 与 Multica **v0.8.0** 的源码及官方文档为主要范围；“支持”表示版本文档描述的能力，<strong>不代表本次全部实测通过</strong>。不同运行时、插件、自托管开关和版本会改变具体能力。参考 [AgentTeams Kubernetes 指南](https://github.com/agentscope-ai/AgentTeams/blob/v1.2.6/docs/usage/deployment/kubernetes.md)、[Multica 核心概念](https://github.com/multica-ai/multica/blob/v0.8.0/apps/docs/content/docs/concepts.mdx)。
 
-两者都需要对身份、存储、网络、凭据和模型输出做人工验收；一次实验中的故障不能推出整个项目的可靠性排名。AgentTeams 不止支持聊天，Multica 也不只有单 Agent；应按目标版本实际功能验证。
+| 功能 | AgentTeams | Multica | 实际选择时看什么 |
+| --- | --- | --- | --- |
+| 工作对象与入口 | Manager、Worker、Team、Human；通过 Matrix 房间与 Agent 协作，也有项目工作流 | Workspace 中的 Issue、Project、Agent、Squad、Chat；Issue 可以分配给成员、Agent 或 Squad | 主要工作是围绕聊天组织角色，还是围绕需求单和项目流转 |
+| 多 Agent 编排 | Manager 管理 Worker；Team 可组织成员，TeamHarness 支持项目和任务流程 | Squad 由 Agent Leader 协调成员；Issue 可指派给 Squad；并非只能单 Agent 工作 | 任务拆分、依赖、交接与冲突处理是否符合团队流程 |
+| 项目与任务状态 | TeamHarness 可以维护项目/任务及状态历史；项目检查 API 依赖相应插件和项目数据 | Project 聚合 Issue；Issue 保存状态、讨论和关联资源；每次触发产生 Run | AgentTeams 的工作流是否启用并被接入；Multica 的 Issue 与运行状态分别如何管理 |
+| 聊天与人工介入 | 默认组合 Element + Matrix；人在房间观察、补充信息并介入 | 工作空间 Chat、Issue 评论；可通过外部聊天渠道与 Agent 交互 | 是否希望自带独立 IM，还是接入团队已有的 IM 和任务系统 |
+| 对接飞书、Slack 等 | Matrix 是本文所测路径；其他渠道取决于运行时与对应接入配置，本次未验证 | 文档列出飞书、Slack、钉钉、企业微信和 Telegram；部分为社区维护，接入方式与可用范围不同 | 不把“支持渠道”当成已经完成企业应用审批和私有环境验证 |
+| 编码、Git 与 PR | Worker 可借助运行时、工具和 Skill 执行编码工作；Git 权限、自动化和审核路径须按配置验证 | 支持围绕 Issue 关联 PR/合并请求与 CI；自托管 Gitea、Forgejo、GitLab 集成需启用配置和 webhook | 多仓库、分支隔离、CI、合并权限及审核流程能否落地；本次均未实测 PR |
+| 自动化触发 | 可结合运行时及项目工作流实现自动化；不同运行时、插件能力不同 | Autopilot 支持定时或 webhook，可创建 Issue 或直接触发 Run；两种模式对运行时离线的处理不同 | 外部事件、重复投递、离线和幂等怎么处理；AgentTeams 本次未做等价触发实测 |
+| 模型与运行时 | Manager/Worker 可配置模型；Worker 支持多个运行时，兼容性依版本和配置而定；Higress 负责网关能力 | daemon 启动用户配置的编码 CLI；不同 CLI 的会话、工具和认证能力不同；DSH 通过独立插件接入 | 是否需要统一网关与容器化 Worker，或希望复用已有开发机与编码 CLI |
+| Skills 与工具 | 支持 Worker 的 Skill、MCP 等配置；工具权限由运行环境、网关和配置共同决定 | Agent 可配置 Skills 和运行工具；具体工具能力取决于绑定的 CLI/runtime | Skill 分发、版本、密钥可见性及工具权限是否可审计；有 Skill 不等于强隔离 |
+| 过程、产物与审查 | Matrix 消息、任务状态、文件与可选项目视图；日志和工作流能力取决于运行时/插件 | Run 时间线、工具事件、Issue 评论、关联 PR/CI 和使用量视图；合并仍应受仓库规则约束 | 能否找到原始输入、工具调用、文件和人工决策；展示完成不等于验收通过 |
+| 部署和隔离 | 提供 Kubernetes 原生控制器与 CRD，也有其他部署方式；本次 Worker 为独立 Pod | 可自托管控制面；daemon 可在主机、容器或其他环境运行，本次使用独立 Pod | 是否有现成 K8s 资源管理能力；Multica 默认不保证文件系统沙箱，Pod 也不自动构成完整安全隔离 |
+| 开源许可 | 仓库标注 Apache-2.0，仍需核对具体依赖 | Multica License 包含 Apache-2.0 文本及附加条款，不能简单当作纯 Apache-2.0 | 商业嵌入、对外托管及商标使用需审核目标版本许可证 |
+
+Git 与消息渠道的具体配置参见 [Multica 自托管 Git 集成](https://github.com/multica-ai/multica/blob/v0.8.0/apps/docs/content/docs/vcs-integration.mdx)、[Multica 消息渠道](https://github.com/multica-ai/multica/blob/v0.8.0/apps/docs/content/docs/channels.mdx)；AgentTeams 的项目能力参见 [TeamHarness 工作流接口](https://github.com/agentscope-ai/AgentTeams/blob/v1.2.6/docs/usage/project-workflow-api.md) 与 [资源管理](https://github.com/agentscope-ai/AgentTeams/blob/v1.2.6/docs/usage/resource-management.md)。自动化细节见 [Multica Autopilots](https://github.com/multica-ai/multica/blob/v0.8.0/apps/docs/content/docs/autopilots.mdx)。
+
+**结合两个实际场景：**如果团队以需求单、仓库和 PR 为主，希望在一个页面追踪编码 Agent 的执行和审核，优先试 Multica 的 Issue → Run → PR 链路；如果更关心在 Kubernetes 里管理多个角色，让 Manager 按任务组织 Worker 并通过房间协作，可以优先试 AgentTeams。两者也可以各取所需，但跨平台交接、身份映射和权限不是现成的集成能力，需要另行设计与验证。
+
+### 本次实测覆盖到哪里
+
+此前的 [Multica 实战](multica-agent-team-platform.md) 实际验证了 Issue 指派、DSH 执行、运行记录，以及代码任务中 17 项单元测试的独立复跑；观察到任务时间重叠，但没有验证 Squad 协作、PR 或自动化触发。本文 AgentTeams 实际验证了房间交互、Worker 创建与文件读取，也记录了人工补充提示、Worker 故障和复杂任务的部分失败；没有验证 Team 多成员、DAG、PR 或高可用。两次模型、任务、执行配置均不同，不能根据这些记录比较速度、成本或可靠性。
 
 ## 部署与检查步骤
 
