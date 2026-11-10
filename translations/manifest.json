@@ -1540,6 +1540,12 @@
       "english_sha256": "f3355eb9276d9519cd3810329c13c552d0728fb50f7fd34938943732c8b0fd17",
       "reviewed_at": "2026-11-09T11:14:22.391218+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/agentteams-kubernetes-practice.md": {
+      "source_sha256": "67ff0165bc8f49e2bcd762b3a3b4f436dd32f124aa93157cfd4c3c7d0f78bd69",
+      "english_sha256": "5f1d405c9635a7301547b87d5c527e4d30c9dc0b73d96fc87a3e3f47c71f3e25",
+      "reviewed_at": "2026-11-10T03:59:14.349883+00:00",
+      "review": "reviewed against source"
     }
   }
 }
