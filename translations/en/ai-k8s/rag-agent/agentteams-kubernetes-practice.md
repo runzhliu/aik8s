@@ -30,6 +30,37 @@ flowchart LR
 
 This is a logical illustration of the test, not evidence of network isolation or high availability. Manager and Worker are separately running agents; Kubernetes hosts the workloads and control components, Matrix rooms carry collaboration, and MinIO stores task files.
 
+## Architecture: who manages resources and who runs tasks
+
+AgentTeams separates creating and maintaining agents from the runtimes in which agents reason and use tools. The following reflects the v1.2.6 source and this deployment; recheck it after upgrading.
+
+| Layer | Components and responsibility | Boundary in this test |
+| --- | --- | --- |
+| Control plane | Controller watches Manager, Worker, Team, Human, and related custom resources, reconciling identity, runtime, and state | Resource reconciliation does not ensure correct answers or successful business tasks |
+| Execution | Manager receives requests and coordinates; Workers execute in their runtimes | In this test each Worker is a separate Pod; a task does not automatically imply a newly created Pod |
+| Collaboration | Element is the client and Tuwunel is the Matrix homeserver; rooms carry human and agent messages | Chat is evidence of the process, not proof that an artifact exists |
+| Data | MinIO stores shared task files and agent state; mechanisms such as file-sync exchange them | Verify local and object copies separately; synchronization is not a database transaction or guaranteed exact resumption |
+| Model access | Higress provides the model and API gateway; this test used an experimental model bridge | Validate gateway policies, authentication, and bridge availability separately; prompts are not a security boundary |
+
+In the source, [`WorkerReconciler`](https://github.com/agentscope-ai/AgentTeams/blob/v1.2.6/agentteams-controller/internal/controller/worker_controller.go) manages standalone Workers; Team members are reconciled by the Team controller using shared member logic. Reconciliation reads desired configuration and maintains resources and status, but Pods, models, Matrix, and storage have different failure modes. Project workflow status and read-only inspection also depend on the relevant plugin and project data; this chat task is not evidence that a DAG workflow was verified. [Project workflow API](https://github.com/agentscope-ai/AgentTeams/blob/v1.2.6/docs/usage/project-workflow-api.md)
+
+A typical request reaches the Manager through chat, then travels to a Worker through a task specification and message. The Worker calls a model, uses tools, produces files, and reports back. Users and reviewers must still check actual files, execution logs, and edge cases. The workstation bridge after the gateway was an experiment-specific adaptation, not a required AgentTeams component.
+
+## Comparison with the Multica test
+
+We previously deployed [Multica v0.8.0](multica-agent-team-platform.md) in a test cluster. Models, tasks, and execution configurations differed, so this compares architecture and observations rather than matched performance.
+
+| Dimension | AgentTeams | Multica |
+| --- | --- | --- |
+| Primary entry | Matrix/Element room conversation with a Manager coordinating Workers | Workspace issues, agents, and execution records |
+| Runtime | In this test the Controller launched separate Worker Pods from custom resources; runtime and model are configurable | The control plane and separate runtime Pod were distinct; a daemon launched the DSH CLI |
+| Collaboration and artifacts | Room messages, task files, and shared object storage; a human supplied a follow-up prompt in this run | Issue assignment, comments, and runs; overlapping tasks were observed, but inter-agent collaboration was not established |
+| Investigation | Chat, Worker state/Pod logs, and shared files; project views depend on plugins | Issue activity, run timeline, and tool events; code and tests still need independent review |
+| Observed risks | A Worker failed and entered a restart loop; its state-file issue needs investigation | The runtime sandbox was unavailable and execution fell back to wider access; prompts alone cannot isolate either system |
+| Starting point | Explore chat-led role delegation and Kubernetes-native Worker management | Track coding agents, execution records, and human review around issues |
+
+Both require review of identities, storage, networking, credentials, and model outputs. A failure in one experiment is not a project-wide reliability ranking. AgentTeams supports more than chat, and Multica supports more than a single agent; validate features against the target version.
+
 ## Deployment and checks
 
 1. Install the target Helm Chart version in a test namespace with the controller, gateway, Matrix, MinIO, and frontend. Configure persistent volumes, reachable images, and a model service for the environment; keep credentials in restricted Secrets, not public values files.
@@ -72,6 +103,31 @@ The Manager wrote separate specifications and sent the three tasks to the Worker
 *The real light-theme desktop screenshot shows the Manager's assignments and the Worker's failure message. Internal addresses are obscured; the original Chinese screenshot is preserved.*
 
 At about the same time, Worker logs repeatedly showed `Shared-state read and cleanup failed` and `SQLite database file identity changed before existing-only open`. The errors coincided with the failure, but causation was not established. Preserve logs and investigate the SQLite database and WAL/SHM lifecycle, whether shared-directory synchronization replaces open files, and the runtime version and official known issues. Do not delete the database or blindly retry side-effecting tasks before understanding state-storage semantics. Reproduce in an isolated test environment and verify files and task results before and after any fix.
+
+## Complex tasks: service-quality analysis and code verification
+
+The earlier document-organizing Worker later entered `CrashLoopBackOff`, with SQLite integrity-check failures in its startup logs. We preserved its state, created a separate test Worker with `agt create worker`, and had the administrator submit fictional tasks directly in its Matrix room. This path was <strong>not automatically orchestrated by the Manager</strong>.
+
+The first task supplied two five-minute windows: 20 failures in 1,000 requests and 120 failures in 4,000 requests, against a 99% success target. It requested individual and aggregate rates, error budget, a counterfactual, and a distinction between facts and diagnostic hypotheses. The Worker replied in the room; we independently checked the arithmetic:
+
+| Metric | Verified result |
+| --- | --- |
+| Individual error rates | 20/1,000 = 2%; 120/4,000 = 3% |
+| Aggregate error rate | 140/5,000 = 2.8%; a simple average of 2.5% is incorrect |
+| Ten-minute budget | At a 99% target for this window, 50 errors are allowed and 90 are in excess; a longer-period SLO cannot be inferred directly |
+| Counterfactual | Reducing the second window to 40 errors yields 60/5,000 = 1.2%, still above 1% |
+
+The Worker also separated hypotheses about traffic mix, releases, and measurement definitions, and suggested read-only investigation. It did not access a real cluster. This validates one Worker's multi-step reasoning, not multi-agent collaboration or production diagnostic correctness. Statistical significance and confidence intervals in the screenshot depend on sampling and independence assumptions; aggregate counts alone do not establish causality.
+
+![Actual response to the complex service-quality task](../../assets/practices/agentteams-sr1/complex-analysis.jpg)
+
+*The independent Worker analyzes fictional service metrics; internal addresses are obscured and the original Chinese model output is preserved.*
+
+A second task asked the Worker to implement a Python log-summary utility and unit tests in a temporary directory, grouping request counts, errors, and average latency by service. The Worker created two files, but the chat reported a temporary model-provider internal error before its final response. We independently ran the existing tests inside the test container: **27 of 28 passed and one failed**, showing that infinite latency was not rejected. We then asked the Worker to fix and rerun the tests; the room again reported a temporary model-service error, and Worker logs showed HTTP 503 from the gateway request. Another independent rerun still had 27 passes and one failure. A 503 alone does not locate the fault. This is not a passing result; the temporary code was only an experiment and was not validated for production.
+
+![Actual code-task failure and retry](../../assets/practices/agentteams-sr1/code-failure.jpg)
+
+*Both the coding task and the repair retry encountered model-service errors. Internal addresses are obscured; the test conclusion comes from the independent rerun. The original Chinese screenshot is preserved.*
 
 ## Interruption and deployment constraints
 
