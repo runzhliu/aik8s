@@ -17,6 +17,7 @@ import xml.etree.ElementTree as ET
 from urllib.parse import unquote
 
 from bilingual import ROOT, coverage, protect, restore
+from cjk_emphasis import normalize_cjk_emphasis
 from translate_assets import ASSET_MAP, asset_errors, localize_asset
 from translate_text_blocks import block_errors, english_readings
 from preserve_prompt_originals import prompt_errors, preserve_prompt_originals
@@ -88,6 +89,14 @@ def prepare(preview=False):
     # Generate both language datasets before the English asset tree is staged.
     subprocess.run([sys.executable, "scripts/generate_topic_cloud.py"], cwd=ROOT, check=True)
     WORK.mkdir(parents=True, exist_ok=True)
+    chinese_staged = WORK / "chinese-docs"
+    if chinese_staged.exists():
+        shutil.rmtree(chinese_staged)
+    shutil.copytree(ROOT / "docs", chinese_staged, ignore=shutil.ignore_patterns("*.md"))
+    for source_path in (ROOT / "docs").rglob("*.md"):
+        target = chinese_staged / source_path.relative_to(ROOT / "docs")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(normalize_cjk_emphasis(source_path.read_text()))
     staged = WORK / "english-docs"
     if staged.exists():
         shutil.rmtree(staged)
@@ -106,12 +115,12 @@ def prepare(preview=False):
         # The homepage's Chinese/English language buttons deliberately retain their targets.
         if name == "index.md":
             source = source.replace('[简体中文](/){ .md-button .md-button--primary }\n[English](/en/){ .md-button }', '[简体中文](/){ .md-button }\n[English](/en/){ .md-button .md-button--primary }')
-        target.write_text(source)
+        target.write_text(normalize_cjk_emphasis(source))
     config = tomllib.loads((ROOT / "zensical.toml").read_text())
     labels = json.loads((ROOT / "translations/navigation.en.json").read_text())
     for language in ("zh", "en"):
         project = deepcopy(config["project"])
-        project["docs_dir"] = os.path.relpath(ROOT / "docs" if language == "zh" else staged, ROOT)
+        project["docs_dir"] = os.path.relpath(chinese_staged if language == "zh" else staged, ROOT)
         project["site_dir"] = os.path.relpath(ROOT / "site" / ("en" if language == "en" else ""), ROOT)
         project["theme"]["custom_dir"] = "overrides"
         if language == "en":
