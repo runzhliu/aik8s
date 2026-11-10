@@ -1541,6 +1541,12 @@
       "reviewed_at": "2026-11-09T11:14:22.391218+00:00",
       "review": "reviewed against source"
     },
+    "ai-k8s/rag-agent/cubesandbox-qwen-sft-practice.md": {
+      "source_sha256": "bdc9f5204e9388fe52a671949523af638346c35788aa915a9b9e40d7e7828536",
+      "english_sha256": "08fa56a03320c6cbb0c4cd542c7db9f427073a5c6e8b728fccedb4f96df13f4a",
+      "reviewed_at": "2026-11-10T03:50:15.332259+00:00",
+      "review": "reviewed against source"
+    },
     "ai-k8s/rag-agent/agentteams-kubernetes-practice.md": {
       "source_sha256": "67ff0165bc8f49e2bcd762b3a3b4f436dd32f124aa93157cfd4c3c7d0f78bd69",
       "english_sha256": "5f1d405c9635a7301547b87d5c527e4d30c9dc0b73d96fc87a3e3f47c71f3e25",

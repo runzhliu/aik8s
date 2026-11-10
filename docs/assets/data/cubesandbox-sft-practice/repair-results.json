@@ -1,0 +1,785 @@
+{
+  "model": "Qwen2.5-0.5B-Instruct",
+  "train_pairs": 259,
+  "dev_eligible": 71,
+  "test_eligible": 85,
+  "test_pool": 100,
+  "selected_epoch": 2,
+  "selection": "best observed passing count on dev; earliest epoch if unknowns tie",
+  "status_note": "error means execution unresolved after RemoteProtocolError and one retry; it is not counted as pass or fail and root cause was not established",
+  "per_task": [
+    {
+      "id": 13,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 18,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 21,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 25,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 30,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 32,
+      "base-feedback": "pass",
+      "base-no-feedback": "pass",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 37,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 42,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 48,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 72,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 73,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 77,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 83,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 85,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 86,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 88,
+      "base-feedback": "fail",
+      "base-no-feedback": "pass",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 100,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "error"
+    },
+    {
+      "id": 106,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 126,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 131,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 134,
+      "base-feedback": "fail",
+      "base-no-feedback": "pass",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 138,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 144,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 152,
+      "base-feedback": "fail",
+      "base-no-feedback": "error",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 155,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 156,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 165,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 166,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 169,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 171,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 178,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 188,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 195,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 199,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 203,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 207,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 211,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "error",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 219,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 223,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 235,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 256,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 259,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 264,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 272,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 275,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 276,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 277,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 280,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 300,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 302,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 305,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 324,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 326,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 328,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 331,
+      "base-feedback": "pass",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 348,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 351,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 352,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 353,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 365,
+      "base-feedback": "pass",
+      "base-no-feedback": "pass",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 381,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 383,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 385,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 392,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 393,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 407,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 409,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 417,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 421,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 428,
+      "base-feedback": "pass",
+      "base-no-feedback": "pass",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 430,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 453,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 457,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 461,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 464,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 468,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 476,
+      "base-feedback": "pass",
+      "base-no-feedback": "pass",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 482,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 483,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "error",
+      "nofb-trained-no-feedback": "error"
+    },
+    {
+      "id": 486,
+      "base-feedback": "fail",
+      "base-no-feedback": "pass",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 488,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 492,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "pass",
+      "nofb-trained-feedback": "pass",
+      "nofb-trained-no-feedback": "pass"
+    },
+    {
+      "id": 495,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "pass",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 496,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    },
+    {
+      "id": 506,
+      "base-feedback": "fail",
+      "base-no-feedback": "fail",
+      "lora-feedback": "fail",
+      "lora-no-feedback": "fail",
+      "nofb-trained-feedback": "fail",
+      "nofb-trained-no-feedback": "fail"
+    }
+  ],
+  "no_feedback_training_control": {
+    "train_pairs": 259,
+    "dev_selected_epoch": 3,
+    "dev_pass": 16,
+    "dev_total": 71,
+    "test_results": "same eligible 85 tasks",
+    "note": "same data and labels; error details replaced during training; post-hoc exploratory control; selected checkpoint has 777 optimizer steps versus 518 for feedback-trained checkpoint"
+  }
+}
