@@ -1558,6 +1558,12 @@
       "english_sha256": "5e44aee12c56eab37303bb52e0e81e4d0e229cff039c2aa3a455e91ec9168704",
       "reviewed_at": "2026-11-10T10:17:30.379529+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/magpie-agent-model-gateway.md": {
+      "source_sha256": "27c38a639debe6e57522bc62627b35864f02f81358b67dceac09bdb9fa73f7ea",
+      "english_sha256": "da055278e6a13f147fd1fec571e29c33925d72baca05b6c5235a9b32afa10cc2",
+      "reviewed_at": "2026-11-11T05:05:43.769099+00:00",
+      "review": "reviewed against source"
     }
   }
 }
