@@ -92,6 +92,7 @@ nav = [
       {"Jev 每周回顾" = "ai-k8s/rag-agent/jev-weekly-review.md"},
       {"HarnessRouter 综述" = "ai-k8s/rag-agent/harnessrouter-overview.md"},
       {"Magpie 编程 Agent 模型网关" = "ai-k8s/rag-agent/magpie-agent-model-gateway.md"},
+      {"LoopForge Kubernetes 实战" = "ai-k8s/rag-agent/loopforge-kubernetes-practice.md"},
       {"HiRoute Agent 路由与模型协作" = "ai-k8s/rag-agent/hiroute-overview.md"},
       {"Agent Memory 技术综述" = "ai-k8s/rag-agent/agent-memory-technology-overview.md"},
       {"Langfuse 与 LangGraph 技术综述" = "ai-k8s/rag-agent/langfuse-langgraph-overview.md"},
