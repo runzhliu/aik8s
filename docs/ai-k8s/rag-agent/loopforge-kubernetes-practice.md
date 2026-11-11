@@ -120,7 +120,26 @@ kubectl -n loopforge-lab port-forward deployment/loopforge 19846:8080 --address 
 
 LoopForge 的主要价值在于把过程显式化：每个节点做什么、是否需要人确认、失败退回哪里、产物和记录在哪里。对企业来说，是否有价值要看它能否和实际代码仓库、模型服务、测试环境及既有审批流程接起来，而不是只看示例流程能否跑通。
 
-## 5. 下一步和生产边界
+## 5. 和 CNB 怎么选
+
+云原生构建（Cloud Native Build，CNB）是腾讯云的 Git 与研发协作平台，覆盖代码仓库、持续集成与持续交付（Continuous Integration / Continuous Delivery，CI/CD）和云开发环境。它的 NPC（Non-Player Character，自动化角色）也可以调用 AI 处理研发任务：在 Issue 或 PR 中 `@CodeBuddy`，开启工作模式后，可以修改代码、建分支和提交 PR。[CNB 产品介绍](https://cloud.tencent.com/document/product/1785/116261) · [NPC 文档](https://docs.cnb.cool/zh/build/npc.html)
+
+两者在「让 Agent 处理代码并交付」上有交集，侧重点不同。下表中 LoopForge 以本文实测的 v0.3.4 为准；CNB 根据官方文档分析，**本文没有实测 CNB**。
+
+| 比较维度 | LoopForge | CNB（云原生构建） |
+| --- | --- | --- |
+| 核心入口 | 围绕需求、角色和标准工作流程（SOP）组织 Agent、脚本与人工节点 | 围绕代码仓库、Issue / PR 和事件驱动流水线组织协作 |
+| Agent 执行 | 为不同角色配置执行器和模型，按流程推进；本次用 Codex 调用真实模型修复样例 | 在 Issue / PR 中 `@` 系统或自定义 NPC，可回复、审查，也可在工作模式下修改代码并提交 PR |
+| 流程与人工介入 | 可视化定义 Agent、脚本、人工门禁和返工路径；本次实测了批准、打回和重启后继续审批 | 用仓库中的 `.cnb.yml` 声明构建任务，支持推送、PR、API、定时和 NPC 等事件；代码交付仍可通过 PR 评审 |
+| 测试与交付 | 可在流程中安排脚本测试和产物审阅；真实仓库和 PR 在本次没有验证 | 仓库事件可触发测试、构建镜像和交付流水线，制品和开发环境与平台配合使用 |
+| 部署方式 | 开源软件，可自行部署并管理数据库、执行环境、凭据和升级 | 官方说明的社区版是 SaaS；企业版部署到指定腾讯云虚拟私有云（Virtual Private Cloud，VPC），具体开通和网络条件需与腾讯云确认 |
+| 本次证据 | 有真实执行和截图：合成代码修复、3 条独立测试、审批及重启恢复 | 仅整理公开资料；未在同一任务、模型或环境下做效果和成本对比 |
+
+CNB 的 NPC 也能处理 Issue、编写代码和提交 PR，不能简单说成「只有流水线」；LoopForge 的价值则更集中在把多个角色、确定性脚本、人工确认和返工组织成可复用流程。[CNB 触发规则](https://docs.cnb.cool/zh/build/trigger-rule.html) · [CNB 构建介绍](https://docs.cnb.cool/zh/build/intro.html) · [LoopForge v0.3.4](https://github.com/Tencent/LoopForge/tree/v0.3.4)
+
+例如，同样修复一个函数并补充测试：如果仓库已在 CNB，团队希望从 Issue 发起、由 NPC 提交 PR 并自动跑已有流水线，先用 CNB 的原生链路试点会更直接；如果团队更重视将「实现、独立测试、人工确认、打回重做」设计成可观察的多角色流程，可以评估 LoopForge。需要同时保留已有代码平台和自建编排时，也可以探索让 LoopForge 负责流程、代码平台负责 PR 与 CI；**这只是架构设想，不代表本文已验证 LoopForge 与 CNB 的仓库、权限、事件或回调集成**。实施前应先做专用仓库试点，核对凭据权限、事件幂等、测试结果回传、审批责任和代码出网边界。
+
+## 6. 下一步和生产边界
 
 本次已打通模型与 Agent 执行器，但 LoopForge 工作流没有在独立执行环境里运行代码修改。下一步应使用专用测试仓库和隔离 Worker，验证真实代码修改、测试失败后重试、人工审核和 PR 交付，再做执行中断与恢复实验。不要把 Docker socket 直接挂到共享集群节点来代替隔离设计。
 

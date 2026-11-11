@@ -1566,9 +1566,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/rag-agent/loopforge-kubernetes-practice.md": {
-      "source_sha256": "01b2ca78188b0725ff2d967ca744bc8c125ca59a882df029f336979b12a598c6",
-      "english_sha256": "f37d10fe064f558446ea2fe0b3dcbfd0c330dc23b0be35b19d00b42220a2620e",
-      "reviewed_at": "2026-11-11T09:17:33.630708+00:00",
+      "source_sha256": "b1a9a019dcab7b3c1551feb4bd79e17eb3a275fc4fc72b806155fd4099429f3f",
+      "english_sha256": "331552b46f35eb878f18f793e948e9059c9d378fc1a2b5185c6fc9c122b3c57c",
+      "reviewed_at": "2026-11-11T09:32:26.705335+00:00",
       "review": "reviewed against source"
     }
   }

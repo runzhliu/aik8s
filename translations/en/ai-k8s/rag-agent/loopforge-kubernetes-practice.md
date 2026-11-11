@@ -120,7 +120,26 @@ We also first verified model tool use and the same code repair in a separate Kub
 
 LoopForge's value is making the process explicit: what each node does, where people approve, where failures return, and where artifacts and records live. Its enterprise value depends on integration with real repositories, model services, testing environments, and existing approvals, not merely on a successful sample workflow.
 
-## 5. Next steps and production boundaries
+## 5. How does it compare with CNB?
+
+Cloud Native Build (CNB) is Tencent Cloud's Git and development collaboration platform, covering repositories, continuous integration and continuous delivery (CI/CD), and cloud development environments. Its NPCs (Non-Player Characters, automated roles) can also use AI for development: mention `@CodeBuddy` in an Issue or PR and enable work mode to let it modify code, create a branch and submit a PR. [CNB product overview](https://cloud.tencent.com/document/product/1785/116261) · [NPC documentation](https://docs.cnb.cool/zh/build/npc.html)
+
+Both can help an Agent work on code and deliver changes, but emphasize different parts of the workflow. The LoopForge column refers to v0.3.4 tested here; the CNB column is based on official documentation. **We did not test CNB in this article.**
+
+| Dimension | LoopForge | CNB (Cloud Native Build) |
+| --- | --- | --- |
+| Primary entry point | Organizes Agents, scripts and human steps around requirements, roles and standard operating procedures (SOPs) | Organizes collaboration around repositories, Issues / PRs and event-driven pipelines |
+| Agent execution | Configures executors and models by role and advances them through a workflow; this experiment used Codex and a real model to repair a sample | Use `@` to mention system or custom NPCs in Issues / PRs to reply or review, or modify code and submit PRs in work mode |
+| Workflow and human involvement | Visually defines Agent, script, human gate and rework paths; this test covered approval, rejection and resuming approval after restart | Uses `.cnb.yml` in the repository to declare build tasks triggered by push, PR, API, schedule or NPC events; delivery can still go through PR review |
+| Tests and delivery | Script tests and artifact review can be steps in a workflow; this experiment did not verify real repositories or PRs | Repository events can trigger tests, image builds and delivery pipelines, with artifacts and development environments integrated into the platform |
+| Deployment | Open-source software that teams can deploy and operate themselves, including the database, execution environment, credentials and upgrades | The official community edition is SaaS; the enterprise edition is deployed into a designated Tencent Cloud Virtual Private Cloud (VPC). Confirm provisioning and network terms with Tencent Cloud |
+| Evidence in this article | Real runs and screenshots: synthetic code repair, three independent tests, approval and restart recovery | Public documentation only; there was no matched comparison of results or costs using the same task, model and environment |
+
+CNB's NPCs can handle Issues, write code and submit PRs, so describing CNB as only a pipeline service would miss a major capability. LoopForge concentrates on combining multiple roles, deterministic scripts, human confirmation and rework into a reusable workflow. [CNB trigger rules](https://docs.cnb.cool/zh/build/trigger-rule.html) · [CNB build overview](https://docs.cnb.cool/zh/build/intro.html) · [LoopForge v0.3.4](https://github.com/Tencent/LoopForge/tree/v0.3.4)
+
+For example, to fix a function and add tests, a team whose repository already lives in CNB can first try its native Issue-to-NPC-to-PR flow and existing pipelines. A team that needs an observable, reusable multi-role process for implementation, independent testing, human approval and rework can evaluate LoopForge. Where an existing code platform and self-hosted orchestration are both required, another option to explore is using LoopForge for orchestration and the code platform for PRs and CI. **This is an architectural possibility, not a tested integration of LoopForge with CNB repositories, permissions, events or callbacks.** Before adopting it, pilot a dedicated repository and verify credential scope, event idempotency, test-result reporting, approval ownership and code egress boundaries.
+
+## 6. Next steps and production boundaries
 
 The Agent executor has been connected to a model, but the LoopForge workflow did not run its code changes in a separate execution environment. A useful next experiment would use a dedicated test repository and isolated worker to validate code changes, test-failure retries, human review, and PR delivery, followed by interruption and recovery tests. Do not mount a shared cluster node's Docker socket as a substitute for an isolation design.
 
