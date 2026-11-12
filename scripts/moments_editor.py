@@ -98,7 +98,12 @@ def publish_to_site(post_id):
         return head
     if git('cat-file', '-e', remote_sha + ':docs/moments.md', check=False).returncode:
         raise ValueError('动态页面尚未部署，请先将页面功能提交到远程；本次内容已保存在本地')
-    post = next(p for p in load_posts()['posts'] if p['id'] == post_id)
+    current = load_posts()['posts']
+    base = json.loads(git('show', head + ':docs/assets/data/moments.json').stdout)['posts']
+    others = lambda posts: {p['id']: p for p in posts if p['id'] != post_id}
+    if others(current) != others(base):
+        raise ValueError('还有其他未发布的动态改动；为避免一起公开，请先逐条处理')
+    post = next(p for p in current if p['id'] == post_id)
     paths = ['docs/assets/data/moments.json'] + ['docs/' + image['path'].lstrip('/') for image in post['images']]
     if git('diff', '--cached', '--quiet', '--', *paths, check=False).returncode:
         raise ValueError('动态文件已有暂存改动，请先处理暂存区后再发布')

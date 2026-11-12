@@ -32,7 +32,7 @@ const ROOT = path.resolve(__dirname, '..');
       await page.goto(base, { waitUntil: 'networkidle' });
       assert.equal(await page.title(), prefix ? 'AI/LLM on Kubernetes Infrastructure' : 'AI/LLM on Kubernetes 基础设施', 'Homepage title must not duplicate the site name');
       const primary = page.locator('.md-nav--primary');
-      assert.equal(await primary.locator(':scope > ul.md-nav__list > li').count(), 2, 'Home plus one integrated technical navigation root');
+      assert.equal(await primary.locator(':scope > ul.md-nav__list > li').count(), 3, 'Home, moments and one integrated technical navigation root');
       const caseRoutes = ['cases/', 'cases/ai-cluster-component-checklist/', 'k3s-upgrade/', 'k3s-upgrade/report/'];
       const navigationPaths = await primary.locator('a[href]').evaluateAll(nodes => nodes.map(node => new URL(node.href).pathname));
       for (const route of caseRoutes) assert.ok(navigationPaths.includes('/' + prefix + route), 'Original case route remains in the unified sidebar: ' + route);
