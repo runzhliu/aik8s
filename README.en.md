@@ -101,9 +101,9 @@ See [Server-pull deployment](ops/aik8s-pull-deploy/README.md) for the current de
 
 ## Publishing Moments
 
-Run `python3 scripts/moments_editor.py` to open the local-only Moments editor. Paste or select images, provide complete Chinese and English text and image descriptions, save a local draft, and preview it. After review, click “Publish to site” to commit the relevant data and images and push them, triggering the existing build and deployment. Original image metadata is retained, so review content and privacy information before publishing.
+Open the [moment issue template](https://github.com/runzhliu/aik8s/issues/new?template=moment.md) on GitHub, fill in both Chinese and English, and paste images between the `moment:images` and `moment:end` markers so they appear in both languages. Once submitted, the site reads issues labeled `moments` authored by `runzhliu`, without a manual Git commit. GitHub Actions updates a separate public snapshot without rebuilding the website. Close an issue to remove it from the feed. Existing local moment data and images remain for old links.
 
-Publication includes only `docs/assets/data/moments.json` and images referenced by the current moment under `docs/assets/images/moments/`; it does not commit other files. The editor stops with an explanation if the repository is not on `main`, local and remote contain other unsynchronized commits, or moment files have staged changes. Local drafts live in Git-ignored `.local/moments/`; visitors cannot publish through the public site. Local Git must already have remote write access.
+Readers can view comments on the site, then follow the link to GitHub to sign in, comment, or add a reaction. The page prefers live GitHub data and falls back to the generated public snapshot when unauthenticated API requests are rate-limited; reaction counts in the snapshot refresh approximately every 30 minutes and may lag.
 
 ## Adding Content
 

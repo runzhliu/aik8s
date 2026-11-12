@@ -1578,9 +1578,9 @@
       "review": "reviewed against source"
     },
     "moments.md": {
-      "source_sha256": "8f349c414f2a764e05910cdd763fc45d4c81f3c43ecc70a6cc6dfd4f5f059227",
-      "english_sha256": "09553b309a93080abbcdd67e0b8fed8ba30864d061405eeb6c395300361c4129",
-      "reviewed_at": "2026-11-12T03:28:18.037958+00:00",
+      "source_sha256": "101d8714cf5639671fa781fee0741c02f10e9986202e138d182f2b29cc497d12",
+      "english_sha256": "9f0510f01305d6372dde08d0f33dd4f09dd874896e1b20441e2b6dba487285dc",
+      "reviewed_at": "2026-11-12T04:52:07.085776+00:00",
       "review": "reviewed against source"
     }
   }

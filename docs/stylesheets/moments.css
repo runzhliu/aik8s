@@ -12,4 +12,16 @@
 .md-typeset .moment__link,.md-typeset .moments__more { display:inline-block; margin-top:.55rem; font-size:.7rem; }
 .moment__tags { display:flex; gap:.45rem; flex-wrap:wrap; margin-top:.6rem; color:var(--md-primary-fg-color); font-size:.6rem; }
 .moments__empty { color:var(--md-default-fg-color--light); font-size:.72rem; }
+.md-typeset .moment__github-like,.md-typeset .moment__github-link { display:inline-block; margin-top:.7rem; font-size:.68rem; }
+.moment__legacy-anchor { position:absolute; scroll-margin-top:5rem; }
+.moment__comments { margin-top:.7rem; }
+.moment__comment-toggle { display:inline-block; cursor:pointer; color:var(--md-primary-fg-color); font-size:.68rem; list-style:none; }
+.moment__comment-toggle::-webkit-details-marker { display:none; }
+.moment__comment-toggle::before { content:'◌'; margin-right:.3rem; }
+.moment__comments-note { color:var(--md-default-fg-color--light); font-size:.65rem; }
+.moment__comments-list { padding:.65rem .8rem; margin-top:.5rem; border-radius:8px; background:var(--md-default-fg-color--lightest); }
+.md-typeset .moment__comment { font-size:.67rem; padding:.3rem 0; }
+.md-typeset .moment__comment-author { font-weight:600; }
+.md-typeset .moment__comment-text { white-space:pre-wrap; overflow-wrap:anywhere; margin:.2rem 0; }
+.md-typeset .moments__load-more { background:transparent; border:1px solid var(--md-default-fg-color--lightest); border-radius:6px; color:var(--md-primary-fg-color); padding:.4rem .7rem; margin-top:1rem; cursor:pointer; font-size:.7rem; }
 @media(max-width:480px){.md-typeset .moment { gap:.6rem; }.moment__head { flex-wrap:wrap; gap:.2rem .5rem; }.moment__avatar { width:1.8rem; height:1.8rem; }}

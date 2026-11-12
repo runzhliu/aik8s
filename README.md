@@ -104,9 +104,9 @@ make build-production
 
 ## 发布动态
 
-运行 `python3 scripts/moments_editor.py` 打开仅供本机使用的动态编辑器；可以直接粘贴或选择图片，填写中英文内容和图片说明，保存本地草稿并预览。确认内容后点击「发布到网站」，编辑器会提交相关动态数据及图片并推送，触发站点既有的构建和部署。图片保留原始元数据，发布前请检查内容和隐私信息。
+在 GitHub 打开 [动态发布模板](https://github.com/runzhliu/aik8s/issues/new?template=moment.md)，分别填写中文和英文，图片直接粘贴到 `moment:images` 与 `moment:end` 标记之间，中英文页面都会显示。提交 Issue 后，动态页面会读取带 `moments` 标签且由 `runzhliu` 发布的 Issue，无须手动 Git 提交；GitHub Actions 会自动更新独立的公开快照，无须重新构建网站。关闭 Issue 可从动态列表移除。已有本地动态数据和图片保留，用于兼容旧链接。
 
-发布只包含 `docs/assets/data/moments.json` 和当前动态引用的 `docs/assets/images/moments/` 图片，不会提交其他文件；仓库不在 `main` 分支、本地和远程有其他未同步提交、或动态文件已有暂存改动时，编辑器会停止并提示处理。本地草稿存放在被 Git 忽略的 `.local/moments/`，访客无法通过公开站点发表动态；本机 Git 必须已有远程写权限。
+读者可以在站内查看评论，点击链接前往 GitHub 登录、评论和点赞。页面优先读取 GitHub 的实时数据；遇到匿名请求限额时使用自动生成的公开快照，点赞数在快照中约每 30 分钟刷新一次，可能滞后。
 
 ## 添加内容
 

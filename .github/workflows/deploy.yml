@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  issues: read
 
 concurrency:
   group: production-artifact
@@ -46,6 +47,11 @@ jobs:
       - name: Build Chinese and English documentation
         run: python scripts/build_bilingual.py
 
+      - name: Generate public moments snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/generate_moments_snapshot.py
+
       - name: Verify all internal links, images and anchors
         run: python scripts/check_site_links.py --site-dir site --site-url https://aik8s.run/
 
@@ -59,6 +65,7 @@ jobs:
           test -n "$CHROMIUM_PATH"
           node scripts/test_timeline_browser.cjs
           node scripts/test_engagement_browser.cjs
+          node scripts/test_moments_comments.cjs
           node scripts/test_blog_polish_browser.cjs
           node scripts/test_search_browser.cjs
           node scripts/test_topic_cloud_browser.cjs
