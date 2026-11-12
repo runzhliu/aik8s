@@ -28,7 +28,7 @@ class NavigationTests(unittest.TestCase):
 
     def test_single_technical_root_and_cases_distributed_by_subject(self):
         roots = [label for entry in self.navigation for label in entry]
-        self.assertEqual(roots, ['首页', 'AI/LLM on Kubernetes'])
+        self.assertEqual(roots, ['首页', '动态', 'AI/LLM on Kubernetes'])
         moved = {
             'cases/index.md': '实战、排障与选型',
             'cases/ai-cluster-component-checklist.md': '参考架构与实验',
@@ -36,6 +36,7 @@ class NavigationTests(unittest.TestCase):
             'k3s-upgrade/report.md': '平台工程与生产运维',
         }
         routes = list(locations(self.navigation))
+        self.assertIn(('moments.md', ('动态',)), routes)
         for path, section in moved.items():
             with self.subTest(path=path):
                 matches = [parents for target, parents in routes if target == path]
@@ -46,7 +47,7 @@ class NavigationTests(unittest.TestCase):
 
     def test_english_navigation_has_the_same_routes_and_structure(self):
         english = translate_navigation(self.navigation, self.labels)
-        self.assertEqual([label for entry in english for label in entry], ['Home', 'AI/LLM on Kubernetes'])
+        self.assertEqual([label for entry in english for label in entry], ['Home', 'Moments', 'AI/LLM on Kubernetes'])
         chinese_routes = list(locations(self.navigation))
         english_routes = list(locations(english))
         self.assertEqual([path for path, _ in chinese_routes], [path for path, _ in english_routes])
