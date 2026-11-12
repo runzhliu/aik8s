@@ -68,6 +68,7 @@
     const item=node('article','moment');item.id='issue-'+issue.number;
     if(parsed.legacy){const anchor=node('span','moment__legacy-anchor');anchor.id=parsed.legacy;item.append(anchor);}
     const avatar=node('div','moment__avatar','R');avatar.setAttribute('aria-hidden','true');
+    const portrait=node('img','moment__avatar-image no-lightbox');portrait.src='https://avatars.githubusercontent.com/u/20874664?v=4';portrait.alt='';portrait.loading='lazy';portrait.referrerPolicy='no-referrer';portrait.addEventListener('error',()=>portrait.remove(),{once:true});avatar.append(portrait);
     const body=node('div','moment__body'),head=node('div','moment__head');
     const author=node('strong','moment__author','runzhliu'), link=node('a','moment__time');link.href=root+'#issue-'+issue.number;
     const date=parsed.date && !Number.isNaN(Date.parse(parsed.date))?parsed.date:issue.created_at;

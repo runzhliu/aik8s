@@ -13,6 +13,7 @@ const issue = {number:4,created_at:'2026-11-12T00:00:00Z',user:{login:'runzhliu'
   let limitApi = false;
   await page.route('**/*',async route=>{
    const url=new URL(route.request().url());
+   if(url.hostname==='avatars.githubusercontent.com')return route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAD0lEQVR4nGNgYPgPRmAKABf2A/1+6zfzAAAAAElFTkSuQmCC','base64')});
    if(url.hostname==='api.github.com') {
     if(limitApi)return route.fulfill({status:403,json:{message:'rate limited'},headers:{'access-control-allow-origin':'*'}});
     if(url.pathname.endsWith('/issues/4/comments'))return route.fulfill({json:[{user:{login:'octocat'},body:'A comment <img src=x onerror=alert(1)>'}],headers:{'access-control-allow-origin':'*'}});
@@ -29,6 +30,11 @@ const issue = {number:4,created_at:'2026-11-12T00:00:00Z',user:{login:'runzhliu'
   const card=page.locator('.moment'); await card.waitFor();
   assert.equal(await card.count(),1,'only owner issues, excluding pull requests');
   assert.equal(await card.getAttribute('id'),'issue-4');
+  const avatar=card.locator('.moment__avatar-image');
+  assert.equal(await avatar.getAttribute('src'),'https://avatars.githubusercontent.com/u/20874664?v=4');
+  await avatar.evaluate(img=>img.dispatchEvent(new Event('error')));
+  assert.equal(await card.locator('.moment__avatar-image').count(),0,'fallback letter remains if avatar fails');
+  assert.equal(await card.locator('.moment__avatar').textContent(),'R');
   assert.equal(await card.locator('#m-123').count(),1,'legacy anchor');
   assert.equal(await card.locator('.moment__image').count(),1);
   assert.ok((await card.locator('.moment__text').textContent()).includes(lang?'English moment':'中文动态'));
