@@ -93,7 +93,7 @@ def publish_to_site(post_id):
             raise ValueError('本地与远程 main 不一致；为避免发布其他提交，请先同步仓库')
         if git('status', '--porcelain', '--', 'docs/assets/data/moments.json', 'docs/assets/images/moments/').stdout:
             raise ValueError('上次推送尚未完成，且动态文件又有改动；请先检查仓库状态')
-        git('push', 'origin', 'HEAD:refs/heads/main', timeout=120)
+        git('push', 'origin', head + ':refs/heads/main', timeout=120)
         PENDING.unlink(missing_ok=True)
         return head
     if git('cat-file', '-e', remote_sha + ':docs/moments.md', check=False).returncode:
@@ -118,7 +118,7 @@ def publish_to_site(post_id):
     commit = git('rev-parse', 'HEAD').stdout.strip()
     atomic(PENDING, (json.dumps({'base':head,'commit':commit})+'\n').encode()); PENDING.chmod(0o600)
     try:
-        git('push', 'origin', 'HEAD:refs/heads/main', timeout=120)
+        git('push', 'origin', commit + ':refs/heads/main', timeout=120)
     except ValueError:
         raise ValueError('已创建动态提交，但推送尚未成功；请检查网络或认证后再次点击发布') from None
     PENDING.unlink(missing_ok=True)
