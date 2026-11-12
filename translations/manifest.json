@@ -1570,6 +1570,12 @@
       "english_sha256": "331552b46f35eb878f18f793e948e9059c9d378fc1a2b5185c6fc9c122b3c57c",
       "reviewed_at": "2026-11-11T09:32:26.705335+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/hermes-mattermost-matrix-kubernetes-practice.md": {
+      "source_sha256": "6f59f438d8ca94b1b8ae37f4c198c7850139e9f7767e0cf68b342fb7026c4cf8",
+      "english_sha256": "ad5a75064b47861f9aaa0b3fb685d71f399b54378b3bf6e02ade92fb16bf24e2",
+      "reviewed_at": "2026-11-12T02:57:09.100295+00:00",
+      "review": "reviewed against source"
     }
   }
 }
