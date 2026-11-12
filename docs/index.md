@@ -10,6 +10,12 @@ hide:
 [简体中文](/){ .md-button .md-button--primary }
 [English](/en/){ .md-button }
 
+## 最近动态
+
+<div class="moments" data-moments data-mode="home" aria-live="polite"></div>
+
+[查看全部动态](moments.md)
+
 <section class="agent-explore" data-agent-explore aria-labelledby="explore-title">
   <div class="agent-explore__header"><div><span class="agent-explore__eyebrow">AIK8S · EXPLORE</span><div class="agent-explore__title" role="heading" aria-level="2" id="explore-title">让探索从一个问题开始</div><p class="agent-explore__intro">告诉我你想了解什么，一起找到站内的工程实践和阅读路径。</p></div><span class="agent-explore__mascot" aria-hidden="true">✳</span></div>
   <form class="agent-explore__form" data-explore-form><label class="agent-explore__label" for="explore-query">你的问题</label><div class="agent-explore__input-row"><input id="explore-query" data-explore-query type="search" maxlength="200" placeholder="例如：Pod Pending 应该怎么排查？"><button type="submit">开始探索 <span aria-hidden="true">↗</span></button></div></form>

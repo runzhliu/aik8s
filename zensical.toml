@@ -6,10 +6,11 @@ repo_url = "https://github.com/runzhliu/aik8s"
 repo_name = "runzhliu/aik8s"
 docs_dir = "docs"
 site_dir = "site"
-extra_css = ["stylesheets/engagement.css", "stylesheets/timeline.css", "stylesheets/article-tools.css", "stylesheets/topic-cloud.css", "stylesheets/agent-explore.css"]
-extra_javascript = ["javascripts/engagement.js", "javascripts/timeline.js", "javascripts/search-polish.js", "javascripts/topic-cloud.js", "javascripts/agent-explore.js"]
+extra_css = ["stylesheets/engagement.css", "stylesheets/timeline.css", "stylesheets/article-tools.css", "stylesheets/topic-cloud.css", "stylesheets/agent-explore.css", "stylesheets/moments.css"]
+extra_javascript = ["javascripts/engagement.js", "javascripts/timeline.js", "javascripts/search-polish.js", "javascripts/topic-cloud.js", "javascripts/agent-explore.js", "javascripts/moments.js"]
 nav = [
   {"首页" = "index.md"},
+  {"动态" = "moments.md"},
   {"AI/LLM on Kubernetes" = [
     "ai-k8s/index.md",
     {"基础与架构" = [

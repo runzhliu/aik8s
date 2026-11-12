@@ -102,6 +102,12 @@ make build-production
 
 当前部署流程见 [Server-pull deployment](ops/aik8s-pull-deploy/README.md)；工作流定义在 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)。
 
+## 发布动态
+
+运行 `python3 scripts/moments_editor.py` 打开仅供本机使用的动态编辑器；可以直接粘贴或选择图片，填写中英文内容和图片说明，保存本地草稿并预览。确认内容后点击「发布到网站」，编辑器会提交相关动态数据及图片并推送，触发站点既有的构建和部署。图片保留原始元数据，发布前请检查内容和隐私信息。
+
+发布只包含 `docs/assets/data/moments.json` 和当前动态引用的 `docs/assets/images/moments/` 图片，不会提交其他文件；仓库不在 `main` 分支、本地和远程有其他未同步提交、或动态文件已有暂存改动时，编辑器会停止并提示处理。本地草稿存放在被 Git 忽略的 `.local/moments/`，访客无法通过公开站点发表动态；本机 Git 必须已有远程写权限。
+
 ## 添加内容
 
 公开文档默认提供完整中英文版本：中文源文件在 `docs/`，英文在 `translations/en/`，两者保持相同相对路径。新增、更新或移动中文页面时，同步维护英文页、`translations/navigation.en.json` 与 `translations/manifest.json`，不能仅提供英文摘要或中文回退页。详细流程见 [双语维护说明](translations/README.md)。

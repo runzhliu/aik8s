@@ -1,0 +1,15 @@
+.md-typeset .moments { margin: 1.5rem 0; }
+.md-typeset .moment { display:flex; gap:.85rem; padding:1.25rem 0; border-bottom:1px solid var(--md-default-fg-color--lightest); scroll-margin-top:5rem; }
+.moment__avatar { width:2.1rem; height:2.1rem; flex:none; display:grid; place-items:center; border-radius:50%; background:var(--md-primary-fg-color); color:#fff; font-size:.85rem; font-weight:600; }
+.moment__body { min-width:0; flex:1; }
+.moment__head { display:flex; justify-content:space-between; gap:1rem; align-items:baseline; }
+.md-typeset .moment__author { font-size:.8rem; color:var(--md-primary-fg-color); }
+.md-typeset .moment__time { font-size:.62rem; color:var(--md-default-fg-color--light); white-space:nowrap; }
+.md-typeset .moment__text { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.75; font-size:.78rem; margin:.4rem 0 .6rem; }
+.moment__images { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); max-width:36rem; gap:.35rem; }
+.md-typeset .moment__image { display:block; aspect-ratio:1; overflow:hidden; border-radius:8px; background:var(--md-default-fg-color--lightest); }
+.md-typeset .moment__image img { width:100%; height:100%; object-fit:cover; }
+.md-typeset .moment__link,.md-typeset .moments__more { display:inline-block; margin-top:.55rem; font-size:.7rem; }
+.moment__tags { display:flex; gap:.45rem; flex-wrap:wrap; margin-top:.6rem; color:var(--md-primary-fg-color); font-size:.6rem; }
+.moments__empty { color:var(--md-default-fg-color--light); font-size:.72rem; }
+@media(max-width:480px){.md-typeset .moment { gap:.6rem; }.moment__head { flex-wrap:wrap; gap:.2rem .5rem; }.moment__avatar { width:1.8rem; height:1.8rem; }}

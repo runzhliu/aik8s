@@ -1,5 +1,6 @@
 {
   "首页": "Home",
+  "动态": "Moments",
   "DeepInfer 架构与源码深度解析": "DeepInfer Architecture and Source Analysis",
   "OpenSandbox Kubernetes 实战": "OpenSandbox on Kubernetes in Practice",
   "OpenKruise Agents Kubernetes 实战": "OpenKruise Agents on Kubernetes in Practice",

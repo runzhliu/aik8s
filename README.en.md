@@ -99,6 +99,12 @@ After a push to `main`, GitHub Actions checks bilingual integrity, internal link
 
 See [Server-pull deployment](ops/aik8s-pull-deploy/README.md) for the current deployment procedure and [.github/workflows/deploy.yml](.github/workflows/deploy.yml) for the workflow.
 
+## Publishing Moments
+
+Run `python3 scripts/moments_editor.py` to open the local-only Moments editor. Paste or select images, provide complete Chinese and English text and image descriptions, save a local draft, and preview it. After review, click “Publish to site” to commit the relevant data and images and push them, triggering the existing build and deployment. Original image metadata is retained, so review content and privacy information before publishing.
+
+Publication includes only `docs/assets/data/moments.json` and images referenced by the current moment under `docs/assets/images/moments/`; it does not commit other files. The editor stops with an explanation if the repository is not on `main`, local and remote contain other unsynchronized commits, or moment files have staged changes. Local drafts live in Git-ignored `.local/moments/`; visitors cannot publish through the public site. Local Git must already have remote write access.
+
 ## Adding Content
 
 Public documentation includes complete Chinese and English versions by default. Chinese sources live in `docs/`; English sources live in `translations/en/` at identical relative paths. When adding, updating, or moving a Chinese page, update its English counterpart, `translations/navigation.en.json`, and `translations/manifest.json` as well. An English summary or a Chinese fallback page does not replace a full translation. See the [bilingual publishing guide](translations/README.md).

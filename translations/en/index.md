@@ -10,6 +10,12 @@ hide:
 [简体中文](/){ .md-button .md-button--primary }
 [English](/en/){ .md-button }
 
+## Recent moments
+
+<div class="moments" data-moments data-mode="home" aria-live="polite"></div>
+
+[View all moments](moments.md)
+
 <section class="agent-explore" data-agent-explore aria-labelledby="explore-title">
   <div class="agent-explore__header"><div><span class="agent-explore__eyebrow">AIK8S · EXPLORE</span><div class="agent-explore__title" role="heading" aria-level="2" id="explore-title">Start exploring with a question</div><p class="agent-explore__intro">Tell us what you want to learn and find practical guides and reading paths.</p></div><span class="agent-explore__mascot" aria-hidden="true">✳</span></div>
   <form class="agent-explore__form" data-explore-form><label class="agent-explore__label" for="explore-query">Your question</label><div class="agent-explore__input-row"><input id="explore-query" data-explore-query type="search" maxlength="200" placeholder="For example: how do I troubleshoot a Pending Pod?"><button type="submit">Explore <span aria-hidden="true">↗</span></button></div></form>
