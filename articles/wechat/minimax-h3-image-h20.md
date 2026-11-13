@@ -1,6 +1,8 @@
 # 单卡 H20-3e 跑 MiniMax-H3-Image：2K、4K 出图与并发实测
 
-MiniMax-H3-Image 是 MiniMax H3 系列的开放权重图片模型，支持根据文字生成图片，也可以结合参考图进行编辑。按照 [vLLM 官方配方](https://recipes.vllm.ai/MiniMaxAI/MiniMax-H3-Image)，图片生成骨干约 33.1B 参数，配套文本编码器约 33.4B 参数，另有图像 VAE，默认使用 6 个蒸馏扩散步。
+2026 年 11 月 10 日，MiniMax-H3-Image 发布开放权重；MiniMax 于 11 月 11 日发布[官方介绍](https://www.minimax.io/blog/minimax-h3-image)。它是基于 H3 的图片生成模型，把文生图、参考图生成和图片编辑放在同一套模型中，支持 4096×4096 输出；官方介绍还提出最多使用 16 张参考图，并强调写实细节和提示词遵循能力。
+
+速度也是它的一个看点：模型采用 6 个蒸馏扩散步，官方宣称 4096×4096 出图可进入 10 秒内，但这一数字不能直接套用到所有硬件。我们这次在单张 H20-3e 上测得的 4K 文生图并发 1 请求 P50 约为 45～47 秒。按照 [vLLM 官方配方](https://recipes.vllm.ai/MiniMaxAI/MiniMax-H3-Image)，图片生成骨干约 33.1B 参数，配套文本编码器约 33.4B 参数，另有图像 VAE。
 
 这次我们分别用单张 H20-3e，通过 vLLM-Omni 和 SGLang 跑通文本生成、图片编辑与多参考图，并测试 2048×2048、2720×1536 和 4096×4096 的不同并发。两次节点和卸载策略不同，结果需要按部署配置比较。下面的图片来自实际请求，监控来自本次实验的 Grafana。
 
@@ -172,3 +174,7 @@ sglang serve --model-type diffusion \
 需要更高吞吐时，应另测多卡和多副本的实际性能；文字准确性、人物一致性、复杂参考图及长期稳定性也要针对业务单独评估。
 
 模型与接口参考：[MiniMax-H3-Image 模型卡](https://huggingface.co/MiniMaxAI/MiniMax-H3-Image) · [vLLM-Omni 配方](https://recipes.vllm.ai/MiniMaxAI/MiniMax-H3-Image)。完整复现步骤与数据见阅读原文。
+
+官方发布时间与模型介绍：https://www.minimax.io/blog/minimax-h3-image
+
+权重发布及许可证日期：https://huggingface.co/MiniMaxAI/MiniMax-H3-Image/blob/main/LICENSE

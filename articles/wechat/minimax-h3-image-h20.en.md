@@ -1,6 +1,8 @@
 # MiniMax-H3-Image on One H20-3e: 2K and 4K Generation and Concurrency Tests
 
-MiniMax-H3-Image is an open-weight image model in the MiniMax H3 family. It generates images from text and edits images using references. According to the [official vLLM recipe](https://recipes.vllm.ai/MiniMaxAI/MiniMax-H3-Image), the image-generation backbone has about 33.1B parameters, the paired text encoder about 33.4B, and a separate image VAE; default generation uses six distilled diffusion steps.
+MiniMax-H3-Image was released with open weights on November 10, 2026; MiniMax published its [official introduction](https://www.minimax.io/blog/minimax-h3-image) on November 11. Built on H3, the image model combines text-to-image, reference-based generation and image editing, and supports 4096×4096 output. MiniMax also highlights support for up to 16 reference images, realistic details and prompt adherence.
+
+Speed is another focus: the model uses six distilled diffusion steps, and MiniMax claims 4096×4096 generation can take under 10 seconds, a figure that cannot be applied to every hardware setup. In our single-H20-3e runs, 4K text-to-image concurrency-1 request P50 was about 45–47 seconds. According to the [official vLLM recipe](https://recipes.vllm.ai/MiniMaxAI/MiniMax-H3-Image), the generation backbone has about 33.1B parameters, the paired text encoder about 33.4B, and a separate image VAE.
 
 We used one H20-3e each in separate vLLM-Omni and SGLang runs to test text-to-image generation, image editing and multiple references, then measured different concurrency levels at 2048×2048, 2720×1536 and 4096×4096. The nodes and offload strategies differ, so results compare these deployment configurations. The pictures below came from actual requests; monitoring comes from the experiment's Grafana.
 
@@ -172,3 +174,7 @@ A single H20-3e can run this model and image API for low-concurrency validation 
 For higher throughput, measure multi-GPU and multi-replica configurations independently. Text accuracy, identity consistency, complex references and long-term stability also require application-specific evaluation.
 
 References: [MiniMax-H3-Image model card](https://huggingface.co/MiniMaxAI/MiniMax-H3-Image) · [vLLM-Omni recipe](https://recipes.vllm.ai/MiniMaxAI/MiniMax-H3-Image). See the linked public article for full reproducibility details and data.
+
+Official announcement and model introduction: https://www.minimax.io/blog/minimax-h3-image
+
+Weights release and license date: https://huggingface.co/MiniMaxAI/MiniMax-H3-Image/blob/main/LICENSE
