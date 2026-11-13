@@ -1,0 +1,184 @@
+[
+  {
+    "id": "portrait",
+    "task": "t2i",
+    "prompt": "A documentary-style portrait of an adult woman in a dark blue coat, standing at a tram stop on a rainy evening, soft reflections, realistic skin texture.",
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "landscape",
+    "task": "t2i",
+    "prompt": "A winding mountain road crossing a green valley after rain, distant snowy peaks and low clouds, wide natural light.",
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "product",
+    "task": "t2i",
+    "prompt": "A brushed silver water bottle on a pale stone table beside a single green leaf, clean studio product photography.",
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "spatial",
+    "task": "t2i",
+    "prompt": "On a white table place a red cube to the left of a blue sphere, with a small green cylinder behind the sphere.",
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "poster",
+    "task": "t2i",
+    "prompt": "A minimalist technology event poster with a navy background and the clearly legible title \"AI INFRA 2026\" in white.",
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "bilingual",
+    "task": "t2i",
+    "prompt": "A clean conference sign with exactly two lines of text: \"Kubernetes\" on the first line and \"云原生\" on the second.",
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "numbers",
+    "task": "t2i",
+    "prompt": "A calendar page showing exactly the digits \"2026 11 12\", evenly spaced black text on white paper.",
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "multi_subject",
+    "task": "t2i",
+    "prompt": "Three adults wait at a bus stop: one wearing a yellow coat, one red coat and one blue coat, clearly separated.",
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "edit-recolor",
+    "task": "edit",
+    "prompt": "<Picture 1> shows simple geometric shapes. Change the red square to green while keeping the blue circle and background unchanged.",
+    "images": [
+      "edit-source-blue-circle-red-square.png"
+    ],
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "edit-two-order",
+    "task": "edit",
+    "prompt": "Combine the main objects from <Picture 1> and <Picture 2> in one clean composition, keeping each object’s shape and color.",
+    "images": [
+      "edit-source-blue-circle-red-square.png",
+      "multi-source-yellow-square-green-circle.png"
+    ],
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "edit-reverse-order",
+    "task": "edit",
+    "prompt": "Combine the main objects from <Picture 1> and <Picture 2> in one clean composition, keeping each object’s shape and color.",
+    "images": [
+      "multi-source-yellow-square-green-circle.png",
+      "edit-source-blue-circle-red-square.png"
+    ],
+    "seeds": [
+      42,
+      1234,
+      2026
+    ]
+  },
+  {
+    "id": "edit-4-reference-protocol",
+    "task": "edit",
+    "prompt": "Compose the geometric symbols in the provided references into a grid, maintaining their order.",
+    "images": [
+      "reference-01.png",
+      "reference-02.png",
+      "reference-03.png",
+      "reference-04.png"
+    ],
+    "note": "16-image case repeats reference sources 1-6; protocol limit test, not 16 unique semantic subjects.",
+    "seeds": [
+      42
+    ]
+  },
+  {
+    "id": "edit-8-reference-protocol",
+    "task": "edit",
+    "prompt": "Compose the geometric symbols in the provided references into a grid, maintaining their order.",
+    "images": [
+      "reference-01.png",
+      "reference-02.png",
+      "reference-03.png",
+      "reference-04.png",
+      "reference-05.png",
+      "reference-06.png",
+      "reference-07.png",
+      "reference-08.png"
+    ],
+    "note": "16-image case repeats reference sources 1-6; protocol limit test, not 16 unique semantic subjects.",
+    "seeds": [
+      42
+    ]
+  },
+  {
+    "id": "edit-16-reference-protocol",
+    "task": "edit",
+    "prompt": "Compose the geometric symbols in the provided references into a grid, maintaining their order.",
+    "images": [
+      "reference-01.png",
+      "reference-02.png",
+      "reference-03.png",
+      "reference-04.png",
+      "reference-05.png",
+      "reference-06.png",
+      "reference-07.png",
+      "reference-08.png",
+      "reference-09.png",
+      "reference-10.png",
+      "reference-11.png",
+      "reference-12.png",
+      "reference-13.png",
+      "reference-14.png",
+      "reference-15.png",
+      "reference-16.png"
+    ],
+    "note": "16-image case repeats reference sources 1-6; protocol limit test, not 16 unique semantic subjects.",
+    "seeds": [
+      42
+    ]
+  }
+]

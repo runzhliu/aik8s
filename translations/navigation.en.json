@@ -154,6 +154,7 @@
   "MiniMax-M3：H20 双引擎实测": "MiniMax-M3: H20 Dual-Engine Benchmark",
   "MiniMax-M3：部署故障与修复": "MiniMax-M3: Deployment Failures and Fixes",
   "MiniMax H3：H20-3e 音视频实测": "MiniMax H3: H20-3e Audio-Video Benchmark",
+  "MiniMax H3 Image：单卡 H20-3e 实测": "MiniMax H3 Image: Single-H20-3e Benchmark",
   "MiniMax-Music3 + 大模型作词": "MiniMax-Music3 + Large Model Lyric Writing",
   "Qwen-Image-2.1：单卡 L20 双引擎实测": "Qwen-Image-2.1: Single-GPU L20 Dual-Engine Benchmark",
   "Qwen3.8-2.4T-A95B-FP8 Day 0：32×H20-3e 实测": "Qwen3.8-2.4T-A95B-FP8 Day 0: 32×H20-3e Benchmark",

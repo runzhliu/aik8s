@@ -1,0 +1,100 @@
+{
+  "description": "Fixture hashes only; no model weights",
+  "files": [
+    {
+      "name": "cases.json",
+      "bytes": 4768,
+      "sha256": "a05ce69b94cf7cf982acb39d4c2f04b7fb81c7a0bf97f646805354c7a9a7265c"
+    },
+    {
+      "name": "edit-source-blue-circle-red-square.png",
+      "bytes": 2259,
+      "sha256": "4104d67a97cb178fdf5582ffa982aa7ef2e5fcae5f6157220b311f14649ec3b3"
+    },
+    {
+      "name": "multi-source-yellow-square-green-circle.png",
+      "bytes": 2289,
+      "sha256": "711cc2de31cb02bcd289e7986b64f969a55c9571ce9d4adcdeaaa7c86f65bc26"
+    },
+    {
+      "name": "reference-01.png",
+      "bytes": 3748,
+      "sha256": "2dae005de8f240ec8fb319d88a70d58b9c92f8165e22ab80b4dc51a785db8d49"
+    },
+    {
+      "name": "reference-02.png",
+      "bytes": 3829,
+      "sha256": "089054ea59401911618cc4f93aafdd264322027f1224a9a0f18e7bdff809a2ed"
+    },
+    {
+      "name": "reference-03.png",
+      "bytes": 3854,
+      "sha256": "209211d811070cba27144e64dfb9694298a00fea0068060b972e07564f42dd5b"
+    },
+    {
+      "name": "reference-04.png",
+      "bytes": 3860,
+      "sha256": "886fc9297b4a20525fad2d9eef411615b4a96c52fdfe90bdcddab1d07445c1e2"
+    },
+    {
+      "name": "reference-05.png",
+      "bytes": 3841,
+      "sha256": "16f882ae5bd49c9c746a0e4fab2e32132f88eee2d5fc6cbba6213edc3e89d92e"
+    },
+    {
+      "name": "reference-06.png",
+      "bytes": 3931,
+      "sha256": "d658d21b8de38e22ce640f4ce7c0206838641bfc691f6ddb956d3b8173d8525a"
+    },
+    {
+      "name": "reference-07.png",
+      "bytes": 3770,
+      "sha256": "a0a2f947cf5b71c1c301faad27986132b607fcfc20b741070a76f25a1a06ced3"
+    },
+    {
+      "name": "reference-08.png",
+      "bytes": 4012,
+      "sha256": "3c4a80cfabfb79e765d2210299e76cee4c640b357a9bb0557e962cabc4883234"
+    },
+    {
+      "name": "reference-09.png",
+      "bytes": 3922,
+      "sha256": "b3fad15292ff7df238b77de14cae544a5c4ec6a0ba079ccd5dd9cd990f0cd070"
+    },
+    {
+      "name": "reference-10.png",
+      "bytes": 3972,
+      "sha256": "d46945c2b43c9522e0da7700cea196a5df65cfc84f79a03504b106160b0de470"
+    },
+    {
+      "name": "reference-11.png",
+      "bytes": 3748,
+      "sha256": "2dae005de8f240ec8fb319d88a70d58b9c92f8165e22ab80b4dc51a785db8d49"
+    },
+    {
+      "name": "reference-12.png",
+      "bytes": 3829,
+      "sha256": "089054ea59401911618cc4f93aafdd264322027f1224a9a0f18e7bdff809a2ed"
+    },
+    {
+      "name": "reference-13.png",
+      "bytes": 3854,
+      "sha256": "209211d811070cba27144e64dfb9694298a00fea0068060b972e07564f42dd5b"
+    },
+    {
+      "name": "reference-14.png",
+      "bytes": 3860,
+      "sha256": "886fc9297b4a20525fad2d9eef411615b4a96c52fdfe90bdcddab1d07445c1e2"
+    },
+    {
+      "name": "reference-15.png",
+      "bytes": 3841,
+      "sha256": "16f882ae5bd49c9c746a0e4fab2e32132f88eee2d5fc6cbba6213edc3e89d92e"
+    },
+    {
+      "name": "reference-16.png",
+      "bytes": 3931,
+      "sha256": "d658d21b8de38e22ce640f4ce7c0206838641bfc691f6ddb956d3b8173d8525a"
+    }
+  ]
+}
