@@ -1,0 +1,14 @@
+{
+  "checks": {
+    "host_metrics": {
+      "result": "PASS",
+      "detail": "both active sandbox IDs present in host metrics"
+    },
+    "same_node_port_mapping": {
+      "result": "FAIL",
+      "type": "AssertionError",
+      "detail": "Connection refused in this Pod-network test; root cause not established."
+    }
+  },
+  "cleanup": []
+}

@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "stages": [
+    "created"
+  ],
+  "cleanup": true,
+  "before_sdk": "'restart-preserved'",
+  "before_shell": {
+    "exit": 0,
+    "stdout": "17\nrestart-preserved"
+  },
+  "after_shell": {
+    "exit": 0,
+    "stdout": "17\nrestart-preserved",
+    "stderr": ""
+  },
+  "sync_before_restart": true,
+  "restart_count": 1,
+  "file_preserved": true,
+  "states": [
+    "Running",
+    "BackOff",
+    "Restarting"
+  ]
+}

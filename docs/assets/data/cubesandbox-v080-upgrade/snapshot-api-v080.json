@@ -1,0 +1,10 @@
+{
+  "checks": {
+    "name_filter": "PASS",
+    "delete_by_name": "PASS",
+    "delete_missing_by_name": "PASS",
+    "kill": "PASS",
+    "is_running_after_kill": true
+  },
+  "cleanup": []
+}

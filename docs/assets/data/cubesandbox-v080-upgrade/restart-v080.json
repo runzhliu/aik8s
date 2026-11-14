@@ -1,0 +1,21 @@
+{
+  "result": "FAIL",
+  "stages": [
+    "created"
+  ],
+  "cleanup": true,
+  "states": [
+    "Running",
+    "BackOff",
+    "Restarting",
+    "GaveUp"
+  ],
+  "last_restart_status": {
+    "restartPolicy": "OnFailure",
+    "restartState": "GaveUp",
+    "restartCount": 2,
+    "lastExitReason": "LivenessProbeFailed",
+    "lastRestartAt": "2026-11-14T01:15:54.660Z",
+    "lastSuccessfulRestartAt": "2026-11-14T01:16:03.310Z"
+  }
+}

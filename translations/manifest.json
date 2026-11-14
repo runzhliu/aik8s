@@ -1588,6 +1588,12 @@
       "english_sha256": "c505429c944141fa65233c77e9b5b4996c9d4fb42a10bf6cfa2e369ec7690fa3",
       "reviewed_at": "2026-11-13T09:39:16.608693+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-v080-upgrade-practice.md": {
+      "source_sha256": "086795caaa9f10a129d886055b54f4794b60df1843987c6cba6db0f5584ab7f8",
+      "english_sha256": "8528aa5b54687fb06efb52b6c50b138ef524306b9481028854b917fb545c7372",
+      "reviewed_at": "2026-11-14T01:56:41.152295+00:00",
+      "review": "reviewed against source"
     }
   }
 }

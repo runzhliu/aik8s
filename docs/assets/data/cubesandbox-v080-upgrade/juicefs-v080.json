@@ -1,0 +1,46 @@
+{
+  "backend": "v0.8.0-jfs",
+  "checks": {
+    "create-and-execute": "PASS (2 rounds)",
+    "deleted-snapshot-status": "PASS",
+    "mcp-shape-validation": "PASS",
+    "pause-metadata-resume": "PASS",
+    "snapshot-restore-clone": "PASS",
+    "snapshot-rollback": "PASS",
+    "template-pagination": "OBSERVED (E2B facade remains unpaged; verify CLI separately)"
+  },
+  "cleanup": {
+    "complete": true,
+    "errors": 0
+  },
+  "deleted_snapshot_http_status": 404,
+  "environment": "kubernetes-lab",
+  "invalid_mcp_http_status": 400,
+  "pause_client_ms": 514.14,
+  "paused_metadata_retained": true,
+  "paused_template_retained": true,
+  "result": "PASS",
+  "sdk_package_version": "0.8.0",
+  "template_page_size": 12,
+  "timestamp": "2026-11-14T01:24:10.714389+00:00",
+  "timings": {
+    "median_ms": {
+      "create_ms": 524.63,
+      "delete_ms": 355.37,
+      "first_command_ms": 340.98
+    },
+    "samples": [
+      {
+        "create_ms": 533.14,
+        "delete_ms": 374.73,
+        "first_command_ms": 321.81
+      },
+      {
+        "create_ms": 516.12,
+        "delete_ms": 336.0,
+        "first_command_ms": 360.14
+      }
+    ],
+    "scope": "client-observed API latency including transport; not a concurrency benchmark"
+  }
+}

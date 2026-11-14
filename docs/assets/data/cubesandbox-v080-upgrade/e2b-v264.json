@@ -1,0 +1,10 @@
+{
+  "sdk": "2.64.0",
+  "checks": {
+    "v2_create": "PASS",
+    "commands": "PASS",
+    "v2_connect": "PASS",
+    "connected_command": "PASS"
+  },
+  "cleanup": true
+}

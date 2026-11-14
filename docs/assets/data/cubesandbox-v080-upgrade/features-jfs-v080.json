@@ -1,0 +1,48 @@
+{
+  "backend": "v0.8.0",
+  "sdk": "source-tag-v0.8.0",
+  "time": "2026-11-14T01:26:37.421468+00:00",
+  "checks": {
+    "create_is_running": {
+      "result": "PASS",
+      "detail": {
+        "is_running": true
+      }
+    },
+    "fs_only_snapshot": {
+      "result": "PASS",
+      "detail": {
+        "mode": "fs-only",
+        "file_before_snapshot": "preserved",
+        "later_write": "isolated",
+        "source_process": "running",
+        "restored_process": "absent"
+      }
+    },
+    "snapshot_name_filter": {
+      "result": "PASS",
+      "detail": {
+        "name_filter": "matched"
+      }
+    },
+    "fork": {
+      "result": "PASS",
+      "detail": {
+        "forks": 2,
+        "file_isolation": "passed"
+      }
+    },
+    "restart_policy_validation": {
+      "result": "PASS",
+      "detail": {
+        "never_with_probe_http": 400
+      }
+    }
+  },
+  "cleanup": {
+    "sandbox_count": 4,
+    "snapshot_count": 1,
+    "errors": []
+  },
+  "result": "PASS"
+}

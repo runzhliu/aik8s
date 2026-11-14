@@ -1,0 +1,23 @@
+{
+  "backend": "v0.8.0",
+  "checks": {
+    "clone_external_volume": "shared-current-data",
+    "clone_rootfs": "isolated",
+    "external_volume_rollback": "kept-current",
+    "mounted_snapshot": "created",
+    "rootfs_rollback": "restored",
+    "snapshot_delete_while_referenced": "accepted",
+    "snapshot_restore_with_resent_mounts": "accepted-current-data"
+  },
+  "cleanup": {
+    "clone_killed": true,
+    "restored_killed": true,
+    "snapshot_deleted": true,
+    "source_killed": true,
+    "verifier_killed": true,
+    "volume_destroyed": true,
+    "writer_killed": true
+  },
+  "result": "PASS",
+  "sdk": "0.8.0"
+}

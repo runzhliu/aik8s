@@ -120,6 +120,7 @@ nav = [
       {"Firecracker 与 CubeSandbox 企业选型" = "ai-k8s/rag-agent/firecracker-cubesandbox-enterprise-selection.md"},
       {"CubeSandbox Kubernetes 部署评估" = "ai-k8s/rag-agent/cubesandbox-kubernetes.md"},
       {"CubeSandbox Kubernetes 部署实战" = "ai-k8s/rag-agent/cubesandbox-kubernetes-practice.md"},
+      {"CubeSandbox v0.8.0 升级实战" = "ai-k8s/rag-agent/cubesandbox-v080-upgrade-practice.md"},
       {"CubeSandbox 增强 OpenClaw 与 DSH 实战" = "ai-k8s/rag-agent/cubesandbox-openclaw-dsh-enterprise-practice.md"},
       {"CubeSandbox Agent Adapter v0.3 实测" = "ai-k8s/rag-agent/cubesandbox-agent-adapter-v03.md"},
       {"CubeSandbox Agent Adapter v0.5 强审计实测" = "ai-k8s/rag-agent/cubesandbox-agent-adapter-v05.md"},

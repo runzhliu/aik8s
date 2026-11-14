@@ -1,0 +1,30 @@
+{
+  "result": "FAIL",
+  "stages": [
+    "created"
+  ],
+  "cleanup": true,
+  "before_sdk": "'restart-preserved'",
+  "before_shell": {
+    "exit": 0,
+    "stdout": "17\nrestart-preserved"
+  },
+  "after_shell": {
+    "exit": 0,
+    "stdout": "FILE_MISSING\n",
+    "stderr": ""
+  },
+  "states": [
+    "Running",
+    "BackOff",
+    "Restarting"
+  ],
+  "last_restart_status": {
+    "restartPolicy": "OnFailure",
+    "restartState": "Running",
+    "restartCount": 1,
+    "lastExitReason": "LivenessProbeFailed",
+    "lastRestartAt": "2026-11-14T01:38:48.966Z",
+    "lastSuccessfulRestartAt": "2026-11-14T01:38:57.609Z"
+  }
+}
