@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-15",
+  "backend": "CubeSandbox v0.8.0",
+  "adapter": "v0.7.0",
+  "client": "DSH headless with v0.7.0 Cordis plugin",
+  "environment": "single-node test cluster",
+  "tests": [
+    {
+      "mode": "existing plugin prompt",
+      "prompt": "请在测试集群的隔离沙箱里做一次小验证：用 Python 计算 1 到 100 的总和，告诉我结果。完成后清理这次临时环境。",
+      "tool_sequence": [
+        "cube_doctor",
+        "cube_status",
+        "cube_exec",
+        "cube_list",
+        "cube_recover",
+        "cube_release",
+        "cube_status",
+        "cube_recover",
+        "cube_release",
+        "cube_recover"
+      ],
+      "executor": "cubesandbox-microvm",
+      "exit_code": 0,
+      "verified_output": [
+        "1..100 sum = 5050"
+      ],
+      "kill_calls": 2,
+      "completed": true
+    },
+    {
+      "mode": "temporary workspace AGENTS.md",
+      "prompt": "请在测试集群的隔离环境里用 Python 检查这些测试分数：4、7、9、10，输出数量和平均分，完成后清理临时环境。",
+      "tool_sequence": [
+        "cube_status",
+        "cube_exec",
+        "cube_release"
+      ],
+      "executor": "cubesandbox-microvm",
+      "exit_code": 0,
+      "verified_output": [
+        "count: 4",
+        "average: 7.5"
+      ],
+      "kill_calls": 1,
+      "completed": true
+    }
+  ],
+  "final_adapter_lease_count": 0
+}

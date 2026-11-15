@@ -29,12 +29,12 @@
       "review": "pending editorial review"
     },
     "index.md": {
-      "source_sha256": "cef139ab9adb0aba062296b965c26fe2db339cd5741b9a4f62b9eb09f21392bd",
-      "english_sha256": "6023b58894d8a25c144b81cc201f18f9276e57092389908ddf16514b260a0553",
+      "source_sha256": "288673577376550c736534014c38365d64027b12bed60db7ae909616f787b6e8",
+      "english_sha256": "632e755ae73df753542c8f0019b39e20e791e183e09d31ed0d12f8d87baca259",
       "translated_at": "2026-10-16T08:48:54.703821+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-11-12T03:28:18.092758+00:00"
+      "reviewed_at": "2026-11-15T01:02:45.129615+00:00"
     },
     "ai-k8s/rag-agent/omarchy-agent-os-overview.md": {
       "source_sha256": "0496759b611c1d132db2ecf032c2bccb240293b4632e4e4b09b8e1eddc56e312",
@@ -1593,6 +1593,12 @@
       "source_sha256": "086795caaa9f10a129d886055b54f4794b60df1843987c6cba6db0f5584ab7f8",
       "english_sha256": "8528aa5b54687fb06efb52b6c50b138ef524306b9481028854b917fb545c7372",
       "reviewed_at": "2026-11-14T01:56:41.152295+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-agent-adapter-v07.md": {
+      "source_sha256": "9855172a0514ec7859afdf6e79f457c86c992372ef7c31699bac288530abfad9",
+      "english_sha256": "e22754fe75fd920a97d94c1173c3dc68ee940b6da1346c997c2f25021ed0c1fb",
+      "reviewed_at": "2026-11-15T01:07:50.065884+00:00",
       "review": "reviewed against source"
     }
   }

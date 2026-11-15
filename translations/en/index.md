@@ -175,6 +175,7 @@ Direct entry points to official documentation organized by technical layer. Proj
 - [Agent Sandbox Selection & Architecture Analysis](ai-k8s/rag-agent/agent-sandbox-selection.md)
 - [CubeSandbox Kubernetes Deployment Requirements & Production Evaluation](ai-k8s/rag-agent/cubesandbox-kubernetes.md)
 - [CubeSandbox Agent Adapter v0.6: Multi-cluster Execution & Practice](ai-k8s/rag-agent/cubesandbox-agent-adapter-v06.md)
+- [CubeSandbox Agent Adapter v0.7: Natural-Language Sandbox Routing in DSH](ai-k8s/rag-agent/cubesandbox-agent-adapter-v07.md)
 - [OpenClaw as an Enterprise Agent Platform Foundation](ai-k8s/rag-agent/openclaw-enterprise-agent-platform.md)
 - [OpenClaw Enterprise Kubernetes Deployment in Practice: Persistence, Cross-cluster Ingress & Model Validation](ai-k8s/rag-agent/openclaw-enterprise-kubernetes-practice.md)
 - [OpenClaw 2.0 Hands-on: Architecture, Features, Performance & Migration Risk Comparison with 1.x](ai-k8s/rag-agent/openclaw-2-real-world-review.md)
