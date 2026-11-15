@@ -2453,5 +2453,23 @@
     "pages": [
       "ai-k8s/rag-agent/agent-landscape-2026.md"
     ]
+  },
+  "d7b1353df0b5a05b9054ac109460b89f8f77ca0be9e9dd504f894451f70856d6": {
+    "translation": "Please run a small validation in an isolated sandbox on the test cluster: use Python to compute the sum from 1 to 100 and report the result. Clean up this temporary environment when finished.",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-agent-adapter-v07.md"
+    ]
+  },
+  "987c01e9fae04a411b5d0e8d9d92380f0d7e756cab3bc160a9b7174ca7a9fa7d": {
+    "translation": "Please use Python in an isolated environment on the test cluster to check these test scores: 4, 7, 9, 10. Report the count and average, then clean up the temporary environment.",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-agent-adapter-v07.md"
+    ]
+  },
+  "a9e85d71ebcc49094825057e73c17b825ef1604576ab3186a7dba8638e803825": {
+    "translation": "Please use Python in an isolated environment on the test cluster to calculate the sum from 1 to 100 and report the result. Clean up the temporary environment when finished.",
+    "pages": [
+      "ai-k8s/rag-agent/cubesandbox-agent-adapter-v07.md"
+    ]
   }
 }
