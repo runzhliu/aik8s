@@ -38,6 +38,7 @@ nav = [
       {"Koordlet 与 Runtime Hook 节点隔离" = "ai-k8s/scheduling/koordinator-node-qos-runtime-hooks.md"},
       {"AI 工作负载弹性伸缩" = "ai-k8s/scheduling/autoscaling.md"},
       {"Kubernetes Serverless 技术综述" = "ai-k8s/scheduling/kubernetes-serverless-overview.md"},
+      {"Fission Kubernetes 函数实战" = "ai-k8s/scheduling/fission-kubernetes-practice.md"},
       {"GPU 成本与容量规划" = "ai-k8s/cost-capacity.md"},
     ]},
     {"网络、数据与模型制品" = [
