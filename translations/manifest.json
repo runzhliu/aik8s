@@ -1600,6 +1600,12 @@
       "english_sha256": "e22754fe75fd920a97d94c1173c3dc68ee940b6da1346c997c2f25021ed0c1fb",
       "reviewed_at": "2026-11-15T01:07:50.065884+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/scheduling/kubernetes-serverless-overview.md": {
+      "source_sha256": "b664ab39b5190c3b6e3a15e725200f755ab9c53befaec477ba6a18b6b230e0f6",
+      "english_sha256": "f9eb427f24be78a537ca3ed9467c4045fcd6f85e59debc83e7a4e520fcfc1fc8",
+      "reviewed_at": "2026-11-16T02:30:04.995645+00:00",
+      "review": "reviewed against source"
     }
   }
 }

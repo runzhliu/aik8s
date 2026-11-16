@@ -672,5 +672,32 @@
       "未扣免费额度或合同折扣；结果是预算，不是账单。价格核对：2026-10-19。": "Before free allowances or contract discounts. A budget, not an invoice. Prices checked: 2026-10-19.",
       "核对官方价格": "Check official prices"
     }
+  },
+  "assets/images/serverless-overview/platform.svg": {
+    "source_sha256": "99cbd72eca7f591facabf96a67f3ce99a2ba2296073437c3a9f05a306809a3fe",
+    "strings": {
+      "Serverless 平台的基本组成": "Core parts of a serverless platform",
+      "用户、应用、Agent": "Users and agents",
+      "请求、消息、定时事件": "Events and requests",
+      "入口与控制面": "Entry and control",
+      "鉴权 · 路由 · 排队 · 扩缩容": "Policy and routing",
+      "服务、函数、任务": "Workloads",
+      "Kubernetes 基础设施": "Kubernetes",
+      "计算与隔离运行时": "Compute",
+      "贯穿全链路：日志、指标、结果与审计": "End-to-end observability and audit"
+    }
+  },
+  "assets/images/serverless-overview/request-flow.svg": {
+    "source_sha256": "08cb1fdf0b813f75f60acbae75eea150d419114c0e02577d8857505ba3dcd15e",
+    "strings": {
+      "从零唤醒 HTTP 服务": "HTTP wake-up from zero",
+      "请求到达": "Request",
+      "入口接收": "Entry",
+      "触发扩容": "Scaling",
+      "启动并就绪": "Readiness",
+      "返回结果": "Response",
+      "排队、调度、拉镜像与初始化都会影响等待时间": "Startup and resource wait affect latency",
+      "入口缓冲和客户端超时均有限": "Waiting is bounded"
+    }
   }
 }

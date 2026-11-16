@@ -160,5 +160,17 @@
     "label_sha256": "8ea353bd5d7856ec1133df487a1a5c7cea06d0549defd72e9006fd1dbb64435d",
     "english_sha256": "98f29f3b0684dd3a0ede156705edd3f3beb4ee3d7135be90c852a5d72535302d",
     "method": "Measured and fitted in Chrome using actual font geometry; source drawing geometry preserved."
+  },
+  "assets/images/serverless-overview/platform.svg": {
+    "source_sha256": "99cbd72eca7f591facabf96a67f3ce99a2ba2296073437c3a9f05a306809a3fe",
+    "label_sha256": "12a43917ebb6a72f4650ba676c6839fe8e62bd3d70259889839fe8b6b7758bab",
+    "english_sha256": "7433930f12293a758af8de0d381786112976fb59b59e833dc5db691f47bb808a",
+    "method": "English labels reviewed in Chrome against the original drawing geometry."
+  },
+  "assets/images/serverless-overview/request-flow.svg": {
+    "source_sha256": "08cb1fdf0b813f75f60acbae75eea150d419114c0e02577d8857505ba3dcd15e",
+    "label_sha256": "86315c8955fddbefaf258b8b92a90db0bee5e1ff7bd76a1fd2297bdeafe1d1ab",
+    "english_sha256": "6305c27e764d47acb0c7010d761824eece03f456d44682801b82e69551cbf9f9",
+    "method": "English labels reviewed in Chrome against the original drawing geometry."
   }
 }
