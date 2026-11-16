@@ -1612,6 +1612,12 @@
       "english_sha256": "4e1e5b13e59ec7da8c59ae5bdf00af6e60f52bc24ab0d1e00907a4addc5f12eb",
       "reviewed_at": "2026-11-16T03:51:28.114173+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/inference/kserve-kubernetes-practice.md": {
+      "source_sha256": "19eb480298930f47c34a299fec54c09d8ef4a3ab6d7c30207e1a2d50bfd482d7",
+      "english_sha256": "10ad29c6fc344caf9709c36245189ee8c44c96e41c69366cb195935e12def9a3",
+      "reviewed_at": "2026-11-16T04:54:12.446100+00:00",
+      "review": "reviewed against source"
     }
   }
 }

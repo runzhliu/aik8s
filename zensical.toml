@@ -67,6 +67,7 @@ nav = [
       {"推理引擎选型" = "ai-k8s/inference/engines.md"},
       {"DeepInfer 架构与源码深度解析" = "ai-k8s/inference/deepinfer-architecture-analysis.md"},
       {"Serving 与微服务框架" = "ai-k8s/inference/serving-frameworks.md"},
+      {"KServe 模型服务实战" = "ai-k8s/inference/kserve-kubernetes-practice.md"},
       {"推理性能优化" = "ai-k8s/inference/optimization.md"},
       {"KV Cache 原理、应用与 Kubernetes" = "ai-k8s/inference/kv-cache-overview.md"},
       {"大模型 API 中转器与 LLM Gateway" = "ai-k8s/inference/llm-api-relay-gateway-overview.md"},
