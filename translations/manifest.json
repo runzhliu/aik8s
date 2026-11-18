@@ -1624,6 +1624,12 @@
       "english_sha256": "493352357ff8bdc1641ab2fa343e2977c26b9f770f97f4007a28e2be2e39e320",
       "reviewed_at": "2026-11-18T04:00:16.361904+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/openmausbot-kubernetes-practice.md": {
+      "source_sha256": "375c924e0c047c69b03e803f2b62727333e4c7f24507eba6b8c043100447169f",
+      "english_sha256": "c5c4480935b4d448300b91dc50c466e701bc5594dcfff96ce6b2d10c14b6187e",
+      "reviewed_at": "2026-11-18T06:32:14.271285+00:00",
+      "review": "reviewed against source"
     }
   }
 }
