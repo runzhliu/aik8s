@@ -102,6 +102,7 @@ nav = [
       {"Agent Memory 技术综述" = "ai-k8s/rag-agent/agent-memory-technology-overview.md"},
       {"Langfuse 与 LangGraph 技术综述" = "ai-k8s/rag-agent/langfuse-langgraph-overview.md"},
       {"LangChain、LangGraph 与 Langfuse Kubernetes 实战" = "ai-k8s/rag-agent/langchain-langgraph-langfuse-kubernetes-demo.md"},
+      {"Rakazo 云电脑 Kubernetes 实战与 Grok Bot 对比" = "ai-k8s/rag-agent/rakazo-kubernetes-practice.md"},
       {"Grok Bot 持久化云电脑与企业治理" = "ai-k8s/rag-agent/grok-bot-overview.md"},
       {"ChatGPT Dots 常驻智能体解析" = "ai-k8s/rag-agent/chatgpt-dots-overview.md"},
       {"DeepSeek Harness 仓库深度解析" = "ai-k8s/rag-agent/deepseek-harness-repository-analysis.md"},

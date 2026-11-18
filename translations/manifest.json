@@ -1618,6 +1618,12 @@
       "english_sha256": "10ad29c6fc344caf9709c36245189ee8c44c96e41c69366cb195935e12def9a3",
       "reviewed_at": "2026-11-16T04:54:12.446100+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/rakazo-kubernetes-practice.md": {
+      "source_sha256": "63b567f5aa885bcb3bd061a9e572270063e536312b01a762a235cfb6c05f8798",
+      "english_sha256": "493352357ff8bdc1641ab2fa343e2977c26b9f770f97f4007a28e2be2e39e320",
+      "reviewed_at": "2026-11-18T04:00:16.361904+00:00",
+      "review": "reviewed against source"
     }
   }
 }
