@@ -1,0 +1,7 @@
+runtime,version,cgroup_manager,network,result,app_under_pod_uid_slice,app_under_active_scope,sandbox_under_pod_uid_slice,sandbox_under_active_scope,app_cpu_max,app_memory_max_bytes,exec_checked
+runc,1.1.12,systemd,hostNetwork,Ready then Succeeded,True,True,True,True,50000 100000,134217728,True
+crun,1.31,systemd,hostNetwork,Ready then Succeeded,True,True,True,True,50000 100000,134217728,True
+crun,1.31,systemd,isolated bridge,Ready then Succeeded,True,True,True,True,50000 100000,134217728,True
+crun,1.31,cgroupfs,isolated bridge,Ready then Succeeded,False,False,False,False,50000 100000,134217728,True
+youki,0.5.6,systemd,isolated bridge,FailedCreatePodSandBox,,,,,,,False
+youki,0.7.0,systemd,isolated bridge,FailedCreatePodSandBox,,,,,,,False

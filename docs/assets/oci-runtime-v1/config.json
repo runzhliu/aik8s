@@ -1,0 +1,99 @@
+{
+  "ociVersion": "1.0.2",
+  "root": {
+    "path": "rootfs",
+    "readonly": true
+  },
+  "hostname": "oci-lab",
+  "process": {
+    "terminal": false,
+    "cwd": "/",
+    "args": [
+      "/bin/sleep",
+      "180"
+    ],
+    "env": [
+      "PATH=/bin",
+      "LC_ALL=C"
+    ],
+    "user": {
+      "uid": 0,
+      "gid": 0
+    },
+    "capabilities": {
+      "bounding": [],
+      "effective": [],
+      "permitted": [],
+      "inheritable": [],
+      "ambient": []
+    },
+    "noNewPrivileges": true
+  },
+  "mounts": [
+    {
+      "destination": "/proc",
+      "type": "proc",
+      "source": "proc",
+      "options": [
+        "nosuid",
+        "noexec",
+        "nodev"
+      ]
+    },
+    {
+      "destination": "/dev",
+      "type": "tmpfs",
+      "source": "tmpfs",
+      "options": [
+        "nosuid",
+        "strictatime",
+        "mode=755",
+        "size=4194304"
+      ]
+    },
+    {
+      "destination": "/dev/pts",
+      "type": "devpts",
+      "source": "devpts",
+      "options": [
+        "nosuid",
+        "noexec",
+        "newinstance",
+        "ptmxmode=0666",
+        "mode=0620"
+      ]
+    }
+  ],
+  "linux": {
+    "cgroupsPath": "/oci-sample",
+    "namespaces": [
+      {
+        "type": "mount"
+      },
+      {
+        "type": "uts"
+      },
+      {
+        "type": "ipc"
+      },
+      {
+        "type": "pid"
+      },
+      {
+        "type": "network"
+      }
+    ],
+    "resources": {
+      "cpu": {
+        "quota": 50000,
+        "period": 100000
+      },
+      "memory": {
+        "limit": 134217728
+      },
+      "pids": {
+        "limit": 32
+      }
+    }
+  }
+}

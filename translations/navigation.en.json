@@ -21,6 +21,7 @@
   "术语表": "Glossary",
   "集群、节点与加速器": "Clusters, Nodes, and Accelerators",
   "GPU 节点软件栈": "GPU Node Software Stack",
+  "youki、crun 与 cgroup v1/v2 实测": "Testing youki and crun on cgroup v1 and v2",
   "多厂商异构加速器": "Multi-Vendor Heterogeneous Accelerators",
   "Device Plugin、CDI 与 DRA": "Device Plugin, CDI, and DRA",
   "GPU 与异构资源调度": "GPU and Heterogeneous Resource Scheduling",

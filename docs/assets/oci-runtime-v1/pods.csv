@@ -1,0 +1,10 @@
+network,runtime,requested_cgroup_manager,result,pod_ip,app_cpu_quota_us,app_memory_limit_bytes,app_systemd_scope,exec_verified
+hostNetwork,crun-1.31,systemd,sandbox-create-failed,,,,,
+hostNetwork,runc-1.1.12,systemd,Ready,node,50000,134217728,active,yes
+hostNetwork,youki-0.5.6,systemd,Ready,node,50000,134217728,inactive,yes
+hostNetwork,youki-0.7.0,systemd,sandbox-create-failed,,,,,
+isolated-bridge,crun-1.31,systemd,sandbox-create-failed,,,,,
+isolated-bridge,crun-1.31,cgroupfs,Ready,dedicated,50000,134217728,inactive,yes
+isolated-bridge,runc-1.1.12,systemd,Ready,dedicated,50000,134217728,active,yes
+isolated-bridge,youki-0.5.6,systemd,Ready,dedicated,50000,134217728,inactive,yes
+isolated-bridge,youki-0.7.0,systemd,sandbox-create-failed,,,,,

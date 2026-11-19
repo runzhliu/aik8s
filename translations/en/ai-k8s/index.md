@@ -70,6 +70,7 @@ Any layer can become the bottleneck. Low GPU utilization is not necessarily a GP
 ### Clusters, Nodes and Accelerators
 
 - [GPU Node Software Stack](cluster/gpu-node-stack.md): Firmware, kernel, drivers, container runtime, CDI, Operators and node acceptance.
+- [Testing youki, crun and runc on Kubernetes with cgroup v1 and v2](cluster/youki-crun-cgroup-v1.md) uses short-container timings and real Pods to identify workloads worth moving from runc to a crun canary and compatibility limits for youki on older nodes.
 - [Multi-Vendor Heterogeneous Accelerators](accelerators/heterogeneous-accelerators.md): NVIDIA, AMD, Intel, TPU, Trainium/Inferentia and CPU/NPU.
 - [Device Plugin, CDI and DRA](accelerators/device-management.md): Responsibilities of the three, migration paths and production selection.
 - [GPU and Heterogeneous Resource Scheduling](gpu-scheduling.md): Full GPU, MIG, sharing, topology, affinity and fragmentation management.

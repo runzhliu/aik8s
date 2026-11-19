@@ -220,12 +220,12 @@
       "reviewed_at": "2026-10-16T13:32:55.347508+00:00"
     },
     "ai-k8s/index.md": {
-      "source_sha256": "fd74c0f11f6104749b3bb87c1df4b05d4a04329bcd0e2c422f27745ec453b661",
-      "english_sha256": "ddf6a3c38c39079c5b0ed6198e56b359566c260d48f1c1b4cc469aa89fd484c3",
+      "source_sha256": "11fe4b79fa99b95ae4265b32f861db0fa8f2a25ad97ec329ff3eb2c044ee9eb2",
+      "english_sha256": "ba5811b54bac45cd813e43116e6133c55288a90d833416d6bb978cb407d20fad",
       "translated_at": "2026-10-16T08:53:20.087099+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-11-01T06:19:09.372255+00:00"
+      "reviewed_at": "2026-11-19T06:19:16.659793+00:00"
     },
     "ai-k8s/practices/agent-sandbox-red-team.md": {
       "source_sha256": "3727c7dff9e923f2f2ca164d3430320983d1417109db6e9213a5e88ce82223bf",
@@ -1629,6 +1629,12 @@
       "source_sha256": "375c924e0c047c69b03e803f2b62727333e4c7f24507eba6b8c043100447169f",
       "english_sha256": "c5c4480935b4d448300b91dc50c466e701bc5594dcfff96ce6b2d10c14b6187e",
       "reviewed_at": "2026-11-18T06:32:14.271285+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/cluster/youki-crun-cgroup-v1.md": {
+      "source_sha256": "e430c2f9513e2c7369278da7748974a00473f10db5cf1204fb7c22414710c024",
+      "english_sha256": "9fa6a9f834999d8996578f978d91ddd26951862ec8bd715d7a689f57f3d0c185",
+      "reviewed_at": "2026-11-19T06:19:16.559645+00:00",
       "review": "reviewed against source"
     }
   }

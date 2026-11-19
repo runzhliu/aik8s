@@ -70,6 +70,7 @@ GPU、TPU、NPU、CPU、RDMA、NVMe、对象存储
 ### 集群、节点与加速器
 
 - [GPU 节点软件栈](cluster/gpu-node-stack.md)：固件、内核、驱动、容器运行时、CDI、Operator 与节点验收。
+- [从 cgroup v1 到 v2：在 Kubernetes 节点实测 youki、crun 和 runc](cluster/youki-crun-cgroup-v1.md)，用短容器耗时和真实 Pod 判断哪些业务值得从 runc 灰度到 crun，以及 youki 在旧节点上的兼容边界。
 - [多厂商异构加速器](accelerators/heterogeneous-accelerators.md)：NVIDIA、AMD、Intel、TPU、Trainium/Inferentia 与 CPU/NPU。
 - [Device Plugin、CDI 与 DRA](accelerators/device-management.md)：三者的职责、迁移路径和生产选型。
 - [GPU 与异构资源调度](gpu-scheduling.md)：整卡、MIG、共享、拓扑、亲和性与碎片治理。
