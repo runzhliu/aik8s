@@ -85,6 +85,7 @@ last_reviewed: 2026-10-29
 - [DeepSeek-V4-Flash-0731 的 H20 部署与压测](deepseek-v4-flash-h20-evaluation.md)
 - [在既有 Kubernetes 集群落地 AIBrix](aibrix-existing-cluster.md)
 - [AIBrix 面向生产：DS V4 Flash 压测、看板与恢复实战](aibrix-dsv4-observability.md)
+- [AIBrix ModelClaim 单卡实测：小模型双活、14B 轮换与 L20 的显存边界](aibrix-modelclaim-l20.md)
 - [AIBrix 生产实战：Qwen3.8-27B 在 L20 上的容量、退出与过载保护](aibrix-qwen-l20-production.md)
 - [AIBrix 路由到底在优化什么：从缓存命中到尾延迟](aibrix-routing-cache-tradeoffs.md)
 - [AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU](aibrix-gpu-multinode-pd-production.md)

@@ -1,0 +1,7 @@
+stage,utc,used_mib,A_phase,A_sleep_mib,B_phase,B_sleep_mib
+a-serving,2026-11-23T12:06:29.353260+00:00,29151,Active,,,
+b-blocked,2026-11-23T12:06:38.930292+00:00,29151,Active,,Pending,
+a-sleep-reserved,2026-11-23T12:07:49.165378+00:00,1043,Sleeping,950.0,Pending,
+b-serving,2026-11-23T12:09:20.647122+00:00,30400,Sleeping,950.0,Active,
+a-waiting,2026-11-23T12:09:57.633196+00:00,30400,Sleeping,950.0,Active,
+a-back,2026-11-23T12:10:54.185772+00:00,30400,Active,,Sleeping,1062.0

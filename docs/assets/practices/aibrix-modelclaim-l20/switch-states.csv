@@ -1,0 +1,12 @@
+utc,A,A_reason,B,B_reason
+2026-11-23T12:03:16.157263+00:00,Pending,NoMatchingPods,,
+2026-11-23T12:04:55.846905+00:00,Pending,NoMatchingPods,,
+2026-11-23T12:04:59.306236+00:00,Activating,EngineStarting,,
+2026-11-23T12:06:24.399915+00:00,Active,ModelClaimActive,,
+2026-11-23T12:06:33.320845+00:00,Active,ModelClaimActive,Pending,NoMatchingPods
+2026-11-23T12:07:41.201174+00:00,Sleeping,EngineSleeping,Pending,NoMatchingPods
+2026-11-23T12:08:12.249136+00:00,Sleeping,EngineSleeping,Activating,EngineStarting
+2026-11-23T12:09:17.179782+00:00,Sleeping,EngineSleeping,Active,ModelClaimActive
+2026-11-23T12:09:23.090366+00:00,Sleeping,WaitingForRoom,Active,ModelClaimActive
+2026-11-23T12:10:46.711842+00:00,Sleeping,WaitingForRoom,Sleeping,EngineSleeping
+2026-11-23T12:10:50.168870+00:00,Active,ModelClaimActive,Sleeping,EngineSleeping

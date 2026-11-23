@@ -85,6 +85,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 - [DeepSeek-V4-Flash-0731 H20 Deployment and Stress Test](deepseek-v4-flash-h20-evaluation.md)
 - [Implementing AIBrix on an Existing Kubernetes Cluster](aibrix-existing-cluster.md)
 - [AIBrix for Production: DS V4 Flash Stress Test, Dashboard, and Recovery Practice](aibrix-dsv4-observability.md)
+- [AIBrix ModelClaim on one L20 — concurrent serving, 14B handoffs and the memory limit](aibrix-modelclaim-l20.md)
 - [AIBrix Production Practice: Capacity, Exit, and Overload Protection for Qwen3.8-27B on L20](aibrix-qwen-l20-production.md)
 - [What Does AIBrix Routing Optimize: From Cache Hits to Tail Latency](aibrix-routing-cache-tradeoffs.md)
 - [AIBrix Real GPU Test: From Two-Node Inference to Eight-Node Fragmented GPUs](aibrix-gpu-multinode-pd-production.md)

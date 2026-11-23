@@ -1,0 +1,64 @@
+{
+  "gpu": "NVIDIA L20",
+  "checkpoints": [
+    "Qwen3-14B",
+    "Mistral-Small-Instruct-2409"
+  ],
+  "usable_device_bytes": 47665709056,
+  "sleeping_qwen_bytes": 996147200,
+  "qwen_asleep_device_used_mib": 1043,
+  "mistral_claim": {
+    "kvFloor": "1Gi",
+    "maximumFootprint": "43Gi"
+  },
+  "placement_while_qwen_asleep": "Pending",
+  "after_manual_qwen_unload": {
+    "placement": "Placed",
+    "default_boot": {
+      "engine_args": {
+        "--enforce-eager": "",
+        "--max-model-len": "2048",
+        "--max-num-seqs": "2"
+      },
+      "process_budget_bytes": 43852452332,
+      "weights_bytes": 44503069696,
+      "peak_activation_bytes": 285345792,
+      "calculated_available_kv_bytes": -935963156,
+      "error": "No available memory for the cache blocks."
+    },
+    "explicit_kv_boot": {
+      "engine_args": {
+        "--enforce-eager": "",
+        "--max-model-len": "2048",
+        "--max-num-seqs": "2",
+        "--kv-cache-memory-bytes": "1073741824"
+      },
+      "events_utc": {
+        "Activating": "2026-11-23T12:17:53Z",
+        "Activated": "2026-11-23T12:18:46Z",
+        "Sleeping": "2026-11-23T12:19:48Z",
+        "Waking": "2026-11-23T12:56:35Z",
+        "Woken": "2026-11-23T12:56:35Z"
+      },
+      "asleep_footprint_bytes": 761266176,
+      "device_used_mib_active": 43305,
+      "active_controller_kv_capacity_bytes": 1494810624,
+      "active_controller_kv_used_bytes": 234881024,
+      "gateway_attempts": [
+        {
+          "sent": "2026-11-23T12:56:32.533347+00:00",
+          "http": 503,
+          "retry": "10",
+          "correct": false
+        },
+        {
+          "sent": "2026-11-23T12:56:47.642327+00:00",
+          "http": 200,
+          "text": " Tokyo. It is the most populous metropolitan area in the world. Tokyo is a city of contrasts, where",
+          "correct": true
+        }
+      ],
+      "same_pod_and_device_as_qwen": true
+    }
+  }
+}

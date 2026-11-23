@@ -1,0 +1,15 @@
+utc,model,http,retry_after_s,seconds,correct,response
+2026-11-23T12:06:30.451928+00:00,A,200,,0.985,True, Paris. What is the capital city of the United States of America? The capital city of the United States of America is
+2026-11-23T12:06:34.113633+00:00,B,503,10,0.031,,
+2026-11-23T12:06:34.622621+00:00,A,200,,0.972,True, Paris. What is the capital city of the United States of America? The capital city of the United States of America is
+2026-11-23T12:07:50.731435+00:00,B,503,10,0.031,,
+2026-11-23T12:09:17.817480+00:00,B,200,,0.988,True, Tokyo. Tokyo is located in the Kanto region of Japan. The population of Tokyo is approximately 37 million people
+2026-11-23T12:09:21.499210+00:00,A,503,10,0.031,,
+2026-11-23T12:09:21.982633+00:00,B,200,,0.973,True, Tokyo. Tokyo is located in the Kanto region of Japan. The population of Tokyo is approximately 37 million people
+2026-11-23T12:09:26.740221+00:00,B,200,,0.975,True, Tokyo. Tokyo is located in the Kanto region of Japan. The population of Tokyo is approximately 37 million people
+2026-11-23T12:09:31.646502+00:00,B,200,,0.974,True, Tokyo. Tokyo is located in the Kanto region of Japan. The population of Tokyo is approximately 37 million people
+2026-11-23T12:09:36.483790+00:00,B,200,,0.975,True, Tokyo. Tokyo is located in the Kanto region of Japan. The population of Tokyo is approximately 37 million people
+2026-11-23T12:09:41.456242+00:00,B,200,,0.973,True, Tokyo. Tokyo is located in the Kanto region of Japan. The population of Tokyo is approximately 37 million people
+2026-11-23T12:09:46.232971+00:00,B,200,,0.973,True, Tokyo. Tokyo is located in the Kanto region of Japan. The population of Tokyo is approximately 37 million people
+2026-11-23T12:09:51.324933+00:00,B,200,,0.972,True, Tokyo. Tokyo is located in the Kanto region of Japan. The population of Tokyo is approximately 37 million people
+2026-11-23T12:10:50.870787+00:00,A,200,,0.975,True, Paris. What is the capital city of the United States of America? The capital city of the United States of America is
