@@ -1,0 +1,11 @@
+[session A]  $ head -1 /opt/skills/report/SKILL.md && cat /tmp/session/report
+# Report v1
+total=42
+
+[session B]  $ head -1 /opt/skills/report/SKILL.md && cat /tmp/session/report
+# Report v2
+{"schema": 2, "total": 42}
+
+[session C]  $ head -1 /opt/skills/report/SKILL.md && cat /tmp/session/report
+# Report v1
+total=42

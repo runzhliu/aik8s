@@ -1,0 +1,34 @@
+{
+  "input": [
+    12,
+    17,
+    13
+  ],
+  "initial_action": "prepare_input",
+  "sessions": [
+    {
+      "name": "A",
+      "opened": "before v2",
+      "installed": 1,
+      "output": "total=42"
+    },
+    {
+      "name": "B",
+      "opened": "after v2",
+      "installed": 2,
+      "output": "{\"schema\": 2, \"total\": 42}"
+    },
+    {
+      "name": "C",
+      "opened": "after rollback",
+      "installed": 1,
+      "output": "total=42"
+    }
+  ],
+  "b_after_rollback": "{\"schema\": 2, \"total\": 42}",
+  "same_a_input_after_switch": [
+    12,
+    17,
+    13
+  ]
+}

@@ -172,5 +172,11 @@
     "label_sha256": "86315c8955fddbefaf258b8b92a90db0bee5e1ff7bd76a1fd2297bdeafe1d1ab",
     "english_sha256": "6305c27e764d47acb0c7010d761824eece03f456d44682801b82e69551cbf9f9",
     "method": "English labels reviewed in Chrome against the original drawing geometry."
+  },
+  "assets/rag-agent/cubesandbox-five-labs/desktop-recovery-path.svg": {
+    "source_sha256": "85eebd45a85da79d7de9da9c314504dd9ceb98f2b33b8abb6f2fd8d153e6d8c7",
+    "label_sha256": "bf4ace000d16b7869d663830c787ddb02d3e017eeacda8e99a234e00b17e9dbf",
+    "english_sha256": "b38f14cdbee469adcf11a6a046db1ac53add732a1c176dcc67515a85bf0af5a4",
+    "method": "Bilingual labels fitted to the same two recovery paths and checked in Chrome."
   }
 }

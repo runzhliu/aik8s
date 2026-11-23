@@ -1636,6 +1636,36 @@
       "english_sha256": "9fa6a9f834999d8996578f978d91ddd26951862ec8bd715d7a689f57f3d0c185",
       "reviewed_at": "2026-11-19T06:19:16.559645+00:00",
       "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-novnc-desktop-handoff.md": {
+      "source_sha256": "603d6843e6f0e7669e8095a9f9ec3528c16ea9d882f05b14c2ca9876cf8584a7",
+      "english_sha256": "1011e5388d639c0893783bf9c1ef1dd84472f2a1065cffde79eaf4e443944e36",
+      "reviewed_at": "2026-11-23T07:27:41.913534+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-parallel-agent-patch-review.md": {
+      "source_sha256": "b27e1b53df5e78b653e062be19be23e5e2d0813397f00eba8b58d5b49936a252",
+      "english_sha256": "558036712ad3d3526237c6525b1280bdb6870308d075989c2aeb1ec885c516ee",
+      "reviewed_at": "2026-11-23T07:27:41.785418+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-prewarmed-agent-first-task.md": {
+      "source_sha256": "1cec8efc4d18df282b70a2ed9b8767d523c0f80c46d5706014e7114f0bb62271",
+      "english_sha256": "9e61034fbfb1d978568d496134c2094b91d26b6be7cc5c7a05b415c7a9dd7fd2",
+      "reviewed_at": "2026-11-23T07:27:41.718432+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-session-skill-rollout.md": {
+      "source_sha256": "f4645e7e6bf0b6162da8c851530160c66f74bd2dd980c03d3eefddab2dc6bab2",
+      "english_sha256": "72ed10c38576434f6d77e894271e8e3a10361b3718575882d30ad9e6d9bcd0a0",
+      "reviewed_at": "2026-11-23T07:27:41.854548+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/rag-agent/cubesandbox-webhook-otel-lifecycle.md": {
+      "source_sha256": "26aa6db641e9ab5cc99bb9e7b1517fe18ca4e8d960a50d36d6e839be32f2bb20",
+      "english_sha256": "3e178ceb9d4496aa839b98873290e13749b19ef19d89e723a4ae7016563b19a3",
+      "reviewed_at": "2026-11-23T07:27:41.977252+00:00",
+      "review": "reviewed against source"
     }
   }
 }

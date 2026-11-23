@@ -1,0 +1,42 @@
+{
+  "release": "v0.8.0",
+  "source": "6843e3f97e67",
+  "same_sandbox_in_log_query_and_deliveries": true,
+  "log_records": 27,
+  "log_fields": [
+    "level",
+    "message",
+    "timestamp"
+  ],
+  "event_type": "sandbox.lifecycle.created",
+  "receiver_http": [
+    503,
+    204
+  ],
+  "event_id_stable": true,
+  "distinct_delivery_ids": 2,
+  "timeout_test_attempts": 3,
+  "otel": [
+    {
+      "name": "cubemaster.sandbox.resume.prepare",
+      "status": "Unset"
+    },
+    {
+      "name": "cubemaster.sandbox.resume.runtime",
+      "status": "Unset"
+    },
+    {
+      "name": "cubemaster.sandbox.resume.finalize",
+      "status": "Unset"
+    },
+    {
+      "name": "cubemaster.sandbox.pause.prepare",
+      "status": "Unset"
+    },
+    {
+      "name": "cubemaster.sandbox.pause.runtime",
+      "status": "Error"
+    }
+  ],
+  "upstream_checks": 5
+}

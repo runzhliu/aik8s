@@ -699,5 +699,20 @@
       "排队、调度、拉镜像与初始化都会影响等待时间": "Startup and resource wait affect latency",
       "入口缓冲和客户端超时均有限": "Waiting is bounded"
     }
+  },
+  "assets/rag-agent/cubesandbox-five-labs/desktop-recovery-path.svg": {
+    "source_sha256": "85eebd45a85da79d7de9da9c314504dd9ceb98f2b33b8abb6f2fd8d153e6d8c7",
+    "strings": {
+      "恢复桌面草稿的两条路径": "Two paths to recover an unsaved desktop",
+      "起点：草稿在来宾内存中，尚无报告文件": "Starting point: the draft is in guest memory, before the report file exists",
+      "原沙箱 ID": "Original sandbox ID",
+      "暂停后请求恢复": "Request resume after pause",
+      "来宾已恢复，代理缓存清除报错": "Guest resumed, proxy cache purge failed",
+      "短时重试仍无法打开原入口": "Bounded retries could not open old route",
+      "新沙箱 ID": "New sandbox ID",
+      "从暂停前的完整快照创建实例": "Restore the pre-pause full snapshot",
+      "用新入口连接，读到未保存的草稿": "Reconnect and see the unsaved draft",
+      "审批、保存并读回报告文件": "Approve, save, and read the file back"
+    }
   }
 }

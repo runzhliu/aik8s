@@ -1,0 +1,339 @@
+{
+  "rows": [
+    {
+      "round": 1,
+      "mode": "lazy",
+      "create_ms": 410.6,
+      "ready_ms": 749.7,
+      "first_result_ms": 926.2,
+      "hits": 19
+    },
+    {
+      "round": 1,
+      "mode": "warm",
+      "create_ms": 1704.6,
+      "ready_ms": 1930.1,
+      "first_result_ms": 2131.4,
+      "hits": 19
+    },
+    {
+      "round": 2,
+      "mode": "warm",
+      "create_ms": 174.1,
+      "ready_ms": 414.5,
+      "first_result_ms": 491.0,
+      "hits": 19
+    },
+    {
+      "round": 2,
+      "mode": "lazy",
+      "create_ms": 156.7,
+      "ready_ms": 574.4,
+      "first_result_ms": 636.7,
+      "hits": 19
+    },
+    {
+      "round": 3,
+      "mode": "lazy",
+      "create_ms": 171.7,
+      "ready_ms": 614.1,
+      "first_result_ms": 658.8,
+      "hits": 19
+    },
+    {
+      "round": 3,
+      "mode": "warm",
+      "create_ms": 131.8,
+      "ready_ms": 324.5,
+      "first_result_ms": 387.1,
+      "hits": 19
+    },
+    {
+      "round": 4,
+      "mode": "warm",
+      "create_ms": 158.5,
+      "ready_ms": 343.6,
+      "first_result_ms": 408.8,
+      "hits": 19
+    },
+    {
+      "round": 4,
+      "mode": "lazy",
+      "create_ms": 146.1,
+      "ready_ms": 508.3,
+      "first_result_ms": 551.3,
+      "hits": 19
+    },
+    {
+      "round": 5,
+      "mode": "lazy",
+      "create_ms": 172.8,
+      "ready_ms": 511.8,
+      "first_result_ms": 579.5,
+      "hits": 19
+    },
+    {
+      "round": 5,
+      "mode": "warm",
+      "create_ms": 134.6,
+      "ready_ms": 302.5,
+      "first_result_ms": 356.6,
+      "hits": 19
+    },
+    {
+      "round": 6,
+      "mode": "warm",
+      "create_ms": 113.9,
+      "ready_ms": 253.9,
+      "first_result_ms": 316.4,
+      "hits": 19
+    },
+    {
+      "round": 6,
+      "mode": "lazy",
+      "create_ms": 157.3,
+      "ready_ms": 504.7,
+      "first_result_ms": 547.8,
+      "hits": 19
+    },
+    {
+      "round": 7,
+      "mode": "lazy",
+      "create_ms": 198.1,
+      "ready_ms": 528.8,
+      "first_result_ms": 591.5,
+      "hits": 19
+    },
+    {
+      "round": 7,
+      "mode": "warm",
+      "create_ms": 143.0,
+      "ready_ms": 352.5,
+      "first_result_ms": 407.9,
+      "hits": 19
+    },
+    {
+      "round": 8,
+      "mode": "warm",
+      "create_ms": 145.8,
+      "ready_ms": 419.6,
+      "first_result_ms": 501.4,
+      "hits": 19
+    },
+    {
+      "round": 8,
+      "mode": "lazy",
+      "create_ms": 157.1,
+      "ready_ms": 625.6,
+      "first_result_ms": 685.7,
+      "hits": 19
+    },
+    {
+      "round": 9,
+      "mode": "lazy",
+      "create_ms": 197.7,
+      "ready_ms": 569.0,
+      "first_result_ms": 628.8,
+      "hits": 19
+    },
+    {
+      "round": 9,
+      "mode": "warm",
+      "create_ms": 122.3,
+      "ready_ms": 278.0,
+      "first_result_ms": 344.7,
+      "hits": 19
+    },
+    {
+      "round": 10,
+      "mode": "warm",
+      "create_ms": 126.5,
+      "ready_ms": 298.1,
+      "first_result_ms": 347.4,
+      "hits": 19
+    },
+    {
+      "round": 10,
+      "mode": "lazy",
+      "create_ms": 126.3,
+      "ready_ms": 565.6,
+      "first_result_ms": 758.9,
+      "hits": 19
+    },
+    {
+      "round": 11,
+      "mode": "lazy",
+      "create_ms": 127.7,
+      "ready_ms": 490.2,
+      "first_result_ms": 531.2,
+      "hits": 19
+    },
+    {
+      "round": 11,
+      "mode": "warm",
+      "create_ms": 135.2,
+      "ready_ms": 333.0,
+      "first_result_ms": 386.8,
+      "hits": 19
+    },
+    {
+      "round": 12,
+      "mode": "warm",
+      "create_ms": 115.1,
+      "ready_ms": 322.1,
+      "first_result_ms": 367.2,
+      "hits": 19
+    },
+    {
+      "round": 12,
+      "mode": "lazy",
+      "create_ms": 134.8,
+      "ready_ms": 510.3,
+      "first_result_ms": 561.4,
+      "hits": 19
+    },
+    {
+      "round": 13,
+      "mode": "lazy",
+      "create_ms": 138.4,
+      "ready_ms": 498.8,
+      "first_result_ms": 560.1,
+      "hits": 19
+    },
+    {
+      "round": 13,
+      "mode": "warm",
+      "create_ms": 125.9,
+      "ready_ms": 282.0,
+      "first_result_ms": 326.8,
+      "hits": 19
+    },
+    {
+      "round": 14,
+      "mode": "warm",
+      "create_ms": 130.6,
+      "ready_ms": 305.1,
+      "first_result_ms": 358.8,
+      "hits": 19
+    },
+    {
+      "round": 14,
+      "mode": "lazy",
+      "create_ms": 147.8,
+      "ready_ms": 492.0,
+      "first_result_ms": 547.9,
+      "hits": 19
+    },
+    {
+      "round": 15,
+      "mode": "lazy",
+      "create_ms": 160.4,
+      "ready_ms": 534.3,
+      "first_result_ms": 583.7,
+      "hits": 19
+    },
+    {
+      "round": 15,
+      "mode": "warm",
+      "create_ms": 148.6,
+      "ready_ms": 324.9,
+      "first_result_ms": 422.1,
+      "hits": 19
+    },
+    {
+      "round": 16,
+      "mode": "warm",
+      "create_ms": 164.7,
+      "ready_ms": 503.8,
+      "first_result_ms": 589.7,
+      "hits": 19
+    },
+    {
+      "round": 16,
+      "mode": "lazy",
+      "create_ms": 149.0,
+      "ready_ms": 603.9,
+      "first_result_ms": 650.2,
+      "hits": 19
+    },
+    {
+      "round": 17,
+      "mode": "lazy",
+      "create_ms": 173.0,
+      "ready_ms": 664.6,
+      "first_result_ms": 718.4,
+      "hits": 19
+    },
+    {
+      "round": 17,
+      "mode": "warm",
+      "create_ms": 167.2,
+      "ready_ms": 361.5,
+      "first_result_ms": 414.1,
+      "hits": 19
+    },
+    {
+      "round": 18,
+      "mode": "warm",
+      "create_ms": 135.3,
+      "ready_ms": 294.6,
+      "first_result_ms": 346.4,
+      "hits": 19
+    },
+    {
+      "round": 18,
+      "mode": "lazy",
+      "create_ms": 175.9,
+      "ready_ms": 543.3,
+      "first_result_ms": 587.7,
+      "hits": 19
+    },
+    {
+      "round": 19,
+      "mode": "lazy",
+      "create_ms": 109.1,
+      "ready_ms": 482.9,
+      "first_result_ms": 543.5,
+      "hits": 19
+    },
+    {
+      "round": 19,
+      "mode": "warm",
+      "create_ms": 144.1,
+      "ready_ms": 304.9,
+      "first_result_ms": 347.1,
+      "hits": 19
+    },
+    {
+      "round": 20,
+      "mode": "warm",
+      "create_ms": 132.8,
+      "ready_ms": 304.6,
+      "first_result_ms": 359.5,
+      "hits": 19
+    },
+    {
+      "round": 20,
+      "mode": "lazy",
+      "create_ms": 137.3,
+      "ready_ms": 575.5,
+      "first_result_ms": 633.5,
+      "hits": 19
+    }
+  ],
+  "errors": [],
+  "model_checks": [
+    {
+      "mode": "lazy",
+      "answer": "19",
+      "model_family": "DeepSeek V4 Flash",
+      "matches": true
+    },
+    {
+      "mode": "warm",
+      "answer": "19",
+      "model_family": "DeepSeek V4 Flash",
+      "matches": true
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "remote_keyboard": false,
+  "display": "Debian 13 X11",
+  "client": "noVNC in Chromium",
+  "before_pause": "Check lot 1048",
+  "saved_before_pause": false,
+  "after_reconnect_and_save": "Check lot 1048 - approved",
+  "pause_ms": 252,
+  "resume_call_ms": 1358,
+  "resume_api_error": "130593",
+  "handoff_route": "new instance from full snapshot"
+}

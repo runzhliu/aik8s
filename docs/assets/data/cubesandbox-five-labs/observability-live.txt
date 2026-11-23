@@ -1,0 +1,9 @@
+receiver attempt=1 event=sandbox.lifecycle.created same_actual_sandbox=true HTTP=503
+receiver attempt=2 event=sandbox.lifecycle.created same_actual_sandbox=true HTTP=204
+real allocation succeeded; event ID stable; delivery ID changed
+--- PASS: TestLabDelegatedCreate (1.17s)
+OBSERVATION span=cubemaster.sandbox.resume.prepare status=Unset
+OBSERVATION span=cubemaster.sandbox.resume.runtime status=Unset
+OBSERVATION span=cubemaster.sandbox.resume.finalize status=Unset
+OBSERVATION span=cubemaster.sandbox.pause.prepare status=Unset
+OBSERVATION span=cubemaster.sandbox.pause.runtime status=Error

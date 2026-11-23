@@ -1,0 +1,30 @@
+{
+  "agents": [
+    {
+      "branch": "A",
+      "patch": "diff --git a/POLICY.md b/POLICY.md\nindex 35ba0a6..6e04ce3 100644\n--- a/POLICY.md\n+++ b/POLICY.md\n@@ -1 +1 @@\n-Preview pricing\n+A fee of 5 percent is charged, rounded down to the nearest integer cent.\ndiff --git a/fee.py b/fee.py\nindex 653d8d7..439c724 100644\n--- a/fee.py\n+++ b/fee.py\n@@ -1,2 +1,2 @@\n def fee(cents):\n-    return 0\n+    return cents * 5 // 100\ndiff --git a/legacy.txt b/legacy.txt\ndeleted file mode 100644\nindex 988d0d4..0000000\n--- a/legacy.txt\n+++ /dev/null\n@@ -1 +0,0 @@\n-Deprecated placeholder\n",
+      "fees": [
+        0,
+        4,
+        5,
+        617
+      ],
+      "base_clean": true
+    },
+    {
+      "branch": "B",
+      "patch": "diff --git a/POLICY.md b/POLICY.md\nindex 35ba0a6..0a646ce 100644\n--- a/POLICY.md\n+++ b/POLICY.md\n@@ -1 +1 @@\n-Preview pricing\n+The fee is 8 percent of the amount, calculated in integer cents and rounded down.\ndiff --git a/fee.py b/fee.py\nindex 653d8d7..4ad79b9 100644\n--- a/fee.py\n+++ b/fee.py\n@@ -1,2 +1,2 @@\n def fee(cents):\n-    return 0\n+    return cents * 8 // 100\n",
+      "fees": [
+        0,
+        7,
+        8,
+        987
+      ],
+      "base_clean": true
+    }
+  ],
+  "accepted": "A",
+  "fee_after_merge": 617,
+  "conflicting_patch_rejected": true,
+  "parent_base_clean": true
+}

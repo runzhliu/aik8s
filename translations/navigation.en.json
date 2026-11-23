@@ -225,5 +225,10 @@
   "CubeSandbox v0.8.0 升级实战": "CubeSandbox v0.8.0 Upgrade Lab",
   "Kubernetes Serverless 技术综述": "Kubernetes Serverless Overview",
   "Fission Kubernetes 函数实战": "Fission Kubernetes Function Lab",
-  "KServe 模型服务实战": "KServe Model Serving Lab"
+  "KServe 模型服务实战": "KServe Model Serving Lab",
+  "CubeSandbox 预热实测：Agent 多久拿到第一个有效结果？": "Prewarming a CubeSandbox Tool: Time to the First Valid Answer",
+  "让两个编码 Agent 同时改一份代码，最后合哪一版？": "Two Coding Agents, One Baseline: Which Patch Can You Merge?",
+  "给 Agent 升级 Skill，正在写的报告会变格式吗？": "Rolling Out an Agent Skill Without Changing an Open Draft",
+  "关掉浏览器以后，CubeSandbox 桌面里没保存的草稿还在吗？": "Can a CubeSandbox Desktop Hand Off an Unsaved Draft?",
+  "沙箱创建成功，通知为何还会失败？CubeSandbox 日志、Webhook 与 Trace 实测": "Why Can a Webhook Fail After a Sandbox Is Created? CubeSandbox Logs, Delivery, and Tracing"
 }

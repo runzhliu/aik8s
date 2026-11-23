@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" font-family="Helvetica Neue, Hiragino Sans GB, sans-serif" font-weight="400">
+<rect width="1200" height="675" fill="white"/>
+<text x="68" y="74" text-anchor="start" font-size="42" fill="#24322c">Two paths to recover an unsaved desktop</text>
+<text x="68" y="134" text-anchor="start" font-size="28" fill="#506057">Starting point: the draft is in guest memory, before the report file exists</text>
+<path d="M68 175 L1132 175" fill="none" stroke="#bfc9c3" stroke-width="2"/>
+<text x="70" y="253" text-anchor="start" font-size="36" fill="#69736d">Original sandbox ID</text>
+<path d="M78 328 L78 537" fill="none" stroke="#69736d" stroke-width="2"/>
+<circle cx="78" cy="328" r="7" fill="#69736d"/>
+<text x="101" y="337" text-anchor="start" font-size="25" fill="#24322c">Request resume after pause</text>
+<circle cx="78" cy="432" r="7" fill="#69736d"/>
+<text x="101" y="441" text-anchor="start" font-size="25" fill="#24322c">Guest resumed, proxy cache purge failed</text>
+<circle cx="78" cy="536" r="7" fill="#69736d"/>
+<text x="101" y="545" text-anchor="start" font-size="25" fill="#24322c">Bounded retries could not open old route</text>
+<text x="636" y="253" text-anchor="start" font-size="36" fill="#49785f">New sandbox ID</text>
+<path d="M644 328 L644 537" fill="none" stroke="#49785f" stroke-width="2"/>
+<circle cx="644" cy="328" r="7" fill="#49785f"/>
+<text x="667" y="337" text-anchor="start" font-size="25" fill="#24322c">Restore the pre-pause full snapshot</text>
+<circle cx="644" cy="432" r="7" fill="#49785f"/>
+<text x="667" y="441" text-anchor="start" font-size="25" fill="#24322c">Reconnect and see the unsaved draft</text>
+<circle cx="644" cy="536" r="7" fill="#49785f"/>
+<text x="667" y="545" text-anchor="start" font-size="25" fill="#24322c">Approve, save, and read the file back</text>
+</svg>

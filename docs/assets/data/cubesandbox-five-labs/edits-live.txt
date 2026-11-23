@@ -1,0 +1,19 @@
+[worker A]  $ git diff --cached --name-status
+M	POLICY.md
+M	fee.py
+D	legacy.txt
+$ python3 -c "from fee import fee; print(fee(12345))"
+617
+
+[worker B]  $ git diff --cached --name-status
+M	POLICY.md
+M	fee.py
+$ python3 -c "from fee import fee; print(fee(12345))"
+987
+
+[review]  $ git apply --check /tmp/B.patch
+error: patch failed: POLICY.md:1
+error: POLICY.md: patch does not apply
+error: patch failed: fee.py:1
+error: fee.py: patch does not apply
+exit=1
