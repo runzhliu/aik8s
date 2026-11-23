@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="white"/>
+<g font-family="Helvetica Neue, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" font-weight="300">
+<text x="54" y="79" font-size="48" fill="#202724" text-anchor="start">Two logical racks for three replicas</text>
+<text x="56" y="133" font-size="31" fill="#505d57" text-anchor="start">Each pair stays in one rack. Only the rule between groups changes.</text>
+<line x1="56" y1="167" x2="1144" y2="167" stroke="#d8e1db" stroke-width="2"/>
+<text x="57" y="235" font-size="30" fill="#505d57" text-anchor="start">Between groups</text>
+<text x="355" y="235" font-size="30" fill="#505d57" text-anchor="start">Rack A</text>
+<text x="677" y="235" font-size="30" fill="#505d57" text-anchor="start">Rack B</text>
+<text x="932" y="235" font-size="30" fill="#505d57" text-anchor="start">Group 3</text>
+<text x="57" y="342" font-size="38" fill="#202724" text-anchor="start">Required</text>
+<rect x="350" y="285" width="270" height="88" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="367" y="302" width="111" height="54" rx="3" fill="#eff2f0" stroke="none" stroke-width="2"/>
+<text x="422" y="339" font-size="29" fill="#202724" text-anchor="middle">G1</text>
+<rect x="672" y="285" width="220" height="88" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="689" y="302" width="111" height="54" rx="3" fill="#eff2f0" stroke="none" stroke-width="2"/>
+<text x="744" y="339" font-size="29" fill="#202724" text-anchor="middle">G2</text>
+<text x="932" y="340" font-size="35" fill="#202724" text-anchor="start">Pending</text>
+<text x="57" y="485" font-size="38" fill="#202724" text-anchor="start">Preferred</text>
+<rect x="350" y="428" width="270" height="88" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="367" y="445" width="111" height="54" rx="3" fill="#eff2f0" stroke="none" stroke-width="2"/>
+<text x="422" y="482" font-size="29" fill="#202724" text-anchor="middle">G1</text>
+<rect x="488" y="445" width="111" height="54" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="543" y="482" font-size="29" fill="#28735b" text-anchor="middle">G3</text>
+<rect x="672" y="428" width="220" height="88" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="689" y="445" width="111" height="54" rx="3" fill="#eff2f0" stroke="none" stroke-width="2"/>
+<text x="744" y="482" font-size="29" fill="#202724" text-anchor="middle">G2</text>
+<text x="932" y="483" font-size="35" fill="#28735b" text-anchor="start">On A</text>
+<line x1="56" y1="579" x2="1144" y2="579" stroke="#d8e1db" stroke-width="2"/>
+<text x="55" y="638" font-size="33" fill="#28735b" text-anchor="start">When group 3 arrived, 12 GPUs were free across 2 domains.</text>
+</g>
+</svg>

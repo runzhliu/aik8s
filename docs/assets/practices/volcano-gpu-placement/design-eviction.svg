@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="white"/>
+<g font-family="Helvetica Neue, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" font-weight="300">
+<text x="54" y="79" font-size="48" fill="#202724" text-anchor="start">高优先级 Pod 到达后，谁腾位置？</text>
+<text x="56" y="133" font-size="31" fill="#505d57" text-anchor="start">每组 2 个 Pod，至少要 2 个，每个 Pod 都用 4 卡</text>
+<line x1="56" y1="167" x2="1144" y2="167" stroke="#d8e1db" stroke-width="2"/>
+<text x="58" y="235" font-size="32" fill="#505d57" text-anchor="start">策略</text>
+<text x="485" y="235" font-size="32" fill="#505d57" text-anchor="start">原组 1</text>
+<text x="676" y="235" font-size="32" fill="#505d57" text-anchor="start">原组 2</text>
+<text x="888" y="235" font-size="32" fill="#505d57" text-anchor="start">新 Pod</text>
+<line x1="56" y1="261" x2="1144" y2="261" stroke="#d8e1db" stroke-width="2"/>
+<text x="58" y="329" font-size="34" fill="#202724" text-anchor="start">普通抢占</text>
+<rect x="489" y="298" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="540" y="298" width="40" height="40" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<line x1="549" y1="307" x2="571" y2="329" stroke="#505d57" stroke-width="3"/>
+<line x1="571" y1="307" x2="549" y2="329" stroke="#505d57" stroke-width="3"/>
+<rect x="680" y="298" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="731" y="298" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<text x="888" y="329" font-size="35" fill="#28735b" text-anchor="start">启动</text>
+<text x="58" y="429" font-size="34" fill="#202724" text-anchor="start">允许整组驱逐</text>
+<rect x="489" y="398" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="540" y="398" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="680" y="398" width="40" height="40" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<line x1="689" y1="407" x2="711" y2="429" stroke="#505d57" stroke-width="3"/>
+<line x1="711" y1="407" x2="689" y2="429" stroke="#505d57" stroke-width="3"/>
+<rect x="731" y="398" width="40" height="40" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<line x1="740" y1="407" x2="762" y2="429" stroke="#505d57" stroke-width="3"/>
+<line x1="762" y1="407" x2="740" y2="429" stroke="#505d57" stroke-width="3"/>
+<text x="888" y="429" font-size="35" fill="#28735b" text-anchor="start">启动</text>
+<text x="58" y="529" font-size="34" fill="#202724" text-anchor="start">禁止整组驱逐</text>
+<rect x="489" y="498" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="540" y="498" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="680" y="498" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="731" y="498" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<text x="888" y="529" font-size="35" fill="#202724" text-anchor="start">等待</text>
+<line x1="56" y1="579" x2="1144" y2="579" stroke="#d8e1db" stroke-width="2"/>
+<text x="55" y="638" font-size="33" fill="#28735b" text-anchor="start">每格是 1 个旧 Pod，叉号表示该 Pod 收到了驱逐事件。</text>
+</g>
+</svg>

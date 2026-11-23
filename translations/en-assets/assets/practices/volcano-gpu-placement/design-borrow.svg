@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="white"/>
+<g font-family="Helvetica Neue, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" font-weight="300">
+<text x="54" y="79" font-size="48" fill="#202724" text-anchor="start">Change one cap, follow the same Pod</text>
+<text x="56" y="133" font-size="31" fill="#505d57" text-anchor="start">Training worker A is full (8 GPUs). Three 1-GPU Pods request worker B.</text>
+<line x1="56" y1="167" x2="1144" y2="167" stroke="#d8e1db" stroke-width="2"/>
+<text x="57" y="236" font-size="31" fill="#505d57" text-anchor="start">Queue cap</text>
+<text x="320" y="236" font-size="31" fill="#505d57" text-anchor="start">Serving worker B</text>
+<text x="815" y="236" font-size="31" fill="#505d57" text-anchor="start">Pod 3</text>
+<line x1="56" y1="267" x2="1144" y2="267" stroke="#d8e1db" stroke-width="2"/>
+<text x="59" y="348" font-size="42" fill="#202724" text-anchor="start">2 GPUs</text>
+<rect x="320" y="316" width="42" height="42" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="372" y="316" width="42" height="42" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="424" y="316" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="476" y="316" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="528" y="316" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="580" y="316" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="632" y="316" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="684" y="316" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<text x="815" y="348" font-size="39" fill="#202724" text-anchor="start">Pending</text>
+<text x="59" y="495" font-size="42" fill="#202724" text-anchor="start">3 GPUs</text>
+<rect x="320" y="463" width="42" height="42" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="372" y="463" width="42" height="42" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="424" y="463" width="42" height="42" rx="4" fill="#77aa98" stroke="#77aa98" stroke-width="2"/>
+<rect x="476" y="463" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="528" y="463" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="580" y="463" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="632" y="463" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="684" y="463" width="42" height="42" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<text x="815" y="495" font-size="39" fill="#28735b" text-anchor="start">Runs on B</text>
+<line x1="70" y1="369" x2="70" y2="420" stroke="#28735b" stroke-width="3"/>
+<line x1="63" y1="410" x2="70" y2="420" stroke="#28735b" stroke-width="3"/>
+<line x1="77" y1="410" x2="70" y2="420" stroke="#28735b" stroke-width="3"/>
+<text x="320" y="400" font-size="29" fill="#505d57" text-anchor="start">6 free</text>
+<text x="320" y="537" font-size="29" fill="#505d57" text-anchor="start">5 free</text>
+<line x1="56" y1="579" x2="1144" y2="579" stroke="#d8e1db" stroke-width="2"/>
+<text x="55" y="638" font-size="33" fill="#28735b" text-anchor="start">Raising the cap admitted the waiting Pod into the third slot.</text>
+</g>
+</svg>

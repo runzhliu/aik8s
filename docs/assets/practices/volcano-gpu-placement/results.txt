@@ -1,0 +1,112 @@
+Volcano v1.16.0 | 2 workers x 8 simulated B300 | 2026-11-23
+A/B count running Pods unless explicitly marked GPUs. Original loss compares original UIDs with the final Running set.
+
+split               hold-a            1 running   A:1  B:0   unbound:0
+split               hold-b            1 running   A:0  B:1   unbound:0
+split               large             0 running   A:0  B:0   unbound:1
+packed              hold-a            1 running   A:1  B:0   unbound:0
+packed              hold-b            1 running   A:1  B:0   unbound:0
+packed              large             1 running   A:0  B:1   unbound:0
+default-score       8 x 1 GPU        A:8  B:0
+default-score       large             1 running   A:0  B:1   unbound:0
+gpu-score           8 x 1 GPU        A:8  B:0
+gpu-score           large             1 running   A:0  B:1   unbound:0
+serve-cap=2         train-full        1 running   A:1  B:0   unbound:0
+serve-cap=2         borrow-0          1 running   A:0  B:1   unbound:0
+serve-cap=2         borrow-1          1 running   A:0  B:1   unbound:0
+serve-cap=2         borrow-2          0 running   A:0  B:0   unbound:1
+serve-cap=3         borrow-2          1 running   A:0  B:1   unbound:0
+required            replica-0         2 running   A:2  B:0   unbound:0
+required            replica-1         2 running   A:0  B:2   unbound:0
+required            replica-2         0 running   A:0  B:0   unbound:2
+preferred           replica-0         2 running   A:2  B:0   unbound:0
+preferred           replica-1         2 running   A:0  B:2   unbound:0
+preferred           replica-2         2 running   A:2  B:0   unbound:0
+classic-fit         incumbent         2 running   A:0  B:2   unbound:0
+classic-fit         arrival           2 running   A:2  B:0   unbound:0
+classic-fit         original loss:2   event objects:2
+gang-fit            incumbent         2 running   A:0  B:2   unbound:0
+gang-fit            arrival           2 running   A:2  B:0   unbound:0
+gang-fit            original loss:2   event objects:2
+classic-no-fit      incumbent         4 running   A:2  B:2   unbound:0
+classic-no-fit      arrival           0 running   A:0  B:0   unbound:5
+classic-no-fit      original loss:0   event objects:0
+gang-no-fit         incumbent         4 running   A:2  B:2   unbound:0
+gang-no-fit         arrival           0 running   A:0  B:0   unbound:5
+gang-no-fit         original loss:0   event objects:0
+reclaim-fit         incumbent         2 running   A:1  B:1   unbound:0
+reclaim-fit         arrival           2 running   A:1  B:1   unbound:0
+reclaim-fit         original loss:2   event objects:2
+tight-classic       pair-1            1 running   A:1  B:0   unbound:0
+tight-classic       pair-2            2 running   A:0  B:2   unbound:0
+tight-classic       single            1 running   A:1  B:0   unbound:0
+tight-classic       Evict objects:1
+tight-whole         pair-1            2 running   A:2  B:0   unbound:0
+tight-whole         pair-2            0 running   A:0  B:0   unbound:0
+tight-whole         single            1 running   A:0  B:1   unbound:0
+tight-whole         Evict objects:2
+tight-protected     pair-1            2 running   A:2  B:0   unbound:0
+tight-protected     pair-2            2 running   A:0  B:2   unbound:0
+tight-protected     single            0 running   A:0  B:0   unbound:1
+tight-protected     Evict objects:0
+
+Eviction event messages for original Pod UIDs, deduplicated per target:
+
+classic-fit (2)
+  incumbent-0  Evict  Pod is evicted, because of preempt
+  incumbent-1  Evict  Pod is evicted, because of preempt
+
+gang-fit (2)
+  incumbent-0  Evict  Pod is evicted, because of gangpreempt
+  incumbent-2  Evict  Pod is evicted, because of gangpreempt
+
+classic-no-fit (0)
+
+gang-no-fit (0)
+
+reclaim-fit (2)
+  incumbent-1  Evict  Pod is evicted, because of gangreclaim
+  incumbent-3  Evict  Pod is evicted, because of gangreclaim
+
+tight-classic (1)
+  pair-1-1  Evict  Pod is evicted, because of preempt
+
+tight-whole (2)
+  pair-2-0  Evict  Pod is evicted, because of gangpreempt
+  pair-2-1  Evict  Pod is evicted, because of gangpreempt
+
+tight-protected (0)
+
+DRA / resource.k8s.io/v1 / SIGs example driver v0.5.0
+ResourceSlice | gpu.example.com | worker A
+
+ResourceSlice A    gpu-0    index:0  memory:80Gi
+ResourceSlice A    gpu-1    index:1  memory:80Gi
+
+Volcano | observed Pod phase and allocated device
+
+holder             Running  node:A  claim:gpu-1  request:accel
+competing          Pending  node:-  claim:-  request:-
+memory-96          Pending  node:-  claim:-  request:-
+after-release      Running  node:A  claim:gpu-1  request:accel
+fallback           Running  node:A  claim:gpu-0  request:accel/standard
+
+Container logs (after release / fallback)
+
+waiter:  GPU_DEVICE_1=gpu-1
+fallback:  GPU_DEVICE_0=gpu-0
+Waiter kept the same Pod UID: true
+
+Pod: holder | same Pod and ResourceClaim UID in both samples
+
+Before   phase:Pending   node:A    allocation:gpu-1
+After    phase:Running   node:A    allocation:gpu-1
+
+kubelet event
+
+FailedPrepareDynamicResources
+DRA driver gpu.example.com is not registered
+
+Container log after plugin directory correction
+
+GPU_DEVICE_1=gpu-1

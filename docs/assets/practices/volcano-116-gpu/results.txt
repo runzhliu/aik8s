@@ -1,0 +1,50 @@
+Quota before the patch
+$ kubectl get namespacequeue training -n v116-team
+NAME       PARENT              LIMIT   ALLOCATED   STATE
+training   cluster/v116-pool   2       2           Open
+
+$ kubectl get vcjob -n v116-team
+JOB            QUEUE                GPUS   PHASE
+quota-holder   namespace/training   2      Running
+quota-waiter   namespace/training   1      Pending
+
+$ kubectl create --dry-run=server -f guest.yaml
+Error from server: error when creating "guest.yaml": admission webhook "validatenamespacequeue.volcano.sh" denied the request: namespace "v116-guest" is not allowed to use parent Queue "v116-pool"
+
+Quota after the patch
+$ kubectl get namespacequeue training -n v116-team
+NAME       PARENT              LIMIT   ALLOCATED   STATE
+training   cluster/v116-pool   3       3           Open
+
+$ kubectl get vcjob -n v116-team
+JOB            QUEUE                GPUS   PHASE
+quota-holder   namespace/training   2      Running
+quota-waiter   namespace/training   1      Running
+
+$ kubectl create --dry-run=server -f guest.yaml
+Error from server: error when creating "guest.yaml": admission webhook "validatenamespacequeue.volcano.sh" denied the request: namespace "v116-guest" is not allowed to use parent Queue "v116-pool"
+
+Immediately before labeling the worker
+volcano_unschedulable_job_cache_skips_total{job_name="cache-probe-835e90a5-cf2d-44be-a85b-6229188c69ad",job_namespace="v116-team",stage="allocate"} 138
+volcano_unschedulable_job_cache_skips_total{job_name="cache-probe-835e90a5-cf2d-44be-a85b-6229188c69ad",job_namespace="v116-team",stage="backfill"} 138
+
+After placement
+volcano_unschedulable_job_cache_skips_total{job_name="cache-probe-835e90a5-cf2d-44be-a85b-6229188c69ad",job_namespace="v116-team",stage="allocate"} 139
+volcano_unschedulable_job_cache_skips_total{job_name="cache-probe-835e90a5-cf2d-44be-a85b-6229188c69ad",job_namespace="v116-team",stage="backfill"} 139
+volcano_unschedulable_job_cache_wakeups_total{action="UpdateNodeLabel",job_name="cache-probe-835e90a5-cf2d-44be-a85b-6229188c69ad",job_namespace="v116-team",resource="Node"} 1
+
+fairshare off: namespace, Pod, created, started, finished (UTC)
+v116-team	off-holder-worker-0	2026-11-23T08:08:20Z	2026-11-23T08:08:23Z	2026-11-23T08:09:08Z
+v116-team	off-older-worker-0	2026-11-23T08:08:23Z	2026-11-23T08:09:11Z	2026-11-23T08:09:29Z
+v116-guest	off-newer-worker-0	2026-11-23T08:08:27Z	2026-11-23T08:09:32Z	2026-11-23T08:09:50Z
+
+fairshare on: namespace, Pod, created, started, finished (UTC)
+v116-team	on-holder-worker-0	2026-11-23T08:10:10Z	2026-11-23T08:10:12Z	2026-11-23T08:10:57Z
+v116-team	on-older-worker-0	2026-11-23T08:10:13Z	2026-11-23T08:11:21Z	2026-11-23T08:11:39Z
+v116-guest	on-newer-worker-0	2026-11-23T08:10:16Z	2026-11-23T08:11:00Z	2026-11-23T08:11:18Z
+
+Sample during the second round
+volcano_namespace_decayed_usage{namespace_name="v116-team",queue="v116-fair",resource="nvidia.com/gpu"} 10084.75458144513
+
+Scheduler comparison during the second round
+I1123 08:10:59.542845       1 fairshare.go:360] [fairshare] JobOrderFn: v116-guest/on-newer-a7638984-2b63-431e-b3c9-3052892582c5 WINS over v116-team/on-older-3b459935-5c77-424e-b0f1-75201bfcf1dd (usage 0.0 < 47158.5)

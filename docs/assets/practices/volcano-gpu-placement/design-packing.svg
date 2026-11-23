@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="white"/>
+<g font-family="Helvetica Neue, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" font-weight="300">
+<text x="54" y="79" font-size="48" fill="#202724" text-anchor="start">空卡要能落在同一台机器</text>
+<text x="56" y="133" font-size="31" fill="#505d57" text-anchor="start">两个后台 Pod 各用 4 张卡，再提交同一个 8 卡 Pod</text>
+<line x1="56" y1="167" x2="1144" y2="167" stroke="#d8e1db" stroke-width="2"/>
+<text x="300" y="235" font-size="32" fill="#505d57" text-anchor="start">节点 A</text>
+<text x="595" y="235" font-size="32" fill="#505d57" text-anchor="start">节点 B</text>
+<text x="892" y="235" font-size="32" fill="#505d57" text-anchor="start">8 卡请求</text>
+<line x1="56" y1="266" x2="1144" y2="266" stroke="#d8e1db" stroke-width="2"/>
+<text x="58" y="359" font-size="39" fill="#202724" text-anchor="start">分开放</text>
+<rect x="300" y="330" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="332" y="330" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="364" y="330" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="396" y="330" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="428" y="330" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="460" y="330" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="492" y="330" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="524" y="330" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="595" y="330" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="627" y="330" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="659" y="330" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="691" y="330" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="723" y="330" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="755" y="330" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="787" y="330" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="819" y="330" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<text x="892" y="360" font-size="38" fill="#202724" text-anchor="start">等待</text>
+<text x="58" y="491" font-size="39" fill="#202724" text-anchor="start">集中放</text>
+<rect x="300" y="462" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="332" y="462" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="364" y="462" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="396" y="462" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="428" y="462" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="460" y="462" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="492" y="462" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="524" y="462" width="27" height="27" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="595" y="462" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="627" y="462" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="659" y="462" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="691" y="462" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="723" y="462" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="755" y="462" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="787" y="462" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<rect x="819" y="462" width="27" height="27" rx="4" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<text x="892" y="492" font-size="38" fill="#28735b" text-anchor="start">在 B 启动</text>
+<line x1="56" y1="418" x2="1144" y2="418" stroke="#d8e1db" stroke-width="2"/>
+<rect x="59" y="599" width="30" height="30" rx="3" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<text x="104" y="625" font-size="30" fill="#505d57" text-anchor="start">已占用</text>
+<rect x="345" y="599" width="30" height="30" rx="3" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<text x="391" y="625" font-size="30" fill="#505d57" text-anchor="start">可用</text>
+<text x="777" y="625" font-size="30" fill="#505d57" text-anchor="start">每格代表 1 张 GPU</text>
+</g>
+</svg>

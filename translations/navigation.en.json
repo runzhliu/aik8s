@@ -181,6 +181,8 @@
   "P/D 分离性能拐点": "P/D Separation Performance Inflection Point",
   "GPU 资源银行与潮汐平台": "GPU Resource Bank and Tidal Platform",
   "Kueue 与 Volcano 实验": "Kueue and Volcano Experiments",
+  "Volcano GPU 放置与抢占实战": "Volcano GPU Placement and Preemption",
+  "Volcano 1.16 GPU 调度实战": "Volcano 1.16 GPU Scheduling Lab",
   "Volcano 企业落地的业务前提": "Volcano Enterprise Adoption Business Prerequisites",
   "Kubernetes 还是 Slurm": "Kubernetes or Slurm",
   "大模型时代 GPU 开发平台踩坑记": "GPU Development Platform Pitfalls in the Large Model Era",

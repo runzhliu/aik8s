@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="white"/>
+<g font-family="Helvetica Neue, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" font-weight="300">
+<text x="54" y="79" font-size="48" fill="#202724" text-anchor="start">Who gives way to a high-priority Pod?</text>
+<text x="56" y="133" font-size="31" fill="#505d57" text-anchor="start">2 Pods per group, 2 required. Each Pod needs 4 GPUs.</text>
+<line x1="56" y1="167" x2="1144" y2="167" stroke="#d8e1db" stroke-width="2"/>
+<text x="58" y="235" font-size="32" fill="#505d57" text-anchor="start">Policy</text>
+<text x="485" y="235" font-size="32" fill="#505d57" text-anchor="start">Group 1</text>
+<text x="676" y="235" font-size="32" fill="#505d57" text-anchor="start">Group 2</text>
+<text x="888" y="235" font-size="32" fill="#505d57" text-anchor="start">Arrival</text>
+<line x1="56" y1="261" x2="1144" y2="261" stroke="#d8e1db" stroke-width="2"/>
+<text x="58" y="329" font-size="34" fill="#202724" text-anchor="start">Classic preemption</text>
+<rect x="489" y="298" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="540" y="298" width="40" height="40" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<line x1="549" y1="307" x2="571" y2="329" stroke="#505d57" stroke-width="3"/>
+<line x1="571" y1="307" x2="549" y2="329" stroke="#505d57" stroke-width="3"/>
+<rect x="680" y="298" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="731" y="298" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<text x="888" y="329" font-size="35" fill="#28735b" text-anchor="start">Running</text>
+<text x="58" y="429" font-size="34" fill="#202724" text-anchor="start">Whole-group eviction</text>
+<rect x="489" y="398" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="540" y="398" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="680" y="398" width="40" height="40" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<line x1="689" y1="407" x2="711" y2="429" stroke="#505d57" stroke-width="3"/>
+<line x1="711" y1="407" x2="689" y2="429" stroke="#505d57" stroke-width="3"/>
+<rect x="731" y="398" width="40" height="40" rx="5" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<line x1="740" y1="407" x2="762" y2="429" stroke="#505d57" stroke-width="3"/>
+<line x1="762" y1="407" x2="740" y2="429" stroke="#505d57" stroke-width="3"/>
+<text x="888" y="429" font-size="35" fill="#28735b" text-anchor="start">Running</text>
+<text x="58" y="529" font-size="34" fill="#202724" text-anchor="start">No whole-group eviction</text>
+<rect x="489" y="498" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="540" y="498" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="680" y="498" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="731" y="498" width="40" height="40" rx="5" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<text x="888" y="529" font-size="35" fill="#202724" text-anchor="start">Pending</text>
+<line x1="56" y1="579" x2="1144" y2="579" stroke="#d8e1db" stroke-width="2"/>
+<text x="55" y="638" font-size="33" fill="#28735b" text-anchor="start">Each square is 1 original Pod. A cross marks an eviction event.</text>
+</g>
+</svg>

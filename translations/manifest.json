@@ -101,12 +101,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/practices/index.md": {
-      "source_sha256": "00bd1c48a4931438e4cb2f65658c89b16ad121fe30f2b8067d2e3dacdc168cb7",
-      "english_sha256": "cb1cf34bce5cb7db5d6a9733a9a0a26ef87ad6b031cf42fb53065105a00dc2e1",
+      "source_sha256": "7da5ef16dc5f16fc62a32b2a1875d2aac7db8be09b5a9af731706e6ebbe70cc8",
+      "english_sha256": "c0ef69397cc2f250a91607cdcc43758ec5530f1e5bdb2bf8105a3327646766e6",
       "translated_at": "2026-10-16T08:50:57.637630+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-11-04T00:08:24.594055+00:00"
+      "reviewed_at": "2026-11-23T08:38:48.637664+00:00"
     },
     "assets/practices/gpu-notebook-platform-evolution/README.md": {
       "source_sha256": "3cdac55cfe726d6d73b60ba5e93b682cb2047e8c27980cc8fd320c0b0da4a8bb",
@@ -1665,6 +1665,18 @@
       "source_sha256": "26aa6db641e9ab5cc99bb9e7b1517fe18ca4e8d960a50d36d6e839be32f2bb20",
       "english_sha256": "3e178ceb9d4496aa839b98873290e13749b19ef19d89e723a4ae7016563b19a3",
       "reviewed_at": "2026-11-23T07:27:41.977252+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/volcano-116-gpu-scheduling.md": {
+      "source_sha256": "b7a01c063364b1923731570cec850d988b162b9bf8ac653cf1510f0b03671d11",
+      "english_sha256": "cd0957a25f9a9acbe041c1c1ce0c701562f7e98d1cbf36912a4e9a2536d99015",
+      "reviewed_at": "2026-11-23T08:16:22.009774+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/volcano-gpu-placement.md": {
+      "source_sha256": "6951d8031d1acee8e7f244740f78813a2323d0bffac67069a3d58738c8180fe0",
+      "english_sha256": "d6e28397ad8197edffe30e91c908de0e07fbba709617043fe15f4ce8f1b7779c",
+      "reviewed_at": "2026-11-23T09:00:40.850301+00:00",
       "review": "reviewed against source"
     }
   }

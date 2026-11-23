@@ -60,6 +60,8 @@ last_reviewed: 2026-10-29
 - [8 卡节点的四卡任务，如何避免拿到跨 NUMA 的碎片 GPU](gpu-topology-fragmentation-scheduling.md)
 - [GPU 资源银行与潮汐推理平台实践蓝图](gpu-resource-bank-tidal-platform.md)
 - [Kueue 与 Volcano 对比实验](kueue-vs-volcano.md)
+- [Volcano GPU 放置与抢占：为什么还剩 8 张卡，推理 Pod 却起不来](volcano-gpu-placement.md)
+- [Volcano 1.16 GPU 调度实战：配额、历史公平性与缓存唤醒](volcano-116-gpu-scheduling.md)
 - [Volcano 功能很多，为什么企业里还是调不顺？](volcano-scheduler-enterprise-limits.md)
 - [Kubernetes 还是 Slurm](kubernetes-vs-slurm.md)
 - [在 KubeVirt 上运行 Kubernetes：架构边界、生产设计与 AI 场景取舍](../cluster/kubevirt-guest-kubernetes.md)

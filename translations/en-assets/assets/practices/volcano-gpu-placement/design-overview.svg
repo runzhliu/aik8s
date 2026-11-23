@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="white"/>
+<g font-family="Helvetica Neue, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" font-weight="300">
+<text x="54" y="79" font-size="48" fill="#202724" text-anchor="start">Two workers, two device inventories</text>
+<text x="56" y="133" font-size="31" fill="#505d57" text-anchor="start">Experiments 1–4 request whole GPUs. Experiment 5 adds a DRA driver.</text>
+<line x1="56" y1="167" x2="1144" y2="167" stroke="#d8e1db" stroke-width="2"/>
+<text x="600" y="219" font-size="34" fill="#202724" text-anchor="middle">Pod submitted to Volcano</text>
+<line x1="600" y1="233" x2="600" y2="254" stroke="#28735b" stroke-width="2"/>
+<line x1="316" y1="254" x2="883" y2="254" stroke="#28735b" stroke-width="2"/>
+<line x1="316" y1="254" x2="316" y2="285" stroke="#28735b" stroke-width="3"/>
+<line x1="309" y1="275" x2="316" y2="285" stroke="#28735b" stroke-width="3"/>
+<line x1="323" y1="275" x2="316" y2="285" stroke="#28735b" stroke-width="3"/>
+<line x1="883" y1="254" x2="883" y2="285" stroke="#28735b" stroke-width="3"/>
+<line x1="876" y1="275" x2="883" y2="285" stroke="#28735b" stroke-width="3"/>
+<line x1="890" y1="275" x2="883" y2="285" stroke="#28735b" stroke-width="3"/>
+<rect x="56" y="296" width="518" height="247" rx="6" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<text x="79" y="344" font-size="37" fill="#202724" text-anchor="start">Worker A</text>
+<text x="79" y="392" font-size="32" fill="#202724" text-anchor="start">8 simulated B300 GPUs</text>
+<rect x="80" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="131" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="182" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="233" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="284" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="335" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="386" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="437" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<text x="79" y="512" font-size="29" fill="#28735b" text-anchor="start">DRA devices</text>
+<rect x="268" y="475" width="122" height="51" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="329" y="511" font-size="29" fill="#202724" text-anchor="middle">gpu-0</text>
+<rect x="412" y="475" width="122" height="51" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="473" y="511" font-size="29" fill="#202724" text-anchor="middle">gpu-1</text>
+<rect x="626" y="296" width="518" height="247" rx="6" fill="#ffffff" stroke="#b7c4bd" stroke-width="2"/>
+<text x="649" y="344" font-size="37" fill="#202724" text-anchor="start">Worker B</text>
+<text x="649" y="392" font-size="32" fill="#202724" text-anchor="start">8 simulated B300 GPUs</text>
+<rect x="650" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="701" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="752" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="803" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="854" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="905" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="956" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<rect x="1007" y="413" width="38" height="38" rx="4" fill="#77847f" stroke="#77847f" stroke-width="2"/>
+<text x="649" y="512" font-size="29" fill="#505d57" text-anchor="start">No DRA driver</text>
+<line x1="56" y1="579" x2="1144" y2="579" stroke="#d8e1db" stroke-width="2"/>
+<text x="55" y="638" font-size="33" fill="#28735b" text-anchor="start">Separate inventories. Each DRA example device advertises 80 GiB.</text>
+</g>
+</svg>

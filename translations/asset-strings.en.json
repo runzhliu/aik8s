@@ -714,5 +714,104 @@
       "用新入口连接，读到未保存的草稿": "Reconnect and see the unsaved draft",
       "审批、保存并读回报告文件": "Approve, save, and read the file back"
     }
+  },
+  "assets/practices/volcano-gpu-placement/design-overview.svg": {
+    "source_sha256": "f4330f156a155d9cdc11b2b08c65d21d2bf8509feaaf72cf9d810c9de35f278d",
+    "strings": {
+      "两台节点，两种设备清单": "Two workers, two device inventories",
+      "实验 1–4 申请整卡，实验 5 单独部署 DRA 示例驱动": "Experiments 1–4 request whole GPUs. Experiment 5 adds a DRA driver.",
+      "Pod 提交给 Volcano": "Pod submitted to Volcano",
+      "节点 A": "Worker A",
+      "8 张模拟 B300": "8 simulated B300 GPUs",
+      "DRA 设备": "DRA devices",
+      "节点 B": "Worker B",
+      "未安装 DRA 驱动": "No DRA driver",
+      "两套清单独立计数，每块 DRA 示例设备声明 80 GiB。": "Separate inventories. Each DRA example device advertises 80 GiB."
+    }
+  },
+  "assets/practices/volcano-gpu-placement/design-packing.svg": {
+    "source_sha256": "df03a30e4b44ae7eec54207945fc52abb15a2e21d87c40e4d8ba3669365ce95d",
+    "strings": {
+      "空卡要能落在同一台机器": "Eight free GPUs must fit on one worker",
+      "两个后台 Pod 各用 4 张卡，再提交同一个 8 卡 Pod": "Two background Pods use 4 GPUs each. Then one Pod requests 8.",
+      "节点 A": "Worker A",
+      "节点 B": "Worker B",
+      "8 卡请求": "8-GPU request",
+      "分开放": "Split",
+      "等待": "Pending",
+      "集中放": "Packed",
+      "在 B 启动": "Runs on B",
+      "已占用": "Occupied",
+      "可用": "Free",
+      "每格代表 1 张 GPU": "Each square = 1 GPU"
+    }
+  },
+  "assets/practices/volcano-gpu-placement/design-borrow.svg": {
+    "source_sha256": "fbd6846bfc0f291916b3ae773f77126d25c933907fc9654849c4372aaddef116",
+    "strings": {
+      "只改借卡上限，追踪同一个 Pod": "Change one cap, follow the same Pod",
+      "训练节点 A 已用满 8 卡，3 个 Pod 各向 B 申请 1 张卡": "Training worker A is full (8 GPUs). Three 1-GPU Pods request worker B.",
+      "队列上限": "Queue cap",
+      "推理节点 B": "Serving worker B",
+      "第 3 个 Pod": "Pod 3",
+      "2 张": "2 GPUs",
+      "仍在等待": "Pending",
+      "3 张": "3 GPUs",
+      "在 B 启动": "Runs on B",
+      "6 张空闲": "6 free",
+      "5 张空闲": "5 free",
+      "只改队列注解，原来等待的 Pod 就拿到了第三张卡。": "Raising the cap admitted the waiting Pod into the third slot."
+    }
+  },
+  "assets/practices/volcano-gpu-placement/design-eviction.svg": {
+    "source_sha256": "cf17c07904725465ecbeed97a9438e6569e112faed2b9f87030f546f1eaefd6f",
+    "strings": {
+      "高优先级 Pod 到达后，谁腾位置？": "Who gives way to a high-priority Pod?",
+      "每组 2 个 Pod，至少要 2 个，每个 Pod 都用 4 卡": "2 Pods per group, 2 required. Each Pod needs 4 GPUs.",
+      "策略": "Policy",
+      "原组 1": "Group 1",
+      "原组 2": "Group 2",
+      "新 Pod": "Arrival",
+      "普通抢占": "Classic preemption",
+      "启动": "Running",
+      "允许整组驱逐": "Whole-group eviction",
+      "禁止整组驱逐": "No whole-group eviction",
+      "等待": "Pending",
+      "每格是 1 个旧 Pod，叉号表示该 Pod 收到了驱逐事件。": "Each square is 1 original Pod. A cross marks an eviction event."
+    }
+  },
+  "assets/practices/volcano-gpu-placement/design-domains.svg": {
+    "source_sha256": "b7c2113059e3c3615650902b12adaf1c134a29660c3c9f16a43ed847951901d5",
+    "strings": {
+      "两个逻辑机架，三组副本": "Two logical racks for three replicas",
+      "每组两个单卡 Pod 同架，改变的是不同组之间的反亲和规则": "Each pair stays in one rack. Only the rule between groups changes.",
+      "组间规则": "Between groups",
+      "机架 A": "Rack A",
+      "机架 B": "Rack B",
+      "组 3": "G3",
+      "硬约束": "Required",
+      "组 1": "G1",
+      "组 2": "G2",
+      "等待": "Pending",
+      "软约束": "Preferred",
+      "落在 A": "On A",
+      "组 3 到达时合计还空 12 卡，独立故障域只有 2 个。": "When group 3 arrived, 12 GPUs were free across 2 domains."
+    }
+  },
+  "assets/practices/volcano-gpu-placement/design-devices.svg": {
+    "source_sha256": "d70bc109fd4a46541037de314814bd22803bda1f9fbb27c3448d52f8a2e9c147",
+    "strings": {
+      "同一个索引，两次设备分配": "Two claims for the same device index",
+      "节点 A 有两块 80 GiB 设备，两个 Pod 都要求索引为 1": "Worker A has two 80 GiB devices. Both Pods require index 1.",
+      "实验动作": "Change",
+      "先启动持有者": "Start holder",
+      "空闲": "Free",
+      "持有者": "Holder",
+      "再提交等待者": "Submit waiter",
+      "仍由持有者占用": "Still held",
+      "删除持有者": "Delete holder",
+      "原等待者接手": "Waiter takes over",
+      "等待者的 Pod UID 相同，容器最终读到 GPU_DEVICE_1=gpu-1。": "Same waiter UID. Its container reported GPU_DEVICE_1=gpu-1."
+    }
   }
 }

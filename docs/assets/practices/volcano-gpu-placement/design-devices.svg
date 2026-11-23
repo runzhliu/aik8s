@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="white"/>
+<g font-family="Helvetica Neue, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" font-weight="300">
+<text x="54" y="79" font-size="48" fill="#202724" text-anchor="start">同一个索引，两次设备分配</text>
+<text x="56" y="133" font-size="31" fill="#505d57" text-anchor="start">节点 A 有两块 80 GiB 设备，两个 Pod 都要求索引为 1</text>
+<line x1="56" y1="167" x2="1144" y2="167" stroke="#d8e1db" stroke-width="2"/>
+<text x="57" y="235" font-size="33" fill="#505d57" text-anchor="start">实验动作</text>
+<text x="505" y="235" font-size="33" fill="#505d57" text-anchor="start">gpu-0</text>
+<text x="800" y="235" font-size="33" fill="#505d57" text-anchor="start">gpu-1</text>
+<line x1="56" y1="255" x2="1144" y2="255" stroke="#d8e1db" stroke-width="2"/>
+<text x="58" y="321" font-size="36" fill="#202724" text-anchor="start">先启动持有者</text>
+<text x="505" y="321" font-size="34" fill="#505d57" text-anchor="start">空闲</text>
+<rect x="800" y="285" width="340" height="58" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="818" y="323" font-size="32" fill="#28735b" text-anchor="start">持有者</text>
+<text x="58" y="419" font-size="36" fill="#202724" text-anchor="start">再提交等待者</text>
+<text x="505" y="419" font-size="34" fill="#505d57" text-anchor="start">空闲</text>
+<rect x="800" y="383" width="340" height="58" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="818" y="421" font-size="32" fill="#28735b" text-anchor="start">仍由持有者占用</text>
+<text x="58" y="517" font-size="36" fill="#202724" text-anchor="start">删除持有者</text>
+<text x="505" y="517" font-size="34" fill="#505d57" text-anchor="start">空闲</text>
+<rect x="800" y="481" width="340" height="58" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="818" y="519" font-size="32" fill="#28735b" text-anchor="start">原等待者接手</text>
+<line x1="56" y1="579" x2="1144" y2="579" stroke="#d8e1db" stroke-width="2"/>
+<text x="55" y="638" font-size="33" fill="#28735b" text-anchor="start">等待者的 Pod UID 相同，容器最终读到 GPU_DEVICE_1=gpu-1。</text>
+</g>
+</svg>

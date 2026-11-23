@@ -178,5 +178,41 @@
     "label_sha256": "bf4ace000d16b7869d663830c787ddb02d3e017eeacda8e99a234e00b17e9dbf",
     "english_sha256": "b38f14cdbee469adcf11a6a046db1ac53add732a1c176dcc67515a85bf0af5a4",
     "method": "Bilingual labels fitted to the same two recovery paths and checked in Chrome."
+  },
+  "assets/practices/volcano-gpu-placement/design-overview.svg": {
+    "source_sha256": "f4330f156a155d9cdc11b2b08c65d21d2bf8509feaaf72cf9d810c9de35f278d",
+    "label_sha256": "1e128191e45c64b373ddc0dc04e41ab316438c0cc0392ed134565eb2a5d0c748",
+    "english_sha256": "efa869370e32ac4a1fff4e6316b0aaf7813f2983c91ac4f835778cd01586ee66",
+    "method": "Paired editable SVGs with shared geometry and localized labels."
+  },
+  "assets/practices/volcano-gpu-placement/design-packing.svg": {
+    "source_sha256": "df03a30e4b44ae7eec54207945fc52abb15a2e21d87c40e4d8ba3669365ce95d",
+    "label_sha256": "9fe0486b35e246f88aa9938575286dd51c3b89ce95bdb6b28aa508db7e5ff0b6",
+    "english_sha256": "c02b81909aefe0174e5878bbaf3ea6f0da8a46077b614ecb04ab6ddbfe986742",
+    "method": "Paired editable SVGs with shared geometry and localized labels."
+  },
+  "assets/practices/volcano-gpu-placement/design-borrow.svg": {
+    "source_sha256": "fbd6846bfc0f291916b3ae773f77126d25c933907fc9654849c4372aaddef116",
+    "label_sha256": "2c44e1652f41defe8355dd3f0f449253ddd5a590ec76b0e299c09c58bb597589",
+    "english_sha256": "25c51d4e71393462f0771d7a44a0ab67494699746eac1f467ea427051ced51cd",
+    "method": "Paired editable SVGs with shared geometry and localized labels."
+  },
+  "assets/practices/volcano-gpu-placement/design-eviction.svg": {
+    "source_sha256": "cf17c07904725465ecbeed97a9438e6569e112faed2b9f87030f546f1eaefd6f",
+    "label_sha256": "b3b27054e3ef1dc4ea19e36711799931ea3bd59dfeacd5efe5af9c8d4f7f4073",
+    "english_sha256": "5966d5fd99f38dd382df21a651eb41453bfe6d1b8782f9399c795e247081f161",
+    "method": "Paired editable SVGs with shared geometry and localized labels."
+  },
+  "assets/practices/volcano-gpu-placement/design-domains.svg": {
+    "source_sha256": "b7c2113059e3c3615650902b12adaf1c134a29660c3c9f16a43ed847951901d5",
+    "label_sha256": "4a4306013d4ed4009de3f76a633585d891becf1e01cdb661b7a3384d41d173cf",
+    "english_sha256": "3e4b8964ce70b07e61dee8c62469d9d8c189c32dc1ec1ce0c40e1dbd54d246d5",
+    "method": "Paired editable SVGs with shared geometry and localized labels."
+  },
+  "assets/practices/volcano-gpu-placement/design-devices.svg": {
+    "source_sha256": "d70bc109fd4a46541037de314814bd22803bda1f9fbb27c3448d52f8a2e9c147",
+    "label_sha256": "25b0a95d69820ab33affecdf054e8931a8992ffc5b11aa3e88a14908f4662b01",
+    "english_sha256": "3bceab233084eff6784594870fdb2976f7144f0e5b76112881042281b596af87",
+    "method": "Paired editable SVGs with shared geometry and localized labels."
   }
 }

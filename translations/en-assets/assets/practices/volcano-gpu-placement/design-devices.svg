@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="white"/>
+<g font-family="Helvetica Neue, Hiragino Sans GB, Noto Sans CJK SC, sans-serif" font-weight="300">
+<text x="54" y="79" font-size="48" fill="#202724" text-anchor="start">Two claims for the same device index</text>
+<text x="56" y="133" font-size="31" fill="#505d57" text-anchor="start">Worker A has two 80 GiB devices. Both Pods require index 1.</text>
+<line x1="56" y1="167" x2="1144" y2="167" stroke="#d8e1db" stroke-width="2"/>
+<text x="57" y="235" font-size="33" fill="#505d57" text-anchor="start">Change</text>
+<text x="505" y="235" font-size="33" fill="#505d57" text-anchor="start">gpu-0</text>
+<text x="800" y="235" font-size="33" fill="#505d57" text-anchor="start">gpu-1</text>
+<line x1="56" y1="255" x2="1144" y2="255" stroke="#d8e1db" stroke-width="2"/>
+<text x="58" y="321" font-size="36" fill="#202724" text-anchor="start">Start holder</text>
+<text x="505" y="321" font-size="34" fill="#505d57" text-anchor="start">Free</text>
+<rect x="800" y="285" width="340" height="58" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="818" y="323" font-size="32" fill="#28735b" text-anchor="start">Holder</text>
+<text x="58" y="419" font-size="36" fill="#202724" text-anchor="start">Submit waiter</text>
+<text x="505" y="419" font-size="34" fill="#505d57" text-anchor="start">Free</text>
+<rect x="800" y="383" width="340" height="58" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="818" y="421" font-size="32" fill="#28735b" text-anchor="start">Still held</text>
+<text x="58" y="517" font-size="36" fill="#202724" text-anchor="start">Delete holder</text>
+<text x="505" y="517" font-size="34" fill="#505d57" text-anchor="start">Free</text>
+<rect x="800" y="481" width="340" height="58" rx="3" fill="#e7f1ed" stroke="none" stroke-width="2"/>
+<text x="818" y="519" font-size="32" fill="#28735b" text-anchor="start">Waiter takes over</text>
+<line x1="56" y1="579" x2="1144" y2="579" stroke="#d8e1db" stroke-width="2"/>
+<text x="55" y="638" font-size="33" fill="#28735b" text-anchor="start">Same waiter UID. Its container reported GPU_DEVICE_1=gpu-1.</text>
+</g>
+</svg>
