@@ -101,12 +101,12 @@
       "review": "pending editorial review"
     },
     "ai-k8s/practices/index.md": {
-      "source_sha256": "6b24a5b31ceb8c2ef48d40a24c03f01f33c442e30c43be7f60e3fe2b5cdf7434",
-      "english_sha256": "e8dbe16f44596a10f41edcb127c9b8fdcaf74da8f1d6a7cca63e2acd8135aa35",
+      "source_sha256": "8a0dd6ee889a8457bf8360fa7bb05e392bb3ec1b8e8870b5f2e007f729b28cd8",
+      "english_sha256": "5e98cf7fbc779e902c82de75be1a69ff894b259dacb8447ca6159cca6f1fd2a2",
       "translated_at": "2026-10-16T08:50:57.637630+00:00",
       "method": "model-assisted translation; structural checks passed",
       "review": "reviewed against source",
-      "reviewed_at": "2026-11-23T12:58:06.193157+00:00"
+      "reviewed_at": "2026-11-23T14:37:41.919576+00:00"
     },
     "assets/practices/gpu-notebook-platform-evolution/README.md": {
       "source_sha256": "3cdac55cfe726d6d73b60ba5e93b682cb2047e8c27980cc8fd320c0b0da4a8bb",
@@ -1683,6 +1683,12 @@
       "source_sha256": "b1c6cd4378d535ee6f882bda80de6c1c4653c4383fc6554d7067b45ef37ac459",
       "english_sha256": "1c5d0534afc43c6c02154292413e658d0a8c5cb219b0303468a17150c39b12ea",
       "reviewed_at": "2026-11-23T12:58:06.133387+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/keda-volcano-tidal-gpu.md": {
+      "source_sha256": "20b0e6571490f7fb18005f67e329262790735c314ef80febb833fe7855beecb7",
+      "english_sha256": "04e793cd35ee8f0e4b97361db063b0a6f716d4e515ad79ea285180d8947b80fa",
+      "reviewed_at": "2026-11-23T14:41:08.737346+00:00",
       "review": "reviewed against source"
     }
   }

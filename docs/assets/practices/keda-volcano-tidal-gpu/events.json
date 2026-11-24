@@ -1,0 +1,492 @@
+{
+  "verified": {
+    "passed": true,
+    "batch": {
+      "batch": 8,
+      "resume": 72
+    },
+    "executionsPerItem": 1,
+    "served": {
+      "base": 55,
+      "elastic": 41
+    },
+    "schedulers": [
+      "tide-volcano"
+    ],
+    "basePodUnchanged": true,
+    "waitingPodUnchanged": true,
+    "claimChanged": true
+  },
+  "events": [
+    {
+      "event": "day_ready",
+      "ts": 1795444156.84,
+      "elasticDesired": 1,
+      "queue": 0,
+      "baseServed": 0,
+      "elasticServed": 0,
+      "committed": 0,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "744dd1fa",
+          "phase": "Running",
+          "claim": "53a9f6a5",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "paused_probe_pending",
+      "ts": 1795444165.86,
+      "elasticDesired": 1,
+      "queue": 0,
+      "baseServed": 0,
+      "elasticServed": 0,
+      "committed": 0,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "744dd1fa",
+          "phase": "Running",
+          "claim": "53a9f6a5",
+          "device": "gpu-1",
+          "deleting": false
+        },
+        "probe": {
+          "pod": "fc3726a1",
+          "phase": "Pending",
+          "claim": "8b6b1d11",
+          "device": null,
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "paused_probe_still_pending",
+      "ts": 1795444175.61,
+      "elasticDesired": 1,
+      "queue": 0,
+      "baseServed": 0,
+      "elasticServed": 0,
+      "committed": 0,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "744dd1fa",
+          "phase": "Running",
+          "claim": "53a9f6a5",
+          "device": "gpu-1",
+          "deleting": false
+        },
+        "probe": {
+          "pod": "fc3726a1",
+          "phase": "Pending",
+          "claim": "8b6b1d11",
+          "device": null,
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "night_released",
+      "ts": 1795444213.0,
+      "elasticDesired": 0,
+      "queue": 0,
+      "baseServed": 0,
+      "elasticServed": 0,
+      "committed": 0,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "batch_owns_slot",
+      "ts": 1795444223.58,
+      "elasticDesired": 0,
+      "queue": 0,
+      "baseServed": 0,
+      "elasticServed": 0,
+      "committed": 2,
+      "lend": 1,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "batch": {
+          "pod": "3807e93d",
+          "phase": "Running",
+          "claim": "584eb8de",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "burst_before_enqueue",
+      "ts": 1795444224.5,
+      "elasticDesired": 0,
+      "queue": 0,
+      "baseServed": 0,
+      "elasticServed": 0,
+      "committed": 3,
+      "lend": 1,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "batch": {
+          "pod": "3807e93d",
+          "phase": "Running",
+          "claim": "584eb8de",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "burst_enqueued",
+      "ts": 1795444225.68,
+      "elasticDesired": 0,
+      "queue": 94,
+      "baseServed": 1,
+      "elasticServed": 0,
+      "committed": 5,
+      "lend": 1,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "batch": {
+          "pod": "3807e93d",
+          "phase": "Running",
+          "claim": "584eb8de",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "recall_waiting",
+      "ts": 1795444226.84,
+      "elasticDesired": 1,
+      "queue": 92,
+      "baseServed": 3,
+      "elasticServed": 0,
+      "committed": 7,
+      "lend": 1,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "batch": {
+          "pod": "3807e93d",
+          "phase": "Running",
+          "claim": "584eb8de",
+          "device": "gpu-1",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "948db624",
+          "phase": "Pending",
+          "claim": "355f35c5",
+          "device": null,
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "admission_closed",
+      "ts": 1795444228.02,
+      "elasticDesired": 1,
+      "queue": 90,
+      "baseServed": 5,
+      "elasticServed": 0,
+      "committed": 8,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "batch": {
+          "pod": "3807e93d",
+          "phase": "Running",
+          "claim": "584eb8de",
+          "device": "gpu-1",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "948db624",
+          "phase": "Pending",
+          "claim": "355f35c5",
+          "device": null,
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "batch_checkpointed",
+      "ts": 1795444229.2,
+      "elasticDesired": 1,
+      "queue": 88,
+      "baseServed": 7,
+      "elasticServed": 0,
+      "committed": 8,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "batch": {
+          "pod": "3807e93d",
+          "phase": "Running",
+          "claim": "584eb8de",
+          "device": "gpu-1",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "948db624",
+          "phase": "Pending",
+          "claim": "355f35c5",
+          "device": null,
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "batch_terminal",
+      "ts": 1795444230.62,
+      "elasticDesired": 1,
+      "queue": 86,
+      "baseServed": 9,
+      "elasticServed": 0,
+      "committed": 8,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "batch": {
+          "pod": "3807e93d",
+          "phase": "Succeeded",
+          "claim": null,
+          "device": null,
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "948db624",
+          "phase": "Pending",
+          "claim": "355f35c5",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "online_reallocated",
+      "ts": 1795444233.16,
+      "elasticDesired": 1,
+      "queue": 82,
+      "baseServed": 13,
+      "elasticServed": 0,
+      "committed": 8,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "948db624",
+          "phase": "Running",
+          "claim": "355f35c5",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "first_elastic_reply",
+      "ts": 1795444235.67,
+      "elasticDesired": 1,
+      "queue": 74,
+      "baseServed": 17,
+      "elasticServed": 3,
+      "committed": 8,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "948db624",
+          "phase": "Running",
+          "claim": "355f35c5",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "online_complete",
+      "ts": 1795444259.97,
+      "elasticDesired": 1,
+      "queue": 0,
+      "baseServed": 55,
+      "elasticServed": 41,
+      "committed": 8,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "elastic": {
+          "pod": "948db624",
+          "phase": "Running",
+          "claim": "355f35c5",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "second_release",
+      "ts": 1795444269.42,
+      "elasticDesired": 0,
+      "queue": 0,
+      "baseServed": 55,
+      "elasticServed": 41,
+      "committed": 8,
+      "lend": 0,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "resumed",
+      "ts": 1795444281.92,
+      "elasticDesired": 0,
+      "queue": 0,
+      "baseServed": 55,
+      "elasticServed": 41,
+      "committed": 9,
+      "lend": 1,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "resume": {
+          "pod": "d6a0bb01",
+          "phase": "Running",
+          "claim": "6f2c4a63",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    },
+    {
+      "event": "offline_complete",
+      "ts": 1795444329.3,
+      "elasticDesired": 0,
+      "queue": 0,
+      "baseServed": 55,
+      "elasticServed": 41,
+      "committed": 80,
+      "lend": 1,
+      "roles": {
+        "base": {
+          "pod": "4d202b67",
+          "phase": "Running",
+          "claim": "886b981f",
+          "device": "gpu-0",
+          "deleting": false
+        },
+        "resume": {
+          "pod": "d6a0bb01",
+          "phase": "Running",
+          "claim": "6f2c4a63",
+          "device": "gpu-1",
+          "deleting": false
+        }
+      }
+    }
+  ]
+}

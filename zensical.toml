@@ -231,6 +231,7 @@ nav = [
       {"P/D 分离性能拐点" = "ai-k8s/practices/pd-break-even.md"},
       {"GPU 资源银行与潮汐平台" = "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"},
       {"Kueue 与 Volcano 实验" = "ai-k8s/practices/kueue-vs-volcano.md"},
+      {"KEDA、Volcano 与 DRA 夜间借卡实测" = "ai-k8s/practices/keda-volcano-tidal-gpu.md"},
       {"Volcano GPU 放置与抢占实战" = "ai-k8s/practices/volcano-gpu-placement.md"},
       {"Volcano 1.16 GPU 调度实战" = "ai-k8s/practices/volcano-116-gpu-scheduling.md"},
       {"Volcano 企业落地的业务前提" = "ai-k8s/practices/volcano-scheduler-enterprise-limits.md"},
