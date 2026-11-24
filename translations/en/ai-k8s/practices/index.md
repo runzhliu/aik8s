@@ -61,6 +61,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 - [GPU Resource Bank and Tidal Inference Platform Practice Blueprint](gpu-resource-bank-tidal-platform.md)
 - [Kueue vs. Volcano Comparative Experiment](kueue-vs-volcano.md)
 - [Lending an inference GPU overnight with KEDA, Volcano and DRA](keda-volcano-tidal-gpu.md)
+- [Kubernetes v1.37 DRA Advanced Trio in Practice: Cross-Driver PCIe Alignment, Consumable Capacity, and Single-GPU Fault Quarantine](kubernetes-137-dra-topology-sharing-health.md)
 - [Volcano GPU placement and preemption: Why an eight-device Pod can wait with eight GPUs free](volcano-gpu-placement.md)
 - [Volcano 1.16 GPU scheduling lab: Quotas, historical fairness and cache wakeups](volcano-116-gpu-scheduling.md)
 - [Volcano Has Many Features, Why Is It Still Hard to Tune in Enterprises?](volcano-scheduler-enterprise-limits.md)

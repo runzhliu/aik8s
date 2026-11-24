@@ -1,0 +1,419 @@
+{
+  "versions": {
+    "kubernetes": "v1.37.2",
+    "volcano": "v1.16.0",
+    "dra_example_driver": "v0.5.0"
+  },
+  "suite1_pcie": {
+    "suite": "1_cross_driver_pcie_alignment",
+    "device_pcie_map": {
+      "gpu.example.com/gpu-0": "pci0000:00",
+      "gpu.example.com/gpu-1": "pci0000:80",
+      "gpu.example.com/gpu-2": "pci0000:00",
+      "gpu.example.com/gpu-3": "pci0000:80",
+      "net.example.com/nic-0": "pci0000:00",
+      "net.example.com/nic-1": "pci0000:80"
+    },
+    "exp1a_control_unaligned": {
+      "running_s": 1.43,
+      "pairs": {
+        "gpu": {
+          "driver": "gpu.example.com",
+          "device": "gpu-1",
+          "pcieRoot": "pci0000:80"
+        },
+        "nic": {
+          "driver": "net.example.com",
+          "device": "nic-0",
+          "pcieRoot": "pci0000:00"
+        }
+      },
+      "pcie_matched": false,
+      "cdi_env": [
+        "GPU_DEVICE_1=gpu-1",
+        "GPU_DEVICE_1_COMPUTE=100",
+        "GPU_DEVICE_1_MEMORY=80Gi",
+        "GPU_DEVICE_1_SHARING_STRATEGY=TimeSlicing",
+        "GPU_DEVICE_1_TIMESLICE_INTERVAL=Default",
+        "GPU_DEVICE_GPU_1_RESOURCE_CLAIM=803cdfc6-9327-4de1-a565-2ff4c5d6107c",
+        "NET_DEVICE_0_EGRESS_RATE=25000000000",
+        "NET_DEVICE_0_INGRESS_RATE=25000000000"
+      ]
+    },
+    "exp1b_aligned_4pods": [
+      {
+        "pod": "s1b-aligned-0",
+        "running_s": 1.42,
+        "pairs": {
+          "gpu": {
+            "driver": "gpu.example.com",
+            "device": "gpu-0",
+            "pcieRoot": "pci0000:00"
+          },
+          "nic": {
+            "driver": "net.example.com",
+            "device": "nic-0",
+            "pcieRoot": "pci0000:00"
+          }
+        },
+        "pcie_matched": true,
+        "cdi_env_sample": [
+          "GPU_DEVICE_0=gpu-0",
+          "GPU_DEVICE_0_COMPUTE=100",
+          "GPU_DEVICE_0_MEMORY=80Gi",
+          "GPU_DEVICE_0_SHARING_STRATEGY=TimeSlicing",
+          "GPU_DEVICE_0_TIMESLICE_INTERVAL=Default",
+          "GPU_DEVICE_GPU_0_RESOURCE_CLAIM=5384694d-423e-4420-af4f-dc6f6c263996",
+          "NET_DEVICE_0_EGRESS_RATE=25000000000",
+          "NET_DEVICE_0_INGRESS_RATE=25000000000"
+        ]
+      },
+      {
+        "pod": "s1b-aligned-1",
+        "running_s": 0.07,
+        "pairs": {
+          "gpu": {
+            "driver": "gpu.example.com",
+            "device": "gpu-1",
+            "pcieRoot": "pci0000:80"
+          },
+          "nic": {
+            "driver": "net.example.com",
+            "device": "nic-1",
+            "pcieRoot": "pci0000:80"
+          }
+        },
+        "pcie_matched": true,
+        "cdi_env_sample": [
+          "GPU_DEVICE_1=gpu-1",
+          "GPU_DEVICE_1_COMPUTE=100",
+          "GPU_DEVICE_1_MEMORY=80Gi",
+          "GPU_DEVICE_1_SHARING_STRATEGY=TimeSlicing",
+          "GPU_DEVICE_1_TIMESLICE_INTERVAL=Default",
+          "GPU_DEVICE_GPU_1_RESOURCE_CLAIM=c563d442-671c-4ec2-a6f2-6632aef74058",
+          "NET_DEVICE_1_EGRESS_RATE=25000000000",
+          "NET_DEVICE_1_INGRESS_RATE=25000000000"
+        ]
+      },
+      {
+        "pod": "s1b-aligned-2",
+        "running_s": 0.09,
+        "pairs": {
+          "gpu": {
+            "driver": "gpu.example.com",
+            "device": "gpu-2",
+            "pcieRoot": "pci0000:00"
+          },
+          "nic": {
+            "driver": "net.example.com",
+            "device": "nic-0",
+            "pcieRoot": "pci0000:00"
+          }
+        },
+        "pcie_matched": true,
+        "cdi_env_sample": [
+          "GPU_DEVICE_2=gpu-2",
+          "GPU_DEVICE_2_COMPUTE=100",
+          "GPU_DEVICE_2_MEMORY=80Gi",
+          "GPU_DEVICE_2_SHARING_STRATEGY=TimeSlicing",
+          "GPU_DEVICE_2_TIMESLICE_INTERVAL=Default",
+          "GPU_DEVICE_GPU_2_RESOURCE_CLAIM=d3759aa2-5368-4c2d-bee4-2fb89d0af74a",
+          "NET_DEVICE_0_EGRESS_RATE=25000000000",
+          "NET_DEVICE_0_INGRESS_RATE=25000000000"
+        ]
+      },
+      {
+        "pod": "s1b-aligned-3",
+        "running_s": 0.12,
+        "pairs": {
+          "gpu": {
+            "driver": "gpu.example.com",
+            "device": "gpu-3",
+            "pcieRoot": "pci0000:80"
+          },
+          "nic": {
+            "driver": "net.example.com",
+            "device": "nic-1",
+            "pcieRoot": "pci0000:80"
+          }
+        },
+        "pcie_matched": true,
+        "cdi_env_sample": [
+          "GPU_DEVICE_3=gpu-3",
+          "GPU_DEVICE_3_COMPUTE=100",
+          "GPU_DEVICE_3_MEMORY=80Gi",
+          "GPU_DEVICE_3_SHARING_STRATEGY=TimeSlicing",
+          "GPU_DEVICE_3_TIMESLICE_INTERVAL=Default",
+          "GPU_DEVICE_GPU_3_RESOURCE_CLAIM=3db17690-f35c-45ef-a05e-6b4c0dfdcdb8",
+          "NET_DEVICE_1_EGRESS_RATE=25000000000",
+          "NET_DEVICE_1_INGRESS_RATE=25000000000"
+        ]
+      }
+    ],
+    "exp1c_strict_rejection": {
+      "blocked_phase": "Pending",
+      "blocked_message": "0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
+      "healed_running_s": 1.48,
+      "healed_pairs": {
+        "gpu": {
+          "driver": "gpu.example.com",
+          "device": "gpu-1",
+          "pcieRoot": "pci0000:80"
+        },
+        "nic": {
+          "driver": "net.example.com",
+          "device": "nic-1",
+          "pcieRoot": "pci0000:80"
+        }
+      }
+    },
+    "exp1d_volcano_v116": {
+      "running_s": 2.06,
+      "pairs": {
+        "gpu": {
+          "driver": "gpu.example.com",
+          "device": "gpu-1",
+          "pcieRoot": "pci0000:80"
+        },
+        "nic": {
+          "driver": "net.example.com",
+          "device": "nic-1",
+          "pcieRoot": "pci0000:80"
+        }
+      },
+      "pcie_matched": true
+    }
+  },
+  "suite2_consumable": {
+    "suite": "2_consumable_capacity_and_volcano_quota",
+    "exp2a_fractional_gpu0": {
+      "gpu0_total_memory": "80Gi",
+      "gpu0_total_compute": "100",
+      "packed_3_pods": [
+        {
+          "pod": "s2a-slice-0",
+          "running_s": 1.4,
+          "claim": "s2a-slice-0-gpu-d5h6m",
+          "device": "gpu-0",
+          "shareID": "1c426a4c-41a5-4bee-a9a3-c6c0a842a381",
+          "consumedCapacity": {
+            "compute": "30",
+            "memory": "24Gi"
+          },
+          "deviceStatusData": null,
+          "cdi_env": [
+            "GPU_DEVICE_0=gpu-0",
+            "GPU_DEVICE_0_COMPUTE=30",
+            "GPU_DEVICE_0_MEMORY=24Gi",
+            "GPU_DEVICE_0_SHARING_STRATEGY=TimeSlicing",
+            "GPU_DEVICE_0_TIMESLICE_INTERVAL=Default",
+            "GPU_DEVICE_GPU_0_RESOURCE_CLAIM=dc947ac0-8d8f-4cdf-9183-26d7c3374879"
+          ]
+        },
+        {
+          "pod": "s2a-slice-1",
+          "running_s": 0.07,
+          "claim": "s2a-slice-1-gpu-g6cqf",
+          "device": "gpu-0",
+          "shareID": "21a8516a-54be-4568-9831-75fce7a4f3db",
+          "consumedCapacity": {
+            "compute": "30",
+            "memory": "24Gi"
+          },
+          "deviceStatusData": null,
+          "cdi_env": [
+            "GPU_DEVICE_0=gpu-0",
+            "GPU_DEVICE_0_COMPUTE=30",
+            "GPU_DEVICE_0_MEMORY=24Gi",
+            "GPU_DEVICE_0_SHARING_STRATEGY=TimeSlicing",
+            "GPU_DEVICE_0_TIMESLICE_INTERVAL=Default",
+            "GPU_DEVICE_GPU_0_RESOURCE_CLAIM=a1b8ff6f-4692-4556-b103-16a4e5c537b5"
+          ]
+        },
+        {
+          "pod": "s2a-slice-2",
+          "running_s": 0.13,
+          "claim": "s2a-slice-2-gpu-ml46j",
+          "device": "gpu-0",
+          "shareID": "d9e11e1b-f00b-4d97-a4c8-c35dd16546b3",
+          "consumedCapacity": {
+            "compute": "30",
+            "memory": "24Gi"
+          },
+          "deviceStatusData": null,
+          "cdi_env": [
+            "GPU_DEVICE_0=gpu-0",
+            "GPU_DEVICE_0_COMPUTE=30",
+            "GPU_DEVICE_0_MEMORY=24Gi",
+            "GPU_DEVICE_0_SHARING_STRATEGY=TimeSlicing",
+            "GPU_DEVICE_0_TIMESLICE_INTERVAL=Default",
+            "GPU_DEVICE_GPU_0_RESOURCE_CLAIM=0cb21263-cedb-44ad-9dd6-79550502fcbc"
+          ]
+        }
+      ],
+      "distinct_share_ids": 3,
+      "pod3_oversub_phase": "Pending",
+      "pod3_oversub_message": "0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
+      "overmax_90gi_phase": "Pending",
+      "overmax_90gi_message": "0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.",
+      "pod3_after_pod0_delete_running_s": 3.81,
+      "pod3_allocated": {
+        "device": "gpu-0",
+        "shareID": "054ff523-3ae9-4647-9d36-b1b172f46917",
+        "consumedCapacity": {
+          "compute": "30",
+          "memory": "24Gi"
+        }
+      }
+    },
+    "exp2b_volcano_dra_queue_quota": {
+      "queue": "dra-vgpu-q",
+      "queue_capability_memory": "48Gi",
+      "queue_capability_compute": "60",
+      "node_total_memory": "320Gi",
+      "qpod0_running_s": 1.83,
+      "qpod1_running_s": 0.85,
+      "qpod2_blocked_phase": "Pending",
+      "qpod2_after_qpod0_delete_running_s": 1.91,
+      "scheduler_log_excerpt": [
+        "I1124 11:16:28.048748       1 drf.go:190] Total Allocatable cpu 168000.00, memory 809026187264.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, hugepages-1Gi 0.00, hugepages-2Mi 0.00, nvidia.com/gpu 16000.00, pods 330.00",
+        "I1124 11:16:28.048907       1 capacity.go:448] The total resource is <cpu 168000.00, memory 809026187264.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, hugepages-1Gi 0.00, hugepages-2Mi 0.00, nvidia.com/gpu 16000.00, pods 330.00>",
+        "I1124 11:16:28.048937       1 capacity.go:1110] The total guarantee resource is <cpu 0.00, memory 0.00>",
+        "I1124 11:16:28.048995       1 capacity.go:1118] Added Queue <dra-vgpu-q> attributes.",
+        "I1124 11:16:28.049106       1 capacity.go:1174] Added jobless Queue <default> attributes with allocated from status: <cpu 0.00, memory 0.00>",
+        "I1124 11:16:28.049141       1 capacity.go:1174] Added jobless Queue <root> attributes with allocated from status: <cpu 40.00, memory 67108864.00, compute.deviceclass/gpu.example.com 60000.00, deviceclass/gpu.example.com 2000.00, memory.deviceclass/gpu.example.com 51539607552000.00, pods 2.00>",
+        "I1124 11:16:28.049173       1 capacity.go:1183] The attributes of queue <dra-vgpu-q> in capacity: deserved <cpu 10000.00, memory 17179869184.00, compute.deviceclass/gpu.example.com 60000.00, memory.deviceclass/gpu.example.com 51539607552000.00>, realCapability <cpu 20000.00, memory 34359738368.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, nvidia.com/gpu 16000.00, pods 330.00>, allocate <cpu 40.00, memory 67108864.00, pods 2.00>, request <cpu 60.00, memory 100663296.00, pods 3.00>, elastic <cpu 0.00, memory 0.00>, share <0.00>",
+        "I1124 11:16:28.049209       1 capacity.go:1183] The attributes of queue <default> in capacity: deserved <cpu 0.00, memory 0.00>, realCapability <cpu 168000.00, memory 809026187264.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, nvidia.com/gpu 16000.00, pods 330.00>, allocate <cpu 0.00, memory 0.00>, request <cpu 0.00, memory 0.00>, elastic <cpu 0.00, memory 0.00>, share <1.00>",
+        "I1124 11:16:28.049241       1 capacity.go:1183] The attributes of queue <root> in capacity: deserved <cpu 0.00, memory 0.00>, realCapability <cpu 168000.00, memory 809026187264.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, nvidia.com/gpu 16000.00, pods 330.00>, allocate <cpu 40.00, memory 67108864.00, compute.deviceclass/gpu.example.com 60000.00, deviceclass/gpu.example.com 2000.00, memory.deviceclass/gpu.example.com 51539607552000.00, pods 2.00>, request <cpu 0.00, memory 0.00>, elastic <cpu 0.00, memory 0.00>, share <1.00>",
+        "I1124 11:16:28.049518       1 allocate.go:236] Added Job <dra-adv-lab/podgroup-a85df5a4-0dce-40f9-a40f-9615f57e5dcd> into Queue <dra-vgpu-q> in regular phase",
+        "I1124 11:16:28.049615       1 allocate.go:401] \"Try to allocate resource\" queue=\"dra-vgpu-q\" job=\"dra-adv-lab/podgroup-a85df5a4-0dce-40f9-a40f-9615f57e5dcd\" nominatedHyperNode=\"\" taskNum=1",
+        "I1124 11:16:28.049636       1 capacity.go:1709] Queue <dra-vgpu-q> DRA resource insufficient for candidate <s2b-qpod-2>",
+        "I1124 11:16:28.049654       1 allocate.go:952] Queue <dra-vgpu-q> is overused when considering task <s2b-qpod-2>, ignore it.",
+        "I1124 11:16:28.049690       1 allocate.go:373] Can not find jobs for queue dra-vgpu-q.",
+        "I1124 11:16:28.049863       1 cache.go:1246] task unscheduleable dra-adv-lab/s2b-qpod-2, message: pod group is not ready, 1 Pending, 1 minAvailable; Pending: 1 Unschedulable, skip by no condition update"
+      ]
+    }
+  },
+  "suite3_health": {
+    "suite": "3_device_health_and_single_gpu_quarantine",
+    "baseline": {
+      "victim": {
+        "pod": "dra-serving-58f799f5b4-ppv9f",
+        "uid": "abaa0bcc-53bd-45f9-bc0c-b821921df02a",
+        "phase": "Running",
+        "restarts": 0,
+        "device": "gpu-1",
+        "claim": "dra-serving-58f799f5b4-ppv9f-gpu-skmpl",
+        "allocatedResourcesStatus": [
+          {
+            "name": "claim:gpu",
+            "resources": [
+              {
+                "health": "Healthy",
+                "message": "Device gpu-1 operating normally, temperature: 53\u00b0C",
+                "resourceID": "k8s.gpu.example.com/gpu=common"
+              }
+            ]
+          }
+        ]
+      },
+      "sibling": {
+        "pod": "dra-serving-58f799f5b4-r87vk",
+        "uid": "8ff0c89a-eb92-4c43-b4b3-f1c0a17a1124",
+        "phase": "Running",
+        "restarts": 0,
+        "device": "gpu-0",
+        "claim": "dra-serving-58f799f5b4-r87vk-gpu-d7sdk",
+        "allocatedResourcesStatus": [
+          {
+            "name": "claim:gpu",
+            "resources": [
+              {
+                "health": "Healthy",
+                "message": "Device gpu-0 operating normally, temperature: 53\u00b0C",
+                "resourceID": "k8s.gpu.example.com/gpu=common"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "exp3a_kep4680_health": {
+      "fault_device": "gpu-1",
+      "unhealthy_propagation_s": 1.62,
+      "unhealthy_status": [
+        {
+          "name": "claim:gpu",
+          "resources": [
+            {
+              "health": "Unhealthy",
+              "message": "gpu-1 temperature: 80\u00b0C (warning threshold exceeded, safe limit is 85\u00b0C)",
+              "resourceID": "k8s.gpu.example.com/gpu=common"
+            }
+          ]
+        }
+      ],
+      "kubelet_auto_evicted_after_10s": false,
+      "unknown_propagation_s": 0.52,
+      "unknown_status": [
+        {
+          "name": "claim:gpu",
+          "resources": [
+            {
+              "health": "Unknown",
+              "message": "Health of device gpu-1 cannot be determined (driver lost contact with the device)",
+              "resourceID": "k8s.gpu.example.com/gpu=common"
+            }
+          ]
+        }
+      ]
+    },
+    "exp3b_single_gpu_quarantine": {
+      "quarantined_device": "gpu-1",
+      "eviction_triggered_s": 0.86,
+      "replacement_healthy_running_s": 1.85,
+      "replacement": {
+        "pod": "dra-serving-58f799f5b4-x2p8s",
+        "uid": "892add49-79fc-497e-8dd6-485e18184759",
+        "phase": "Running",
+        "restarts": 0,
+        "device": "gpu-2",
+        "claim": "dra-serving-58f799f5b4-x2p8s-gpu-whjc7",
+        "allocatedResourcesStatus": [
+          {
+            "name": "claim:gpu",
+            "resources": [
+              {
+                "health": "Healthy",
+                "message": "Device gpu-2 operating normally, temperature: 51\u00b0C",
+                "resourceID": "k8s.gpu.example.com/gpu=common"
+              }
+            ]
+          }
+        ]
+      },
+      "avoided_bad_gpu": true,
+      "sibling_same_node_untouched": true,
+      "sibling_after": {
+        "pod": "dra-serving-58f799f5b4-r87vk",
+        "uid": "8ff0c89a-eb92-4c43-b4b3-f1c0a17a1124",
+        "phase": "Running",
+        "restarts": 0,
+        "device": "gpu-0",
+        "claim": "dra-serving-58f799f5b4-r87vk-gpu-d7sdk",
+        "allocatedResourcesStatus": [
+          {
+            "name": "claim:gpu",
+            "resources": [
+              {
+                "health": "Healthy",
+                "message": "Device gpu-0 operating normally, temperature: 53\u00b0C",
+                "resourceID": "k8s.gpu.example.com/gpu=common"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

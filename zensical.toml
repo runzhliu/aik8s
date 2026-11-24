@@ -232,6 +232,7 @@ nav = [
       {"GPU 资源银行与潮汐平台" = "ai-k8s/practices/gpu-resource-bank-tidal-platform.md"},
       {"Kueue 与 Volcano 实验" = "ai-k8s/practices/kueue-vs-volcano.md"},
       {"KEDA、Volcano 与 DRA 夜间借卡实测" = "ai-k8s/practices/keda-volcano-tidal-gpu.md"},
+      {"Kubernetes v1.37 DRA 高级三件套实测" = "ai-k8s/practices/kubernetes-137-dra-topology-sharing-health.md"},
       {"Volcano GPU 放置与抢占实战" = "ai-k8s/practices/volcano-gpu-placement.md"},
       {"Volcano 1.16 GPU 调度实战" = "ai-k8s/practices/volcano-116-gpu-scheduling.md"},
       {"Volcano 企业落地的业务前提" = "ai-k8s/practices/volcano-scheduler-enterprise-limits.md"},

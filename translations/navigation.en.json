@@ -183,6 +183,7 @@
   "GPU 资源银行与潮汐平台": "GPU Resource Bank and Tidal Platform",
   "Kueue 与 Volcano 实验": "Kueue and Volcano Experiments",
   "KEDA、Volcano 与 DRA 夜间借卡实测": "Overnight GPU Lending with KEDA, Volcano and DRA",
+  "Kubernetes v1.37 DRA 高级三件套实测": "Kubernetes v1.37 DRA Advanced Trio Lab",
   "Volcano GPU 放置与抢占实战": "Volcano GPU Placement and Preemption",
   "Volcano 1.16 GPU 调度实战": "Volcano 1.16 GPU Scheduling Lab",
   "Volcano 企业落地的业务前提": "Volcano Enterprise Adoption Business Prerequisites",

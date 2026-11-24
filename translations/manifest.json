@@ -101,12 +101,10 @@
       "review": "pending editorial review"
     },
     "ai-k8s/practices/index.md": {
-      "source_sha256": "8a0dd6ee889a8457bf8360fa7bb05e392bb3ec1b8e8870b5f2e007f729b28cd8",
-      "english_sha256": "5e98cf7fbc779e902c82de75be1a69ff894b259dacb8447ca6159cca6f1fd2a2",
-      "translated_at": "2026-10-16T08:50:57.637630+00:00",
-      "method": "model-assisted translation; structural checks passed",
-      "review": "reviewed against source",
-      "reviewed_at": "2026-11-23T14:37:41.919576+00:00"
+      "source_sha256": "8fe05e0dbf64c0bc9307d11fe69c51b5a807bd8bb89cf7a44e4cb09637e6d97e",
+      "english_sha256": "12036299ab43d9878e1938121332d410086b3e1a0100e8de179181c6e0d2c55e",
+      "reviewed_at": "2026-11-24T07:51:30.921017+00:00",
+      "review": "reviewed against source"
     },
     "assets/practices/gpu-notebook-platform-evolution/README.md": {
       "source_sha256": "3cdac55cfe726d6d73b60ba5e93b682cb2047e8c27980cc8fd320c0b0da4a8bb",
@@ -1689,6 +1687,12 @@
       "source_sha256": "eafaf336fd7e0ee041ad7eab02b8b84ea3c31f03d6167194a10bb707a75c49a8",
       "english_sha256": "b9e83db9164f5f45f5e1f6ba0b49f109a15ac8704b432811056b2eb226bf9038",
       "reviewed_at": "2026-11-24T07:51:30.921017+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/kubernetes-137-dra-topology-sharing-health.md": {
+      "source_sha256": "fb98d3f1b43515ec5e38089621c42afdd840c902e4ceb3e7c0360234c41a971b",
+      "english_sha256": "f79b7aa1b03d5f488ee5544f27075d7017298e35b3aba34b5edc04c17b66c5a3",
+      "reviewed_at": "2026-11-24T11:27:56.096772+00:00",
       "review": "reviewed against source"
     }
   }
