@@ -1686,9 +1686,9 @@
       "review": "reviewed against source"
     },
     "ai-k8s/practices/keda-volcano-tidal-gpu.md": {
-      "source_sha256": "20b0e6571490f7fb18005f67e329262790735c314ef80febb833fe7855beecb7",
-      "english_sha256": "04e793cd35ee8f0e4b97361db063b0a6f716d4e515ad79ea285180d8947b80fa",
-      "reviewed_at": "2026-11-23T14:41:08.737346+00:00",
+      "source_sha256": "eafaf336fd7e0ee041ad7eab02b8b84ea3c31f03d6167194a10bb707a75c49a8",
+      "english_sha256": "b9e83db9164f5f45f5e1f6ba0b49f109a15ac8704b432811056b2eb226bf9038",
+      "reviewed_at": "2026-11-24T07:51:30.921017+00:00",
       "review": "reviewed against source"
     }
   }

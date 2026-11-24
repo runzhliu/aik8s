@@ -1,492 +1,1403 @@
 {
-  "verified": {
-    "passed": true,
-    "batch": {
-      "batch": 8,
-      "resume": 72
-    },
-    "executionsPerItem": 1,
-    "served": {
-      "base": 55,
-      "elastic": 41
-    },
-    "schedulers": [
-      "tide-volcano"
-    ],
-    "basePodUnchanged": true,
-    "waitingPodUnchanged": true,
-    "claimChanged": true
+  "versions": {
+    "kubernetes": "v1.37.2",
+    "volcano": "v1.16.0",
+    "keda": "v2.21.1",
+    "fake_gpu_operator": "v0.2.1",
+    "dra_example_driver": "v0.5.0"
   },
-  "events": [
-    {
-      "event": "day_ready",
-      "ts": 1795444156.84,
-      "elasticDesired": 1,
-      "queue": 0,
-      "baseServed": 0,
-      "elasticServed": 0,
-      "committed": 0,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
+  "exp1a_16gpu_declarative_reclaim": {
+    "summary": {
+      "exp": "1A_nvidia_gpu_declarative_reclaim",
+      "online_served_total": 400,
+      "base_served": 252,
+      "elastic_served": 148,
+      "offline_done_total": 720,
+      "offline_exec_unique_counts": [
+        "1"
+      ],
+      "offline_sigterm_records": [
+        "batch-elastic-worker-6:1795503581",
+        "batch-elastic-worker-4:1795503581",
+        "batch-elastic-worker-7:1795503582",
+        "batch-elastic-worker-5:1795503582"
+      ],
+      "offline_graceful_exits": [
+        "batch-elastic-worker-6:601:1795503581",
+        "batch-elastic-worker-4:603:1795503581",
+        "batch-elastic-worker-7:604:1795503582",
+        "batch-elastic-worker-5:608:1795503582",
+        "batch-elastic-worker-9:720:1795503604",
+        "batch-elastic-worker-0:720:1795503604",
+        "batch-elastic-worker-3:720:1795503604",
+        "batch-elastic-worker-10:720:1795503605",
+        "batch-elastic-worker-2:720:1795503605",
+        "batch-elastic-worker-8:720:1795503605",
+        "batch-elastic-worker-1:720:1795503605",
+        "batch-elastic-worker-11:720:1795503605",
+        "batch-elastic-worker-5:720:1795503609",
+        "batch-elastic-worker-7:720:1795503609",
+        "batch-elastic-worker-4:720:1795503611",
+        "batch-elastic-worker-6:720:1795503611"
+      ],
+      "reclaim_events": []
+    },
+    "events": [
+      {
+        "event": "day_online_ready",
+        "ts": 1795503465.582,
+        "utc": "2026-11-24T06:57:45.582+00:00",
+        "elastic_desired": 4,
+        "base_running": 4,
+        "elastic_running": 4,
+        "elastic_pending": 0,
+        "offline_running": 0,
+        "offline_pending": 0,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 8,
+            "offline": 0
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 0
+          }
         },
-        "elastic": {
-          "pod": "744dd1fa",
-          "phase": "Running",
-          "claim": "53a9f6a5",
-          "device": "gpu-1",
-          "deleting": false
+        "online_queue": 0,
+        "online_served": 0,
+        "base_served": 0,
+        "elastic_served": 0,
+        "offline_queue": 720,
+        "offline_done": 0,
+        "offline_sigterm": 0,
+        "offline_graceful_exit": 0
+      },
+      {
+        "event": "day_full_16gpu",
+        "ts": 1795503473.479,
+        "utc": "2026-11-24T06:57:53.478+00:00",
+        "elastic_desired": 4,
+        "base_running": 4,
+        "elastic_running": 4,
+        "elastic_pending": 0,
+        "offline_running": 8,
+        "offline_pending": 4,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 8,
+            "offline": 0
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 8
+          }
+        },
+        "online_queue": 0,
+        "online_served": 0,
+        "base_served": 0,
+        "elastic_served": 0,
+        "offline_queue": 706,
+        "offline_done": 6,
+        "offline_sigterm": 0,
+        "offline_graceful_exit": 0
+      },
+      {
+        "event": "night_elastic_scaled_zero",
+        "ts": 1795503553.352,
+        "utc": "2026-11-24T06:59:13.351+00:00",
+        "elastic_desired": 0,
+        "base_running": 4,
+        "elastic_running": 0,
+        "elastic_pending": 0,
+        "offline_running": 9,
+        "offline_pending": 3,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 1
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 8
+          }
+        },
+        "online_queue": 0,
+        "online_served": 0,
+        "base_served": 0,
+        "elastic_served": 0,
+        "offline_queue": 307,
+        "offline_done": 404,
+        "offline_sigterm": 0,
+        "offline_graceful_exit": 0
+      },
+      {
+        "event": "night_offline_borrowed_12gpu",
+        "ts": 1795503559.645,
+        "utc": "2026-11-24T06:59:19.644+00:00",
+        "elastic_desired": 0,
+        "base_running": 4,
+        "elastic_running": 0,
+        "elastic_pending": 0,
+        "offline_running": 12,
+        "offline_pending": 0,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 8
+          }
+        },
+        "online_queue": 0,
+        "online_served": 0,
+        "base_served": 0,
+        "elastic_served": 0,
+        "offline_queue": 261,
+        "offline_done": 447,
+        "offline_sigterm": 0,
+        "offline_graceful_exit": 0
+      },
+      {
+        "event": "burst_before_enqueue",
+        "ts": 1795503573.233,
+        "utc": "2026-11-24T06:59:33.233+00:00",
+        "elastic_desired": 0,
+        "base_running": 4,
+        "elastic_running": 0,
+        "elastic_pending": 0,
+        "offline_running": 12,
+        "offline_pending": 0,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 8
+          }
+        },
+        "online_queue": 0,
+        "online_served": 0,
+        "base_served": 0,
+        "elastic_served": 0,
+        "offline_queue": 163,
+        "offline_done": 545,
+        "offline_sigterm": 0,
+        "offline_graceful_exit": 0
+      },
+      {
+        "event": "burst_enqueued",
+        "ts": 1795503574.624,
+        "utc": "2026-11-24T06:59:34.623+00:00",
+        "elastic_desired": 0,
+        "base_running": 4,
+        "elastic_running": 0,
+        "elastic_pending": 0,
+        "offline_running": 12,
+        "offline_pending": 0,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 8
+          }
+        },
+        "online_queue": 392,
+        "online_served": 4,
+        "base_served": 4,
+        "elastic_served": 0,
+        "offline_queue": 153,
+        "offline_done": 555,
+        "offline_sigterm": 0,
+        "offline_graceful_exit": 0
+      },
+      {
+        "event": "keda_scaled_up",
+        "ts": 1795503582.801,
+        "utc": "2026-11-24T06:59:42.801+00:00",
+        "elastic_desired": 4,
+        "base_running": 4,
+        "elastic_running": 0,
+        "elastic_pending": 4,
+        "offline_running": 8,
+        "offline_pending": 4,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 4
+          }
+        },
+        "online_queue": 308,
+        "online_served": 88,
+        "base_served": 88,
+        "elastic_served": 0,
+        "offline_queue": 91,
+        "offline_done": 621,
+        "offline_sigterm": 4,
+        "offline_graceful_exit": 4
+      },
+      {
+        "event": "volcano_reclaim_triggered",
+        "ts": 1795503587.724,
+        "utc": "2026-11-24T06:59:47.724+00:00",
+        "elastic_desired": 4,
+        "base_running": 4,
+        "elastic_running": 4,
+        "elastic_pending": 0,
+        "offline_running": 8,
+        "offline_pending": 4,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 4,
+            "offline": 4
+          }
+        },
+        "online_queue": 239,
+        "online_served": 153,
+        "base_served": 128,
+        "elastic_served": 25,
+        "offline_queue": 67,
+        "offline_done": 645,
+        "offline_sigterm": 4,
+        "offline_graceful_exit": 4
+      },
+      {
+        "event": "elastic_reclaimed_first_running",
+        "ts": 1795503592.634,
+        "utc": "2026-11-24T06:59:52.634+00:00",
+        "elastic_desired": 4,
+        "base_running": 4,
+        "elastic_running": 4,
+        "elastic_pending": 0,
+        "offline_running": 8,
+        "offline_pending": 4,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 4,
+            "offline": 4
+          }
+        },
+        "online_queue": 145,
+        "online_served": 247,
+        "base_served": 176,
+        "elastic_served": 71,
+        "offline_queue": 42,
+        "offline_done": 670,
+        "offline_sigterm": 4,
+        "offline_graceful_exit": 4
+      },
+      {
+        "event": "elastic_all_4_running",
+        "ts": 1795503596.43,
+        "utc": "2026-11-24T06:59:56.429+00:00",
+        "elastic_desired": 4,
+        "base_running": 4,
+        "elastic_running": 4,
+        "elastic_pending": 0,
+        "offline_running": 8,
+        "offline_pending": 4,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 4,
+            "offline": 4
+          }
+        },
+        "online_queue": 105,
+        "online_served": 287,
+        "base_served": 196,
+        "elastic_served": 91,
+        "offline_queue": 28,
+        "offline_done": 684,
+        "offline_sigterm": 4,
+        "offline_graceful_exit": 4
+      },
+      {
+        "event": "elastic_first_reply",
+        "ts": 1795503598.759,
+        "utc": "2026-11-24T06:59:58.758+00:00",
+        "elastic_desired": 4,
+        "base_running": 4,
+        "elastic_running": 4,
+        "elastic_pending": 0,
+        "offline_running": 8,
+        "offline_pending": 4,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 4,
+            "offline": 4
+          }
+        },
+        "online_queue": 62,
+        "online_served": 330,
+        "base_served": 216,
+        "elastic_served": 114,
+        "offline_queue": 18,
+        "offline_done": 694,
+        "offline_sigterm": 4,
+        "offline_graceful_exit": 4
+      },
+      {
+        "event": "burst_all_400_served",
+        "ts": 1795503605.473,
+        "utc": "2026-11-24T07:00:05.473+00:00",
+        "elastic_desired": 4,
+        "base_running": 4,
+        "elastic_running": 4,
+        "elastic_pending": 0,
+        "offline_running": 8,
+        "offline_pending": 4,
+        "offline_terminating": 0,
+        "offline_succeeded": 0,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 4
+          },
+          "worker-b": {
+            "online": 4,
+            "offline": 4
+          }
+        },
+        "online_queue": 0,
+        "online_served": 400,
+        "base_served": 252,
+        "elastic_served": 148,
+        "offline_queue": 0,
+        "offline_done": 720,
+        "offline_sigterm": 4,
+        "offline_graceful_exit": 12
+      },
+      {
+        "event": "post_burst_scaled_zero",
+        "ts": 1795503615.029,
+        "utc": "2026-11-24T07:00:15.029+00:00",
+        "elastic_desired": 0,
+        "base_running": 4,
+        "elastic_running": 0,
+        "elastic_pending": 0,
+        "offline_running": 0,
+        "offline_pending": 0,
+        "offline_terminating": 0,
+        "offline_succeeded": 12,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 0
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 0
+          }
+        },
+        "online_queue": 0,
+        "online_served": 400,
+        "base_served": 252,
+        "elastic_served": 148,
+        "offline_queue": 0,
+        "offline_done": 720,
+        "offline_sigterm": 4,
+        "offline_graceful_exit": 16
+      },
+      {
+        "event": "offline_all_720_done",
+        "ts": 1795503618.569,
+        "utc": "2026-11-24T07:00:18.568+00:00",
+        "elastic_desired": 0,
+        "base_running": 4,
+        "elastic_running": 0,
+        "elastic_pending": 0,
+        "offline_running": 0,
+        "offline_pending": 0,
+        "offline_terminating": 0,
+        "offline_succeeded": 12,
+        "by_node": {
+          "worker-a": {
+            "online": 4,
+            "offline": 0
+          },
+          "worker-b": {
+            "online": 0,
+            "offline": 0
+          }
+        },
+        "online_queue": 0,
+        "online_served": 400,
+        "base_served": 252,
+        "elastic_served": 148,
+        "offline_queue": 0,
+        "offline_done": 720,
+        "offline_sigterm": 4,
+        "offline_graceful_exit": 16
+      }
+    ]
+  },
+  "exp1b_dra_volcano_reclaim": {
+    "exp": "1B_dra_resourceclaim_reclaim",
+    "reclaimed_automatically": false,
+    "timeline_tail": [
+      {
+        "t_plus": 32.64,
+        "pods": {
+          "dra-base-57c78f6b56-f5xpt": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-0": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-1": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-2": [
+            "Running",
+            false
+          ],
+          "dra-elastic-54b994766-5xwdh": [
+            "Pending",
+            false
+          ]
+        }
+      },
+      {
+        "t_plus": 34.97,
+        "pods": {
+          "dra-base-57c78f6b56-f5xpt": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-0": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-1": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-2": [
+            "Running",
+            false
+          ],
+          "dra-elastic-54b994766-5xwdh": [
+            "Pending",
+            false
+          ]
+        }
+      },
+      {
+        "t_plus": 37.37,
+        "pods": {
+          "dra-base-57c78f6b56-f5xpt": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-0": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-1": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-2": [
+            "Running",
+            false
+          ],
+          "dra-elastic-54b994766-5xwdh": [
+            "Pending",
+            false
+          ]
+        }
+      },
+      {
+        "t_plus": 39.56,
+        "pods": {
+          "dra-base-57c78f6b56-f5xpt": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-0": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-1": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-2": [
+            "Running",
+            false
+          ],
+          "dra-elastic-54b994766-5xwdh": [
+            "Pending",
+            false
+          ]
+        }
+      },
+      {
+        "t_plus": 41.77,
+        "pods": {
+          "dra-base-57c78f6b56-f5xpt": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-0": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-1": [
+            "Running",
+            false
+          ],
+          "dra-batch-worker-2": [
+            "Running",
+            false
+          ],
+          "dra-elastic-54b994766-5xwdh": [
+            "Pending",
+            false
+          ]
         }
       }
-    },
-    {
-      "event": "paused_probe_pending",
-      "ts": 1795444165.86,
-      "elasticDesired": 1,
-      "queue": 0,
-      "baseServed": 0,
-      "elasticServed": 0,
-      "committed": 0,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "744dd1fa",
-          "phase": "Running",
-          "claim": "53a9f6a5",
-          "device": "gpu-1",
-          "deleting": false
-        },
-        "probe": {
-          "pod": "fc3726a1",
-          "phase": "Pending",
-          "claim": "8b6b1d11",
-          "device": null,
-          "deleting": false
-        }
+    ],
+    "events": [
+      {
+        "obj": "dra-batch-4adc5fd5-26b4-4b3e-8f30-05b1905e6b52",
+        "reason": "Unschedulable",
+        "msg": "0/0 tasks in gang unschedulable: pod group is not ready, 1 minAvailable"
+      },
+      {
+        "obj": "dra-batch-4adc5fd5-26b4-4b3e-8f30-05b1905e6b52",
+        "reason": "Unschedulable",
+        "msg": "0/3 tasks in gang unschedulable: pod group is ready, 1 minAvailable, 3 Binding"
+      },
+      {
+        "obj": "dra-batch-4adc5fd5-26b4-4b3e-8f30-05b1905e6b52",
+        "reason": "Scheduled",
+        "msg": "pod group is ready"
+      },
+      {
+        "obj": "dra-batch-4adc5fd5-26b4-4b3e-8f30-05b1905e6b52",
+        "reason": "Scheduled",
+        "msg": "pod group is ready"
+      },
+      {
+        "obj": "dra-batch-e43d22c6-4f20-413a-ba49-2eff921e8b5b",
+        "reason": "Unschedulable",
+        "msg": "0/0 tasks in gang unschedulable: pod group is not ready, 1 minAvailable"
+      },
+      {
+        "obj": "dra-batch-e43d22c6-4f20-413a-ba49-2eff921e8b5b",
+        "reason": "Unschedulable",
+        "msg": "0/0 tasks in gang unschedulable: pod group is not ready, 1 minAvailable"
+      },
+      {
+        "obj": "dra-batch-e43d22c6-4f20-413a-ba49-2eff921e8b5b",
+        "reason": "Unschedulable",
+        "msg": "0/3 tasks in gang unschedulable: pod group is ready, 1 minAvailable, 3 Binding"
+      },
+      {
+        "obj": "dra-batch-e43d22c6-4f20-413a-ba49-2eff921e8b5b",
+        "reason": "Scheduled",
+        "msg": "pod group is ready"
+      },
+      {
+        "obj": "dra-batch-worker-0",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-batch-worker-0 to worker-a"
+      },
+      {
+        "obj": "dra-batch-worker-0",
+        "reason": "FailedPrepareDynamicResources",
+        "msg": "Failed to prepare dynamic resources: prepare dynamic resources: DRA driver gpu.example.com is not registered"
+      },
+      {
+        "obj": "dra-batch-worker-0",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-batch-worker-0 to worker-a"
+      },
+      {
+        "obj": "dra-batch-worker-0",
+        "reason": "Pulled",
+        "msg": "Container image \"redis:7-alpine\" already present on machine and can be accessed by the pod"
+      },
+      {
+        "obj": "dra-batch-worker-0",
+        "reason": "Created",
+        "msg": "Container created"
+      },
+      {
+        "obj": "dra-batch-worker-0",
+        "reason": "Started",
+        "msg": "Container started"
+      },
+      {
+        "obj": "dra-batch-worker-1",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-batch-worker-1 to worker-a"
+      },
+      {
+        "obj": "dra-batch-worker-1",
+        "reason": "FailedPrepareDynamicResources",
+        "msg": "Failed to prepare dynamic resources: prepare dynamic resources: DRA driver gpu.example.com is not registered"
+      },
+      {
+        "obj": "dra-batch-worker-1",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-batch-worker-1 to worker-a"
+      },
+      {
+        "obj": "dra-batch-worker-1",
+        "reason": "Pulled",
+        "msg": "Container image \"redis:7-alpine\" already present on machine and can be accessed by the pod"
+      },
+      {
+        "obj": "dra-batch-worker-1",
+        "reason": "Created",
+        "msg": "Container created"
+      },
+      {
+        "obj": "dra-batch-worker-1",
+        "reason": "Started",
+        "msg": "Container started"
+      },
+      {
+        "obj": "dra-batch-worker-2",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-batch-worker-2 to worker-a"
+      },
+      {
+        "obj": "dra-batch-worker-2",
+        "reason": "FailedPrepareDynamicResources",
+        "msg": "Failed to prepare dynamic resources: prepare dynamic resources: DRA driver gpu.example.com is not registered"
+      },
+      {
+        "obj": "dra-batch-worker-2",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-batch-worker-2 to worker-a"
+      },
+      {
+        "obj": "dra-batch-worker-2",
+        "reason": "Pulled",
+        "msg": "Container image \"redis:7-alpine\" already present on machine and can be accessed by the pod"
+      },
+      {
+        "obj": "dra-batch-worker-2",
+        "reason": "Created",
+        "msg": "Container created"
+      },
+      {
+        "obj": "dra-batch-worker-2",
+        "reason": "Started",
+        "msg": "Container started"
+      },
+      {
+        "obj": "dra-elastic-54b994766-5xwdh",
+        "reason": "FailedScheduling",
+        "msg": "Node: 0/3 nodes are unavailable: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims."
+      },
+      {
+        "obj": "dra-elastic-54b994766-vvdn9",
+        "reason": "FailedScheduling",
+        "msg": "Node: 0/3 nodes are unavailable: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims."
+      },
+      {
+        "obj": "dra-elastic-54b994766",
+        "reason": "SuccessfulCreate",
+        "msg": "Created pod: dra-elastic-54b994766-vvdn9"
+      },
+      {
+        "obj": "dra-elastic-54b994766",
+        "reason": "SuccessfulCreate",
+        "msg": "Created pod: dra-elastic-54b994766-5xwdh"
+      },
+      {
+        "obj": "dra-elastic",
+        "reason": "ScalingReplicaSet",
+        "msg": "Scaled up replica set dra-elastic-54b994766 from 0 to 1"
+      },
+      {
+        "obj": "dra-elastic",
+        "reason": "ScalingReplicaSet",
+        "msg": "Scaled up replica set dra-elastic-54b994766 from 0 to 1"
       }
-    },
-    {
-      "event": "paused_probe_still_pending",
-      "ts": 1795444175.61,
-      "elasticDesired": 1,
-      "queue": 0,
-      "baseServed": 0,
-      "elasticServed": 0,
-      "committed": 0,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "744dd1fa",
-          "phase": "Running",
-          "claim": "53a9f6a5",
-          "device": "gpu-1",
-          "deleting": false
-        },
-        "probe": {
-          "pod": "fc3726a1",
-          "phase": "Pending",
-          "claim": "8b6b1d11",
-          "device": null,
-          "deleting": false
+    ],
+    "scheduler_log_excerpt": [
+      "I1124 07:31:52.843582       1 predicates.go:834] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:52.843666       1 score_helper.go:182] NodeResourcesFit_LeastAllocated Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.843677       1 score_helper.go:182] NodeResourcesBalancedAllocation Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.843684       1 score_helper.go:182] TaintToleration Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.843689       1 score_helper.go:182] PodTopologySpread Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.843700       1 nodeorder.go:388] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:52.843878       1 score_helper.go:182] DynamicResources Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.843891       1 predicates.go:834] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:52.843983       1 score_helper.go:182] TaintToleration Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.843993       1 score_helper.go:182] PodTopologySpread Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.843997       1 score_helper.go:182] NodeResourcesFit_LeastAllocated Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.844001       1 score_helper.go:182] NodeResourcesBalancedAllocation Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.844007       1 nodeorder.go:388] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:52.844026       1 score_helper.go:182] DynamicResources Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.844034       1 predicates.go:834] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:52.844102       1 score_helper.go:182] PodTopologySpread Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.844110       1 score_helper.go:182] NodeResourcesFit_LeastAllocated Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.844113       1 score_helper.go:182] NodeResourcesBalancedAllocation Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.844116       1 score_helper.go:182] TaintToleration Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:52.844121       1 nodeorder.go:388] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:52.844306       1 cache.go:1246] task unscheduleable keda-tide-lab/dra-elastic-54b994766-5xwdh, message: Node: 0/3 nodes are unavailable: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims., skip by no condition update",
+      "I1124 07:31:53.845702       1 cache.go:1694] The priority of job <keda-tide-lab/dra-batch-4adc5fd5-26b4-4b3e-8f30-05b1905e6b52> is <tide-offline-low/100>",
+      "I1124 07:31:53.846979       1 capacity.go:1035] [capacity] reclaim ancestor level configured as 0",
+      "I1124 07:31:53.846990       1 capacity.go:448] The total resource is <cpu 168000.00, memory 809026187264.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, hugepages-1Gi 0.00, hugepages-2Mi 0.00, nvidia.com/gpu 16000.00, pods 330.00>",
+      "I1124 07:31:53.847019       1 capacity.go:1110] The total guarantee resource is <cpu 4000.00, memory 8589934592.00, deviceclass/gpu.example.com 1000.00, nvidia.com/gpu 4000.00>",
+      "I1124 07:31:53.847033       1 capacity.go:1113] Considering Job <keda-tide-lab/podgroup-e6dbbf9a-4aee-49f9-8596-1e17ab0869e0>.",
+      "I1124 07:31:53.847072       1 capacity.go:1118] Added Queue <tide-online> attributes.",
+      "I1124 07:31:53.847099       1 capacity.go:1113] Considering Job <keda-tide-lab/dra-batch-4adc5fd5-26b4-4b3e-8f30-05b1905e6b52>.",
+      "I1124 07:31:53.847126       1 capacity.go:1118] Added Queue <tide-offline> attributes.",
+      "I1124 07:31:53.847152       1 capacity.go:1113] Considering Job <keda-tide-lab/podgroup-3487da45-55e3-4110-ba37-b12b7b1a64b9>.",
+      "I1124 07:31:53.847185       1 capacity.go:1174] Added jobless Queue <default> attributes with allocated from status: <cpu 0.00, memory 0.00>",
+      "I1124 07:31:53.847205       1 capacity.go:1174] Added jobless Queue <root> attributes with allocated from status: <cpu 200.00, memory 201326592.00, deviceclass/gpu.example.com 4000.00, pods 4.00>",
+      "I1124 07:31:53.847225       1 capacity.go:1183] The attributes of queue <tide-online> in capacity: deserved <cpu 20000.00, memory 34359738368.00, deviceclass/gpu.example.com 1000.00, nvidia.com/gpu 8000.00>, realCapability <cpu 40000.00, memory 68719476736.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, deviceclass/gpu.example.com 1000.00, ephemeral-storage 620342797719000.00, nvidia.com/gpu 16000.00, pods 330.00>, allocate <cpu 50.00, memory 50331648.00, pods 1.00>, request <cpu 100.00, memory 100663296.00, pods 2.00>, elastic <cpu 0.00, memory 0.00>, share <0.00>",
+      "I1124 07:31:53.847260       1 capacity.go:1183] The attributes of queue <tide-offline> in capacity: deserved <cpu 20000.00, memory 34359738368.00, deviceclass/gpu.example.com 2000.00, nvidia.com/gpu 8000.00>, realCapability <cpu 40000.00, memory 68719476736.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, nvidia.com/gpu 12000.00, pods 330.00>, allocate <cpu 150.00, memory 150994944.00, pods 3.00>, request <cpu 150.00, memory 150994944.00, pods 3.00>, elastic <cpu 100.00, memory 100663296.00, pods 2.00>, share <0.01>",
+      "I1124 07:31:53.847288       1 capacity.go:1183] The attributes of queue <default> in capacity: deserved <cpu 0.00, memory 0.00>, realCapability <cpu 164000.00, memory 800436252672.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, nvidia.com/gpu 12000.00, pods 330.00>, allocate <cpu 0.00, memory 0.00>, request <cpu 0.00, memory 0.00>, elastic <cpu 0.00, memory 0.00>, share <1.00>",
+      "I1124 07:31:53.847306       1 capacity.go:1183] The attributes of queue <root> in capacity: deserved <cpu 0.00, memory 0.00>, realCapability <cpu 164000.00, memory 800436252672.00, attachable-volumes-csi-local.csi.aliyun.com 768.00, ephemeral-storage 620342797719000.00, nvidia.com/gpu 12000.00, pods 330.00>, allocate <cpu 200.00, memory 201326592.00, deviceclass/gpu.example.com 4000.00, pods 4.00>, request <cpu 0.00, memory 0.00>, elastic <cpu 0.00, memory 0.00>, share <1.00>",
+      "I1124 07:31:53.847803       1 predicate_helper.go:84] Considering Task <keda-tide-lab/dra-elastic-54b994766-5xwdh> on node <worker-b>: <cpu 50.00, memory 50331648.00, pods 1.00> vs. <cpu 54555.00, memory 267506937856.00, attachable-volumes-csi-local.csi.aliyun.com 248.00, ephemeral-storage 206780932573000.00, hugepages-1Gi 0.00, hugepages-2Mi 0.00, nvidia.com/gpu 8000.00, pods 84.00>",
+      "I1124 07:31:53.847807       1 predicate_helper.go:84] Considering Task <keda-tide-lab/dra-elastic-54b994766-5xwdh> on node <control-plane>: <cpu 50.00, memory 50331648.00, pods 1.00> vs. <cpu 54830.00, memory 269025288192.00, attachable-volumes-csi-local.csi.aliyun.com 256.00, ephemeral-storage 206780932573000.00, hugepages-1Gi 0.00, hugepages-2Mi 0.00, pods 100.00>",
+      "I1124 07:31:53.847821       1 predicate_helper.go:84] Considering Task <keda-tide-lab/dra-elastic-54b994766-5xwdh> on node <worker-a>: <cpu 50.00, memory 50331648.00, pods 1.00> vs. <cpu 52970.00, memory 263753031680.00, attachable-volumes-csi-local.csi.aliyun.com 255.00, ephemeral-storage 206780932573000.00, hugepages-1Gi 0.00, hugepages-2Mi 0.00, nvidia.com/gpu 8000.00, pods 83.00>",
+      "I1124 07:31:53.847876       1 taint_toleration.go:130] \"node had untolerated taints\" node=\"control-plane\" pod=\"keda-tide-lab/dra-elastic-54b994766-5xwdh\" untoleratedTaint={\"key\":\"node-role.kubernetes.io/control-plane\",\"effect\":\"NoSchedule\"}",
+      "I1124 07:31:53.847894       1 predicate_helper.go:115] Predicates failed: task keda-tide-lab/dra-elastic-54b994766-5xwdh on node control-plane fit failed: node(s) had untolerated taint(s)",
+      "I1124 07:31:53.847918       1 predicate_helper.go:115] Predicates failed: task keda-tide-lab/dra-elastic-54b994766-5xwdh on node worker-b fit failed: cannot allocate all claims",
+      "I1124 07:31:53.847926       1 predicate_helper.go:115] Predicates failed: task keda-tide-lab/dra-elastic-54b994766-5xwdh on node worker-a fit failed: cannot allocate all claims",
+      "I1124 07:31:53.848007       1 reclaim.go:69] There are <3> Jobs and <4> Queues in total for scheduling.",
+      "I1124 07:31:53.848023       1 reclaim.go:86] Added Queue <tide-online> for Job <keda-tide-lab/podgroup-3487da45-55e3-4110-ba37-b12b7b1a64b9>",
+      "I1124 07:31:53.848040       1 reclaim.go:86] Added Queue <tide-offline> for Job <keda-tide-lab/dra-batch-4adc5fd5-26b4-4b3e-8f30-05b1905e6b52>",
+      "I1124 07:31:53.848054       1 reclaim.go:141] Considering reclaim for 1 tasks of job <keda-tide-lab/podgroup-e6dbbf9a-4aee-49f9-8596-1e17ab0869e0>.",
+      "I1124 07:31:53.848070       1 capacity.go:686] Queue <tide-online> can reclaim on resource dimensions: [cpu memory]. The futureUsed: cpu 100.00, memory 100663296.00, pods 2.00, deserved: cpu 20000.00, memory 34359738368.00, deviceclass/gpu.example.com 1000.00, nvidia.com/gpu 8000.00, allocated: cpu 50.00, memory 50331648.00, pods 1.00, tasks requested: cpu 50.00, memory 50331648.00, pods 1.00",
+      "I1124 07:31:53.848197       1 reclaim.go:136] No preemptor task in job <keda-tide-lab/podgroup-e6dbbf9a-4aee-49f9-8596-1e17ab0869e0>.",
+      "I1124 07:31:53.848235       1 reclaim.go:121] No preemptors in Queue <tide-online>, break.",
+      "I1124 07:31:53.848249       1 reclaim.go:121] No preemptors in Queue <tide-offline>, break.",
+      "I1124 07:31:53.848410       1 score_helper.go:182] DynamicResources Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848422       1 predicates.go:834] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:53.848526       1 score_helper.go:182] NodeResourcesFit_LeastAllocated Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848533       1 score_helper.go:182] NodeResourcesBalancedAllocation Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848537       1 score_helper.go:182] TaintToleration Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848541       1 score_helper.go:182] PodTopologySpread Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848548       1 nodeorder.go:388] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:53.848569       1 score_helper.go:182] DynamicResources Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848576       1 predicates.go:834] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:53.848655       1 score_helper.go:182] NodeResourcesBalancedAllocation Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848666       1 score_helper.go:182] TaintToleration Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848673       1 score_helper.go:182] PodTopologySpread Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848678       1 score_helper.go:182] NodeResourcesFit_LeastAllocated Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848688       1 nodeorder.go:388] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:53.848862       1 score_helper.go:182] DynamicResources Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848876       1 predicates.go:834] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:53.848957       1 score_helper.go:182] NodeResourcesBalancedAllocation Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848966       1 score_helper.go:182] TaintToleration Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848970       1 score_helper.go:182] PodTopologySpread Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848973       1 score_helper.go:182] NodeResourcesFit_LeastAllocated Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.848979       1 nodeorder.go:388] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:53.848999       1 score_helper.go:182] DynamicResources Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.849006       1 predicates.go:834] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:53.849072       1 score_helper.go:182] NodeResourcesBalancedAllocation Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.849079       1 score_helper.go:182] TaintToleration Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.849083       1 score_helper.go:182] PodTopologySpread Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.849087       1 score_helper.go:182] NodeResourcesFit_LeastAllocated Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: []",
+      "I1124 07:31:53.849093       1 nodeorder.go:388] Batch Total Score for task keda-tide-lab/dra-elastic-54b994766-5xwdh is: map[]",
+      "I1124 07:31:53.849238       1 cache.go:1246] task unscheduleable keda-tide-lab/dra-elastic-54b994766-5xwdh, message: Node: 0/3 nodes are unavailable: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims., skip by no condition update"
+    ]
+  },
+  "exp2a_gpu_fragmentation": {
+    "exp": "2A_gpu_fragmentation",
+    "spread": {
+      "online_per_node": {
+        "worker-a": 3,
+        "worker-b": 3
+      },
+      "free_gpus_total": 10,
+      "train_8gpu_phase": "Pending",
+      "train_8gpu_conditions": [
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-24T07:13:02Z",
+          "message": "Node: 0/3 nodes are unavailable: 3 Insufficient nvidia.com/gpu.",
+          "reason": "Unschedulable",
+          "status": "False",
+          "type": "PodScheduled"
         }
-      }
+      ]
     },
-    {
-      "event": "night_released",
-      "ts": 1795444213.0,
-      "elasticDesired": 0,
-      "queue": 0,
-      "baseServed": 0,
-      "elasticServed": 0,
-      "committed": 0,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
+    "binpack_deletion_cost": {
+      "daytime_10gpu_per_node": {
+        "worker-a": 8,
+        "worker-b": 2
+      },
+      "fuller_node": "worker-a",
+      "sparse_node": "worker-b",
+      "nighttime_6gpu_per_node": {
+        "worker-a": 6,
+        "worker-b": 0
+      },
+      "free_gpus_total": 10,
+      "train_8gpu_phase": "Running",
+      "train_8gpu_node": "worker-b",
+      "schedule_to_running_s": 5.32
+    }
+  },
+  "exp2b_gang_vcjob_reclaim": {
+    "antipattern_RestartPod": {
+      "action": "RestartPod",
+      "pre_burst_nodes": {
+        "worker-a": {
+          "online": 4,
+          "offline": 4
+        },
+        "worker-b": {
+          "online": 0,
+          "offline": 8
         }
-      }
+      },
+      "pre_burst_epoch": 3,
+      "elastic_4_ready_s": 7.13,
+      "during_burst_steady": {
+        "t_plus": 19.81,
+        "elastic_running": 4,
+        "gang_running": 8,
+        "gang_pending": 4,
+        "epoch": 4,
+        "vcjob_phase": "Pending"
+      },
+      "zombie_gpus_held_during_burst": 8,
+      "epoch_stalled_during_burst": true,
+      "resumed_to_epoch_10": false,
+      "resume_to_done_s": null,
+      "final_epoch": 8,
+      "ckpt_log": [
+        "epoch=1:ts=1795505559",
+        "epoch=2:ts=1795505561",
+        "epoch=3:ts=1795505563",
+        "epoch=4:ts=1795505565",
+        "epoch=5:ts=1795505592",
+        "epoch=6:ts=1795505594",
+        "epoch=7:ts=1795505596",
+        "epoch=8:ts=1795505597",
+        "epoch=9:ts=1795505599"
+      ],
+      "timeline": [
+        {
+          "t_plus": 2.61,
+          "elastic_running": 0,
+          "gang_running": 8,
+          "gang_pending": 0,
+          "epoch": 4,
+          "vcjob_phase": "Restarting"
+        },
+        {
+          "t_plus": 4.91,
+          "elastic_running": 2,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 7.13,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 9.3,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 11.36,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 13.3,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 15.51,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 17.68,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 19.81,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        }
+      ]
     },
-    {
-      "event": "batch_owns_slot",
-      "ts": 1795444223.58,
-      "elasticDesired": 0,
-      "queue": 0,
-      "baseServed": 0,
-      "elasticServed": 0,
-      "committed": 2,
-      "lend": 1,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
+    "production_RestartJob": {
+      "action": "RestartJob",
+      "pre_burst_nodes": {
+        "worker-a": {
+          "online": 4,
+          "offline": 4
         },
-        "batch": {
-          "pod": "3807e93d",
-          "phase": "Running",
-          "claim": "584eb8de",
-          "device": "gpu-1",
-          "deleting": false
+        "worker-b": {
+          "online": 0,
+          "offline": 8
         }
-      }
+      },
+      "pre_burst_epoch": 2,
+      "elastic_4_ready_s": 7.12,
+      "during_burst_steady": {
+        "t_plus": 19.86,
+        "elastic_running": 4,
+        "gang_running": 8,
+        "gang_pending": 4,
+        "epoch": 4,
+        "vcjob_phase": "Pending"
+      },
+      "zombie_gpus_held_during_burst": 8,
+      "epoch_stalled_during_burst": false,
+      "resumed_to_epoch_10": true,
+      "resume_to_done_s": 18.6,
+      "final_epoch": 10,
+      "ckpt_log": [
+        "epoch=1:ts=1795505620",
+        "epoch=2:ts=1795505622",
+        "epoch=3:ts=1795505624",
+        "epoch=4:ts=1795505633",
+        "epoch=5:ts=1795505651",
+        "epoch=6:ts=1795505653",
+        "epoch=7:ts=1795505654",
+        "epoch=8:ts=1795505656",
+        "epoch=9:ts=1795505658",
+        "epoch=10:ts=1795505660"
+      ],
+      "timeline": [
+        {
+          "t_plus": 2.48,
+          "elastic_running": 0,
+          "gang_running": 0,
+          "gang_pending": 1,
+          "epoch": 3,
+          "vcjob_phase": "Restarting"
+        },
+        {
+          "t_plus": 4.87,
+          "elastic_running": 2,
+          "gang_running": 0,
+          "gang_pending": 12,
+          "epoch": 3,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 7.12,
+          "elastic_running": 4,
+          "gang_running": 7,
+          "gang_pending": 5,
+          "epoch": 3,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 9.29,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 3,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 11.5,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 13.64,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 15.69,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 17.76,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        },
+        {
+          "t_plus": 19.86,
+          "elastic_running": 4,
+          "gang_running": 8,
+          "gang_pending": 4,
+          "epoch": 4,
+          "vcjob_phase": "Pending"
+        }
+      ]
+    }
+  },
+  "exp4a_rogue_offline_worker": {
+    "graceful_sigterm": {
+      "termination_grace_period_s": 15,
+      "eviction_seen_s": 1.97,
+      "elastic_2_scheduled_s": 3.56,
+      "elastic_2_running_s": 5.96
     },
-    {
-      "event": "burst_before_enqueue",
-      "ts": 1795444224.5,
-      "elasticDesired": 0,
-      "queue": 0,
-      "baseServed": 0,
-      "elasticServed": 0,
-      "committed": 3,
-      "lend": 1,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "batch": {
-          "pod": "3807e93d",
-          "phase": "Running",
-          "claim": "584eb8de",
-          "device": "gpu-1",
-          "deleting": false
+    "rogue_ignore_sigterm": {
+      "termination_grace_period_s": 15,
+      "eviction_seen_s": 2.96,
+      "elastic_2_scheduled_s": 19.16,
+      "elastic_2_running_s": 20.63
+    }
+  },
+  "exp4b_keda_fallback_scale_zero": {
+    "without_fallback": {
+      "fallback_config": null,
+      "fallback_activated_s": null,
+      "elastic_2_running_s": null,
+      "final_during_outage": {
+        "t_plus": 65.49,
+        "desired": 0,
+        "elastic_running": 0,
+        "offline_running": 12,
+        "conditions": {
+          "Ready": "False",
+          "Active": "False",
+          "Fallback": "False",
+          "Paused": "False",
+          "HPAActive": "True"
         }
-      }
+      },
+      "recovered_to_zero_after_restore_s": null
     },
-    {
-      "event": "burst_enqueued",
-      "ts": 1795444225.68,
-      "elasticDesired": 0,
-      "queue": 94,
-      "baseServed": 1,
-      "elasticServed": 0,
-      "committed": 5,
-      "lend": 1,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "batch": {
-          "pod": "3807e93d",
-          "phase": "Running",
-          "claim": "584eb8de",
-          "device": "gpu-1",
-          "deleting": false
+    "with_fallback_2": {
+      "fallback_config": {
+        "failureThreshold": 2,
+        "replicas": 2
+      },
+      "fallback_activated_s": null,
+      "elastic_2_running_s": null,
+      "final_during_outage": {
+        "t_plus": 51.0,
+        "desired": 0,
+        "elastic_running": 0,
+        "offline_running": 12,
+        "conditions": {
+          "Ready": "False",
+          "Active": "Unknown",
+          "Fallback": "Unknown",
+          "Paused": "False"
         }
-      }
-    },
-    {
-      "event": "recall_waiting",
-      "ts": 1795444226.84,
-      "elasticDesired": 1,
-      "queue": 92,
-      "baseServed": 3,
-      "elasticServed": 0,
-      "committed": 7,
-      "lend": 1,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "batch": {
-          "pod": "3807e93d",
-          "phase": "Running",
-          "claim": "584eb8de",
-          "device": "gpu-1",
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "948db624",
-          "phase": "Pending",
-          "claim": "355f35c5",
-          "device": null,
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "admission_closed",
-      "ts": 1795444228.02,
-      "elasticDesired": 1,
-      "queue": 90,
-      "baseServed": 5,
-      "elasticServed": 0,
-      "committed": 8,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "batch": {
-          "pod": "3807e93d",
-          "phase": "Running",
-          "claim": "584eb8de",
-          "device": "gpu-1",
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "948db624",
-          "phase": "Pending",
-          "claim": "355f35c5",
-          "device": null,
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "batch_checkpointed",
-      "ts": 1795444229.2,
-      "elasticDesired": 1,
-      "queue": 88,
-      "baseServed": 7,
-      "elasticServed": 0,
-      "committed": 8,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "batch": {
-          "pod": "3807e93d",
-          "phase": "Running",
-          "claim": "584eb8de",
-          "device": "gpu-1",
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "948db624",
-          "phase": "Pending",
-          "claim": "355f35c5",
-          "device": null,
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "batch_terminal",
-      "ts": 1795444230.62,
-      "elasticDesired": 1,
-      "queue": 86,
-      "baseServed": 9,
-      "elasticServed": 0,
-      "committed": 8,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "batch": {
-          "pod": "3807e93d",
-          "phase": "Succeeded",
-          "claim": null,
-          "device": null,
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "948db624",
-          "phase": "Pending",
-          "claim": "355f35c5",
-          "device": "gpu-1",
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "online_reallocated",
-      "ts": 1795444233.16,
-      "elasticDesired": 1,
-      "queue": 82,
-      "baseServed": 13,
-      "elasticServed": 0,
-      "committed": 8,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "948db624",
-          "phase": "Running",
-          "claim": "355f35c5",
-          "device": "gpu-1",
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "first_elastic_reply",
-      "ts": 1795444235.67,
-      "elasticDesired": 1,
-      "queue": 74,
-      "baseServed": 17,
-      "elasticServed": 3,
-      "committed": 8,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "948db624",
-          "phase": "Running",
-          "claim": "355f35c5",
-          "device": "gpu-1",
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "online_complete",
-      "ts": 1795444259.97,
-      "elasticDesired": 1,
-      "queue": 0,
-      "baseServed": 55,
-      "elasticServed": 41,
-      "committed": 8,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "elastic": {
-          "pod": "948db624",
-          "phase": "Running",
-          "claim": "355f35c5",
-          "device": "gpu-1",
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "second_release",
-      "ts": 1795444269.42,
-      "elasticDesired": 0,
-      "queue": 0,
-      "baseServed": 55,
-      "elasticServed": 41,
-      "committed": 8,
-      "lend": 0,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "resumed",
-      "ts": 1795444281.92,
-      "elasticDesired": 0,
-      "queue": 0,
-      "baseServed": 55,
-      "elasticServed": 41,
-      "committed": 9,
-      "lend": 1,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "resume": {
-          "pod": "d6a0bb01",
-          "phase": "Running",
-          "claim": "6f2c4a63",
-          "device": "gpu-1",
-          "deleting": false
-        }
-      }
-    },
-    {
-      "event": "offline_complete",
-      "ts": 1795444329.3,
-      "elasticDesired": 0,
-      "queue": 0,
-      "baseServed": 55,
-      "elasticServed": 41,
-      "committed": 80,
-      "lend": 1,
-      "roles": {
-        "base": {
-          "pod": "4d202b67",
-          "phase": "Running",
-          "claim": "886b981f",
-          "device": "gpu-0",
-          "deleting": false
-        },
-        "resume": {
-          "pod": "d6a0bb01",
-          "phase": "Running",
-          "claim": "6f2c4a63",
-          "device": "gpu-1",
-          "deleting": false
-        }
+      },
+      "recovered_to_zero_after_restore_s": 58.52
+    }
+  },
+  "exp4b_keda_fallback_active": {
+    "exp": "4B_active_fallback",
+    "fallback_activated_s": null,
+    "converged_to_fallback_2_s": null,
+    "last_state_during_outage": {
+      "t_plus": 74.14,
+      "desired": 4,
+      "conditions": {
+        "Ready": "True",
+        "Active": "False",
+        "Fallback": "False",
+        "Paused": "False",
+        "HPAActive": "True"
       }
     }
-  ]
+  },
+  "exp4c_dra_device_taint_rule": {
+    "exp": "4C_dra_device_taint_rule",
+    "toleration_seconds_offline": 2,
+    "online_phase_before_taint": "Pending",
+    "offline_eviction_started_s": 2.79,
+    "offline_pod_deleted_s": 4.53,
+    "online_running_with_gpu1_s": 5.39,
+    "online_claim_status": [
+      {
+        "name": "gpu",
+        "resourceClaimName": "dra-online-waiter-gpu-mzns7"
+      }
+    ],
+    "device_taint_rule_status": {
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-11-24T07:32:11Z",
+          "message": "1 pod needs to be evicted in 1 namespace.",
+          "observedGeneration": 1,
+          "reason": "PodsPendingEviction",
+          "status": "True",
+          "type": "EvictionInProgress"
+        }
+      ]
+    },
+    "events": [
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Unschedulable",
+        "msg": "0/0 tasks in gang unschedulable: pod group is not ready, 1 minAvailable"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Unschedulable",
+        "msg": "0/1 tasks in gang unschedulable: pod group is ready, 1 Binding, 1 minAvailable"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-offline-holder to worker-a"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "FailedPrepareDynamicResources",
+        "msg": "Failed to prepare dynamic resources: prepare dynamic resources: DRA driver gpu.example.com is not registered"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Scheduled",
+        "msg": "pod group is ready"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "DeviceTaintManagerEviction",
+        "msg": "Marking for deletion"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Unschedulable",
+        "msg": "0/0 tasks in gang unschedulable: pod group is not ready, 1 minAvailable"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Unschedulable",
+        "msg": "0/0 tasks in gang unschedulable: pod group is not ready, 1 minAvailable"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Unschedulable",
+        "msg": "0/1 tasks in gang unschedulable: pod group is ready, 1 Binding, 1 minAvailable"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-offline-holder to worker-a"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Scheduled",
+        "msg": "pod group is ready"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Pulled",
+        "msg": "Container image \"redis:7-alpine\" already present on machine and can be accessed by the pod"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Created",
+        "msg": "Container created"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Started",
+        "msg": "Container started"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "DeviceTaintManagerEviction",
+        "msg": "Marking for deletion"
+      },
+      {
+        "obj": "dra-offline-holder",
+        "reason": "Killing",
+        "msg": "Stopping container w"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Unschedulable",
+        "msg": "0/0 tasks in gang unschedulable: pod group is not ready, 1 minAvailable"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Unschedulable",
+        "msg": "1/1 tasks in gang unschedulable: pod group is not ready, 1 Pending, 1 minAvailable; Pending: 1 Unschedulable. Node: dra-online-waiter: 0/3 nodes are unavailable: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims."
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "FailedScheduling",
+        "msg": "Node: 0/3 nodes are unavailable: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims."
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Unschedulable",
+        "msg": "0/1 tasks in gang unschedulable: pod group is ready, 1 Binding, 1 minAvailable"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-online-waiter to worker-a"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "FailedPrepareDynamicResources",
+        "msg": "Failed to prepare dynamic resources: prepare dynamic resources: DRA driver gpu.example.com is not registered"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Scheduled",
+        "msg": "pod group is ready"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Pulled",
+        "msg": "Container image \"redis:7-alpine\" already present on machine and can be accessed by the pod"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Created",
+        "msg": "Container created"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Started",
+        "msg": "Container started"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Killing",
+        "msg": "Stopping container w"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Unschedulable",
+        "msg": "0/0 tasks in gang unschedulable: pod group is not ready, 1 minAvailable"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Unschedulable",
+        "msg": "1/1 tasks in gang unschedulable: pod group is not ready, 1 Pending, 1 minAvailable; Pending: 1 Unschedulable. Node: dra-online-waiter: 0/3 nodes are unavailable: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims."
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "FailedScheduling",
+        "msg": "Node: 0/3 nodes are unavailable: 1 node(s) had untolerated taint(s), 2 cannot allocate all claims."
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Unschedulable",
+        "msg": "0/1 tasks in gang unschedulable: pod group is ready, 1 Binding, 1 minAvailable"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Scheduled",
+        "msg": "Successfully assigned keda-tide-lab/dra-online-waiter to worker-a"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Scheduled",
+        "msg": "pod group is ready"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Pulled",
+        "msg": "Container image \"redis:7-alpine\" already present on machine and can be accessed by the pod"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Created",
+        "msg": "Container created"
+      },
+      {
+        "obj": "dra-online-waiter",
+        "reason": "Started",
+        "msg": "Container started"
+      }
+    ]
+  }
 }
