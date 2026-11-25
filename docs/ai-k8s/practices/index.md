@@ -90,6 +90,7 @@ last_reviewed: 2026-10-29
 - [AIBrix ModelClaim 单卡实测：小模型双活、14B 轮换与 L20 的显存边界](aibrix-modelclaim-l20.md)
 - [AIBrix 生产实战：Qwen3.8-27B 在 L20 上的容量、退出与过载保护](aibrix-qwen-l20-production.md)
 - [AIBrix 路由到底在优化什么：从缓存命中到尾延迟](aibrix-routing-cache-tradeoffs.md)
+- [多 LoRA 共享集群 L20 实测：AIBrix v0.8.0 vs CNCF llm-d EPP v1.0.0 亲和路由与防噪邻](multi-lora-l20-aibrix-vs-llmd.md)
 - [AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU](aibrix-gpu-multinode-pd-production.md)
 - [在 Kubernetes 部署 ComfyUI：离线镜像、CephFS 模型与跨集群 Ingress](comfyui-minimax-h3-gpu.md)
 - [RBG 多角色推理编排与 sr1 实战](rbg-existing-cluster.md)

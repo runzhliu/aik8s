@@ -101,9 +101,9 @@
       "review": "pending editorial review"
     },
     "ai-k8s/practices/index.md": {
-      "source_sha256": "8fe05e0dbf64c0bc9307d11fe69c51b5a807bd8bb89cf7a44e4cb09637e6d97e",
-      "english_sha256": "12036299ab43d9878e1938121332d410086b3e1a0100e8de179181c6e0d2c55e",
-      "reviewed_at": "2026-11-24T07:51:30.921017+00:00",
+      "source_sha256": "49fd5aa5e7e01a80a1b97f647e96eaa0bfa3ee051fe5a6753eabfd46dae3e7f5",
+      "english_sha256": "1491f63addece60ccd2d733e4470f3f39971a5a90763b61cdb317a56ff8288b2",
+      "reviewed_at": "2026-11-24T14:26:35.812915+00:00",
       "review": "reviewed against source"
     },
     "assets/practices/gpu-notebook-platform-evolution/README.md": {
@@ -1693,6 +1693,12 @@
       "source_sha256": "fb98d3f1b43515ec5e38089621c42afdd840c902e4ceb3e7c0360234c41a971b",
       "english_sha256": "f79b7aa1b03d5f488ee5544f27075d7017298e35b3aba34b5edc04c17b66c5a3",
       "reviewed_at": "2026-11-24T11:27:56.096772+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/multi-lora-l20-aibrix-vs-llmd.md": {
+      "source_sha256": "4ff44723af114bf1ac5115a8912499722df6d83158e3f91291c2eb728dce4c7a",
+      "english_sha256": "b8065eb19f9ba3d00b62758268b57ee5312f9e0402947f715ec131132ab31670",
+      "reviewed_at": "2026-11-24T14:51:12.835223+00:00",
       "review": "reviewed against source"
     }
   }

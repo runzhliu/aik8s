@@ -1,0 +1,1620 @@
+{
+  "environment": {
+    "kubernetes": "v1.30.4",
+    "gpu": "NVIDIA L20 (46,068 MiB VRAM)",
+    "base_model": "Qwen3-8B (BF16, 36 layers, hidden=4096, intermediate=12288, heads=32, kv_heads=8, head_dim=128)",
+    "vllm": "0.26.0b2.dev1+g3b102b576 (--dtype bfloat16 --max-model-len 8192 --max-num-seqs 32 --gpu-memory-utilization 0.90 --max-lora-rank 16 --max-cpu-loras 24 --enable-prefix-caching --enforce-eager)",
+    "lora_adapters": "20 synthetic PEFT Safetensors adapters (r=16, lora_alpha=32, 7 projections, 87.4 MB each) + 1 hot-load adapter",
+    "aibrix": "v0.8.0 (ModelAdapter v1alpha1 + Envoy Gateway v1.2.8 + gateway-plugins v0.8.0 + Redis 7.4.2)",
+    "llmd_epp": "v1.0.0 (ghcr.io/llm-d/llm-d-router-endpoint-picker:v1.0.0 + GAIE InferencePool v1 + llm-d.ai/v1 InferenceObjective + Envoy v1.33.2)"
+  },
+  "stage1_single_l20_sweep": {
+    "max_loras_4": {
+      "model_and_lora_vram_gib": 15.64,
+      "available_kv_cache_gib": 24.03,
+      "kv_cache_tokens": 174944,
+      "load_20_mean_ms": 1340.7,
+      "wall_s": 89.88,
+      "summary": {
+        "total": 100,
+        "complete": 100,
+        "status_codes": {
+          "200": 100
+        },
+        "wall_s": 89.88,
+        "output_tok_s": 71.2,
+        "input_tok_s": 614.14,
+        "ttft_p50_ms": 10913.2,
+        "ttft_p95_ms": 11070.08,
+        "ttft_p99_ms": 11781.82,
+        "ttft_mean_ms": 10172.94,
+        "tpot_p50_ms": 52.98,
+        "tpot_p95_ms": 55.27,
+        "e2e_p50_ms": 14248.79,
+        "e2e_p95_ms": 14387.7,
+        "e2e_p99_ms": 15142.19,
+        "target_pods": {},
+        "per_model_pods": {
+          "lora-01": {
+            "": 5
+          },
+          "lora-02": {
+            "": 5
+          },
+          "lora-03": {
+            "": 5
+          },
+          "lora-04": {
+            "": 5
+          },
+          "lora-05": {
+            "": 5
+          },
+          "lora-06": {
+            "": 5
+          },
+          "lora-07": {
+            "": 5
+          },
+          "lora-08": {
+            "": 5
+          },
+          "lora-09": {
+            "": 5
+          },
+          "lora-10": {
+            "": 5
+          },
+          "lora-11": {
+            "": 5
+          },
+          "lora-12": {
+            "": 5
+          },
+          "lora-13": {
+            "": 5
+          },
+          "lora-14": {
+            "": 5
+          },
+          "lora-15": {
+            "": 5
+          },
+          "lora-16": {
+            "": 5
+          },
+          "lora-17": {
+            "": 5
+          },
+          "lora-18": {
+            "": 5
+          },
+          "lora-19": {
+            "": 5
+          },
+          "lora-20": {
+            "": 5
+          }
+        }
+      }
+    },
+    "max_loras_8": {
+      "model_and_lora_vram_gib": 16.0,
+      "available_kv_cache_gib": 23.66,
+      "kv_cache_tokens": 172320,
+      "load_20_mean_ms": 1465.1,
+      "wall_s": 50.43,
+      "summary": {
+        "total": 100,
+        "complete": 100,
+        "status_codes": {
+          "200": 100
+        },
+        "wall_s": 50.43,
+        "output_tok_s": 126.92,
+        "input_tok_s": 1094.66,
+        "ttft_p50_ms": 4116.6,
+        "ttft_p95_ms": 4820.54,
+        "ttft_p99_ms": 5234.95,
+        "ttft_mean_ms": 3930.76,
+        "tpot_p50_ms": 56.78,
+        "tpot_p95_ms": 59.01,
+        "e2e_p50_ms": 7697.9,
+        "e2e_p95_ms": 8395.71,
+        "e2e_p99_ms": 8932.53,
+        "target_pods": {},
+        "per_model_pods": {
+          "lora-01": {
+            "": 5
+          },
+          "lora-02": {
+            "": 5
+          },
+          "lora-03": {
+            "": 5
+          },
+          "lora-04": {
+            "": 5
+          },
+          "lora-05": {
+            "": 5
+          },
+          "lora-06": {
+            "": 5
+          },
+          "lora-07": {
+            "": 5
+          },
+          "lora-08": {
+            "": 5
+          },
+          "lora-09": {
+            "": 5
+          },
+          "lora-10": {
+            "": 5
+          },
+          "lora-11": {
+            "": 5
+          },
+          "lora-12": {
+            "": 5
+          },
+          "lora-13": {
+            "": 5
+          },
+          "lora-14": {
+            "": 5
+          },
+          "lora-15": {
+            "": 5
+          },
+          "lora-16": {
+            "": 5
+          },
+          "lora-17": {
+            "": 5
+          },
+          "lora-18": {
+            "": 5
+          },
+          "lora-19": {
+            "": 5
+          },
+          "lora-20": {
+            "": 5
+          }
+        }
+      }
+    },
+    "max_loras_20": {
+      "model_and_lora_vram_gib": 17.08,
+      "available_kv_cache_gib": 22.58,
+      "kv_cache_tokens": 164400,
+      "load_20_mean_ms": 1137.9,
+      "wall_s": 32.71,
+      "summary": {
+        "total": 100,
+        "complete": 100,
+        "status_codes": {
+          "200": 100
+        },
+        "wall_s": 32.71,
+        "output_tok_s": 195.67,
+        "input_tok_s": 1687.63,
+        "ttft_p50_ms": 773.98,
+        "ttft_p95_ms": 1620.45,
+        "ttft_p99_ms": 1956.04,
+        "ttft_mean_ms": 799.16,
+        "tpot_p50_ms": 62.26,
+        "tpot_p95_ms": 74.51,
+        "e2e_p50_ms": 4617.3,
+        "e2e_p95_ms": 6098.11,
+        "e2e_p99_ms": 6353.56,
+        "target_pods": {},
+        "per_model_pods": {
+          "lora-01": {
+            "": 5
+          },
+          "lora-02": {
+            "": 5
+          },
+          "lora-03": {
+            "": 5
+          },
+          "lora-04": {
+            "": 5
+          },
+          "lora-05": {
+            "": 5
+          },
+          "lora-06": {
+            "": 5
+          },
+          "lora-07": {
+            "": 5
+          },
+          "lora-08": {
+            "": 5
+          },
+          "lora-09": {
+            "": 5
+          },
+          "lora-10": {
+            "": 5
+          },
+          "lora-11": {
+            "": 5
+          },
+          "lora-12": {
+            "": 5
+          },
+          "lora-13": {
+            "": 5
+          },
+          "lora-14": {
+            "": 5
+          },
+          "lora-15": {
+            "": 5
+          },
+          "lora-16": {
+            "": 5
+          },
+          "lora-17": {
+            "": 5
+          },
+          "lora-18": {
+            "": 5
+          },
+          "lora-19": {
+            "": 5
+          },
+          "lora-20": {
+            "": 5
+          }
+        }
+      }
+    }
+  },
+  "stage2a_2x_l20_uniform_20loras": {
+    "round_robin": {
+      "wall_s": 37.29,
+      "summary": {
+        "total": 160,
+        "complete": 159,
+        "status_codes": {
+          "200": 159,
+          "503": 1
+        },
+        "wall_s": 37.29,
+        "output_tok_s": 272.89,
+        "input_tok_s": 2353.69,
+        "ttft_p50_ms": 473.24,
+        "ttft_p95_ms": 4936.49,
+        "ttft_p99_ms": 5197.48,
+        "ttft_mean_ms": 1212.99,
+        "tpot_p50_ms": 61.02,
+        "tpot_p95_ms": 87.52,
+        "e2e_p50_ms": 4374.21,
+        "e2e_p95_ms": 9639.09,
+        "e2e_p99_ms": 9860.24,
+        "target_pods": {
+          "pod-b:8000": 80,
+          "pod-a:8000": 79
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-a:8000": 6,
+            "pod-b:8000": 2
+          },
+          "lora-02": {
+            "pod-a:8000": 5,
+            "pod-b:8000": 3
+          },
+          "lora-03": {
+            "pod-b:8000": 3,
+            "pod-a:8000": 5
+          },
+          "lora-04": {
+            "pod-b:8000": 5,
+            "pod-a:8000": 3
+          },
+          "lora-05": {
+            "pod-a:8000": 4,
+            "pod-b:8000": 4
+          },
+          "lora-06": {
+            "pod-b:8000": 5,
+            "pod-a:8000": 3
+          },
+          "lora-07": {
+            "pod-a:8000": 6,
+            "pod-b:8000": 2
+          },
+          "lora-08": {
+            "pod-b:8000": 4,
+            "pod-a:8000": 4
+          },
+          "lora-09": {
+            "pod-b:8000": 4,
+            "pod-a:8000": 4
+          },
+          "lora-10": {
+            "pod-b:8000": 4,
+            "pod-a:8000": 4
+          },
+          "lora-11": {
+            "pod-b:8000": 5,
+            "pod-a:8000": 3
+          },
+          "lora-12": {
+            "pod-b:8000": 5,
+            "pod-a:8000": 3
+          },
+          "lora-13": {
+            "pod-b:8000": 6,
+            "pod-a:8000": 2
+          },
+          "lora-14": {
+            "pod-b:8000": 5,
+            "pod-a:8000": 3
+          },
+          "lora-15": {
+            "pod-b:8000": 6,
+            "pod-a:8000": 2
+          },
+          "lora-16": {
+            "pod-b:8000": 4,
+            "pod-a:8000": 4
+          },
+          "lora-17": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 6
+          },
+          "lora-18": {
+            "pod-a:8000": 4,
+            "pod-b:8000": 4
+          },
+          "lora-19": {
+            "pod-a:8000": 6,
+            "pod-b:8000": 1
+          },
+          "lora-20": {
+            "pod-b:8000": 6,
+            "pod-a:8000": 2
+          }
+        }
+      }
+    },
+    "llmd_epp_v1_0": {
+      "wall_s": 29.11,
+      "summary": {
+        "total": 160,
+        "complete": 160,
+        "status_codes": {
+          "200": 160
+        },
+        "wall_s": 29.11,
+        "output_tok_s": 351.77,
+        "input_tok_s": 3033.99,
+        "ttft_p50_ms": 267.42,
+        "ttft_p95_ms": 4153.93,
+        "ttft_p99_ms": 4176.52,
+        "ttft_mean_ms": 732.06,
+        "tpot_p50_ms": 54.42,
+        "tpot_p95_ms": 57.62,
+        "e2e_p50_ms": 3746.19,
+        "e2e_p95_ms": 7410.51,
+        "e2e_p99_ms": 7433.15,
+        "target_pods": {
+          "pod-a:8000": 72,
+          "pod-b:8000": 88
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-a:8000": 7,
+            "pod-b:8000": 1
+          },
+          "lora-02": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-03": {
+            "pod-b:8000": 3,
+            "pod-a:8000": 5
+          },
+          "lora-04": {
+            "pod-b:8000": 3,
+            "pod-a:8000": 5
+          },
+          "lora-05": {
+            "pod-a:8000": 6,
+            "pod-b:8000": 2
+          },
+          "lora-06": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 6
+          },
+          "lora-07": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 7
+          },
+          "lora-08": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 6
+          },
+          "lora-09": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-10": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-11": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-12": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-13": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-14": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-15": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-16": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-17": {
+            "pod-b:8000": 7,
+            "pod-a:8000": 1
+          },
+          "lora-18": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 7
+          },
+          "lora-19": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 7
+          },
+          "lora-20": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 6
+          }
+        }
+      }
+    },
+    "aibrix_v0_8_replicas1": {
+      "wall_s": 28.62,
+      "summary": {
+        "total": 160,
+        "complete": 160,
+        "status_codes": {
+          "200": 160
+        },
+        "wall_s": 28.62,
+        "output_tok_s": 357.75,
+        "input_tok_s": 3085.58,
+        "ttft_p50_ms": 408.07,
+        "ttft_p95_ms": 986.27,
+        "ttft_p99_ms": 1116.57,
+        "ttft_mean_ms": 479.96,
+        "tpot_p50_ms": 58.14,
+        "tpot_p95_ms": 61.89,
+        "e2e_p50_ms": 4108.26,
+        "e2e_p95_ms": 4432.25,
+        "e2e_p99_ms": 4529.32,
+        "target_pods": {
+          "pod-b": 80,
+          "pod-a": 80
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b": 8
+          },
+          "lora-02": {
+            "pod-a": 8
+          },
+          "lora-03": {
+            "pod-b": 8
+          },
+          "lora-04": {
+            "pod-a": 8
+          },
+          "lora-05": {
+            "pod-a": 8
+          },
+          "lora-06": {
+            "pod-b": 8
+          },
+          "lora-07": {
+            "pod-b": 8
+          },
+          "lora-08": {
+            "pod-b": 8
+          },
+          "lora-09": {
+            "pod-a": 8
+          },
+          "lora-10": {
+            "pod-a": 8
+          },
+          "lora-11": {
+            "pod-b": 8
+          },
+          "lora-12": {
+            "pod-a": 8
+          },
+          "lora-13": {
+            "pod-b": 8
+          },
+          "lora-14": {
+            "pod-a": 8
+          },
+          "lora-15": {
+            "pod-b": 8
+          },
+          "lora-16": {
+            "pod-a": 8
+          },
+          "lora-17": {
+            "pod-b": 8
+          },
+          "lora-18": {
+            "pod-a": 8
+          },
+          "lora-19": {
+            "pod-b": 8
+          },
+          "lora-20": {
+            "pod-a": 8
+          }
+        }
+      }
+    }
+  },
+  "stage2b_2x_l20_hotspot_70pct_lora01": {
+    "round_robin": {
+      "wall_s": 20.17,
+      "summary": {
+        "total": 120,
+        "complete": 120,
+        "status_codes": {
+          "200": 120
+        },
+        "wall_s": 20.17,
+        "output_tok_s": 380.79,
+        "input_tok_s": 3284.27,
+        "ttft_p50_ms": 312.11,
+        "ttft_p95_ms": 739.61,
+        "ttft_p99_ms": 794.82,
+        "ttft_mean_ms": 355.41,
+        "tpot_p50_ms": 53.98,
+        "tpot_p95_ms": 69.85,
+        "e2e_p50_ms": 3846.31,
+        "e2e_p95_ms": 4970.74,
+        "e2e_p99_ms": 4974.05,
+        "target_pods": {
+          "pod-a:8000": 61,
+          "pod-b:8000": 59
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-a:8000": 46,
+            "pod-b:8000": 41
+          },
+          "lora-03": {
+            "pod-a:8000": 1,
+            "pod-b:8000": 1
+          },
+          "lora-05": {
+            "pod-a:8000": 1,
+            "pod-b:8000": 1
+          },
+          "lora-06": {
+            "pod-b:8000": 1
+          },
+          "lora-07": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-08": {
+            "pod-b:8000": 1
+          },
+          "lora-09": {
+            "pod-b:8000": 2
+          },
+          "lora-10": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-11": {
+            "pod-b:8000": 1
+          },
+          "lora-12": {
+            "pod-a:8000": 2
+          },
+          "lora-13": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 1
+          },
+          "lora-14": {
+            "pod-a:8000": 1,
+            "pod-b:8000": 1
+          },
+          "lora-15": {
+            "pod-a:8000": 1
+          },
+          "lora-16": {
+            "pod-a:8000": 2
+          },
+          "lora-17": {
+            "pod-b:8000": 4
+          },
+          "lora-18": {
+            "pod-b:8000": 2
+          },
+          "lora-19": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 1
+          },
+          "lora-20": {
+            "pod-a:8000": 1
+          }
+        }
+      }
+    },
+    "llmd_epp_v1_0_w4_2": {
+      "wall_s": 22.83,
+      "summary": {
+        "total": 120,
+        "complete": 120,
+        "status_codes": {
+          "200": 120
+        },
+        "wall_s": 22.83,
+        "output_tok_s": 336.4,
+        "input_tok_s": 2901.46,
+        "ttft_p50_ms": 335.33,
+        "ttft_p95_ms": 1082.64,
+        "ttft_p99_ms": 1338.08,
+        "ttft_mean_ms": 443.49,
+        "tpot_p50_ms": 63.42,
+        "tpot_p95_ms": 72.43,
+        "e2e_p50_ms": 4673.84,
+        "e2e_p95_ms": 4962.58,
+        "e2e_p99_ms": 5056.93,
+        "target_pods": {
+          "pod-b:8000": 33,
+          "pod-a:8000": 87
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-a:8000": 87
+          },
+          "lora-03": {
+            "pod-b:8000": 2
+          },
+          "lora-05": {
+            "pod-b:8000": 2
+          },
+          "lora-06": {
+            "pod-b:8000": 1
+          },
+          "lora-07": {
+            "pod-b:8000": 3
+          },
+          "lora-08": {
+            "pod-b:8000": 1
+          },
+          "lora-09": {
+            "pod-b:8000": 2
+          },
+          "lora-10": {
+            "pod-b:8000": 3
+          },
+          "lora-11": {
+            "pod-b:8000": 1
+          },
+          "lora-12": {
+            "pod-b:8000": 2
+          },
+          "lora-13": {
+            "pod-b:8000": 2
+          },
+          "lora-14": {
+            "pod-b:8000": 2
+          },
+          "lora-15": {
+            "pod-b:8000": 1
+          },
+          "lora-16": {
+            "pod-b:8000": 2
+          },
+          "lora-17": {
+            "pod-b:8000": 4
+          },
+          "lora-18": {
+            "pod-b:8000": 2
+          },
+          "lora-19": {
+            "pod-b:8000": 2
+          },
+          "lora-20": {
+            "pod-b:8000": 1
+          }
+        }
+      }
+    },
+    "aibrix_v0_8_replicas1": {
+      "wall_s": 23.16,
+      "summary": {
+        "total": 120,
+        "complete": 120,
+        "status_codes": {
+          "200": 120
+        },
+        "wall_s": 23.16,
+        "output_tok_s": 331.65,
+        "input_tok_s": 2860.45,
+        "ttft_p50_ms": 428.84,
+        "ttft_p95_ms": 1056.79,
+        "ttft_p99_ms": 1353.85,
+        "ttft_mean_ms": 521.43,
+        "tpot_p50_ms": 63.81,
+        "tpot_p95_ms": 71.18,
+        "e2e_p50_ms": 4686.45,
+        "e2e_p95_ms": 4963.19,
+        "e2e_p99_ms": 5135.79,
+        "target_pods": {
+          "pod-a": 16,
+          "pod-b": 104
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b": 87
+          },
+          "lora-03": {
+            "pod-b": 2
+          },
+          "lora-05": {
+            "pod-a": 2
+          },
+          "lora-06": {
+            "pod-b": 1
+          },
+          "lora-07": {
+            "pod-b": 3
+          },
+          "lora-08": {
+            "pod-b": 1
+          },
+          "lora-09": {
+            "pod-a": 2
+          },
+          "lora-10": {
+            "pod-a": 3
+          },
+          "lora-11": {
+            "pod-b": 1
+          },
+          "lora-12": {
+            "pod-a": 2
+          },
+          "lora-13": {
+            "pod-b": 2
+          },
+          "lora-14": {
+            "pod-a": 2
+          },
+          "lora-15": {
+            "pod-b": 1
+          },
+          "lora-16": {
+            "pod-a": 2
+          },
+          "lora-17": {
+            "pod-b": 4
+          },
+          "lora-18": {
+            "pod-a": 2
+          },
+          "lora-19": {
+            "pod-b": 2
+          },
+          "lora-20": {
+            "pod-a": 1
+          }
+        }
+      }
+    },
+    "aibrix_v0_8_hot_all_pods": {
+      "wall_s": 17.04,
+      "summary": {
+        "total": 120,
+        "complete": 120,
+        "status_codes": {
+          "200": 120
+        },
+        "wall_s": 17.04,
+        "output_tok_s": 450.64,
+        "input_tok_s": 3886.79,
+        "ttft_p50_ms": 159.85,
+        "ttft_p95_ms": 185.5,
+        "ttft_p99_ms": 186.39,
+        "ttft_mean_ms": 161.65,
+        "tpot_p50_ms": 50.94,
+        "tpot_p95_ms": 52.07,
+        "e2e_p50_ms": 3363.76,
+        "e2e_p95_ms": 3438.65,
+        "e2e_p99_ms": 3439.36,
+        "target_pods": {
+          "pod-b": 63,
+          "pod-a": 57
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b": 46,
+            "pod-a": 41
+          },
+          "lora-03": {
+            "pod-b": 2
+          },
+          "lora-05": {
+            "pod-a": 2
+          },
+          "lora-06": {
+            "pod-b": 1
+          },
+          "lora-07": {
+            "pod-b": 3
+          },
+          "lora-08": {
+            "pod-b": 1
+          },
+          "lora-09": {
+            "pod-a": 2
+          },
+          "lora-10": {
+            "pod-a": 3
+          },
+          "lora-11": {
+            "pod-b": 1
+          },
+          "lora-12": {
+            "pod-a": 2
+          },
+          "lora-13": {
+            "pod-b": 2
+          },
+          "lora-14": {
+            "pod-a": 2
+          },
+          "lora-15": {
+            "pod-b": 1
+          },
+          "lora-16": {
+            "pod-a": 2
+          },
+          "lora-17": {
+            "pod-b": 4
+          },
+          "lora-18": {
+            "pod-a": 2
+          },
+          "lora-19": {
+            "pod-b": 2
+          },
+          "lora-20": {
+            "pod-a": 1
+          }
+        }
+      }
+    }
+  },
+  "stage2c_hotload_lifecycle": {
+    "aibrix_modeladapter_apply_to_200": {
+      "first_ok_s": 0.0,
+      "attempts": [
+        {
+          "i": 0,
+          "t_s": 0.0,
+          "status": 200,
+          "target_pod": "pod-b"
+        }
+      ]
+    },
+    "aibrix_modeladapter_delete_unload": {
+      "pod-a": {
+        "has_lora_21": false,
+        "total_models": 21
+      },
+      "pod-b": {
+        "has_lora_21": false,
+        "total_models": 21
+      }
+    },
+    "aibrix_20_adapters_batch_ready_s": 48.04,
+    "vllm_direct_load_20_mean_ms": 1340.7
+  },
+  "stage3_2x_l20_noisy_neighbor": {
+    "unprotected_rr": {
+      "wall_s": 65.75,
+      "summary": {
+        "total": 141,
+        "complete": 141,
+        "status_codes": {
+          "200": 141
+        },
+        "wall_s": 65.75,
+        "output_tok_s": 212.18,
+        "input_tok_s": 5062.55,
+        "ttft_p50_ms": 1260.1,
+        "ttft_p95_ms": 5366.78,
+        "ttft_p99_ms": 7436.84,
+        "ttft_mean_ms": 1917.8,
+        "tpot_p50_ms": 76.98,
+        "tpot_p95_ms": 157.6,
+        "e2e_p50_ms": 10952.94,
+        "e2e_p95_ms": 16528.1,
+        "e2e_p99_ms": 18166.68,
+        "target_pods": {
+          "pod-a:8000": 73,
+          "pod-b:8000": 68
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b:8000": 3,
+            "pod-a:8000": 1
+          },
+          "lora-02": {
+            "pod-a:8000": 3,
+            "pod-b:8000": 1
+          },
+          "lora-03": {
+            "pod-b:8000": 4
+          },
+          "lora-04": {
+            "pod-a:8000": 4
+          },
+          "lora-05": {
+            "pod-a:8000": 1,
+            "pod-b:8000": 3
+          },
+          "lora-06": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 2
+          },
+          "lora-07": {
+            "pod-a:8000": 1,
+            "pod-b:8000": 3
+          },
+          "lora-08": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-09": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-10": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-11": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-12": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-13": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-14": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-15": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-16": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-17": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-18": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-19": {
+            "pod-a:8000": 3
+          },
+          "lora-20": {
+            "pod-a:8000": 39,
+            "pod-b:8000": 38
+          }
+        }
+      },
+      "normal_summary": {
+        "total": 64,
+        "complete": 64,
+        "status_codes": {
+          "200": 64
+        },
+        "wall_s": 58.89,
+        "output_tok_s": 69.55,
+        "input_tok_s": 599.88,
+        "ttft_p50_ms": 362.96,
+        "ttft_p95_ms": 4605.97,
+        "ttft_p99_ms": 4825.79,
+        "ttft_mean_ms": 1066.13,
+        "tpot_p50_ms": 70.05,
+        "tpot_p95_ms": 165.33,
+        "e2e_p50_ms": 6141.56,
+        "e2e_p95_ms": 11526.1,
+        "e2e_p99_ms": 12058.31,
+        "target_pods": {
+          "pod-a:8000": 34,
+          "pod-b:8000": 30
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b:8000": 3,
+            "pod-a:8000": 1
+          },
+          "lora-02": {
+            "pod-a:8000": 3,
+            "pod-b:8000": 1
+          },
+          "lora-03": {
+            "pod-b:8000": 4
+          },
+          "lora-04": {
+            "pod-a:8000": 4
+          },
+          "lora-05": {
+            "pod-a:8000": 1,
+            "pod-b:8000": 3
+          },
+          "lora-06": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 2
+          },
+          "lora-07": {
+            "pod-a:8000": 1,
+            "pod-b:8000": 3
+          },
+          "lora-08": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-09": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-10": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-11": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-12": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-13": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-14": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-15": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-16": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-17": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-18": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-19": {
+            "pod-a:8000": 3
+          }
+        }
+      },
+      "noisy_summary": {
+        "total": 77,
+        "complete": 77,
+        "status_codes": {
+          "200": 77
+        },
+        "wall_s": 65.75,
+        "output_tok_s": 149.89,
+        "input_tok_s": 4525.27,
+        "ttft_p50_ms": 2031.13,
+        "ttft_p95_ms": 6500.84,
+        "ttft_p99_ms": 7801.74,
+        "ttft_mean_ms": 2625.69,
+        "tpot_p50_ms": 81.77,
+        "tpot_p95_ms": 116.3,
+        "e2e_p50_ms": 13320.3,
+        "e2e_p95_ms": 17461.22,
+        "e2e_p99_ms": 18232.3,
+        "target_pods": {
+          "pod-a:8000": 39,
+          "pod-b:8000": 38
+        },
+        "per_model_pods": {
+          "lora-20": {
+            "pod-a:8000": 39,
+            "pod-b:8000": 38
+          }
+        }
+      }
+    },
+    "llmd_epp_priority_10_vs_neg10": {
+      "wall_s": 54.71,
+      "summary": {
+        "total": 144,
+        "complete": 144,
+        "status_codes": {
+          "200": 144
+        },
+        "wall_s": 54.71,
+        "output_tok_s": 262.03,
+        "input_tok_s": 6296.19,
+        "ttft_p50_ms": 1121.24,
+        "ttft_p95_ms": 2806.6,
+        "ttft_p99_ms": 4382.14,
+        "ttft_mean_ms": 1211.96,
+        "tpot_p50_ms": 70.47,
+        "tpot_p95_ms": 104.7,
+        "e2e_p50_ms": 8920.06,
+        "e2e_p95_ms": 12139.14,
+        "e2e_p99_ms": 12942.29,
+        "target_pods": {
+          "pod-b:8000": 68,
+          "pod-a:8000": 76
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b:8000": 3,
+            "pod-a:8000": 1
+          },
+          "lora-02": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 3
+          },
+          "lora-03": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 3
+          },
+          "lora-04": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 2
+          },
+          "lora-05": {
+            "pod-a:8000": 3,
+            "pod-b:8000": 1
+          },
+          "lora-06": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 2
+          },
+          "lora-07": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 2
+          },
+          "lora-08": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-09": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-10": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-11": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-12": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-13": {
+            "pod-a:8000": 3
+          },
+          "lora-14": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-15": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-16": {
+            "pod-a:8000": 3
+          },
+          "lora-17": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-18": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-19": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-20": {
+            "pod-b:8000": 42,
+            "pod-a:8000": 38
+          }
+        }
+      },
+      "normal_summary": {
+        "total": 64,
+        "complete": 64,
+        "status_codes": {
+          "200": 64
+        },
+        "wall_s": 46.06,
+        "output_tok_s": 88.94,
+        "input_tok_s": 767.07,
+        "ttft_p50_ms": 810.12,
+        "ttft_p95_ms": 1875.3,
+        "ttft_p99_ms": 1933.25,
+        "ttft_mean_ms": 948.08,
+        "tpot_p50_ms": 75.88,
+        "tpot_p95_ms": 108.33,
+        "e2e_p50_ms": 5442.26,
+        "e2e_p95_ms": 7094.15,
+        "e2e_p99_ms": 7113.37,
+        "target_pods": {
+          "pod-b:8000": 26,
+          "pod-a:8000": 38
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b:8000": 3,
+            "pod-a:8000": 1
+          },
+          "lora-02": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 3
+          },
+          "lora-03": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 3
+          },
+          "lora-04": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 2
+          },
+          "lora-05": {
+            "pod-a:8000": 3,
+            "pod-b:8000": 1
+          },
+          "lora-06": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 2
+          },
+          "lora-07": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 2
+          },
+          "lora-08": {
+            "pod-a:8000": 2,
+            "pod-b:8000": 1
+          },
+          "lora-09": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-10": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-11": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-12": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-13": {
+            "pod-a:8000": 3
+          },
+          "lora-14": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-15": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-16": {
+            "pod-a:8000": 3
+          },
+          "lora-17": {
+            "pod-b:8000": 2,
+            "pod-a:8000": 1
+          },
+          "lora-18": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          },
+          "lora-19": {
+            "pod-b:8000": 1,
+            "pod-a:8000": 2
+          }
+        }
+      },
+      "noisy_summary": {
+        "total": 80,
+        "complete": 80,
+        "status_codes": {
+          "200": 80
+        },
+        "wall_s": 54.71,
+        "output_tok_s": 187.16,
+        "input_tok_s": 5650.48,
+        "ttft_p50_ms": 1286.06,
+        "ttft_p95_ms": 3340.04,
+        "ttft_p99_ms": 4773.52,
+        "ttft_mean_ms": 1423.07,
+        "tpot_p50_ms": 68.55,
+        "tpot_p95_ms": 84.64,
+        "e2e_p50_ms": 10140.21,
+        "e2e_p95_ms": 12479.4,
+        "e2e_p99_ms": 13370.72,
+        "target_pods": {
+          "pod-b:8000": 42,
+          "pod-a:8000": 38
+        },
+        "per_model_pods": {
+          "lora-20": {
+            "pod-b:8000": 42,
+            "pod-a:8000": 38
+          }
+        }
+      }
+    },
+    "aibrix_redis_ratelimit_6rpm_20ktpm": {
+      "wall_s": 32.43,
+      "summary": {
+        "total": 8623,
+        "complete": 70,
+        "status_codes": {
+          "429": 8553,
+          "200": 70
+        },
+        "wall_s": 32.43,
+        "output_tok_s": 149.99,
+        "input_tok_s": 1804.36,
+        "ttft_p50_ms": 203.03,
+        "ttft_p95_ms": 2513.9,
+        "ttft_p99_ms": 3539.88,
+        "ttft_mean_ms": 485.81,
+        "tpot_p50_ms": 53.22,
+        "tpot_p95_ms": 63.08,
+        "e2e_p50_ms": 3588.03,
+        "e2e_p95_ms": 10778.3,
+        "e2e_p99_ms": 11063.43,
+        "target_pods": {
+          "pod-b": 32,
+          "pod-a": 38
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b": 2,
+            "pod-a": 2
+          },
+          "lora-02": {
+            "pod-a": 4
+          },
+          "lora-03": {
+            "pod-b": 4
+          },
+          "lora-04": {
+            "pod-a": 4
+          },
+          "lora-05": {
+            "pod-a": 4
+          },
+          "lora-06": {
+            "pod-b": 4
+          },
+          "lora-07": {
+            "pod-b": 4
+          },
+          "lora-08": {
+            "pod-b": 3
+          },
+          "lora-09": {
+            "pod-a": 3
+          },
+          "lora-10": {
+            "pod-a": 3
+          },
+          "lora-11": {
+            "pod-b": 3
+          },
+          "lora-12": {
+            "pod-a": 3
+          },
+          "lora-13": {
+            "pod-b": 3
+          },
+          "lora-14": {
+            "pod-a": 3
+          },
+          "lora-15": {
+            "pod-b": 3
+          },
+          "lora-16": {
+            "pod-a": 3
+          },
+          "lora-17": {
+            "pod-b": 3
+          },
+          "lora-18": {
+            "pod-a": 3
+          },
+          "lora-19": {
+            "pod-b": 3
+          },
+          "lora-20": {
+            "pod-a": 6
+          }
+        }
+      },
+      "normal_summary": {
+        "total": 64,
+        "complete": 64,
+        "status_codes": {
+          "200": 64
+        },
+        "wall_s": 30.89,
+        "output_tok_s": 132.59,
+        "input_tok_s": 1143.57,
+        "ttft_p50_ms": 201.5,
+        "ttft_p95_ms": 578.76,
+        "ttft_p99_ms": 2513.8,
+        "ttft_mean_ms": 312.13,
+        "tpot_p50_ms": 53.1,
+        "tpot_p95_ms": 55.94,
+        "e2e_p50_ms": 3575.95,
+        "e2e_p95_ms": 3888.58,
+        "e2e_p99_ms": 6113.99,
+        "target_pods": {
+          "pod-b": 32,
+          "pod-a": 32
+        },
+        "per_model_pods": {
+          "lora-01": {
+            "pod-b": 2,
+            "pod-a": 2
+          },
+          "lora-02": {
+            "pod-a": 4
+          },
+          "lora-03": {
+            "pod-b": 4
+          },
+          "lora-04": {
+            "pod-a": 4
+          },
+          "lora-05": {
+            "pod-a": 4
+          },
+          "lora-06": {
+            "pod-b": 4
+          },
+          "lora-07": {
+            "pod-b": 4
+          },
+          "lora-08": {
+            "pod-b": 3
+          },
+          "lora-09": {
+            "pod-a": 3
+          },
+          "lora-10": {
+            "pod-a": 3
+          },
+          "lora-11": {
+            "pod-b": 3
+          },
+          "lora-12": {
+            "pod-a": 3
+          },
+          "lora-13": {
+            "pod-b": 3
+          },
+          "lora-14": {
+            "pod-a": 3
+          },
+          "lora-15": {
+            "pod-b": 3
+          },
+          "lora-16": {
+            "pod-a": 3
+          },
+          "lora-17": {
+            "pod-b": 3
+          },
+          "lora-18": {
+            "pod-a": 3
+          },
+          "lora-19": {
+            "pod-b": 3
+          }
+        }
+      },
+      "noisy_summary": {
+        "total": 8559,
+        "complete": 6,
+        "status_codes": {
+          "429": 8553,
+          "200": 6
+        },
+        "wall_s": 32.43,
+        "output_tok_s": 23.68,
+        "input_tok_s": 714.93,
+        "ttft_p50_ms": 2331.19,
+        "ttft_p95_ms": 3841.82,
+        "ttft_p99_ms": 3979.07,
+        "ttft_mean_ms": 2338.43,
+        "tpot_p50_ms": 67.28,
+        "tpot_p95_ms": 77.13,
+        "e2e_p50_ms": 10876.7,
+        "e2e_p95_ms": 11108.34,
+        "e2e_p99_ms": 11128.76,
+        "target_pods": {
+          "pod-a": 6
+        },
+        "per_model_pods": {
+          "lora-20": {
+            "pod-a": 6
+          }
+        }
+      }
+    }
+  }
+}

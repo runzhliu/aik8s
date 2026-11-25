@@ -90,6 +90,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 - [AIBrix ModelClaim on one L20 — concurrent serving, 14B handoffs and the memory limit](aibrix-modelclaim-l20.md)
 - [AIBrix Production Practice: Capacity, Exit, and Overload Protection for Qwen3.8-27B on L20](aibrix-qwen-l20-production.md)
 - [What Does AIBrix Routing Optimize: From Cache Hits to Tail Latency](aibrix-routing-cache-tradeoffs.md)
+- [Multi-LoRA Sharing on NVIDIA L20: AIBrix v0.8.0 vs. CNCF llm-d EPP v1.0.0 for Affinity Routing and Noisy-Neighbor Isolation](multi-lora-l20-aibrix-vs-llmd.md)
 - [AIBrix Real GPU Test: From Two-Node Inference to Eight-Node Fragmented GPUs](aibrix-gpu-multinode-pd-production.md)
 - [Deploying ComfyUI on Kubernetes: Offline Images, CephFS Models, and Cross-Cluster Ingress](comfyui-minimax-h3-gpu.md)
 - [RBG Multi-Role Inference Orchestration and sr1 Practice](rbg-existing-cluster.md)

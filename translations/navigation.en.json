@@ -173,6 +173,7 @@
   "AIBrix ModelClaim：L20 共卡与轮换": "AIBrix ModelClaim: Sharing and Switching on L20",
   "AIBrix：L20 容量、退出与过载保护": "AIBrix: L20 Capacity, Eviction, and Overload Protection",
   "AIBrix：缓存路由与尾延迟": "AIBrix: Cache Routing and Tail Latency",
+  "多 LoRA L20 实测：AIBrix vs llm-d": "Multi-LoRA on L20: AIBrix vs. llm-d",
   "AIBrix GPU 多机、P/D 与碎片卡实测": "AIBrix GPU Multi-Node, P/D, and Fragmented GPU Benchmark",
   "ComfyUI、MiniMax-H3 与跨集群 Ingress": "ComfyUI, MiniMax-H3, and Cross-Cluster Ingress",
   "RBG 多角色推理编排": "RBG Multi-Role Inference Orchestration",

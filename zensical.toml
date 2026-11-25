@@ -222,6 +222,7 @@ nav = [
       {"AIBrix ModelClaim：L20 共卡与轮换" = "ai-k8s/practices/aibrix-modelclaim-l20.md"},
       {"AIBrix：L20 容量、退出与过载保护" = "ai-k8s/practices/aibrix-qwen-l20-production.md"},
       {"AIBrix：缓存路由与尾延迟" = "ai-k8s/practices/aibrix-routing-cache-tradeoffs.md"},
+      {"多 LoRA L20 实测：AIBrix vs llm-d" = "ai-k8s/practices/multi-lora-l20-aibrix-vs-llmd.md"},
       {"AIBrix GPU 多机、P/D 与碎片卡实测" = "ai-k8s/practices/aibrix-gpu-multinode-pd-production.md"},
       {"ComfyUI、MiniMax-H3 与跨集群 Ingress" = "ai-k8s/practices/comfyui-minimax-h3-gpu.md"},
       {"RBG 多角色推理编排" = "ai-k8s/practices/rbg-existing-cluster.md"},
