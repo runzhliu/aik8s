@@ -13,6 +13,7 @@ last_reviewed: 2026-10-29
 
 - [GPU 有空闲，Pod 为什么仍然 Pending](gpu-pending.md)
 - [GPU 利用率为什么很低](low-gpu-utilization.md)
+- [“低利用率 GPU 推理服务”为什么缩不下去？25 个线上服务的四维硬件穿透与降本实战](low-util-gpu-serving-governance.md)
 - [GPU 节点故障图鉴](gpu-failure-atlas.md)
 - [看似 NCCL 故障，实际是 Host Memory OOM](nccl-unhandled-cuda-error-host-memory-oom.md)
 - [AI 集群事故复盘方法](incident-review.md)
@@ -91,6 +92,7 @@ last_reviewed: 2026-10-29
 - [AIBrix 生产实战：Qwen3.8-27B 在 L20 上的容量、退出与过载保护](aibrix-qwen-l20-production.md)
 - [AIBrix 路由到底在优化什么：从缓存命中到尾延迟](aibrix-routing-cache-tradeoffs.md)
 - [多 LoRA 共享集群 L20 实测：AIBrix v0.8.0 vs CNCF llm-d EPP v1.0.0 亲和路由与防噪邻](multi-lora-l20-aibrix-vs-llmd.md)
+- [单卡 L20 混合架构 Multi-LoRA 极限压测：Qwen3.5-2B 吞吐拐点与 544-Token Prefix Cache 锯齿悬崖](hybrid-multi-lora-l20-prefix-cache.md)
 - [AIBrix 真实 GPU 实测：从两机推理到八节点碎片 GPU](aibrix-gpu-multinode-pd-production.md)
 - [在 Kubernetes 部署 ComfyUI：离线镜像、CephFS 模型与跨集群 Ingress](comfyui-minimax-h3-gpu.md)
 - [RBG 多角色推理编排与 sr1 实战](rbg-existing-cluster.md)

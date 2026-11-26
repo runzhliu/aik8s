@@ -1,0 +1,94 @@
+{
+  "audit_summary": {
+    "total_services": 25,
+    "initial_gpus": 313,
+    "already_reclaimed_round1": 56,
+    "current_active_gpus": 257,
+    "reclaimable_low": 94,
+    "reclaimable_high": 126,
+    "high_value_72g_reclaimable_low": 68,
+    "high_value_72g_reclaimable_high": 84
+  },
+  "categories": [
+    {
+      "id": "cat1_fake_100",
+      "cn": "一类·假100%/可安全缩容",
+      "en": "Cat 1: Fake 100% / Safe Rightsize",
+      "services": 5,
+      "current_gpus": 140,
+      "reclaim_low": 66,
+      "reclaim_high": 88,
+      "action_cn": "按容灾核定副本 / 改 TP=1",
+      "action_en": "Rightsize to HA / switch to TP=1"
+    },
+    {
+      "id": "cat2_real_burst",
+      "cn": "二类·真排队/真脉冲",
+      "en": "Cat 2: Real Queue / True Burst",
+      "services": 7,
+      "current_gpus": 65,
+      "reclaim_low": 18,
+      "reclaim_high": 24,
+      "action_cn": "开 Prefix Cache / 合池混部",
+      "action_en": "Prefix Cache / shared-pool mux"
+    },
+    {
+      "id": "cat3_zero_tensor",
+      "cn": "三类·Tensor=0%非算力瓶颈",
+      "en": "Cat 3: Tensor=0% Non-GPU Bound",
+      "services": 6,
+      "current_gpus": 26,
+      "reclaim_low": 10,
+      "reclaim_high": 14,
+      "action_cn": "动态批 / 共卡 / 切 CPU",
+      "action_en": "Dynamic batch / colocate / CPU"
+    },
+    {
+      "id": "cat4_already_scaled",
+      "cn": "四类·已达双活稳态底线",
+      "en": "Cat 4: At Min HA Baseline",
+      "services": 7,
+      "current_gpus": 26,
+      "reclaim_low": 0,
+      "reclaim_high": 0,
+      "action_cn": "首轮已协同释放 27 卡",
+      "action_en": "27 GPUs freed; hold at HA floor"
+    }
+  ],
+  "case_study_svc03": {
+    "label": "SVC-03 (Dual-AZ Relevance Scorer, 2x12 72G PCIe GPUs without NVLink)",
+    "az1_gpus": 12,
+    "az2_gpus": 12,
+    "gpu_util_7d_avg_pct": [10.2, 9.8],
+    "gpu_util_max_pct": 100.0,
+    "gpu_util_ge95_min_ratio_pct": 39.3,
+    "sm_active_24h_avg_pct": [5.6, 5.3],
+    "sm_active_24h_peak_pct": [19.5, 19.0],
+    "sm_when_util99_pct": [7.3, 14.7],
+    "tensor_24h_peak_pct": [5.9, 5.0],
+    "power_24h_avg_w": [85, 82],
+    "power_tdp_w": 300,
+    "qps_7d_avg": [11.8, 11.6],
+    "qps_7d_max": [17.9, 17.4],
+    "max_running": [6, 8],
+    "max_waiting": [0, 0],
+    "kv_peak_pct": [0.77, 1.18],
+    "prefix_cache_hit_pct": [82.8, 84.0],
+    "e2e_avg_ms": [74.5, 70.6],
+    "ttft_avg_ms": [37.8, 37.6],
+    "e2e_p99_ms": [652, 622],
+    "avg_input_tok": 2379,
+    "avg_output_tok": 5.8
+  },
+  "fingerprints": [
+    {"id": "SVC-01", "group": "cat1", "cn": "SVC-01\n27B对话(44卡)", "en": "SVC-01\n27B Chat (44)", "util_max": 100, "sm_peak": 49, "tensor_peak": 25},
+    {"id": "SVC-02", "group": "cat1", "cn": "SVC-02\n细排重排(36卡)", "en": "SVC-02\nRerank (36)", "util_max": 100, "sm_peak": 28, "tensor_peak": 9},
+    {"id": "SVC-03", "group": "cat1", "cn": "SVC-03\n相关打分(24卡)", "en": "SVC-03\nScorer (24)", "util_max": 100, "sm_peak": 19.5, "tensor_peak": 5.9},
+    {"id": "SVC-06", "group": "cat2", "cn": "SVC-06\n脉冲摘要(32卡)", "en": "SVC-06\nBurst 27B (32)", "util_max": 100, "sm_peak": 79, "tensor_peak": 24},
+    {"id": "SVC-07", "group": "cat2", "cn": "SVC-07\n审核2B(9卡)", "en": "SVC-07\nMod 2B (9)", "util_max": 100, "sm_peak": 95, "tensor_peak": 68},
+    {"id": "SVC-08", "group": "cat2", "cn": "SVC-08\n审核0.8B(2卡)", "en": "SVC-08\nMod 0.8B (2)", "util_max": 100, "sm_peak": 84, "tensor_peak": 47},
+    {"id": "SVC-13", "group": "cat3", "cn": "SVC-13\n向量编码(6卡)", "en": "SVC-13\nVision Enc (6)", "util_max": 29, "sm_peak": 9, "tensor_peak": 0},
+    {"id": "SVC-14", "group": "cat3", "cn": "SVC-14\n搜索基线(6卡)", "en": "SVC-14\nRank 48G (6)", "util_max": 95, "sm_peak": 5, "tensor_peak": 0},
+    {"id": "SVC-16", "group": "cat3", "cn": "SVC-16\n推荐基线(4卡)", "en": "SVC-16\nRec 24G (4)", "util_max": 97, "sm_peak": 24, "tensor_peak": 0}
+  ]
+}

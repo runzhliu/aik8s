@@ -13,6 +13,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 
 - [Why is a Pod still Pending when GPU is idle](gpu-pending.md)
 - [Why is GPU utilization so low](low-gpu-utilization.md)
+- [Why Low-Utilization GPU Inference Services Refuse to Scale Down: A Four-Dimensional Hardware Audit of 25 Production Services](low-util-gpu-serving-governance.md)
 - [GPU Node Failure Atlas](gpu-failure-atlas.md)
 - [Seemingly NCCL failure, actually Host Memory OOM](nccl-unhandled-cuda-error-host-memory-oom.md)
 - [AI Cluster Incident Retrospective Methods](incident-review.md)
@@ -91,6 +92,7 @@ This series no longer explains "what it is" by component, but starts from a spec
 - [AIBrix Production Practice: Capacity, Exit, and Overload Protection for Qwen3.8-27B on L20](aibrix-qwen-l20-production.md)
 - [What Does AIBrix Routing Optimize: From Cache Hits to Tail Latency](aibrix-routing-cache-tradeoffs.md)
 - [Multi-LoRA Sharing on NVIDIA L20: AIBrix v0.8.0 vs. CNCF llm-d EPP v1.0.0 for Affinity Routing and Noisy-Neighbor Isolation](multi-lora-l20-aibrix-vs-llmd.md)
+- [Single-L20 Hybrid Multi-LoRA Limit Benchmark: Qwen3.5-2B Saturation Knee and the 544-Token Prefix Cache Sawtooth Cliff](hybrid-multi-lora-l20-prefix-cache.md)
 - [AIBrix Real GPU Test: From Two-Node Inference to Eight-Node Fragmented GPUs](aibrix-gpu-multinode-pd-production.md)
 - [Deploying ComfyUI on Kubernetes: Offline Images, CephFS Models, and Cross-Cluster Ingress](comfyui-minimax-h3-gpu.md)
 - [RBG Multi-Role Inference Orchestration and sr1 Practice](rbg-existing-cluster.md)

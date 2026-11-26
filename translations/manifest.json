@@ -101,9 +101,9 @@
       "review": "pending editorial review"
     },
     "ai-k8s/practices/index.md": {
-      "source_sha256": "49fd5aa5e7e01a80a1b97f647e96eaa0bfa3ee051fe5a6753eabfd46dae3e7f5",
-      "english_sha256": "1491f63addece60ccd2d733e4470f3f39971a5a90763b61cdb317a56ff8288b2",
-      "reviewed_at": "2026-11-24T14:26:35.812915+00:00",
+      "source_sha256": "73437fef3d661ca698d79b9f95c1a7c57f28f66a8ba757c507f475d9fba45c5e",
+      "english_sha256": "4146a13eda8ea56c3b99ea441a9e2e888446f9795a20775c1166d903c702b0aa",
+      "reviewed_at": "2026-11-26T03:50:13.952662+00:00",
       "review": "reviewed against source"
     },
     "assets/practices/gpu-notebook-platform-evolution/README.md": {
@@ -1699,6 +1699,18 @@
       "source_sha256": "4ff44723af114bf1ac5115a8912499722df6d83158e3f91291c2eb728dce4c7a",
       "english_sha256": "b8065eb19f9ba3d00b62758268b57ee5312f9e0402947f715ec131132ab31670",
       "reviewed_at": "2026-11-24T14:51:12.835223+00:00",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/hybrid-multi-lora-l20-prefix-cache.md": {
+      "source_sha256": "7a3a3a584c0e5eef7bd09486e578179197387a8a582beaa3321d54119eb5ca02",
+      "english_sha256": "37d7f1f28685c0eac85ec047911d7b344fc7cdaf73fbd3e55c67de284d37c5f0",
+      "reviewed_at": "2026-11-26T07:56:08Z",
+      "review": "reviewed against source"
+    },
+    "ai-k8s/practices/low-util-gpu-serving-governance.md": {
+      "source_sha256": "22fd3c97f4dd4f1417913e06a0809e792ff3017931c0f64067cb8cecff6c2eff",
+      "english_sha256": "37827cb7c878dd2012be0533360e4924840deb01ddba87a0d221c545d37cdda2",
+      "reviewed_at": "2026-11-26T08:10:26Z",
       "review": "reviewed against source"
     }
   }
