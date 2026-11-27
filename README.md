@@ -100,6 +100,8 @@ make build-production
 
 向 `main` 分支推送后，GitHub Actions 会检查双语一致性、内部链接、图片、浏览器交互与资源体积，并将构建产物发布到 `site-production` GitHub Release。服务器通过 HTTPS 主动拉取并校验制品，安装到新版本目录，再原子切换 `/srv/aik8s/current`；激活后的健康检查失败时回滚。
 
+同时，CI/CD 会在注入广告与统计脚本之前，将纯净的双语站点打包成带中英文全文索引的离线 **Kiwix ZIM** 归档（`aik8s_mul_all.zim` 及 `.sha256` 校验文件），自动发布到 [offline-latest GitHub Release](https://github.com/runzhliu/aik8s/releases/tag/offline-latest)。下载后可直接用 [Kiwix](https://kiwix.org/) 离线阅读，也可在本地运行 `make zim` 生成。
+
 当前部署流程见 [Server-pull deployment](ops/aik8s-pull-deploy/README.md)；工作流定义在 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)。
 
 ## 发布动态

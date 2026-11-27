@@ -8,9 +8,12 @@ WECHAT_PREVIEW ?= .wechat-output/$(basename $(notdir $(WECHAT_ARTICLE))).html
 WECHAT_SOURCE_URL ?=
 WECHAT_PYTHON = .venv/wechat/bin/python
 WECHAT_INSTALLED = .venv/wechat/.installed
+ZIM_PYTHON = .venv/zim/bin/python
+ZIM_INSTALLED = .venv/zim/.installed
+ZIM_OUTPUT ?= dist/aik8s_mul_all.zim
 DOCKER_RUN = docker run --rm --user "$$(id -u):$$(id -g)" -v "$(CURDIR):/docs"
 
-.PHONY: dev build build-production distribution wechat-editor wechat-cover wechat-preview wechat-draft
+.PHONY: dev build build-production distribution zim wechat-editor wechat-cover wechat-preview wechat-draft
 
 dev:
 	python3 scripts/generate_topic_cloud.py
@@ -25,6 +28,20 @@ build-production: build
 
 distribution:
 	python3 scripts/build_bilingual.py --docker
+
+$(ZIM_INSTALLED): requirements-zim.txt
+	python3 -m venv .venv/zim
+	$(ZIM_PYTHON) -m pip install --upgrade pip
+	$(ZIM_PYTHON) -m pip install -r requirements-zim.txt
+	touch $(ZIM_INSTALLED)
+
+zim: build $(ZIM_INSTALLED)
+	$(ZIM_PYTHON) scripts/build_zim.py \
+		--site-dir site \
+		--output "$(ZIM_OUTPUT)" \
+		--favicon docs/assets/brand/favicon.png \
+		--verify
+	shasum -a 256 "$(ZIM_OUTPUT)" > "$(ZIM_OUTPUT).sha256"
 
 wechat-editor:
 	npx --yes @doocs/md-cli@2.1.3 port=$(WECHAT_EDITOR_PORT)

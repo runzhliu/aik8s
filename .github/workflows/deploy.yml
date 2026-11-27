@@ -33,7 +33,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: python -m pip install --requirement requirements.txt
+        run: python -m pip install --requirement requirements.txt --requirement requirements-zim.txt
 
       - name: Verify bilingual integrity and article metadata
         run: |
@@ -69,6 +69,30 @@ jobs:
           node scripts/test_blog_polish_browser.cjs
           node scripts/test_search_browser.cjs
           node scripts/test_topic_cloud_browser.cjs
+
+      - name: Build and verify offline Kiwix ZIM archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist-zim
+          python scripts/build_zim.py \
+            --site-dir site \
+            --output dist-zim/aik8s_mul_all.zim \
+            --favicon docs/assets/brand/favicon.png \
+            --date "$(date -u +'%Y-%m-%d')" \
+            --verify
+          (
+            cd dist-zim
+            sha256sum aik8s_mul_all.zim > aik8s_mul_all.zim.sha256
+          )
+
+      - name: Upload offline ZIM artifact for the release job
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: offline-zim
+          path: dist-zim/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Add production-only AdSense
         env:
@@ -163,3 +187,68 @@ jobs:
             dist/manifest.json \
             --clobber
           gh release upload "$RELEASE_TAG" dist/revision.txt --clobber
+
+  publish-zim:
+    name: Publish offline Kiwix ZIM release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download offline ZIM artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: offline-zim
+          path: dist-zim
+
+      - name: Publish offline Kiwix ZIM release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: offline-latest
+        run: |
+          set -euo pipefail
+          test -s dist-zim/aik8s_mul_all.zim
+          test -s dist-zim/aik8s_mul_all.zim.sha256
+
+          build_date="$(date -u +'%Y-%m-%d')"
+          short_sha="${GITHUB_SHA:0:7}"
+          size_human="$(du -h dist-zim/aik8s_mul_all.zim | cut -f1)"
+          checksum="$(cut -d ' ' -f 1 dist-zim/aik8s_mul_all.zim.sha256)"
+
+          notes="$(cat <<EOF
+          Offline Kiwix ZIM snapshot of **aik8s.run** (Chinese & English bilingual, ad-free, full-text indexed).
+
+          - **Build date (UTC)**: ${build_date}
+          - **Commit**: \`${short_sha}\` (\`${GITHUB_SHA}\`)
+          - **Archive**: \`aik8s_mul_all.zim\` (${size_human})
+          - **SHA-256**: \`${checksum}\`
+
+          ### How to read offline with Kiwix
+          1. Download \`aik8s_mul_all.zim\` below.
+          2. Open it directly in [Kiwix](https://kiwix.org/) (macOS, iOS, Android, Windows, Linux) or serve locally via \`kiwix-serve --port 8080 aik8s_mul_all.zim\`.
+          3. Supports both Chinese and English browsing, native Kiwix full-text search, and offline diagrams/charts.
+          EOF
+          )"
+
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "aik8s.run Offline Kiwix ZIM (Latest)" \
+              --notes "$notes" \
+              --latest
+          else
+            gh release edit "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "aik8s.run Offline Kiwix ZIM (Latest)" \
+              --notes "$notes" \
+              --latest
+          fi
+
+          gh release upload "$RELEASE_TAG" \
+            dist-zim/aik8s_mul_all.zim \
+            dist-zim/aik8s_mul_all.zim.sha256 \
+            --clobber

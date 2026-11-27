@@ -97,6 +97,8 @@ Publication and update dates appear below article titles in Beijing time. The pu
 
 After a push to `main`, GitHub Actions checks bilingual integrity, internal links, images, browser interactions, and asset sizes, then publishes the artifact to the `site-production` GitHub Release. The server pulls and verifies artifacts over HTTPS, installs them into a new release directory, and atomically switches `/srv/aik8s/current`. A failed post-activation health check triggers rollback.
 
+In parallel, before production advertising and analytics scripts are injected, CI/CD packages the clean bilingual site into a full-text-indexed offline **Kiwix ZIM** archive (`aik8s_mul_all.zim` and its `.sha256` checksum) and publishes it to the [offline-latest GitHub Release](https://github.com/runzhliu/aik8s/releases/tag/offline-latest). Open it directly in [Kiwix](https://kiwix.org/) for offline reading, or build it locally with `make zim`.
+
 See [Server-pull deployment](ops/aik8s-pull-deploy/README.md) for the current deployment procedure and [.github/workflows/deploy.yml](.github/workflows/deploy.yml) for the workflow.
 
 ## Publishing Moments
